@@ -27,7 +27,8 @@
       "Bash(move MONOREPO_MIGRATION.md docs )",
       "Bash(move:*)",
       "Bash(npm run prisma:generate:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
