@@ -48,3 +48,10 @@ export const SESSION_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
 export const MAX_LIMIT = 100;
+
+// OTP Generation Configuration
+export const OTP_LENGTH = 8;
+export const OTP_MIN_VALUE = 10000000; // 8-digit minimum (10^7)
+export const OTP_MAX_VALUE = 100000000; // 8-digit maximum (10^8)
+export const OTP_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+export const MAX_OTP_PER_WINDOW = 5;

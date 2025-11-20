@@ -28,7 +28,8 @@
       "Bash(move:*)",
       "Bash(npm run prisma:generate:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git check-ignore:*)"
     ],
     "deny": [],
     "ask": []

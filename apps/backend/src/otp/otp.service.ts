@@ -6,6 +6,10 @@ import { randomInt, createHash } from 'crypto';
 import {
   OTP_EXPIRATION_MS,
   OTP_EXPIRATION_MINUTES,
+  OTP_MIN_VALUE,
+  OTP_MAX_VALUE,
+  OTP_RATE_LIMIT_WINDOW_MS,
+  MAX_OTP_PER_WINDOW,
 } from '../common/constants/timeouts.constants';
 
 @Injectable()
@@ -22,7 +26,7 @@ export class OtpService {
    */
   private generateToken(): string {
     // Generate a cryptographically secure random number between 10000000 and 99999999
-    return randomInt(10000000, 100000000).toString();
+    return randomInt(OTP_MIN_VALUE, OTP_MAX_VALUE).toString();
   }
 
   /**
@@ -38,8 +42,7 @@ export class OtpService {
    */
   async createOtp(userId: string): Promise<string> {
     // Rate limiting: max 5 OTP creations per 15 minutes per user
-    const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-    const rateLimitWindowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+    const rateLimitWindowStart = new Date(Date.now() - OTP_RATE_LIMIT_WINDOW_MS);
     const recentOtps = await this.prisma.otpToken.findMany({
       where: {
         userId,
@@ -53,7 +56,6 @@ export class OtpService {
       take: 1,
     });
 
-    const MAX_OTP_PER_WINDOW = 5;
     const recentOtpCount = await this.prisma.otpToken.count({
       where: {
         userId,
@@ -66,7 +68,7 @@ export class OtpService {
     if (recentOtpCount >= MAX_OTP_PER_WINDOW) {
       // Calculate when the oldest OTP will expire from the rate limit window
       const oldestOtp = recentOtps[0];
-      const waitUntil = new Date(oldestOtp.createdAt.getTime() + RATE_LIMIT_WINDOW_MS);
+      const waitUntil = new Date(oldestOtp.createdAt.getTime() + OTP_RATE_LIMIT_WINDOW_MS);
       const waitMinutes = Math.ceil((waitUntil.getTime() - Date.now()) / 60000);
 
       this.logger.warn(
