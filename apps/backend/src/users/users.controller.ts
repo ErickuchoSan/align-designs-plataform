@@ -119,7 +119,7 @@ export class UsersController {
       ipAddress,
       userAgent,
       details: {
-        updatedFields: Object.keys(updateUserDto),
+        updatedFields: Object.keys(updateUserDto).join(', '),
       },
     });
 

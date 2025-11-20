@@ -12,6 +12,7 @@ import { OtpModule } from './otp/otp.module';
 import { StorageModule } from './storage/storage.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
+import { TasksModule } from './tasks/tasks.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
@@ -39,6 +40,7 @@ import { validate } from './config/configuration.validation';
     StorageModule,
     EmailModule,
     HealthModule,
+    TasksModule,
   ],
   controllers: [],
   providers: [

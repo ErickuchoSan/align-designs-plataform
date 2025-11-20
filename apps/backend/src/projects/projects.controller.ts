@@ -181,7 +181,7 @@ export class ProjectsController {
       ipAddress,
       userAgent,
       details: {
-        updatedFields: Object.keys(updateProjectDto),
+        updatedFields: Object.keys(updateProjectDto).join(', '),
       },
     });
 
