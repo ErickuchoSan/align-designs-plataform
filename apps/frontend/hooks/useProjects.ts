@@ -3,6 +3,7 @@ import api from '@/lib/api';
 import { Project } from '@/types';
 import { logger } from '@/lib/logger';
 import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
+import { getErrorMessage } from '@/lib/errors';
 
 interface Client {
   id: string;
@@ -65,9 +66,8 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       // Handle both response formats: data.data or data directly
       setProjects(Array.isArray(data) ? data : data.data);
       setError('');
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error loading projects');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error loading projects'));
     } finally {
       setLoading(false);
     }
@@ -96,9 +96,8 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       setCreateFormData({ name: '', description: '', clientId: '' });
       fetchProjects();
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error creating project');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error creating project'));
     } finally {
       setCreating(false);
     }
@@ -133,9 +132,8 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       setEditingProject(null);
       fetchProjects();
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error updating project');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error updating project'));
     } finally {
       setEditing(false);
     }
@@ -157,9 +155,8 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       setProjectToDelete(null);
       fetchProjects();
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error deleting project');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error deleting project'));
     } finally {
       setDeleting(false);
     }

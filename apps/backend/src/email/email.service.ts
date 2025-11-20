@@ -10,6 +10,11 @@ import {
   EMAIL_STYLES,
   EMAIL_CONTENT,
 } from './templates/email-styles.constants';
+import {
+  getBaseEmailTemplate,
+  getOtpCodeHtml,
+  escapeHtml,
+} from './templates/base-email.template';
 
 @Injectable()
 export class EmailService {
@@ -190,93 +195,14 @@ export class EmailService {
    * HTML template for OTP email
    */
   private getOtpEmailTemplate(otpCode: string, userName: string): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Verification Code</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .container {
-            background-color: #f9fafb;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-          }
-          .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 30px;
-          }
-          .otp-code {
-            font-size: 36px;
-            font-weight: bold;
-            color: #1f2937;
-            background-color: #fff;
-            padding: 20px 40px;
-            border-radius: 8px;
-            letter-spacing: 8px;
-            margin: 30px 0;
-            display: inline-block;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          .message {
-            color: #6b7280;
-            margin: 20px 0;
-          }
-          .warning {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 30px;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            color: #9ca3af;
-            font-size: 12px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="logo">Align Designs</div>
-
-          <h1>Verification Code</h1>
-
-          <p class="message">
-            Hello ${this.escapeHtml(userName)},<br>
-            Use the following code to log in:
-          </p>
-
-          <div class="otp-code">${otpCode}</div>
-
-          <p class="message">
-            This code will expire in <strong>10 minutes</strong>.
-          </p>
-
-          <p class="warning">
-            ⚠️ If you did not request this code, please ignore this message.
-          </p>
-
-          <div class="footer">
-            <p>This is an automated message, please do not reply.</p>
-            <p>&copy; ${new Date().getFullYear()} Align Designs. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    return getBaseEmailTemplate({
+      title: 'Verification Code',
+      userName,
+      preMessage: 'Hello {userName},<br>Use the following code to log in:',
+      bodyContent: getOtpCodeHtml(otpCode),
+      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
+      warningMessage: 'If you did not request this code, please ignore this message.',
+    });
   }
 
   /**
@@ -394,93 +320,14 @@ export class EmailService {
     otpCode: string,
     userName: string,
   ): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Recovery Code</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .container {
-            background-color: #f9fafb;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-          }
-          .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #dc2626;
-            margin-bottom: 30px;
-          }
-          .otp-code {
-            font-size: 36px;
-            font-weight: bold;
-            color: #1f2937;
-            background-color: #fff;
-            padding: 20px 40px;
-            border-radius: 8px;
-            letter-spacing: 8px;
-            margin: 30px 0;
-            display: inline-block;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          .message {
-            color: #6b7280;
-            margin: 20px 0;
-          }
-          .warning {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 30px;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            color: #9ca3af;
-            font-size: 12px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="logo">🔐 Align Designs</div>
-
-          <h1>Password Recovery Code</h1>
-
-          <p class="message">
-            Hello ${this.escapeHtml(userName)},<br>
-            Use this code to reset your password:
-          </p>
-
-          <div class="otp-code">${otpCode}</div>
-
-          <p class="message">
-            This code will expire in <strong>10 minutes</strong>.
-          </p>
-
-          <p class="warning">
-            ⚠️ If you did not request this password reset, please ignore this message.
-          </p>
-
-          <div class="footer">
-            <p>This is an automated message, please do not reply.</p>
-            <p>&copy; ${new Date().getFullYear()} Align Designs. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    return getBaseEmailTemplate({
+      title: 'Password Recovery Code',
+      userName,
+      preMessage: 'Hello {userName},<br>Use this code to reset your password:',
+      bodyContent: getOtpCodeHtml(otpCode),
+      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
+      warningMessage: 'If you did not request this password reset, please ignore this message.',
+    });
   }
 
   /**
@@ -490,93 +337,14 @@ export class EmailService {
     otpCode: string,
     userName: string,
   ): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Account Verification - Align Designs</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .container {
-            background-color: #f9fafb;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-          }
-          .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 30px;
-          }
-          .otp-code {
-            font-size: 36px;
-            font-weight: bold;
-            color: #1f2937;
-            background-color: #fff;
-            padding: 20px 40px;
-            border-radius: 8px;
-            letter-spacing: 8px;
-            margin: 30px 0;
-            display: inline-block;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-          .message {
-            color: #6b7280;
-            margin: 20px 0;
-          }
-          .warning {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 30px;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            color: #9ca3af;
-            font-size: 12px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="logo">Align Designs</div>
-
-          <h1>Account Verification</h1>
-
-          <p class="message">
-            Hello ${this.escapeHtml(userName)},<br>
-            Welcome to Align Designs! Use this code to verify your account and create your password:
-          </p>
-
-          <div class="otp-code">${otpCode}</div>
-
-          <p class="message">
-            This code will expire in <strong>10 minutes</strong>.
-          </p>
-
-          <p class="warning">
-            ⚠️ If you did not create this account, please ignore this message.
-          </p>
-
-          <div class="footer">
-            <p>This is an automated message, please do not reply.</p>
-            <p>&copy; ${new Date().getFullYear()} Align Designs. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    return getBaseEmailTemplate({
+      title: 'Account Verification',
+      userName,
+      preMessage: 'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:',
+      bodyContent: getOtpCodeHtml(otpCode),
+      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
+      warningMessage: 'If you did not create this account, please ignore this message.',
+    });
   }
 
   /**

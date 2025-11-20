@@ -11,6 +11,7 @@ import FileInput from '@/app/components/FileInput';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import { formatDate } from '@/lib/utils/date.utils';
 import { sanitizeText } from '@/lib/utils/text.utils';
+import { getErrorMessage } from '@/lib/errors';
 
 interface FileData {
   id: string;
@@ -144,9 +145,8 @@ export default function ProjectDetailsPage() {
     try {
       const { data } = await api.get(`/projects/${projectId}`);
       setProject(data);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error loading project');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error loading project'));
     }
   };
 
@@ -158,9 +158,8 @@ export default function ProjectDetailsPage() {
       // Extract the data array from the paginated response
       const filesArray = data?.data || data;
       setFiles(Array.isArray(filesArray) ? filesArray : []);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error loading files');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error loading files'));
       setFiles([]); // Reset to empty array on error
     } finally {
       setLoading(false);
@@ -210,10 +209,9 @@ export default function ProjectDetailsPage() {
       await fetchFiles();
 
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
+    } catch (error) {
       // Keep error in modal context, don't set global error
-      setError(error.response?.data?.message || 'Error uploading file');
+      setError(getErrorMessage(error, 'Error uploading file'));
       // Don't close modal on error so user can see the message
     } finally {
       setUploading(false);
@@ -239,9 +237,8 @@ export default function ProjectDetailsPage() {
       await fetchFiles();
 
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error creating comment');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error creating comment'));
     } finally {
       setUploading(false);
     }
@@ -288,9 +285,8 @@ export default function ProjectDetailsPage() {
       await fetchFiles();
 
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error updating entry');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error updating entry'));
     } finally {
       setUploading(false);
     }
@@ -341,9 +337,8 @@ export default function ProjectDetailsPage() {
 
       setSuccess('File downloaded successfully');
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error downloading file');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error downloading file'));
     }
   };
 
@@ -366,9 +361,8 @@ export default function ProjectDetailsPage() {
       await fetchFiles();
 
       setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Error deleting file');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error deleting file'));
     } finally {
       setDeleting(false);
     }

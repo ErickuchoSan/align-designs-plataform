@@ -112,8 +112,7 @@ export class FilesController {
     return this.filesService.findAllByProject(
       projectId,
       paginationDto,
-      user.userId,
-      user.role,
+      { userId: user.userId, role: user.role },
     );
   }
 

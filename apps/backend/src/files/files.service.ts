@@ -10,6 +10,7 @@ import { StorageService } from '../storage/storage.service';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
+import { UserContext } from '../common/interfaces/user-context.interface';
 
 @Injectable()
 export class FilesService {
@@ -311,8 +312,7 @@ export class FilesService {
   async findAllByProject(
     projectId: string,
     paginationDto: PaginationDto,
-    userId: string,
-    userRole: Role,
+    userContext: UserContext,
   ): Promise<PaginatedResult<FileResponse>> {
     // Verify that the project exists, is not deleted, and the user has access
     const project = await this.prisma.project.findFirst({
@@ -326,7 +326,7 @@ export class FilesService {
       throw new NotFoundException('Project not found');
     }
 
-    if (userRole === Role.CLIENT && project.clientId !== userId) {
+    if (userContext.role === Role.CLIENT && project.clientId !== userContext.userId) {
       throw new ForbiddenException('You do not have access to this project');
     }
 
