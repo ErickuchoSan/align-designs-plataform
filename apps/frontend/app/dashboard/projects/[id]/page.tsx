@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { PageLoader } from '@/app/components/Loader';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import Pagination from '@/app/components/Pagination';
@@ -113,8 +113,11 @@ export default function ProjectDetailsPage() {
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
 
-  // Check if filters are active
-  const hasActiveFilters = nameFilter || typeFilter !== 'all';
+  // Check if filters are active - memoized to prevent recalculation
+  const hasActiveFilters = useMemo(
+    () => nameFilter || typeFilter !== 'all',
+    [nameFilter, typeFilter]
+  );
 
   // Apply filters and local pagination
   useEffect(() => {
@@ -216,21 +219,25 @@ export default function ProjectDetailsPage() {
     [isAdmin, user]
   );
 
-  // Calculate pagination values based on whether filters are active
-  const paginationCurrentPage = hasActiveFilters ? localCurrentPage : currentPage;
-  const paginationItemsPerPage = hasActiveFilters ? localItemsPerPage : itemsPerPage;
-  const paginationTotalItems = hasActiveFilters ? filteredFiles.length : totalItems;
-  const paginationTotalPages = hasActiveFilters
-    ? Math.ceil(filteredFiles.length / localItemsPerPage)
-    : totalPages;
+  // Calculate pagination values based on whether filters are active - memoized
+  const paginationValues = useMemo(() => ({
+    currentPage: hasActiveFilters ? localCurrentPage : currentPage,
+    itemsPerPage: hasActiveFilters ? localItemsPerPage : itemsPerPage,
+    totalItems: hasActiveFilters ? filteredFiles.length : totalItems,
+    totalPages: hasActiveFilters
+      ? Math.ceil(filteredFiles.length / localItemsPerPage)
+      : totalPages,
+  }), [hasActiveFilters, localCurrentPage, currentPage, localItemsPerPage, itemsPerPage, filteredFiles.length, totalItems, totalPages]);
 
-  // Apply local pagination to filtered files if filters are active
-  const displayedFiles = hasActiveFilters
-    ? filteredFiles.slice(
-        (localCurrentPage - 1) * localItemsPerPage,
-        localCurrentPage * localItemsPerPage
-      )
-    : filteredFiles;
+  // Apply local pagination to filtered files if filters are active - memoized
+  const displayedFiles = useMemo(() => {
+    if (!hasActiveFilters) return filteredFiles;
+
+    return filteredFiles.slice(
+      (localCurrentPage - 1) * localItemsPerPage,
+      localCurrentPage * localItemsPerPage
+    );
+  }, [hasActiveFilters, filteredFiles, localCurrentPage, localItemsPerPage]);
 
   const handlePageChange = (page: number) => {
     if (hasActiveFilters) {
@@ -380,12 +387,12 @@ export default function ProjectDetailsPage() {
           />
 
           {/* Pagination */}
-          {paginationTotalPages > 0 && (
+          {paginationValues.totalPages > 0 && (
             <Pagination
-              currentPage={paginationCurrentPage}
-              totalPages={paginationTotalPages}
-              totalItems={paginationTotalItems}
-              itemsPerPage={paginationItemsPerPage}
+              currentPage={paginationValues.currentPage}
+              totalPages={paginationValues.totalPages}
+              totalItems={paginationValues.totalItems}
+              itemsPerPage={paginationValues.itemsPerPage}
               onPageChange={handlePageChange}
               onItemsPerPageChange={handleItemsPerPageChange}
             />

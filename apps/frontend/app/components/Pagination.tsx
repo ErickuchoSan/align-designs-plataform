@@ -1,5 +1,7 @@
 'use client';
 
+import { memo, useMemo, useCallback } from 'react';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -9,7 +11,7 @@ interface PaginationProps {
   onItemsPerPageChange: (limit: number) => void;
 }
 
-export default function Pagination({
+function Pagination({
   currentPage,
   totalPages,
   totalItems,
@@ -17,13 +19,14 @@ export default function Pagination({
   onPageChange,
   onItemsPerPageChange,
 }: PaginationProps) {
-  // Calculate available limits based on total items
-  const availableLimits = [10, 20, 50, 100, 500, 1000].filter(
-    (limit) => limit <= Math.max(totalItems, 10)
+  // Calculate available limits based on total items - memoized
+  const availableLimits = useMemo(
+    () => [10, 20, 50, 100, 500, 1000].filter((limit) => limit <= Math.max(totalItems, 10)),
+    [totalItems]
   );
 
-  // Generate page numbers to display
-  const getPageNumbers = (): (number | string)[] => {
+  // Generate page numbers to display - memoized
+  const pageNumbers = useMemo(() => {
     if (totalPages <= 7) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
@@ -42,27 +45,25 @@ export default function Pagination({
     }
 
     return pages;
-  };
+  }, [currentPage, totalPages]);
 
-  const pageNumbers = getPageNumbers();
-
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentPage > 1) {
       onPageChange(currentPage - 1);
     }
-  };
+  }, [currentPage, onPageChange]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentPage < totalPages) {
       onPageChange(currentPage + 1);
     }
-  };
+  }, [currentPage, totalPages, onPageChange]);
 
-  const handlePageClick = (page: number | string) => {
+  const handlePageClick = useCallback((page: number | string) => {
     if (typeof page === 'number') {
       onPageChange(page);
     }
-  };
+  }, [onPageChange]);
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -156,3 +157,5 @@ export default function Pagination({
     </div>
   );
 }
+
+export default memo(Pagination);
