@@ -68,7 +68,7 @@ export default function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="mt-6 bg-white rounded-xl border border-stone-200 shadow-sm">
+    <div className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6">
         {/* Items per page selector */}
         <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function Pagination({
           </span>
         </div>
 
-        {/* Page navigation */}
+        {/* Page navigation - only show if more than 1 page */}
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
             {/* Previous button */}

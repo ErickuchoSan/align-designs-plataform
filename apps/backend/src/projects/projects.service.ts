@@ -226,13 +226,18 @@ export class ProjectsService {
       );
     }
 
-    // Convert BigInt to number for JSON serialization
+    // Separate files and comments count
+    const filesCount = project.files.filter((f) => f.filename !== null).length;
+    const commentsCount = project.files.filter((f) => f.filename === null).length;
+
+    // Convert BigInt to number for JSON serialization and remove files array
+    const { files, ...projectWithoutFiles } = project;
     return {
-      ...project,
-      files: project.files.map((file) => ({
-        ...file,
-        sizeBytes: Number(file.sizeBytes),
-      })),
+      ...projectWithoutFiles,
+      _count: {
+        files: filesCount,
+        comments: commentsCount,
+      },
     };
   }
 
