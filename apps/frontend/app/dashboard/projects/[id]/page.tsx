@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { PageLoader } from '@/app/components/Loader';
 import DashboardHeader from '@/app/components/DashboardHeader';
+import Pagination from '@/app/components/Pagination';
 import { formatDate } from '@/lib/utils/date.utils';
 import { getFileExtension } from '@/lib/utils/file.utils';
 
@@ -40,6 +41,12 @@ export default function ProjectDetailsPage() {
     setSuccess,
     fetchProjectDetails,
     fetchFiles,
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    totalItems,
+    totalPages,
   } = useProjectFiles(projectId);
 
   // Filters
@@ -85,7 +92,7 @@ export default function ProjectDetailsPage() {
       fetchProjectDetails();
       fetchFiles();
     }
-  }, [projectId, isAuthenticated, fetchProjectDetails, fetchFiles]);
+  }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
   // Extract available file types
   useEffect(() => {
@@ -264,12 +271,22 @@ export default function ProjectDetailsPage() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-sm text-stone-700">
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                {files.length} file{files.length !== 1 ? 's' : ''}
-              </span>
+              {project._count && (
+                <>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    {project._count.files} file{project._count.files !== 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    {project._count.comments} comment{project._count.comments !== 1 ? 's' : ''}
+                  </span>
+                </>
+              )}
               <span>
                 Created: {formatDate(project.createdAt, 'LONG')}
               </span>
@@ -315,6 +332,18 @@ export default function ProjectDetailsPage() {
             onDelete={openDeleteConfirm}
             canDelete={canDeleteFile}
           />
+
+          {/* Pagination */}
+          {totalPages > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
         </main>
       </div>
 

@@ -31,6 +31,7 @@ export interface ProjectData {
   createdAt: string;
   _count: {
     files: number;
+    comments: number;
   };
 }
 
@@ -41,6 +42,12 @@ export function useProjectFiles(projectId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const fetchProjectDetails = useCallback(async () => {
     try {
@@ -54,16 +61,23 @@ export function useProjectFiles(projectId: string) {
   const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/files/project/${projectId}`);
+      const { data } = await api.get(`/files/project/${projectId}`, {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+        },
+      });
       // Backend returns paginated response: { data: [...], meta: {...} }
       setFiles(data.data || []);
+      setTotalItems(data.meta?.total || 0);
+      setTotalPages(data.meta?.totalPages || 0);
     } catch (error) {
       setError(getErrorMessage(error, 'Error loading files'));
       setFiles([]); // Reset to empty array on error
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, currentPage, itemsPerPage]);
 
   return {
     project,
@@ -77,5 +91,12 @@ export function useProjectFiles(projectId: string) {
     setSuccess,
     fetchProjectDetails,
     fetchFiles,
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    totalItems,
+    totalPages,
   };
 }
