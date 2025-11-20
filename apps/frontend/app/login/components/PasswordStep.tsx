@@ -9,6 +9,7 @@ interface PasswordStepProps {
   setPassword: (password: string) => void;
   onSubmit: (e: FormEvent) => Promise<void>;
   onForgotPassword: () => void;
+  onLoginWithOTP: () => void;
   loading: boolean;
   error: string;
   onBack: () => void;
@@ -20,6 +21,7 @@ export default function PasswordStep({
   setPassword,
   onSubmit,
   onForgotPassword,
+  onLoginWithOTP,
   loading,
   error,
   onBack
@@ -59,6 +61,22 @@ export default function PasswordStep({
         className="w-full rounded-lg bg-navy-800 px-4 py-3 text-white font-medium hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all transform hover:scale-105 disabled:transform-none flex items-center justify-center"
       >
         {loading ? <ButtonLoader /> : 'Sign In'}
+      </button>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-stone-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-stone-500">Or</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onLoginWithOTP}
+        disabled={loading}
+        className="w-full rounded-lg border-2 border-navy-800 px-4 py-3 text-navy-800 font-medium hover:bg-navy-50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 disabled:transform-none"
+      >
+        Login with OTP
       </button>
       <button
         type="button"

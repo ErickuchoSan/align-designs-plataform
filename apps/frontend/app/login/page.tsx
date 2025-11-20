@@ -50,23 +50,16 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await api.post('/auth/check-email', { email });
-      const data = response.data;
+      // SECURITY: checkEmail endpoint now always returns the same response
+      // to prevent user enumeration. We proceed to password step for all users.
+      // The actual user existence and password status will be verified during login.
+      await api.post('/auth/check-email', { email });
 
-      // Role is no longer returned here to prevent user enumeration
-      // It will be provided after successful authentication
-
-      if (data.hasPassword) {
-        // User has password, show password input
-        setStep('password');
-      } else {
-        // User has no password, send OTP automatically
-        setRequiresPasswordSetup(true);
-        await api.post('/auth/otp/request', { email });
-        setStep('otp');
-      }
+      // Always proceed to password step
+      // Users without password can use "Login with OTP" button
+      setStep('password');
     } catch (error) {
-      setError(getErrorMessage(error, 'User not found'));
+      setError(getErrorMessage(error, 'An error occurred. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -161,6 +154,21 @@ export default function LoginPage() {
     setShowForgotPassword(true);
   };
 
+  const handleLoginWithOTP = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Request OTP for the user
+      await api.post('/auth/otp/request', { email });
+      setStep('otp');
+    } catch (error) {
+      setError(getErrorMessage(error, 'Error requesting OTP'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetToEmail = () => {
     setStep('email');
     setEmail('');
@@ -210,6 +218,7 @@ export default function LoginPage() {
                 setPassword={setPassword}
                 onSubmit={handlePasswordLogin}
                 onForgotPassword={handleForgotPassword}
+                onLoginWithOTP={handleLoginWithOTP}
                 loading={loading}
                 error={error}
                 onBack={resetToEmail}
