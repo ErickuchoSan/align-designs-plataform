@@ -46,7 +46,10 @@ model User {
   @@index([email])
   @@index([role])
   @@index([deletedAt])
+  @@index([isActive])
+  @@index([emailVerified])
   @@index([email, deletedAt]) // Compound index for efficient authentication queries
+  @@index([role, isActive]) // Compound index for filtering active users by role
   @@map("users")
 }
 
@@ -69,6 +72,9 @@ model Project {
   @@index([clientId])
   @@index([createdBy])
   @@index([deletedAt])
+  @@index([clientId, deletedAt]) // Compound index for efficient client project queries
+  @@index([createdBy, deletedAt]) // Compound index for efficient creator project queries
+  @@index([createdAt]) // Index for sorting by creation date
   @@map("projects")
 }
 
@@ -94,6 +100,9 @@ model File {
   @@index([projectId])
   @@index([uploadedBy])
   @@index([deletedAt])
+  @@index([projectId, deletedAt]) // Compound index for efficient project file queries
+  @@index([uploadedBy, deletedAt]) // Compound index for efficient uploader file queries
+  @@index([uploadedAt]) // Index for sorting by upload date
   @@map("files")
 }
 
@@ -111,6 +120,9 @@ model OtpToken {
   @@index([userId])
   @@index([tokenHash])
   @@index([expiresAt])
+  @@index([used])
+  @@index([userId, used, expiresAt]) // Compound index for finding valid tokens
+  @@index([tokenHash, used, expiresAt]) // Compound index for validating tokens
   @@map("otp_tokens")
 }
 
@@ -128,6 +140,9 @@ model PasswordResetToken {
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
+  @@index([used])
+  @@index([userId, used, expiresAt]) // Compound index for finding valid tokens
+  @@index([token, used, expiresAt]) // Compound index for validating tokens
   @@map("password_reset_tokens")
 }
 

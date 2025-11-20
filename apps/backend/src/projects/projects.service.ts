@@ -112,12 +112,13 @@ export class ProjectsService {
               lastName: true,
             },
           },
-          files: {
-            where: {
-              deletedAt: null,
-            },
+          _count: {
             select: {
-              filename: true,
+              files: {
+                where: {
+                  deletedAt: null,
+                },
+              },
             },
           },
         },
@@ -132,19 +133,39 @@ export class ProjectsService {
 
     const totalPages = Math.ceil(total / limit);
 
-    // Transform projects to include separate counts for files and comments
+    // Get separate counts for files and comments for each project efficiently
+    const projectIds = projects.map((p) => p.id);
+    const fileCounts = await this.prisma.file.groupBy({
+      by: ['projectId'],
+      where: {
+        projectId: { in: projectIds },
+        deletedAt: null,
+        filename: { not: null },
+      },
+      _count: true,
+    });
+
+    const commentCounts = await this.prisma.file.groupBy({
+      by: ['projectId'],
+      where: {
+        projectId: { in: projectIds },
+        deletedAt: null,
+        filename: null,
+      },
+      _count: true,
+    });
+
+    // Create maps for O(1) lookup
+    const fileCountMap = new Map(fileCounts.map((fc) => [fc.projectId, fc._count]));
+    const commentCountMap = new Map(commentCounts.map((cc) => [cc.projectId, cc._count]));
+
+    // Transform projects to include separate counts
     const projectsWithCounts = projects.map((project) => {
-      const filesCount = project.files.filter((f) => f.filename !== null).length;
-      const commentsCount = project.files.filter((f) => f.filename === null).length;
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { files, ...projectWithoutFiles } = project;
-
       return {
-        ...projectWithoutFiles,
+        ...project,
         _count: {
-          files: filesCount,
-          comments: commentsCount,
+          files: fileCountMap.get(project.id) || 0,
+          comments: commentCountMap.get(project.id) || 0,
         },
       };
     });

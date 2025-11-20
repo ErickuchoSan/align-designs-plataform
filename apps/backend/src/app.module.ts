@@ -13,6 +13,7 @@ import { StorageModule } from './storage/storage.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { validate } from './config/configuration.validation';
 
@@ -50,7 +51,7 @@ import { validate } from './config/configuration.validation';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(RequestIdMiddleware, CsrfMiddleware)
+      .apply(RequestLoggingMiddleware, RequestIdMiddleware, CsrfMiddleware)
       .forRoutes('*');
   }
 }
