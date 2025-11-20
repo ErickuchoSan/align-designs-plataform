@@ -45,8 +45,8 @@ export function validateEnv(): void {
     }
   });
 
-  // Log warnings
-  if (warnings.length > 0) {
+  // Log warnings only in development
+  if (warnings.length > 0 && process.env.NODE_ENV === 'development') {
     console.warn('\n⚠️  Environment Variable Warnings:\n');
     warnings.forEach((warning) => console.warn(warning));
     console.warn('');

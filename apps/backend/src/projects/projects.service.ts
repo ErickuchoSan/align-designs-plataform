@@ -100,6 +100,7 @@ export class ProjectsService {
       ...(userRole === Role.CLIENT ? { clientId: userId } : {}),
     };
 
+    // Optimized: Only 2 queries - projects with files included, and total count
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({
         where,
@@ -112,13 +113,12 @@ export class ProjectsService {
               lastName: true,
             },
           },
-          _count: {
+          files: {
+            where: {
+              deletedAt: null,
+            },
             select: {
-              files: {
-                where: {
-                  deletedAt: null,
-                },
-              },
+              filename: true,
             },
           },
         },
@@ -133,39 +133,19 @@ export class ProjectsService {
 
     const totalPages = Math.ceil(total / limit);
 
-    // Get separate counts for files and comments for each project efficiently
-    const projectIds = projects.map((p) => p.id);
-    const fileCounts = await this.prisma.file.groupBy({
-      by: ['projectId'],
-      where: {
-        projectId: { in: projectIds },
-        deletedAt: null,
-        filename: { not: null },
-      },
-      _count: true,
-    });
-
-    const commentCounts = await this.prisma.file.groupBy({
-      by: ['projectId'],
-      where: {
-        projectId: { in: projectIds },
-        deletedAt: null,
-        filename: null,
-      },
-      _count: true,
-    });
-
-    // Create maps for O(1) lookup
-    const fileCountMap = new Map(fileCounts.map((fc) => [fc.projectId, fc._count]));
-    const commentCountMap = new Map(commentCounts.map((cc) => [cc.projectId, cc._count]));
-
-    // Transform projects to include separate counts
+    // Transform projects to include separate counts from already-loaded files
     const projectsWithCounts = projects.map((project) => {
+      const filesCount = project.files.filter((f) => f.filename !== null).length;
+      const commentsCount = project.files.filter((f) => f.filename === null).length;
+
+      // Remove the files array and replace with counts
+      const { files, ...projectWithoutFiles } = project;
+
       return {
-        ...project,
+        ...projectWithoutFiles,
         _count: {
-          files: fileCountMap.get(project.id) || 0,
-          comments: commentCountMap.get(project.id) || 0,
+          files: filesCount,
+          comments: commentsCount,
         },
       };
     });
@@ -271,10 +251,21 @@ export class ProjectsService {
     userId: string,
     userRole: Role,
   ) {
+    // Optimized: Load project with client uploads in single query
     const project = await this.prisma.project.findFirst({
       where: {
         id,
         deletedAt: null, // Only allow updating non-deleted projects
+      },
+      include: {
+        files: {
+          where: {
+            deletedAt: null,
+          },
+          select: {
+            uploadedBy: true,
+          },
+        },
       },
     });
 
@@ -303,14 +294,10 @@ export class ProjectsService {
         throw new NotFoundException('New client not found');
       }
 
-      // Check if current client has uploaded any files or comments
-      const clientUploads = await this.prisma.file.count({
-        where: {
-          projectId: id,
-          uploadedBy: project.clientId,
-          deletedAt: null,
-        },
-      });
+      // Check if current client has uploaded any files or comments (using already-loaded data)
+      const clientUploads = project.files.filter(
+        (file) => file.uploadedBy === project.clientId,
+      ).length;
 
       if (clientUploads > 0) {
         throw new ForbiddenException(
