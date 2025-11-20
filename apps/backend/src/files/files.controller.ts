@@ -66,6 +66,7 @@ export class FilesController {
    * Create only comment without file
    */
   @Post(':projectId/comment')
+  @Throttle({ default: RATE_LIMIT_FILES.CREATE_COMMENT })
   @HttpCode(HttpStatus.CREATED)
   async createComment(
     @Param('projectId') projectId: string,
@@ -123,6 +124,7 @@ export class FilesController {
   }
 
   @Delete(':id')
+  @Throttle({ default: RATE_LIMIT_FILES.DELETE })
   @HttpCode(HttpStatus.OK)
   async deleteFile(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.filesService.deleteFile(id, user.userId, user.role);

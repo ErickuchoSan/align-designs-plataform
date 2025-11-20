@@ -307,8 +307,11 @@ export class AuthService {
   /**
    * Check if an email exists and if it has a password configured
    * Returns minimal information to prevent user enumeration
+   * Uses constant-time response to prevent timing attacks
    */
   async checkEmail(email: string) {
+    const startTime = Date.now();
+
     const user = await this.prisma.user.findFirst({
       where: {
         email,
@@ -321,22 +324,37 @@ export class AuthService {
       },
     });
 
-    // If user doesn't exist, return false for both fields to prevent enumeration
+    // Prepare response
+    let response;
     if (!user) {
-      return {
+      // User doesn't exist - return false for both fields
+      // Do not reveal role to prevent enumeration
+      response = {
         hasPassword: false,
         requiresPasswordSetup: false,
-        role: null,
+      };
+    } else {
+      // User exists - return password status
+      // Role is intentionally excluded to prevent enumeration
+      // It will be provided after successful authentication
+      const hasPassword = !!user.passwordHash;
+      response = {
+        hasPassword,
+        requiresPasswordSetup: !hasPassword,
       };
     }
 
-    // Return information needed for UI flow
-    const hasPassword = !!user.passwordHash;
-    return {
-      hasPassword,
-      requiresPasswordSetup: !hasPassword,
-      role: user.role,
-    };
+    // Add constant-time delay to prevent timing attacks
+    // This ensures all responses take approximately the same time
+    const elapsedTime = Date.now() - startTime;
+    const minimumDelay = 100; // 100ms minimum response time
+    const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
+
+    if (delayNeeded > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayNeeded));
+    }
+
+    return response;
   }
 
   /**

@@ -36,6 +36,23 @@ export const RATE_LIMIT_FILES = {
   UPLOAD: { limit: 3, ttl: RATE_LIMIT_TTL_MS }, // 3×15GB = 45GB/min max
   UPDATE: { limit: 3, ttl: RATE_LIMIT_TTL_MS },
   DOWNLOAD: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  CREATE_COMMENT: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  DELETE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+};
+
+// Rate Limit: Project operations
+export const RATE_LIMIT_PROJECTS = {
+  CREATE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  UPDATE: { limit: 20, ttl: RATE_LIMIT_TTL_MS },
+  DELETE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+};
+
+// Rate Limit: User operations
+export const RATE_LIMIT_USERS = {
+  CREATE: { limit: 5, ttl: RATE_LIMIT_TTL_MS },
+  UPDATE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  DELETE: { limit: 5, ttl: RATE_LIMIT_TTL_MS },
+  TOGGLE_STATUS: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
 };
 
 // JWT Configuration

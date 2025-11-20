@@ -13,8 +13,7 @@ import { StorageModule } from './storage/storage.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
-// CSRF middleware disabled: httpOnly cookies with sameSite=strict provide sufficient CSRF protection
-// import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { validate } from './config/configuration.validation';
 
 @Module({
@@ -51,9 +50,7 @@ import { validate } from './config/configuration.validation';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(RequestIdMiddleware)
+      .apply(RequestIdMiddleware, CsrfMiddleware)
       .forRoutes('*');
-    // CSRF middleware disabled - using httpOnly cookies with sameSite=strict instead
-    // .apply(CsrfMiddleware).forRoutes('*');
   }
 }

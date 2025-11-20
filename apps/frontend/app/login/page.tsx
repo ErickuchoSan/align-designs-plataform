@@ -53,7 +53,8 @@ export default function LoginPage() {
       const response = await api.post('/auth/check-email', { email });
       const data = response.data;
 
-      setUserRole(data.role);
+      // Role is no longer returned here to prevent user enumeration
+      // It will be provided after successful authentication
 
       if (data.hasPassword) {
         // User has password, show password input

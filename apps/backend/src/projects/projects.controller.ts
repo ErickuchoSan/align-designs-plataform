@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -21,6 +22,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { RATE_LIMIT_PROJECTS } from '../common/constants/timeouts.constants';
 
 @Controller('projects')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,6 +31,7 @@ export class ProjectsController {
 
   @Post()
   @Roles(Role.ADMIN)
+  @Throttle({ default: RATE_LIMIT_PROJECTS.CREATE })
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() createProjectDto: CreateProjectDto,
@@ -52,6 +55,7 @@ export class ProjectsController {
 
   @Patch(':id')
   @Roles(Role.ADMIN)
+  @Throttle({ default: RATE_LIMIT_PROJECTS.UPDATE })
   update(
     @Param('id') id: string,
     @Body() updateProjectDto: UpdateProjectDto,
@@ -67,6 +71,7 @@ export class ProjectsController {
 
   @Delete(':id')
   @Roles(Role.ADMIN)
+  @Throttle({ default: RATE_LIMIT_PROJECTS.DELETE })
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.projectsService.remove(id, user.userId, user.role);
