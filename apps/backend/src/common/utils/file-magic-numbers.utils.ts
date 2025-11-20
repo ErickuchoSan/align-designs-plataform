@@ -28,6 +28,25 @@ const FILE_SIGNATURES: FileSignature[] = [
     extensions: ['webp'],
     signatures: [[0x52, 0x49, 0x46, 0x46]],
   },
+  {
+    mimeType: 'image/svg+xml',
+    extensions: ['svg'],
+    // SVG files are XML-based, start with < or <?xml
+    signatures: [
+      [0x3c, 0x3f, 0x78, 0x6d, 0x6c], // <?xml
+      [0x3c, 0x73, 0x76, 0x67], // <svg
+    ],
+  },
+  {
+    mimeType: 'image/vnd.adobe.photoshop',
+    extensions: ['psd'],
+    signatures: [[0x38, 0x42, 0x50, 0x53]], // 8BPS
+  },
+  {
+    mimeType: 'application/postscript',
+    extensions: ['ai', 'eps'],
+    signatures: [[0x25, 0x21, 0x50, 0x53]], // %!PS
+  },
   // PDF
   {
     mimeType: 'application/pdf',
@@ -63,6 +82,33 @@ const FILE_SIGNATURES: FileSignature[] = [
     extensions: ['zip'],
     signatures: [[0x50, 0x4b, 0x03, 0x04]],
   },
+  // RAR
+  {
+    mimeType: 'application/x-rar-compressed',
+    extensions: ['rar'],
+    signatures: [
+      [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00], // Rar! (RAR 1.5+)
+      [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x01, 0x00], // Rar! (RAR 5.0+)
+    ],
+  },
+  // 7Z
+  {
+    mimeType: 'application/x-7z-compressed',
+    extensions: ['7z'],
+    signatures: [[0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]], // 7z¼¯'
+  },
+  // Video - MOV/QuickTime
+  {
+    mimeType: 'video/quicktime',
+    extensions: ['mov', 'qt'],
+    // MOV files have 'ftyp' at offset 4
+    signatures: [
+      [0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70], // ....ftyp
+      [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], // ....ftyp
+      [0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70], // ....ftyp
+      [0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70], // ... ftyp
+    ],
+  },
   // Text
   {
     mimeType: 'text/plain',
@@ -93,11 +139,53 @@ export class FileMagicNumberValidator {
     // Check if file matches any of the known signatures
     for (const sigPattern of signature.signatures) {
       if (this.matchesSignature(fileBuffer, sigPattern)) {
+        // Additional validation for SVG files (XSS protection)
+        if (claimedMimeType === 'image/svg+xml') {
+          return this.validateSvgContent(fileBuffer);
+        }
         return true;
       }
     }
 
     return false;
+  }
+
+  /**
+   * Validates SVG content for potentially malicious scripts
+   * Rejects SVG files containing <script>, on* event handlers, or javascript: URLs
+   */
+  private static validateSvgContent(fileBuffer: Buffer): boolean {
+    const content = fileBuffer.toString('utf-8');
+
+    // Check for script tags (case-insensitive)
+    if (/<script[\s>]/i.test(content)) {
+      throw new BadRequestException(
+        'SVG files with <script> tags are not allowed for security reasons',
+      );
+    }
+
+    // Check for event handlers (onclick, onload, etc.)
+    if (/\son\w+\s*=/i.test(content)) {
+      throw new BadRequestException(
+        'SVG files with event handlers (onclick, onload, etc.) are not allowed for security reasons',
+      );
+    }
+
+    // Check for javascript: URLs
+    if (/javascript:/i.test(content)) {
+      throw new BadRequestException(
+        'SVG files with javascript: URLs are not allowed for security reasons',
+      );
+    }
+
+    // Check for data: URLs with text/html or application/javascript
+    if (/data:(?:text\/html|application\/(?:java|ecma)script)/i.test(content)) {
+      throw new BadRequestException(
+        'SVG files with executable data URLs are not allowed for security reasons',
+      );
+    }
+
+    return true;
   }
 
   private static matchesSignature(
