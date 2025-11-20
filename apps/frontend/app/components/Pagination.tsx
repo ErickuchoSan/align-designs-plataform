@@ -68,87 +68,89 @@ export default function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
-      {/* Items per page selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-stone-700">Show:</span>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="px-3 py-2 border border-stone-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all"
-        >
-          {availableLimits.map((limit) => (
-            <option key={limit} value={limit}>
-              {limit}
-            </option>
-          ))}
-        </select>
-        <span className="text-sm text-stone-700">
-          per page ({startItem}-{endItem} of {totalItems})
-        </span>
-      </div>
-
-      {/* Page navigation */}
-      {totalPages > 1 && (
-        <div className="flex items-center gap-1">
-          {/* Previous button */}
-          <button
-            onClick={handlePrevious}
-            disabled={currentPage === 1}
-            className={`p-2 rounded-lg border transition-all ${
-              currentPage === 1
-                ? 'border-stone-200 text-stone-400 cursor-not-allowed'
-                : 'border-stone-300 text-navy-700 hover:bg-gold-50 hover:border-gold-500'
-            }`}
-            aria-label="Previous page"
+    <div className="mt-6 bg-white rounded-xl border border-stone-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6">
+        {/* Items per page selector */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-navy-900">Show:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="px-4 py-2 border border-stone-300 rounded-lg bg-white text-sm font-medium text-navy-900 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all hover:border-gold-400 cursor-pointer shadow-sm"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Page numbers */}
-          {pageNumbers.map((page, index) => {
-            if (page === '...') {
-              return (
-                <span key={`ellipsis-${index}`} className="px-3 py-2 text-stone-500">
-                  ...
-                </span>
-              );
-            }
-
-            return (
-              <button
-                key={page}
-                onClick={() => handlePageClick(page)}
-                className={`min-w-[40px] px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
-                  currentPage === page
-                    ? 'bg-gold-600 border-gold-600 text-white shadow-md'
-                    : 'border-stone-300 text-navy-700 hover:bg-gold-50 hover:border-gold-500'
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
-
-          {/* Next button */}
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className={`p-2 rounded-lg border transition-all ${
-              currentPage === totalPages
-                ? 'border-stone-200 text-stone-400 cursor-not-allowed'
-                : 'border-stone-300 text-navy-700 hover:bg-gold-50 hover:border-gold-500'
-            }`}
-            aria-label="Next page"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            {availableLimits.map((limit) => (
+              <option key={limit} value={limit}>
+                {limit}
+              </option>
+            ))}
+          </select>
+          <span className="text-sm text-stone-700 font-medium">
+            {startItem}-{endItem} of {totalItems}
+          </span>
         </div>
-      )}
+
+        {/* Page navigation */}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            {/* Previous button */}
+            <button
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className={`p-2.5 rounded-lg border-2 transition-all font-medium ${
+                currentPage === 1
+                  ? 'border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed'
+                  : 'border-navy-300 bg-white text-navy-700 hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-600 hover:text-navy-900 hover:border-gold-600 shadow-sm hover:shadow-lg transform hover:scale-105'
+              }`}
+              aria-label="Previous page"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Page numbers */}
+            {pageNumbers.map((page, index) => {
+              if (page === '...') {
+                return (
+                  <span key={`ellipsis-${index}`} className="px-3 py-2 text-stone-500 font-bold text-lg">
+                    ...
+                  </span>
+                );
+              }
+
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageClick(page)}
+                  className={`min-w-[44px] px-4 py-2.5 rounded-lg border-2 text-sm font-bold transition-all transform ${
+                    currentPage === page
+                      ? 'bg-gradient-to-r from-gold-500 to-gold-600 border-gold-600 text-navy-900 shadow-lg scale-105'
+                      : 'border-navy-300 bg-white text-navy-700 hover:bg-navy-50 hover:border-navy-500 hover:scale-105 shadow-sm hover:shadow-md'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            {/* Next button */}
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`p-2.5 rounded-lg border-2 transition-all font-medium ${
+                currentPage === totalPages
+                  ? 'border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed'
+                  : 'border-navy-300 bg-white text-navy-700 hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-600 hover:text-navy-900 hover:border-gold-600 shadow-sm hover:shadow-lg transform hover:scale-105'
+              }`}
+              aria-label="Next page"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
