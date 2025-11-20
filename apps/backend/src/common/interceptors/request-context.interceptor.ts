@@ -14,7 +14,7 @@ import { throwError } from 'rxjs';
  */
 @Injectable()
 export class RequestContextInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const requestId = request.requestId;
 

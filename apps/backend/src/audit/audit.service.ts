@@ -22,6 +22,8 @@ export enum AuditAction {
   PROJECT_DELETE = 'PROJECT_DELETE',
 }
 
+export type AuditDetailsValue = string | number | boolean | null;
+
 export interface AuditLogData {
   userId?: string;
   action: AuditAction;
@@ -29,7 +31,7 @@ export interface AuditLogData {
   resourceId?: string;
   ipAddress?: string;
   userAgent?: string;
-  details?: Record<string, any>;
+  details?: Record<string, AuditDetailsValue>;
 }
 
 @Injectable()

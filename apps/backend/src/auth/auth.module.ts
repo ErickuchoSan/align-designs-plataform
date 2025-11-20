@@ -24,8 +24,7 @@ import { EmailModule } from '../email/email.module';
         return {
           secret,
           signOptions: {
-            expiresIn: (configService.get<string>('JWT_EXPIRATION') ||
-              '7d') as any, // Type assertion needed for JWT library compatibility
+            expiresIn: configService.get<string>('JWT_EXPIRATION') || '7d',
           },
         };
       },

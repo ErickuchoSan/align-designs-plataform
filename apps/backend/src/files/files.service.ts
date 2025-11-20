@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { FileResponse } from '../common/interfaces/file-response.interface';
 
 @Injectable()
 export class FilesService {
@@ -312,7 +313,7 @@ export class FilesService {
     paginationDto: PaginationDto,
     userId: string,
     userRole: Role,
-  ): Promise<PaginatedResult<any>> {
+  ): Promise<PaginatedResult<FileResponse>> {
     // Verify that the project exists, is not deleted, and the user has access
     const project = await this.prisma.project.findFirst({
       where: {
