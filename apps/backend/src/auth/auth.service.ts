@@ -306,10 +306,19 @@ export class AuthService {
 
   /**
    * Check if an email exists and if it has a password configured
-   * Returns minimal information to prevent user enumeration
+   *
+   * SECURITY NOTE: This endpoint always returns the same response to prevent
+   * user enumeration attacks. The response does not reveal whether an email
+   * exists in the system or its password status.
+   *
+   * Uses constant-time response to prevent timing attacks.
    */
   async checkEmail(email: string) {
-    const user = await this.prisma.user.findFirst({
+    const startTime = Date.now();
+
+    // Always perform database query to maintain consistent timing
+    // but don't use the result in the response
+    await this.prisma.user.findFirst({
       where: {
         email,
         deletedAt: null,
@@ -321,22 +330,25 @@ export class AuthService {
       },
     });
 
-    // If user doesn't exist, return false for both fields to prevent enumeration
-    if (!user) {
-      return {
-        hasPassword: false,
-        requiresPasswordSetup: false,
-        role: null,
-      };
+    // SECURITY: Always return the same response regardless of email existence
+    // This prevents attackers from enumerating valid email addresses
+    // The actual password status will be revealed during login/OTP flow
+    const response = {
+      hasPassword: false,
+      requiresPasswordSetup: false,
+    };
+
+    // Add constant-time delay to prevent timing attacks
+    // This ensures all responses take approximately the same time
+    const elapsedTime = Date.now() - startTime;
+    const minimumDelay = 100; // 100ms minimum response time
+    const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
+
+    if (delayNeeded > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayNeeded));
     }
 
-    // Return information needed for UI flow
-    const hasPassword = !!user.passwordHash;
-    return {
-      hasPassword,
-      requiresPasswordSetup: !hasPassword,
-      role: user.role,
-    };
+    return response;
   }
 
   /**

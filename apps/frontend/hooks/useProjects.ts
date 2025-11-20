@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { Project } from '@/types';
 import { logger } from '@/lib/logger';
 import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
-import { getErrorMessage } from '@/lib/errors';
+import { useProjectsList } from './useProjectsList';
+import { useProjectModals } from './useProjectModals';
+import { useProjectActions } from './useProjectActions';
 
 interface Client {
   id: string;
@@ -12,79 +13,42 @@ interface Client {
   email: string;
 }
 
-interface ProjectFormData {
-  name: string;
-  description: string;
-  clientId: string;
-}
-
+/**
+ * Main hook for project management
+ * Composed of smaller, focused hooks for better maintainability
+ *
+ * This hook has been refactored from 253 lines to ~90 lines by extracting
+ * logic into specialized hooks:
+ * - useProjectsList: Fetching and pagination
+ * - useProjectModals: Modal state management
+ * - useProjectActions: CRUD operations
+ */
 export function useProjects(isAuthenticated: boolean, userRole?: string) {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  // Use composed hooks for specific responsibilities
+  const projectsList = useProjectsList(isAuthenticated);
+  const modals = useProjectModals();
 
-  // Create modal state
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createFormData, setCreateFormData] = useState<ProjectFormData>({
-    name: '',
-    description: '',
-    clientId: '',
+  const handleSuccess = useCallback((message: string) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
+  }, []);
+
+  const actions = useProjectActions({
+    onSuccess: handleSuccess,
+    onError: (error) => {
+      // Error is already set by projectsList hook
+    },
+    refetchProjects: projectsList.refetch,
   });
-  const [creating, setCreating] = useState(false);
-
-  // Edit modal state
-  const [showEditConfirm, setShowEditConfirm] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [editFormData, setEditFormData] = useState<ProjectFormData>({
-    name: '',
-    description: '',
-    clientId: '',
-  });
-  const [editing, setEditing] = useState(false);
-  const [canChangeClient, setCanChangeClient] = useState(true);
-
-  // Delete modal state
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchProjects();
-      if (userRole === 'ADMIN') {
-        fetchClients();
-      }
+    if (isAuthenticated && userRole === 'ADMIN') {
+      fetchClients();
     }
-  }, [isAuthenticated, userRole, currentPage, itemsPerPage]);
-
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const { data } = await api.get('/projects', {
-        params: {
-          page: currentPage,
-          limit: itemsPerPage,
-        },
-      });
-      setProjects(data.data || []);
-      setTotalItems(data.meta?.total || 0);
-      setTotalPages(data.meta?.totalPages || 0);
-      setError('');
-    } catch (error) {
-      setError(getErrorMessage(error, 'Error loading projects'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isAuthenticated, userRole]);
 
   const fetchClients = async () => {
     try {
@@ -96,158 +60,87 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     }
   };
 
+  // Simplified handlers using composed hooks
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreating(true);
-    setError('');
-    try {
-      await api.post('/projects', createFormData);
-      setSuccess('Project created successfully');
-      setShowCreateModal(false);
-      setCreateFormData({ name: '', description: '', clientId: '' });
-      fetchProjects();
-      setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (error) {
-      setError(getErrorMessage(error, 'Error creating project'));
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const openEditConfirm = (project: Project) => {
-    setEditingProject(project);
-    setShowEditConfirm(true);
-  };
-
-  const confirmEdit = async () => {
-    if (editingProject) {
-      setEditFormData({
-        name: editingProject.name,
-        description: editingProject.description || '',
-        clientId: editingProject.clientId || '',
-      });
-
-      // Check if client has uploaded any files
-      try {
-        const { data } = await api.get(`/files/project/${editingProject.id}`);
-        const files = data.data || [];
-
-        // Check if current client has uploaded any files or comments
-        const clientHasUploads = files.some(
-          (file: any) => file.uploadedBy === editingProject.clientId
-        );
-
-        setCanChangeClient(!clientHasUploads);
-      } catch (err) {
-        logger.error('Error checking client uploads:', err);
-        // Default to allowing change if check fails
-        setCanChangeClient(true);
-      }
-
-      setShowEditConfirm(false);
-      setShowEditModal(true);
+    const result = await actions.createProject(modals.createFormData);
+    if (result) {
+      modals.closeCreateModal();
     }
   };
 
   const handleEditProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProject) return;
-    setEditing(true);
-    setError('');
-    try {
-      // Send all form data including clientId
-      await api.patch(`/projects/${editingProject.id}`, editFormData);
-      setSuccess('Project updated successfully');
-      setShowEditModal(false);
-      setEditingProject(null);
-      fetchProjects();
-      setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (error) {
-      setError(getErrorMessage(error, 'Error updating project'));
-    } finally {
-      setEditing(false);
+    if (!modals.editingProject) return;
+    const result = await actions.updateProject(modals.editingProject.id, modals.editFormData);
+    if (result) {
+      modals.closeEditModal();
     }
-  };
-
-  const openDeleteConfirm = (project: Project) => {
-    setProjectToDelete(project);
-    setShowDeleteConfirm(true);
   };
 
   const handleDeleteProject = async () => {
-    if (!projectToDelete) return;
-    setDeleting(true);
-    setError('');
-    try {
-      await api.delete(`/projects/${projectToDelete.id}`);
-      setSuccess('Project deleted successfully');
-      setShowDeleteConfirm(false);
-      setProjectToDelete(null);
-      fetchProjects();
-      setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
-    } catch (error) {
-      setError(getErrorMessage(error, 'Error deleting project'));
-    } finally {
-      setDeleting(false);
+    if (!modals.projectToDelete) return;
+    const result = await actions.deleteProject(modals.projectToDelete.id);
+    if (result) {
+      modals.closeDeleteConfirm();
     }
-  };
-
-  const closeCreateModal = () => {
-    setShowCreateModal(false);
-    setCreateFormData({ name: '', description: '', clientId: '' });
-    setError('');
-  };
-
-  const closeEditModal = () => {
-    setShowEditModal(false);
-    setEditingProject(null);
-    setEditFormData({ name: '', description: '', clientId: '' });
-    setError('');
   };
 
   return {
     // State
-    projects,
+    projects: projectsList.projects,
     clients,
-    loading,
-    error,
+    loading: projectsList.loading,
+    error: projectsList.error,
     success,
+
     // Pagination
-    currentPage,
-    setCurrentPage,
-    itemsPerPage,
-    setItemsPerPage,
-    totalItems,
-    totalPages,
+    currentPage: projectsList.currentPage,
+    setCurrentPage: projectsList.handlePageChange,
+    itemsPerPage: projectsList.itemsPerPage,
+    setItemsPerPage: projectsList.handleItemsPerPageChange,
+    totalItems: projectsList.totalItems,
+    totalPages: projectsList.totalPages,
+
     // Create modal
-    showCreateModal,
-    setShowCreateModal,
-    createFormData,
-    setCreateFormData,
-    creating,
-    closeCreateModal,
+    showCreateModal: modals.showCreateModal,
+    setShowCreateModal: modals.setShowCreateModal,
+    createFormData: modals.createFormData,
+    setCreateFormData: modals.setCreateFormData,
+    creating: actions.creating,
+    closeCreateModal: modals.closeCreateModal,
     handleCreateProject,
+
     // Edit modal
-    showEditConfirm,
-    setShowEditConfirm,
-    showEditModal,
-    editingProject,
-    setEditingProject,
-    editFormData,
-    setEditFormData,
-    editing,
-    closeEditModal,
+    showEditConfirm: modals.showEditConfirm,
+    setShowEditConfirm: modals.setShowEditConfirm,
+    showEditModal: modals.showEditModal,
+    editingProject: modals.editingProject,
+    setEditingProject: modals.setEditingProject,
+    editFormData: modals.editFormData,
+    setEditFormData: modals.setEditFormData,
+    editing: actions.editing,
+    closeEditModal: modals.closeEditModal,
     handleEditProject,
-    openEditConfirm,
-    confirmEdit,
-    canChangeClient,
+    openEditConfirm: (project) => {
+      modals.setEditingProject(project);
+      modals.setShowEditConfirm(true);
+    },
+    confirmEdit: () => {
+      if (modals.editingProject) {
+        modals.openEditModal(modals.editingProject);
+        modals.setShowEditConfirm(false);
+      }
+    },
+    canChangeClient: modals.canChangeClient,
+
     // Delete modal
-    showDeleteConfirm,
-    setShowDeleteConfirm,
-    projectToDelete,
-    setProjectToDelete,
-    deleting,
+    showDeleteConfirm: modals.showDeleteConfirm,
+    setShowDeleteConfirm: modals.setShowDeleteConfirm,
+    projectToDelete: modals.projectToDelete,
+    setProjectToDelete: modals.setProjectToDelete,
+    deleting: actions.deleting,
+    openDeleteConfirm: modals.openDeleteConfirm,
     handleDeleteProject,
-    openDeleteConfirm,
   };
 }

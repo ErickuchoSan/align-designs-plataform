@@ -17,6 +17,7 @@ export class CsrfMiddleware implements NestMiddleware {
   private readonly publicPaths = [
     '/health',
     '/api/docs',
+    '/auth/csrf-token',
     '/auth/login',
     '/auth/logout',
     '/auth/register',
@@ -70,8 +71,9 @@ export class CsrfMiddleware implements NestMiddleware {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    // Store the token in response locals for frontend access
+    // Store the token in response locals and header for frontend access
     res.locals.csrfToken = token;
+    res.setHeader('X-CSRF-Token', token);
   }
 
   private generateToken(secret: string): string {

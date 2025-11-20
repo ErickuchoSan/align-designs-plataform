@@ -1,8 +1,10 @@
 import { Transform } from 'class-transformer';
+import sanitizeHtml from 'sanitize-html';
 
 /**
  * Sanitizes HTML input to prevent XSS attacks
- * Removes all HTML tags and dangerous characters
+ * Uses sanitize-html library with strict configuration
+ * Removes all HTML tags, scripts, and dangerous content
  */
 export function Sanitize() {
   return Transform(({ value }) => {
@@ -10,20 +12,16 @@ export function Sanitize() {
       return value;
     }
 
-    // Remove HTML tags
-    let sanitized = value.replace(/<[^>]*>/g, '');
-
-    // Remove script content
-    sanitized = sanitized.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      '',
-    );
-
-    // Remove dangerous characters and encode special chars
-    sanitized = sanitized
-      .replace(/javascript:/gi, '')
-      .replace(/on\w+\s*=/gi, '')
-      .replace(/[<>]/g, '');
+    // Use sanitize-html with strict configuration
+    // This removes all HTML tags, scripts, and dangerous content
+    const sanitized = sanitizeHtml(value, {
+      allowedTags: [], // No HTML tags allowed
+      allowedAttributes: {}, // No attributes allowed
+      disallowedTagsMode: 'discard', // Remove disallowed tags completely
+      // Additional security options
+      allowProtocolRelative: false,
+      enforceHtmlBoundary: true,
+    });
 
     return sanitized.trim();
   });

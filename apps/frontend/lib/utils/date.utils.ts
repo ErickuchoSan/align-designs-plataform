@@ -2,6 +2,8 @@
  * Date formatting utilities for consistent timestamp display
  */
 
+import { logger } from '../logger';
+
 export const DATE_FORMATS = {
   SHORT: { day: '2-digit', month: 'short', year: 'numeric' } as const,
   LONG: { day: '2-digit', month: 'long', year: 'numeric' } as const,
@@ -32,7 +34,7 @@ export function formatDate(
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString(locale, DATE_FORMATS[format]);
   } catch (error) {
-    console.error('Error formatting date:', error);
+    logger.error('Error formatting date:', error);
     return 'Invalid date';
   }
 }
@@ -75,7 +77,7 @@ export function formatRelativeTime(date: string | Date): string {
       return formatDate(dateObj);
     }
   } catch (error) {
-    console.error('Error formatting relative time:', error);
+    logger.error('Error formatting relative time:', error);
     return 'Invalid date';
   }
 }

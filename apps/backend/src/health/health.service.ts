@@ -10,18 +10,40 @@ export interface HealthCheckResult {
   uptime: number;
   responseTime: string;
   checks: {
-    database: { status: string; responseTime?: string; error?: string };
-    storage: { status: string; responseTime?: string; error?: string };
-    email: { status: string; configured: boolean };
+    database: {
+      status: string;
+      responseTime?: string;
+      error?: string;
+      poolSize?: number;
+      activeConnections?: number;
+    };
+    storage: {
+      status: string;
+      responseTime?: string;
+      error?: string;
+      available?: boolean;
+    };
+    email: {
+      status: string;
+      configured: boolean;
+      verified?: boolean;
+    };
   };
   system: {
     memory: {
       used: string;
       total: string;
       percentage: number;
+      rss: string;
+      external: string;
+    };
+    cpu: {
+      usage: number;
+      loadAverage: number[];
     };
     nodeVersion: string;
     environment: string;
+    platform: string;
   };
 }
 
@@ -57,6 +79,14 @@ export class HealthService {
     const memoryUsage = process.memoryUsage();
     const memoryUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
     const memoryTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
+    const rssMB = Math.round(memoryUsage.rss / 1024 / 1024);
+    const externalMB = Math.round(memoryUsage.external / 1024 / 1024);
+
+    // Calculate CPU usage (simple approximation)
+    const loadAverage = process.cpuUsage ? process.cpuUsage() : { user: 0, system: 0 };
+    const cpuUsage = Math.round(
+      ((loadAverage.user + loadAverage.system) / 1000000) * 100
+    ) / 100;
 
     return {
       status,
@@ -69,9 +99,16 @@ export class HealthService {
           used: `${memoryUsedMB}MB`,
           total: `${memoryTotalMB}MB`,
           percentage: Math.round((memoryUsedMB / memoryTotalMB) * 100),
+          rss: `${rssMB}MB`,
+          external: `${externalMB}MB`,
+        },
+        cpu: {
+          usage: cpuUsage,
+          loadAverage: [0, 0, 0], // Not available in Node.js on all platforms
         },
         nodeVersion: process.version,
         environment: this.configService.get('NODE_ENV', 'development'),
+        platform: process.platform,
       },
     };
   }
@@ -80,14 +117,46 @@ export class HealthService {
     status: string;
     responseTime?: string;
     error?: string;
+    poolSize?: number;
+    activeConnections?: number;
   }> {
     const startTime = Date.now();
     try {
+      // Test basic database connectivity
       await this.prisma.$queryRaw`SELECT 1`;
+
+      // Get database connection pool statistics (if available)
+      let poolSize: number | undefined;
+      let activeConnections: number | undefined;
+
+      try {
+        const poolStats = await this.prisma.$queryRaw<
+          Array<{ count: bigint }>
+        >`SELECT COUNT(*) as count FROM pg_stat_activity WHERE datname = current_database()`;
+
+        if (poolStats && poolStats[0]) {
+          activeConnections = Number(poolStats[0].count);
+        }
+
+        // Get max connections from PostgreSQL
+        const maxConnections = await this.prisma.$queryRaw<
+          Array<{ max_connections: string }>
+        >`SHOW max_connections`;
+
+        if (maxConnections && maxConnections[0]) {
+          poolSize = parseInt(maxConnections[0].max_connections);
+        }
+      } catch (poolError) {
+        // Pool stats are optional, log but don't fail the health check
+        this.logger.warn('Could not retrieve database pool stats:', poolError);
+      }
+
       const responseTime = Date.now() - startTime;
       return {
         status: 'healthy',
         responseTime: `${responseTime}ms`,
+        poolSize,
+        activeConnections,
       };
     } catch (error) {
       this.logger.error('Database health check failed:', error);
@@ -102,6 +171,7 @@ export class HealthService {
     status: string;
     responseTime?: string;
     error?: string;
+    available?: boolean;
   }> {
     const startTime = Date.now();
     try {
@@ -114,23 +184,30 @@ export class HealthService {
           status: 'unhealthy',
           error: 'Storage bucket not accessible',
           responseTime: `${responseTime}ms`,
+          available: false,
         };
       }
 
       return {
         status: 'healthy',
         responseTime: `${responseTime}ms`,
+        available: true,
       };
     } catch (error) {
       this.logger.error('Storage health check failed:', error);
       return {
         status: 'unhealthy',
         error: error instanceof Error ? error.message : 'Unknown error',
+        available: false,
       };
     }
   }
 
-  private async checkEmail(): Promise<{ status: string; configured: boolean }> {
+  private async checkEmail(): Promise<{
+    status: string;
+    configured: boolean;
+    verified?: boolean;
+  }> {
     const emailHost = this.configService.get<string>('EMAIL_HOST');
     const emailUser = this.configService.get<string>('EMAIL_USER');
 
@@ -140,6 +217,7 @@ export class HealthService {
       return {
         status: 'not_configured',
         configured: false,
+        verified: false,
       };
     }
 
@@ -149,6 +227,7 @@ export class HealthService {
     return {
       status: isHealthy ? 'healthy' : 'unhealthy',
       configured: true,
+      verified: isHealthy,
     };
   }
 }

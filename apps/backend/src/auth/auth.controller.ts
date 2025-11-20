@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   HttpCode,
   HttpStatus,
@@ -28,6 +29,26 @@ import { RATE_LIMIT_AUTH } from '../common/constants/timeouts.constants';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Get('csrf-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get CSRF token',
+    description: 'Returns a CSRF token for subsequent requests. The token will be sent in the X-CSRF-Token header.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSRF token generated successfully',
+    schema: {
+      example: { message: 'CSRF token generated' },
+    },
+  })
+  async getCsrfToken(@Res({ passthrough: true }) res: Response) {
+    // The CSRF middleware will generate and set the token automatically
+    // We just need to return a success message
+    // The token will be available in the X-CSRF-Token response header
+    return { message: 'CSRF token generated' };
+  }
 
   @Post('check-email')
   @HttpCode(HttpStatus.OK)

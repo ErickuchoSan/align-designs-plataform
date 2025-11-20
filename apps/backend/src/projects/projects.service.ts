@@ -100,6 +100,7 @@ export class ProjectsService {
       ...(userRole === Role.CLIENT ? { clientId: userId } : {}),
     };
 
+    // Optimized: Only 2 queries - projects with files included, and total count
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({
         where,
@@ -132,12 +133,12 @@ export class ProjectsService {
 
     const totalPages = Math.ceil(total / limit);
 
-    // Transform projects to include separate counts for files and comments
+    // Transform projects to include separate counts from already-loaded files
     const projectsWithCounts = projects.map((project) => {
       const filesCount = project.files.filter((f) => f.filename !== null).length;
       const commentsCount = project.files.filter((f) => f.filename === null).length;
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // Remove the files array and replace with counts
       const { files, ...projectWithoutFiles } = project;
 
       return {
@@ -250,10 +251,21 @@ export class ProjectsService {
     userId: string,
     userRole: Role,
   ) {
+    // Optimized: Load project with client uploads in single query
     const project = await this.prisma.project.findFirst({
       where: {
         id,
         deletedAt: null, // Only allow updating non-deleted projects
+      },
+      include: {
+        files: {
+          where: {
+            deletedAt: null,
+          },
+          select: {
+            uploadedBy: true,
+          },
+        },
       },
     });
 
@@ -282,14 +294,10 @@ export class ProjectsService {
         throw new NotFoundException('New client not found');
       }
 
-      // Check if current client has uploaded any files or comments
-      const clientUploads = await this.prisma.file.count({
-        where: {
-          projectId: id,
-          uploadedBy: project.clientId,
-          deletedAt: null,
-        },
-      });
+      // Check if current client has uploaded any files or comments (using already-loaded data)
+      const clientUploads = project.files.filter(
+        (file) => file.uploadedBy === project.clientId,
+      ).length;
 
       if (clientUploads > 0) {
         throw new ForbiddenException(
