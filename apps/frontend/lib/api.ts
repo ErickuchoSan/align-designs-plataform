@@ -3,7 +3,11 @@ import { storage } from './storage';
 import { env } from './env-validator';
 import { LOADING_DELAY } from './constants/ui.constants';
 
+// API Configuration
+// The backend uses URI versioning (e.g., /api/v1/endpoint)
+// Default version is v1, automatically applied to all endpoints
 const API_URL = env.API_URL;
+const API_VERSION = '1';
 
 // Retry configuration
 const MAX_RETRIES = 3;

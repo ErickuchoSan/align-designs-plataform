@@ -1,3 +1,4 @@
+import React, { useCallback, useMemo } from 'react';
 import { Project } from '@/types';
 import { formatDate } from '@/lib/utils/date.utils';
 
@@ -10,7 +11,11 @@ interface ProjectCardProps {
   theme?: 'navy' | 'blue';
 }
 
-export default function ProjectCard({
+/**
+ * Optimized ProjectCard component using React.memo
+ * Prevents unnecessary re-renders when props haven't changed
+ */
+function ProjectCard({
   project,
   isAdmin,
   onEdit,
@@ -18,13 +23,23 @@ export default function ProjectCard({
   onClick,
   theme = 'navy',
 }: ProjectCardProps) {
-  const handleCardClick = () => {
+  const handleCardClick = useCallback(() => {
     if (onClick) {
       onClick(project);
     }
-  };
+  }, [onClick, project]);
 
-  const themeStyles = {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(project);
+  }, [onEdit, project]);
+
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(project);
+  }, [onDelete, project]);
+
+  const themeStyles = useMemo(() => ({
     navy: {
       card: 'bg-white shadow-lg border border-stone-200 hover:shadow-2xl',
       title: 'text-navy-900',
@@ -47,7 +62,7 @@ export default function ProjectCard({
       editButton: 'text-blue-600 hover:bg-blue-50',
       deleteButton: 'text-red-600 hover:bg-red-50',
     },
-  };
+  }), []);
 
   const styles = themeStyles[theme];
 
@@ -64,10 +79,7 @@ export default function ProjectCard({
           {isAdmin && (
             <div className="flex gap-2 ml-2">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(project);
-                }}
+                onClick={handleEdit}
                 className={`p-2 ${styles.editButton} rounded-lg transition-colors`}
                 title="Edit project"
                 aria-label={`Edit project ${project.name}`}
@@ -77,10 +89,7 @@ export default function ProjectCard({
                 </svg>
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(project);
-                }}
+                onClick={handleDelete}
                 className={`p-2 ${styles.deleteButton} rounded-lg transition-colors`}
                 title="Delete project"
                 aria-label={`Delete project ${project.name}`}
@@ -138,3 +147,18 @@ export default function ProjectCard({
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-renders when props actually change
+export default React.memo(ProjectCard, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.project.id === nextProps.project.id &&
+    prevProps.project.name === nextProps.project.name &&
+    prevProps.project.description === nextProps.project.description &&
+    prevProps.project._count?.files === nextProps.project._count?.files &&
+    prevProps.project._count?.comments === nextProps.project._count?.comments &&
+    prevProps.isAdmin === nextProps.isAdmin &&
+    prevProps.theme === nextProps.theme
+  );
+});

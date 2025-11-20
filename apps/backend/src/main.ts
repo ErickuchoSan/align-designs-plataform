@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import compression from 'compression';
@@ -8,10 +8,18 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new Logger('Bootstrap');
+
+  // Enable API versioning
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+    prefix: 'api/v',
+  });
 
   // Enable cookie parser (required for CSRF)
   app.use(cookieParser());
@@ -97,7 +105,10 @@ async function bootstrap() {
   );
 
   // Global exception filters
-  app.useGlobalFilters(new ThrottlerExceptionFilter());
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new ThrottlerExceptionFilter(),
+  );
 
   // Swagger documentation
   const config = new DocumentBuilder()
@@ -138,6 +149,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 4000;
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`API v1 available at: http://localhost:${port}/api/v1`);
   logger.log(
     `API Documentation available at: http://localhost:${port}/api/docs`,
   );
