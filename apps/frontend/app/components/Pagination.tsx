@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback, useRef, useEffect } from 'react';
 import { PAGINATION } from '@/lib/constants/ui.constants';
 
 interface PaginationProps {
@@ -20,6 +20,22 @@ function Pagination({
   onPageChange,
   onItemsPerPageChange,
 }: PaginationProps) {
+  // Ref to track the pagination component position
+  const paginationRef = useRef<HTMLElement>(null);
+  const previousPageRef = useRef<number>(currentPage);
+
+  // Scroll to pagination when page changes (but not on initial render)
+  useEffect(() => {
+    if (previousPageRef.current !== currentPage && paginationRef.current) {
+      // Scroll to the top of the content area (above pagination)
+      // We scroll to the pagination component itself so user sees the new content
+      const scrollTarget = paginationRef.current.parentElement;
+      if (scrollTarget) {
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    previousPageRef.current = currentPage;
+  }, [currentPage]);
   // Calculate available limits based on total items - memoized
   const availableLimits = useMemo(
     () => PAGINATION.PAGE_SIZE_OPTIONS.filter((limit) => limit <= Math.max(totalItems, PAGINATION.DEFAULT_PAGE_SIZE)),
@@ -70,7 +86,7 @@ function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <nav className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg" aria-label="Pagination">
+    <nav ref={paginationRef} className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg" aria-label="Pagination">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6">
         {/* Items per page selector */}
         <div className="flex items-center gap-3">
