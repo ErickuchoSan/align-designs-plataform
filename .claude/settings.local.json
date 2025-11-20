@@ -48,7 +48,8 @@
       "Bash(git rm:*)",
       "Bash(NUL)",
       "Bash(.gitignore)",
-      "Bash(Pagination.tsx)"
+      "Bash(Pagination.tsx)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
