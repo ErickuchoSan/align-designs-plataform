@@ -6,13 +6,17 @@ import {
   Length,
   Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class ResetPasswordDto {
   @IsEmail({}, { message: 'Email must be valid' })
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email: string;
 
   @IsString()
   @Length(8, 8, { message: 'OTP code must have 8 digits' })
+  @Matches(/^\d{8}$/, { message: 'OTP code must contain only digits' })
+  @Transform(({ value }) => value?.trim())
   otp: string;
 
   @IsString()

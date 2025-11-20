@@ -25,6 +25,9 @@ export class SetPasswordDto {
 
   @IsString()
   @IsNotEmpty({ message: 'Password confirmation is required' })
-  @MaxLength(128)
+  @MinLength(12, {
+    message: 'Password confirmation must be at least 12 characters long',
+  })
+  @MaxLength(128, { message: 'Password confirmation cannot exceed 128 characters' })
   confirmPassword: string;
 }
