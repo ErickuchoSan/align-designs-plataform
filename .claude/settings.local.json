@@ -34,7 +34,15 @@
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
       "Bash(tree:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(if exist .nextdevlock del .nextdevlock)",
+      "Bash(timeout /t 2 /nobreak)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\scripts\\stop-dev.ps1\")",
+      "Bash(cmd.exe /c \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\scripts\\stop-dev.bat\")",
+      "Bash(scriptsrestart-dev.bat)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(if exist \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\frontend\\.next\\dev\" rmdir /s /q \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\frontend\\.next\\dev\")",
+      "Bash(powershell.exe:*)"
     ],
     "deny": [],
     "ask": []

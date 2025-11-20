@@ -38,6 +38,7 @@ export interface Project {
   };
   _count?: {
     files: number;
+    comments: number;
   };
 }
 

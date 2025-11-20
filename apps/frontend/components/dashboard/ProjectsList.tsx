@@ -2,6 +2,7 @@ import { Project } from '@/types';
 import { ProjectCardSkeleton } from '@/app/components/Loader';
 import ProjectCard from './ProjectCard';
 import ProjectModals from './ProjectModals';
+import Pagination from '@/app/components/Pagination';
 import { useProjects } from '@/hooks/useProjects';
 
 interface ProjectsListProps {
@@ -138,19 +139,33 @@ export default function ProjectsList({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
-          {projectsHook.projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              isAdmin={isAdmin}
-              onEdit={projectsHook.openEditConfirm}
-              onDelete={projectsHook.openDeleteConfirm}
-              onClick={onProjectClick}
-              theme={theme}
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
+            {projectsHook.projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                isAdmin={isAdmin}
+                onEdit={projectsHook.openEditConfirm}
+                onDelete={projectsHook.openDeleteConfirm}
+                onClick={onProjectClick}
+                theme={theme}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {projectsHook.totalPages > 0 && (
+            <Pagination
+              currentPage={projectsHook.currentPage}
+              totalPages={projectsHook.totalPages}
+              totalItems={projectsHook.totalItems}
+              itemsPerPage={projectsHook.itemsPerPage}
+              onPageChange={projectsHook.setCurrentPage}
+              onItemsPerPageChange={projectsHook.setItemsPerPage}
             />
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Modals */}

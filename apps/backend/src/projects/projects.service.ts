@@ -112,8 +112,13 @@ export class ProjectsService {
               lastName: true,
             },
           },
-          _count: {
-            select: { files: true },
+          files: {
+            where: {
+              deletedAt: null,
+            },
+            select: {
+              filename: true,
+            },
           },
         },
         orderBy: {
@@ -127,8 +132,25 @@ export class ProjectsService {
 
     const totalPages = Math.ceil(total / limit);
 
+    // Transform projects to include separate counts for files and comments
+    const projectsWithCounts = projects.map((project) => {
+      const filesCount = project.files.filter((f) => f.filename !== null).length;
+      const commentsCount = project.files.filter((f) => f.filename === null).length;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { files, ...projectWithoutFiles } = project;
+
+      return {
+        ...projectWithoutFiles,
+        _count: {
+          files: filesCount,
+          comments: commentsCount,
+        },
+      };
+    });
+
     return {
-      data: projects,
+      data: projectsWithCounts,
       meta: {
         total,
         page,

@@ -25,6 +25,12 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   // Create modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createFormData, setCreateFormData] = useState<ProjectFormData>({
@@ -57,13 +63,20 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
         fetchClients();
       }
     }
-  }, [isAuthenticated, userRole]);
+  }, [isAuthenticated, userRole, currentPage, itemsPerPage]);
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/projects');
+      const { data } = await api.get('/projects', {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+        },
+      });
       setProjects(data.data || []);
+      setTotalItems(data.meta?.total || 0);
+      setTotalPages(data.meta?.totalPages || 0);
       setError('');
     } catch (error) {
       setError(getErrorMessage(error, 'Error loading projects'));
@@ -179,6 +192,13 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     loading,
     error,
     success,
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    totalItems,
+    totalPages,
     // Create modal
     showCreateModal,
     setShowCreateModal,
