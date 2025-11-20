@@ -21,22 +21,51 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { IpAddress } from '../auth/decorators/ip-address.decorator';
+import { UserAgent } from '../auth/decorators/user-agent.decorator';
 import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { RATE_LIMIT_USERS } from '../common/constants/timeouts.constants';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Post()
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createClientDto: CreateClientDto) {
-    return this.usersService.createClient(createClientDto);
+  async create(
+    @Body() createClientDto: CreateClientDto,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const newUser = await this.usersService.createClient(createClientDto);
+
+    // Audit log for user creation
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.USER_CREATE,
+      resourceType: 'user',
+      resourceId: newUser.id,
+      ipAddress,
+      userAgent,
+      details: {
+        email: createClientDto.email,
+        firstName: createClientDto.firstName,
+        lastName: createClientDto.lastName,
+        role: 'CLIENT',
+      },
+    });
+
+    return newUser;
   }
 
   @Get()
@@ -72,12 +101,29 @@ export class UsersController {
 
   @Patch(':id')
   @Throttle({ default: RATE_LIMIT_USERS.UPDATE })
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
   ) {
-    return this.usersService.update(id, updateUserDto, user.userId, user.role);
+    const updatedUser = await this.usersService.update(id, updateUserDto, user.userId, user.role);
+
+    // Audit log for user update
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.USER_UPDATE,
+      resourceType: 'user',
+      resourceId: id,
+      ipAddress,
+      userAgent,
+      details: {
+        updatedFields: Object.keys(updateUserDto),
+      },
+    });
+
+    return updatedUser;
   }
 
   @Patch(':id/toggle-status')
@@ -95,7 +141,24 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.DELETE })
   @HttpCode(HttpStatus.OK)
-  remove(@Param('id') id: string, @CurrentUser() user: UserPayload) {
-    return this.usersService.remove(id, user.userId);
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.usersService.remove(id, user.userId);
+
+    // Audit log for user deletion
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.USER_DELETE,
+      resourceType: 'user',
+      resourceId: id,
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   }
 }
