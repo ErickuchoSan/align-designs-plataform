@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import { Project } from '@/types';
 import { logger } from '@/lib/logger';
 import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
@@ -63,8 +63,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     try {
       setLoading(true);
       const { data } = await api.get('/projects');
-      // Handle both response formats: data.data or data directly
-      setProjects(Array.isArray(data) ? data : data.data);
+      setProjects(data);
       setError('');
     } catch (error) {
       setError(getErrorMessage(error, 'Error loading projects'));
@@ -76,9 +75,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const fetchClients = async () => {
     try {
       const { data } = await api.get('/users');
-      // Handle both response formats: data.data or data directly
-      const userData = Array.isArray(data) ? data : data.data;
-      const clientUsers = userData.filter((u: { role: string }) => u.role === 'CLIENT');
+      const clientUsers = data.data.filter((u: { role: string }) => u.role === 'CLIENT');
       setClients(clientUsers);
     } catch (err) {
       logger.error('Error loading clients:', err);

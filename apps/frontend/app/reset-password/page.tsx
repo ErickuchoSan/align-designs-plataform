@@ -3,7 +3,7 @@ import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import Loader, { ButtonLoader } from '@/app/components/Loader';
 import PasswordInput from '@/app/components/PasswordInput';
 import PasswordRequirements from '@/app/components/PasswordRequirements';

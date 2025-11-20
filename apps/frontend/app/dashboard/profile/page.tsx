@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import Modal from '@/app/components/Modal';
 import { ButtonLoader, PageLoader } from '@/app/components/Loader';
 import PhoneInput from '@/app/components/PhoneInput';

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, LoginCredentials, OTPRequest, OTPVerify, AuthResponse } from '@/types';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { storage } from '@/lib/storage';
 

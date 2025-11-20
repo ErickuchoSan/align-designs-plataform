@@ -4,7 +4,7 @@ import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import { User, CreateClientDto } from '@/types';
 import Modal from '@/app/components/Modal';
 import ConfirmModal from '@/app/components/ConfirmModal';

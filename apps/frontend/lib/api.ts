@@ -119,4 +119,5 @@ api.interceptors.response.use(
   }
 );
 
+// Export as default for backward compatibility (to be phased out)
 export default api;
