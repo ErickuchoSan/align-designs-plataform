@@ -136,7 +136,9 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     setEditing(true);
     setError('');
     try {
-      await api.patch(`/projects/${editingProject.id}`, editFormData);
+      // Only send name and description for update (not clientId)
+      const { clientId, ...updateData } = editFormData;
+      await api.patch(`/projects/${editingProject.id}`, updateData);
       setSuccess('Project updated successfully');
       setShowEditModal(false);
       setEditingProject(null);
