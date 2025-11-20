@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Backend environment variable validation at startup (validates all required vars before app starts)
+- Comprehensive accessibility improvements to Pagination component:
+  - ARIA labels for all interactive elements
+  - Semantic HTML (nav element, proper labels)
+  - aria-current for active page indication
+  - aria-live regions for dynamic content
+  - aria-disabled states for buttons
+- Pagination constants extracted to centralized configuration
 - Domain Layer with DDD principles (Value Objects, Domain Entities, Repository Interfaces)
 - Comprehensive API documentation with Swagger decorators
 - Service layer for frontend to decouple UI from API
@@ -18,11 +26,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG and CONTRIBUTING documentation
 
 ### Changed
+- **Performance**: Optimized N+1 queries in projects service:
+  - Reduced findAll() from 3 queries to 2 (33% improvement)
+  - Optimized update() from 4 to 3 queries when changing clients (25% reduction)
+  - Eliminated separate groupBy queries by including files in main query
+- Enhanced React performance with comprehensive memoization:
+  - Added React.memo to Pagination component
+  - Implemented useMemo for expensive calculations (hasActiveFilters, paginationValues, displayedFiles, pageNumbers)
+  - Added useCallback for all event handlers (handlePrevious, handleNext, handlePageClick)
+- Extracted magic numbers to UI constants (pagination thresholds, page size options)
 - Replaced console.log with logger utility
+- Added development-only guards to console statements in env-validator
 - Optimized ProjectCard with React.memo and performance hooks
 - Enhanced security headers (HSTS, Referrer-Policy, X-Frame-Options, etc.)
 - Improved error sanitization in production environment
 - Enhanced DTO validation with normalization and sanitization
+
+### Fixed
+- Removed unused imports (getErrorMessage from project details page)
+- Prevented console output in production builds
 
 ### Security
 - Implemented comprehensive security improvements (CSRF, rate limiting, HSTS)
