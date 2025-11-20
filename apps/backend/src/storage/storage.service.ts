@@ -52,6 +52,8 @@ export class StorageService implements OnModuleInit {
     'video/quicktime': 'mov',
   };
 
+  private readonly region: string;
+
   constructor(private configService: ConfigService) {
     // MinIO configuration - all required in production
     const endpoint = this.configService.get<string>('MINIO_ENDPOINT') || '';
@@ -62,6 +64,7 @@ export class StorageService implements OnModuleInit {
     const secretKey = this.configService.get<string>('MINIO_SECRET_KEY') || '';
 
     this.bucketName = this.configService.get<string>('MINIO_BUCKET') || '';
+    this.region = this.configService.get<string>('MINIO_REGION', 'us-east-1');
 
     // Validate required MinIO configuration
     // Note: These errors are intentionally generic to avoid information disclosure
@@ -93,8 +96,10 @@ export class StorageService implements OnModuleInit {
       const bucketExists = await this.minioClient.bucketExists(this.bucketName);
 
       if (!bucketExists) {
-        await this.minioClient.makeBucket(this.bucketName, 'us-east-1');
-        this.logger.log(`Bucket "${this.bucketName}" created successfully`);
+        await this.minioClient.makeBucket(this.bucketName, this.region);
+        this.logger.log(
+          `Bucket "${this.bucketName}" created successfully in region "${this.region}"`,
+        );
       } else {
         this.logger.log(`Bucket "${this.bucketName}" already exists`);
       }
