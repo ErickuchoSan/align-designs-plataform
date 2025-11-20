@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useMemo, useCallback } from 'react';
+import { PAGINATION } from '@/lib/constants/ui.constants';
 
 interface PaginationProps {
   currentPage: number;
@@ -21,13 +22,13 @@ function Pagination({
 }: PaginationProps) {
   // Calculate available limits based on total items - memoized
   const availableLimits = useMemo(
-    () => [10, 20, 50, 100, 500, 1000].filter((limit) => limit <= Math.max(totalItems, 10)),
+    () => PAGINATION.PAGE_SIZE_OPTIONS.filter((limit) => limit <= Math.max(totalItems, PAGINATION.DEFAULT_PAGE_SIZE)),
     [totalItems]
   );
 
   // Generate page numbers to display - memoized
   const pageNumbers = useMemo(() => {
-    if (totalPages <= 7) {
+    if (totalPages <= PAGINATION.ELLIPSIS_THRESHOLD) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
 
@@ -48,7 +49,7 @@ function Pagination({
   }, [currentPage, totalPages]);
 
   const handlePrevious = useCallback(() => {
-    if (currentPage > 1) {
+    if (currentPage > PAGINATION.MIN_PAGE) {
       onPageChange(currentPage - 1);
     }
   }, [currentPage, onPageChange]);
@@ -69,15 +70,19 @@ function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg">
+    <nav className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg" aria-label="Pagination">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6">
         {/* Items per page selector */}
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-navy-900">Show:</span>
+          <label htmlFor="items-per-page" className="text-sm font-medium text-navy-900">
+            Show:
+          </label>
           <select
+            id="items-per-page"
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
             className="px-4 py-2 border border-stone-300 rounded-lg bg-white text-sm font-medium text-navy-900 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all hover:border-gold-400 cursor-pointer shadow-sm"
+            aria-label="Items per page"
           >
             {availableLimits.map((limit) => (
               <option key={limit} value={limit}>
@@ -85,13 +90,13 @@ function Pagination({
               </option>
             ))}
           </select>
-          <span className="text-sm text-stone-700 font-medium">
+          <span className="text-sm text-stone-700 font-medium" aria-live="polite" aria-atomic="true">
             {startItem}-{endItem} of {totalItems}
           </span>
         </div>
 
         {/* Page navigation - always show page numbers, hide arrows if only 1 page */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="navigation" aria-label="Page navigation">
           {/* Previous button - only show if more than 1 page */}
           {totalPages > 1 && (
             <button
@@ -102,9 +107,10 @@ function Pagination({
                   ? 'border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed'
                   : 'border-navy-300 bg-white text-navy-700 hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-600 hover:text-navy-900 hover:border-gold-600 shadow-sm hover:shadow-lg transform hover:scale-105'
               }`}
-              aria-label="Previous page"
+              aria-label="Go to previous page"
+              aria-disabled={currentPage === 1}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -129,6 +135,8 @@ function Pagination({
                     ? 'bg-gradient-to-r from-gold-500 to-gold-600 border-gold-600 text-navy-900 shadow-lg scale-105'
                     : 'border-navy-300 bg-white text-navy-700 hover:bg-navy-50 hover:border-navy-500 hover:scale-105 shadow-sm hover:shadow-md'
                 }`}
+                aria-label={`Go to page ${page}`}
+                aria-current={currentPage === page ? 'page' : undefined}
               >
                 {page}
               </button>
@@ -145,16 +153,17 @@ function Pagination({
                   ? 'border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed'
                   : 'border-navy-300 bg-white text-navy-700 hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-600 hover:text-navy-900 hover:border-gold-600 shadow-sm hover:shadow-lg transform hover:scale-105'
               }`}
-              aria-label="Next page"
+              aria-label="Go to next page"
+              aria-disabled={currentPage === totalPages}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           )}
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
 
