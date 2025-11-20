@@ -2,6 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { storage } from './storage';
 import { env } from './env-validator';
 import { LOADING_DELAY } from './constants/ui.constants';
+import { logger } from './logger';
 
 // API Configuration
 // The backend uses URI versioning (e.g., /api/v1/endpoint)
@@ -35,7 +36,7 @@ async function fetchCsrfToken(): Promise<void> {
     });
     csrfToken = response.headers['x-csrf-token'];
   } catch (error) {
-    console.error('Failed to fetch CSRF token:', error);
+    logger.error('Failed to fetch CSRF token:', error);
   }
 }
 
