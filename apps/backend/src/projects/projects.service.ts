@@ -11,6 +11,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
+import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
 
 @Injectable()
 export class ProjectsService {
@@ -135,8 +136,7 @@ export class ProjectsService {
 
     // Transform projects to include separate counts from already-loaded files
     const projectsWithCounts = projects.map((project) => {
-      const filesCount = project.files.filter((f) => f.filename !== null).length;
-      const commentsCount = project.files.filter((f) => f.filename === null).length;
+      const { filesCount, commentsCount } = getFilesAndCommentsCounts(project.files);
 
       // Remove the files array and replace with counts
       const { files, ...projectWithoutFiles } = project;
@@ -228,8 +228,7 @@ export class ProjectsService {
     }
 
     // Separate files and comments count
-    const filesCount = project.files.filter((f) => f.filename !== null).length;
-    const commentsCount = project.files.filter((f) => f.filename === null).length;
+    const { filesCount, commentsCount } = getFilesAndCommentsCounts(project.files);
 
     // Convert BigInt to number for JSON serialization and remove files array
     const { files, ...projectWithoutFiles } = project;

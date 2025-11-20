@@ -288,7 +288,7 @@ export class EmailService {
             We received a request to reset your password.
           </p>
 
-          <a href="${resetLink}" class="button">Reset Password</a>
+          <a href="${this.escapeHtml(resetLink)}" class="button">Reset Password</a>
 
           <p class="message">
             This link will expire in <strong>1 hour</strong>.
@@ -300,7 +300,7 @@ export class EmailService {
 
           <div class="link-text">
             <p>If the button doesn't work, copy and paste this link into your browser:</p>
-            <p>${resetLink}</p>
+            <p>${this.escapeHtml(resetLink)}</p>
           </div>
 
           <div class="footer">
