@@ -63,7 +63,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     try {
       setLoading(true);
       const { data } = await api.get('/projects');
-      setProjects(data);
+      setProjects(data.data || []);
       setError('');
     } catch (error) {
       setError(getErrorMessage(error, 'Error loading projects'));
