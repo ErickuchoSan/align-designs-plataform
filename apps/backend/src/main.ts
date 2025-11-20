@@ -34,8 +34,11 @@ async function bootstrap() {
   app.use(compression());
 
   // Enable Helmet security headers
+  const isProduction = process.env.NODE_ENV === 'production';
+
   app.use(
     helmet({
+      // Content Security Policy - Prevents XSS attacks
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
@@ -48,6 +51,34 @@ async function bootstrap() {
           mediaSrc: ["'self'"],
           frameSrc: ["'none'"],
         },
+      },
+      // HSTS - Force HTTPS in production
+      strictTransportSecurity: isProduction
+        ? {
+            maxAge: 31536000, // 1 year in seconds
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false, // Disable in development (http://localhost)
+      // Referrer Policy - Control referrer information leakage
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
+      },
+      // X-Content-Type-Options - Prevent MIME sniffing
+      noSniff: true,
+      // X-Frame-Options - Prevent clickjacking (already default in helmet)
+      frameguard: {
+        action: 'deny',
+      },
+      // X-DNS-Prefetch-Control - Control DNS prefetching
+      dnsPrefetchControl: {
+        allow: false,
+      },
+      // X-Download-Options - Prevent IE from executing downloads
+      ieNoOpen: true,
+      // X-Permitted-Cross-Domain-Policies - Restrict Adobe Flash and PDF
+      permittedCrossDomainPolicies: {
+        permittedPolicies: 'none',
       },
       crossOriginEmbedderPolicy: false, // Allow file downloads
       crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow CORS requests
