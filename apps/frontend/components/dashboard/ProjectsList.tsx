@@ -188,6 +188,7 @@ export default function ProjectsList({
         handleEditProject={projectsHook.handleEditProject}
         editing={projectsHook.editing}
         confirmEdit={projectsHook.confirmEdit}
+        canChangeClient={projectsHook.canChangeClient}
         showDeleteConfirm={projectsHook.showDeleteConfirm}
         setShowDeleteConfirm={projectsHook.setShowDeleteConfirm}
         projectToDelete={projectsHook.projectToDelete}

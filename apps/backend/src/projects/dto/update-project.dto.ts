@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 
@@ -19,4 +19,8 @@ export class UpdateProjectDto {
   @Transform(({ value }) => value?.trim())
   @Sanitize()
   description?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Invalid client ID format' })
+  clientId?: string;
 }

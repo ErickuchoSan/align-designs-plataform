@@ -268,6 +268,36 @@ export class ProjectsService {
       );
     }
 
+    // If clientId is being changed, verify the current client hasn't uploaded files
+    if (updateProjectDto.clientId && updateProjectDto.clientId !== project.clientId) {
+      // Verify the new client exists and is active
+      const newClient = await this.prisma.user.findFirst({
+        where: {
+          id: updateProjectDto.clientId,
+          deletedAt: null,
+        },
+      });
+
+      if (!newClient || newClient.role !== Role.CLIENT) {
+        throw new NotFoundException('New client not found');
+      }
+
+      // Check if current client has uploaded any files or comments
+      const clientUploads = await this.prisma.file.count({
+        where: {
+          projectId: id,
+          uploadedBy: project.clientId,
+          deletedAt: null,
+        },
+      });
+
+      if (clientUploads > 0) {
+        throw new ForbiddenException(
+          'Cannot change client: current client has uploaded files or comments to this project',
+        );
+      }
+    }
+
     const updatedProject = await this.prisma.project.update({
       where: { id },
       data: updateProjectDto,

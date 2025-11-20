@@ -50,6 +50,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     clientId: '',
   });
   const [editing, setEditing] = useState(false);
+  const [canChangeClient, setCanChangeClient] = useState(true);
 
   // Delete modal state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -118,13 +119,31 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     setShowEditConfirm(true);
   };
 
-  const confirmEdit = () => {
+  const confirmEdit = async () => {
     if (editingProject) {
       setEditFormData({
         name: editingProject.name,
         description: editingProject.description || '',
         clientId: editingProject.clientId || '',
       });
+
+      // Check if client has uploaded any files
+      try {
+        const { data } = await api.get(`/files/project/${editingProject.id}`);
+        const files = data.data || [];
+
+        // Check if current client has uploaded any files or comments
+        const clientHasUploads = files.some(
+          (file: any) => file.uploadedBy === editingProject.clientId
+        );
+
+        setCanChangeClient(!clientHasUploads);
+      } catch (err) {
+        logger.error('Error checking client uploads:', err);
+        // Default to allowing change if check fails
+        setCanChangeClient(true);
+      }
+
       setShowEditConfirm(false);
       setShowEditModal(true);
     }
@@ -136,9 +155,8 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     setEditing(true);
     setError('');
     try {
-      // Only send name and description for update (not clientId)
-      const { clientId, ...updateData } = editFormData;
-      await api.patch(`/projects/${editingProject.id}`, updateData);
+      // Send all form data including clientId
+      await api.patch(`/projects/${editingProject.id}`, editFormData);
       setSuccess('Project updated successfully');
       setShowEditModal(false);
       setEditingProject(null);
@@ -222,6 +240,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     handleEditProject,
     openEditConfirm,
     confirmEdit,
+    canChangeClient,
     // Delete modal
     showDeleteConfirm,
     setShowDeleteConfirm,
