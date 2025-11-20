@@ -49,29 +49,29 @@ export default function PhoneInput({ value, onChange, className = '', required =
   const handlePhoneChange = (newPhone: string) => {
     // Solo permitir números
     const cleanedPhone = newPhone.replace(/\D/g, '');
-    
+
     // Limitar a 10 dígitos
     const limitedPhone = cleanedPhone.slice(0, 10);
-    
+
     setPhoneNumber(limitedPhone);
-    
+
     // Validar
     if (limitedPhone && !validatePhoneNumber(limitedPhone)) {
       setError('Phone number must be exactly 10 digits');
     } else {
       setError('');
     }
-    
-    // Actualizar el valor completo
-    const fullValue = limitedPhone ? `${countryCode} ${limitedPhone}` : '';
+
+    // Actualizar el valor completo (sin espacios para el backend)
+    const fullValue = limitedPhone ? `${countryCode}${limitedPhone}` : '';
     onChange(fullValue);
   };
 
   const handleCountryCodeChange = (newCode: string) => {
     setCountryCode(newCode);
-    
-    // Actualizar el valor completo
-    const fullValue = phoneNumber ? `${newCode} ${phoneNumber}` : '';
+
+    // Actualizar el valor completo (sin espacios para el backend)
+    const fullValue = phoneNumber ? `${newCode}${phoneNumber}` : '';
     onChange(fullValue);
   };
 
