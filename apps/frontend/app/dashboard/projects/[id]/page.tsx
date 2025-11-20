@@ -8,6 +8,8 @@ import DashboardHeader from '@/app/components/DashboardHeader';
 import Pagination from '@/app/components/Pagination';
 import { formatDate } from '@/lib/utils/date.utils';
 import { getFileExtension } from '@/lib/utils/file.utils';
+import { api } from '@/lib/api';
+import { getErrorMessage } from '@/lib/errors';
 
 // Hooks
 import { useProjectFiles } from './hooks/useProjectFiles';
@@ -108,7 +110,14 @@ export default function ProjectDetailsPage() {
     setAvailableTypes(types);
   }, [files]);
 
-  // Apply filters
+  // Local pagination state for filtered results
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
+
+  // Check if filters are active
+  const hasActiveFilters = nameFilter || typeFilter !== 'all';
+
+  // Apply filters and local pagination
   useEffect(() => {
     if (!Array.isArray(files)) {
       setFilteredFiles([]);
@@ -136,6 +145,11 @@ export default function ProjectDetailsPage() {
 
     setFilteredFiles(filtered);
   }, [files, nameFilter, typeFilter, setFilteredFiles]);
+
+  // Reset local pagination when filters change
+  useEffect(() => {
+    setLocalCurrentPage(1);
+  }, [nameFilter, typeFilter]);
 
   // File operation handlers
   const handleUpload = useCallback(
@@ -202,6 +216,39 @@ export default function ProjectDetailsPage() {
     },
     [isAdmin, user]
   );
+
+  // Calculate pagination values based on whether filters are active
+  const paginationCurrentPage = hasActiveFilters ? localCurrentPage : currentPage;
+  const paginationItemsPerPage = hasActiveFilters ? localItemsPerPage : itemsPerPage;
+  const paginationTotalItems = hasActiveFilters ? filteredFiles.length : totalItems;
+  const paginationTotalPages = hasActiveFilters
+    ? Math.ceil(filteredFiles.length / localItemsPerPage)
+    : totalPages;
+
+  // Apply local pagination to filtered files if filters are active
+  const displayedFiles = hasActiveFilters
+    ? filteredFiles.slice(
+        (localCurrentPage - 1) * localItemsPerPage,
+        localCurrentPage * localItemsPerPage
+      )
+    : filteredFiles;
+
+  const handlePageChange = (page: number) => {
+    if (hasActiveFilters) {
+      setLocalCurrentPage(page);
+    } else {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (limit: number) => {
+    if (hasActiveFilters) {
+      setLocalItemsPerPage(limit);
+      setLocalCurrentPage(1);
+    } else {
+      setItemsPerPage(limit);
+    }
+  };
 
   if (authLoading || loading) {
     return <PageLoader text="Loading project..." />;
@@ -326,7 +373,7 @@ export default function ProjectDetailsPage() {
 
           {/* Files Table */}
           <FileList
-            files={filteredFiles}
+            files={displayedFiles}
             onDownload={handleDownload}
             onEdit={openEditModal}
             onDelete={openDeleteConfirm}
@@ -334,14 +381,14 @@ export default function ProjectDetailsPage() {
           />
 
           {/* Pagination */}
-          {totalPages > 0 && (
+          {paginationTotalPages > 0 && (
             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onItemsPerPageChange={setItemsPerPage}
+              currentPage={paginationCurrentPage}
+              totalPages={paginationTotalPages}
+              totalItems={paginationTotalItems}
+              itemsPerPage={paginationItemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </main>

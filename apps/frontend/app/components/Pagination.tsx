@@ -89,10 +89,10 @@ export default function Pagination({
           </span>
         </div>
 
-        {/* Page navigation - only show if more than 1 page */}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            {/* Previous button */}
+        {/* Page navigation - always show page numbers, hide arrows if only 1 page */}
+        <div className="flex items-center gap-2">
+          {/* Previous button - only show if more than 1 page */}
+          {totalPages > 1 && (
             <button
               onClick={handlePrevious}
               disabled={currentPage === 1}
@@ -107,33 +107,35 @@ export default function Pagination({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
+          )}
 
-            {/* Page numbers */}
-            {pageNumbers.map((page, index) => {
-              if (page === '...') {
-                return (
-                  <span key={`ellipsis-${index}`} className="px-3 py-2 text-stone-500 font-bold text-lg">
-                    ...
-                  </span>
-                );
-              }
-
+          {/* Page numbers - always show */}
+          {pageNumbers.map((page, index) => {
+            if (page === '...') {
               return (
-                <button
-                  key={page}
-                  onClick={() => handlePageClick(page)}
-                  className={`min-w-[44px] px-4 py-2.5 rounded-lg border-2 text-sm font-bold transition-all transform ${
-                    currentPage === page
-                      ? 'bg-gradient-to-r from-gold-500 to-gold-600 border-gold-600 text-navy-900 shadow-lg scale-105'
-                      : 'border-navy-300 bg-white text-navy-700 hover:bg-navy-50 hover:border-navy-500 hover:scale-105 shadow-sm hover:shadow-md'
-                  }`}
-                >
-                  {page}
-                </button>
+                <span key={`ellipsis-${index}`} className="px-3 py-2 text-stone-500 font-bold text-lg">
+                  ...
+                </span>
               );
-            })}
+            }
 
-            {/* Next button */}
+            return (
+              <button
+                key={page}
+                onClick={() => handlePageClick(page)}
+                className={`min-w-[44px] px-4 py-2.5 rounded-lg border-2 text-sm font-bold transition-all transform ${
+                  currentPage === page
+                    ? 'bg-gradient-to-r from-gold-500 to-gold-600 border-gold-600 text-navy-900 shadow-lg scale-105'
+                    : 'border-navy-300 bg-white text-navy-700 hover:bg-navy-50 hover:border-navy-500 hover:scale-105 shadow-sm hover:shadow-md'
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+
+          {/* Next button - only show if more than 1 page */}
+          {totalPages > 1 && (
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
@@ -148,8 +150,8 @@ export default function Pagination({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
