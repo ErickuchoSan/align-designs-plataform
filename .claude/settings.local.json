@@ -42,7 +42,12 @@
       "Bash(scriptsrestart-dev.bat)",
       "Bash(timeout /t 5 /nobreak)",
       "Bash(if exist \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\frontend\\.next\\dev\" rmdir /s /q \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\frontend\\.next\\dev\")",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "Bash(ping:*)",
+      "Bash(if exist nul del /f nul)",
+      "Bash(git rm:*)",
+      "Bash(NUL)",
+      "Bash(.gitignore)"
     ],
     "deny": [],
     "ask": []

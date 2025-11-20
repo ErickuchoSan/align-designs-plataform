@@ -9,7 +9,6 @@ import Pagination from '@/app/components/Pagination';
 import { formatDate } from '@/lib/utils/date.utils';
 import { getFileExtension } from '@/lib/utils/file.utils';
 import { api } from '@/lib/api';
-import { getErrorMessage } from '@/lib/errors';
 
 // Hooks
 import { useProjectFiles } from './hooks/useProjectFiles';

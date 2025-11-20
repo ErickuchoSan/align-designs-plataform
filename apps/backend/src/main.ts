@@ -9,8 +9,12 @@ import express from 'express';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { validateEnvironmentVariables } from './common/config/env-validator';
 
 async function bootstrap() {
+  // Validate environment variables before starting the application
+  validateEnvironmentVariables();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new Logger('Bootstrap');
 

@@ -27,7 +27,13 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       const message = `${method} ${originalUrl} ${statusCode} ${responseTime}ms - ${userAgent} - ${ip}`;
 
       // Log with appropriate level
-      this.logger[logLevel](message);
+      if (logLevel === 'error') {
+        this.logger.error(message);
+      } else if (logLevel === 'warn') {
+        this.logger.warn(message);
+      } else {
+        this.logger.log(message);
+      }
 
       // Log additional details for errors
       if (statusCode >= 400) {

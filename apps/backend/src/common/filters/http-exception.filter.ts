@@ -46,12 +46,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
         error = exception.name;
+        originalMessage = message;
       } else if (typeof exceptionResponse === 'object') {
         const resp = exceptionResponse as any;
         message = resp.message || message;
         error = resp.error || exception.name;
+        originalMessage = Array.isArray(message) ? message.join(', ') : message;
       }
-      originalMessage = message;
     }
     // Handle other errors (unexpected errors)
     else if (exception instanceof Error) {

@@ -21,10 +21,6 @@ export function Sanitize() {
       // Additional security options
       allowProtocolRelative: false,
       enforceHtmlBoundary: true,
-      // Remove all scripts and dangerous content
-      transformTags: {
-        '*': () => '', // Transform all tags to empty string
-      },
     });
 
     return sanitized.trim();
