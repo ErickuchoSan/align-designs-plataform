@@ -34,7 +34,10 @@ export const LOADING_DELAY = {
 // Pagination
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 10,
-  PAGE_SIZE_OPTIONS: [10, 25, 50, 100],
+  PAGE_SIZE_OPTIONS: [10, 20, 50, 100, 500, 1000],
+  MIN_PAGE: 1,
+  MAX_VISIBLE_PAGES: 7, // Maximum page numbers to show in pagination
+  ELLIPSIS_THRESHOLD: 7, // Show ellipsis when total pages exceed this
 } as const;
 
 // File Upload Configuration
