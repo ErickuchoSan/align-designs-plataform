@@ -154,12 +154,10 @@ api.interceptors.response.use(
         config.retryCount += 1;
         const delay = getRetryDelay(config.retryCount - 1);
 
-        // Log retry attempts only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            `Retrying request (${config.retryCount}/${MAX_RETRIES}) after ${delay}ms: ${config.url}`
-          );
-        }
+        // Log retry attempts
+        logger.debug(
+          `Retrying request (${config.retryCount}/${MAX_RETRIES}) after ${delay}ms: ${config.url}`
+        );
 
         // Wait before retrying
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -168,12 +166,10 @@ api.interceptors.response.use(
         return api(config);
       }
 
-      // Log max retries only in development
-      if (process.env.NODE_ENV === 'development') {
-        console.error(
-          `Max retries (${MAX_RETRIES}) reached for request: ${config.url}`
-        );
-      }
+      // Log max retries reached
+      logger.warn(
+        `Max retries (${MAX_RETRIES}) reached for request: ${config.url}`
+      );
     }
 
     return Promise.reject(error);

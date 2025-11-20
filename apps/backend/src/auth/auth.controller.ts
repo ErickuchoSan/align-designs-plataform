@@ -22,13 +22,19 @@ import { CheckEmailDto } from './dto/check-email.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { IpAddress } from './decorators/ip-address.decorator';
+import { UserAgent } from './decorators/user-agent.decorator';
 import type { UserPayload } from './interfaces/user.interface';
 import { RATE_LIMIT_AUTH } from '../common/constants/timeouts.constants';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private auditService: AuditService,
+  ) {}
 
   @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
@@ -102,11 +108,28 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
   ) {
     const result = await this.authService.loginAdmin(
       loginDto.email,
       loginDto.password,
     );
+
+    // Audit log for successful login
+    await this.auditService.log({
+      userId: result.user.id,
+      action: AuditAction.LOGIN,
+      resourceType: 'auth',
+      resourceId: result.user.id,
+      ipAddress,
+      userAgent,
+      details: {
+        email: loginDto.email,
+        role: result.user.role,
+        method: 'password',
+      },
+    });
 
     // Set JWT as httpOnly cookie for enhanced security
     res.cookie('access_token', result.access_token, {
@@ -123,8 +146,25 @@ export class AuthController {
   @Post('otp/request')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.OTP_REQUEST })
-  async requestOtp(@Body() requestOtpDto: RequestOtpDto) {
-    return this.authService.requestOtpForClient(requestOtpDto.email);
+  async requestOtp(
+    @Body() requestOtpDto: RequestOtpDto,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.authService.requestOtpForClient(requestOtpDto.email);
+
+    // Audit log for OTP request (userId not available yet)
+    await this.auditService.log({
+      action: AuditAction.OTP_REQUEST,
+      resourceType: 'auth',
+      ipAddress,
+      userAgent,
+      details: {
+        email: requestOtpDto.email,
+      },
+    });
+
+    return result;
   }
 
   @Post('otp/verify')
@@ -133,11 +173,28 @@ export class AuthController {
   async verifyOtp(
     @Body() verifyOtpDto: VerifyOtpDto,
     @Res({ passthrough: true }) res: Response,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
   ) {
     const result = await this.authService.verifyOtpForClient(
       verifyOtpDto.email,
       verifyOtpDto.token,
     );
+
+    // Audit log for successful OTP verification
+    await this.auditService.log({
+      userId: result.user.id,
+      action: AuditAction.OTP_VERIFY,
+      resourceType: 'auth',
+      resourceId: result.user.id,
+      ipAddress,
+      userAgent,
+      details: {
+        email: verifyOtpDto.email,
+        role: result.user.role,
+        method: 'otp',
+      },
+    });
 
     // Set JWT as httpOnly cookie for enhanced security
     res.cookie('access_token', result.access_token, {
@@ -171,13 +228,27 @@ export class AuthController {
   async changePassword(
     @CurrentUser() user: UserPayload,
     @Body() changePasswordDto: ChangePasswordDto,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
   ) {
-    return this.authService.changePassword(
+    const result = await this.authService.changePassword(
       user.userId,
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
       changePasswordDto.confirmPassword,
     );
+
+    // Audit log for password change
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.PASSWORD_CHANGE,
+      resourceType: 'user',
+      resourceId: user.userId,
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   }
 
   @Post('forgot-password')
@@ -190,18 +261,51 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.RESET_PASSWORD })
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.authService.resetPassword(
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.authService.resetPassword(
       resetPasswordDto.email,
       resetPasswordDto.otp,
       resetPasswordDto.newPassword,
       resetPasswordDto.confirmPassword,
     );
+
+    // Audit log for password reset (userId not available in result)
+    await this.auditService.log({
+      action: AuditAction.PASSWORD_RESET,
+      resourceType: 'user',
+      ipAddress,
+      userAgent,
+      details: {
+        email: resetPasswordDto.email,
+      },
+    });
+
+    return result;
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Res({ passthrough: true }) res: Response) {
+  @UseGuards(JwtAuthGuard)
+  async logout(
+    @CurrentUser() user: UserPayload,
+    @Res({ passthrough: true }) res: Response,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    // Audit log for logout
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.LOGOUT,
+      resourceType: 'auth',
+      resourceId: user.userId,
+      ipAddress,
+      userAgent,
+    });
+
     // Clear the access_token cookie
     res.clearCookie('access_token', {
       httpOnly: true,

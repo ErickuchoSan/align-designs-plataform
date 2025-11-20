@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { OtpModule } from '../otp/otp.module';
 import { EmailModule } from '../email/email.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { EmailModule } from '../email/email.module';
     }),
     OtpModule,
     EmailModule,
+    AuditModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
