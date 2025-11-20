@@ -24,7 +24,7 @@ import { EmailModule } from '../email/email.module';
         return {
           secret,
           signOptions: {
-            expiresIn: configService.get<string>('JWT_EXPIRATION') || '7d',
+            expiresIn: configService.get('JWT_EXPIRATION') || '7d',
           },
         };
       },
