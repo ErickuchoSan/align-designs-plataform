@@ -18,7 +18,10 @@ const ENV_CONFIG: EnvConfig = {
   NEXT_PUBLIC_API_URL: {
     required: true,
     description: 'Backend API URL',
-    defaultValue: 'http://localhost:4000',
+    // Only use default in development, not in production
+    ...(process.env.NODE_ENV === 'development' && {
+      defaultValue: 'http://localhost:4000',
+    }),
   },
 };
 
@@ -87,9 +90,10 @@ export function getEnv(key: keyof typeof ENV_CONFIG): string {
 
 /**
  * Environment variables (validated and typed)
+ * Uses getEnv to ensure proper validation and no unsafe fallbacks in production
  */
 export const env = {
-  API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  API_URL: getEnv('NEXT_PUBLIC_API_URL'),
 } as const;
 
 // Run validation on module load (only in browser or during build)

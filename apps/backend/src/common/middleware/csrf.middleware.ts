@@ -28,7 +28,8 @@ export class CsrfMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     // Skip CSRF validation for public endpoints
-    if (this.publicPaths.some((path) => req.path.startsWith(path))) {
+    // Use exact match or proper prefix check to prevent bypass
+    if (this.isPublicPath(req.path)) {
       return next();
     }
 
@@ -58,6 +59,34 @@ export class CsrfMiddleware implements NestMiddleware {
     }
 
     next();
+  }
+
+  /**
+   * Check if a path is public (doesn't require CSRF protection)
+   * Uses exact match to prevent bypass attacks
+   */
+  private isPublicPath(requestPath: string): boolean {
+    // Remove version prefix and query params for comparison
+    const normalizedPath = requestPath.split('?')[0];
+
+    return this.publicPaths.some((publicPath) => {
+      // Exact match
+      if (normalizedPath === publicPath) {
+        return true;
+      }
+
+      // For paths that should match with sub-paths (like /auth/otp/*)
+      // Only allow if followed by / or end of string
+      if (publicPath.endsWith('/')) {
+        return normalizedPath.startsWith(publicPath);
+      }
+
+      // Check if it's a valid sub-path (must be followed by /)
+      return (
+        normalizedPath.startsWith(publicPath + '/') ||
+        normalizedPath === publicPath
+      );
+    });
   }
 
   private generateAndSetToken(_req: Request, res: Response): void {
