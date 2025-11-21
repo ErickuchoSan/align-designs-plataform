@@ -49,6 +49,19 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
+      // Check if account is locked
+      if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
+        const lockoutMinutes = Math.ceil(
+          (user.accountLockedUntil.getTime() - Date.now()) / (1000 * 60),
+        );
+        this.logger.warn(
+          `Login attempt for locked account: ${email}. Locked for ${lockoutMinutes} more minutes`,
+        );
+        throw new UnauthorizedException(
+          `Account is locked due to multiple failed login attempts. Please try again in ${lockoutMinutes} minute${lockoutMinutes > 1 ? 's' : ''}.`,
+        );
+      }
+
       if (!user.passwordHash) {
         this.logger.warn(`Login attempt for user without password: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
@@ -57,13 +70,66 @@ export class AuthService {
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
       if (!isPasswordValid) {
-        this.logger.warn(`Failed login attempt for user: ${email}`);
-        throw new UnauthorizedException('Invalid email or password');
+        // Increment failed login attempts
+        const maxAttempts = parseInt(
+          this.configService.get<string>('MAX_LOGIN_ATTEMPTS', '5'),
+          10,
+        );
+        const lockoutDuration = parseInt(
+          this.configService.get<string>('ACCOUNT_LOCKOUT_DURATION', '15'),
+          10,
+        );
+        const newFailedAttempts = user.failedLoginAttempts + 1;
+
+        // Check if we should lock the account
+        if (newFailedAttempts >= maxAttempts) {
+          const lockUntil = new Date(Date.now() + lockoutDuration * 60 * 1000);
+          await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: newFailedAttempts,
+              lastFailedLoginAt: new Date(),
+              accountLockedUntil: lockUntil,
+            },
+          });
+          this.logger.warn(
+            `Account locked for user ${email} after ${newFailedAttempts} failed attempts`,
+          );
+          throw new UnauthorizedException(
+            `Account locked due to multiple failed login attempts. Please try again in ${lockoutDuration} minutes.`,
+          );
+        } else {
+          // Just increment the counter
+          await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: newFailedAttempts,
+              lastFailedLoginAt: new Date(),
+            },
+          });
+          const remainingAttempts = maxAttempts - newFailedAttempts;
+          this.logger.warn(
+            `Failed login attempt for user: ${email}. ${remainingAttempts} attempts remaining`,
+          );
+          throw new UnauthorizedException('Invalid email or password');
+        }
       }
 
       if (!user.isActive) {
         this.logger.warn(`Login attempt for inactive user: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
+      }
+
+      // Reset failed login attempts on successful login
+      if (user.failedLoginAttempts > 0 || user.accountLockedUntil) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            failedLoginAttempts: 0,
+            lastFailedLoginAt: null,
+            accountLockedUntil: null,
+          },
+        });
       }
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
@@ -207,8 +273,19 @@ export class AuthService {
       );
     }
 
+    // Check password history to prevent reuse
+    await this.validatePasswordHistory(userId, newPassword);
+
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+
+    // Save current password to history before updating
+    await this.prisma.passwordHistory.create({
+      data: {
+        userId: user.id,
+        passwordHash: user.passwordHash,
+      },
+    });
 
     // Update password
     await this.prisma.user.update({
@@ -294,8 +371,21 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Check password history to prevent reuse
+    await this.validatePasswordHistory(user.id, newPassword);
+
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+
+    // Save current password to history if user has one
+    if (user.passwordHash) {
+      await this.prisma.passwordHistory.create({
+        data: {
+          userId: user.id,
+          passwordHash: user.passwordHash,
+        },
+      });
+    }
 
     // Update password
     await this.prisma.user.update({
@@ -437,6 +527,41 @@ export class AuthService {
       }
     } catch (error) {
       this.logger.error('Error revoking token:', error);
+    }
+  }
+
+  /**
+   * Validate that a new password hasn't been used recently
+   * Prevents password reuse based on PASSWORD_HISTORY_COUNT
+   */
+  private async validatePasswordHistory(
+    userId: string,
+    newPassword: string,
+  ): Promise<void> {
+    const historyCount = parseInt(
+      this.configService.get<string>('PASSWORD_HISTORY_COUNT', '5'),
+      10,
+    );
+
+    // Get recent password history
+    const passwordHistory = await this.prisma.passwordHistory.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: historyCount,
+    });
+
+    // Check if new password matches any in history
+    for (const history of passwordHistory) {
+      const matches = await bcrypt.compare(newPassword, history.passwordHash);
+      if (matches) {
+        throw new BadRequestException(
+          `Password has been used recently. Please choose a different password. You cannot reuse your last ${historyCount} passwords.`,
+        );
+      }
     }
   }
 

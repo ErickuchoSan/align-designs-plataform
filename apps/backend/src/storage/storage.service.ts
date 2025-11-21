@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
 import { STORAGE_PRESIGNED_URL_EXPIRY_SECONDS } from '../common/constants/timeouts.constants';
 import { FileMagicNumberValidator } from '../common/utils/file-magic-numbers.utils';
 
@@ -173,8 +174,16 @@ export class StorageService implements OnModuleInit {
 
   /**
    * Validate project ID to prevent path traversal attacks
+   * Enhanced validation using path normalization
    */
   private validateProjectId(projectId: string): void {
+    // UUID format validation (strict check first)
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(projectId)) {
+      throw new BadRequestException('Invalid project ID format');
+    }
+
     // Check for path traversal patterns
     const dangerousPatterns = [
       '..', // Parent directory
@@ -183,8 +192,14 @@ export class StorageService implements OnModuleInit {
       '\\', // Windows path separator
       '\0', // Null byte
       '%2e%2e', // URL encoded ..
+      '%2e%2E', // Mixed case URL encoded ..
+      '%2E%2e', // Mixed case URL encoded ..
+      '%2E%2E', // Mixed case URL encoded ..
       '%2f', // URL encoded /
+      '%2F', // URL encoded / (uppercase)
       '%5c', // URL encoded \
+      '%5C', // URL encoded \ (uppercase)
+      '\u0000', // Unicode null byte
     ];
 
     const lowerProjectId = projectId.toLowerCase();
@@ -198,10 +213,22 @@ export class StorageService implements OnModuleInit {
       }
     }
 
-    // UUID format validation (loose check for format)
-    const uuidPattern =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidPattern.test(projectId)) {
+    // Additional validation: normalize path and ensure it doesn't escape
+    const normalizedPath = path.normalize(`/${projectId}`);
+    if (normalizedPath !== `/${projectId}`) {
+      this.logger.warn(
+        `Path normalization mismatch: ${projectId} -> ${normalizedPath}`,
+      );
+      throw new BadRequestException('Invalid project ID format');
+    }
+
+    // Ensure path doesn't contain path separators after normalization
+    if (
+      normalizedPath.includes('..') ||
+      normalizedPath.includes(path.sep) ||
+      normalizedPath.split('/').length > 2
+    ) {
+      this.logger.warn(`Path traversal in normalized path: ${normalizedPath}`);
       throw new BadRequestException('Invalid project ID format');
     }
   }

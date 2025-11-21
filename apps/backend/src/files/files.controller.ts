@@ -37,7 +37,10 @@ import { UploadFileDto } from './dto/upload-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { FileValidationPipe } from './pipes/file-validation.pipe';
-import { RATE_LIMIT_FILES } from '../common/constants/timeouts.constants';
+import {
+  RATE_LIMIT_FILES,
+  MAX_FILE_SIZE_BYTES,
+} from '../common/constants/timeouts.constants';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
 
@@ -63,7 +66,13 @@ export class FilesController {
   @ApiResponse({ status: 404, description: 'Project not found' })
   @Throttle({ default: RATE_LIMIT_FILES.UPLOAD })
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: MAX_FILE_SIZE_BYTES, // Enforce size limit BEFORE upload
+      },
+    }),
+  )
   async uploadFile(
     @Param('projectId') projectId: string,
     @UploadedFile(new FileValidationPipe())
@@ -137,7 +146,13 @@ export class FilesController {
   @ApiResponse({ status: 404, description: 'File record not found' })
   @Throttle({ default: RATE_LIMIT_FILES.UPDATE })
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: MAX_FILE_SIZE_BYTES, // Enforce size limit BEFORE upload
+      },
+    }),
+  )
   async updateFile(
     @Param('id') id: string,
     @UploadedFile(new FileValidationPipe())

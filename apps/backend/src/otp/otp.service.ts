@@ -127,8 +127,10 @@ export class OtpService {
 
   /**
    * Verify if an OTP is valid
+   * Uses constant-time response to prevent timing attacks
    */
   async verifyOtp(userId: string, token: string): Promise<boolean> {
+    const startTime = Date.now();
     const tokenHash = this.hashToken(token);
 
     const otpRecord = await this.prisma.otpToken.findFirst({
@@ -142,24 +144,36 @@ export class OtpService {
       },
     });
 
-    if (!otpRecord) {
-      return false;
+    // Perform the update operation regardless of whether the OTP exists
+    // to maintain consistent timing
+    let isValid = false;
+    if (otpRecord) {
+      // Mark as used
+      await this.prisma.otpToken.update({
+        where: { id: otpRecord.id },
+        data: { used: true },
+      });
+      isValid = true;
     }
 
-    // Mark as used
-    await this.prisma.otpToken.update({
-      where: { id: otpRecord.id },
-      data: { used: true },
-    });
+    // Add constant-time delay to prevent timing attacks
+    // This ensures all responses take approximately the same time
+    const elapsedTime = Date.now() - startTime;
+    const minimumDelay = 100; // 100ms minimum response time
+    const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
 
-    return true;
+    if (delayNeeded > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayNeeded));
+    }
+
+    return isValid;
   }
 
   /**
    * Cleanup expired and used OTP tokens
-   * Runs daily at 3 AM
+   * Runs every 6 hours for better security and database hygiene
    */
-  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  @Cron('0 */6 * * *') // Every 6 hours (at 00:00, 06:00, 12:00, 18:00)
   async cleanupExpiredTokens() {
     try {
       const sevenDaysAgo = new Date(Date.now() - OTP_CLEANUP_RETENTION_MS);

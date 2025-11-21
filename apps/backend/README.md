@@ -57,6 +57,65 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Security Considerations
+
+### Rate Limiting in Clustered Environments
+
+**IMPORTANT**: The current implementation uses in-memory rate limiting via `@nestjs/throttler`. This works correctly for **single-instance deployments** but has limitations in **multi-instance/clustered environments**.
+
+#### Limitation
+
+In a clustered environment (multiple Node.js processes or containers), each instance maintains its own rate limit counter in memory. This means:
+
+- Rate limits are **per instance**, not global across all instances
+- An attacker could potentially bypass rate limits by distributing requests across multiple instances
+- Example: With a limit of 10 requests/minute and 3 instances, an attacker could make 30 requests/minute total
+
+#### Solutions for Production Clusters
+
+For production deployments with multiple instances, implement one of these solutions:
+
+1. **Redis-based Rate Limiting** (Recommended)
+   ```bash
+   npm install @nestjs/throttler-storage-redis ioredis
+   ```
+
+   Update `app.module.ts`:
+   ```typescript
+   import { ThrottlerStorageRedisService } from '@nestjs/throttler-storage-redis';
+   import Redis from 'ioredis';
+
+   @Module({
+     imports: [
+       ThrottlerModule.forRoot({
+         throttlers: [{ ttl: 60000, limit: 10 }],
+         storage: new ThrottlerStorageRedisService(new Redis({
+           host: 'localhost',
+           port: 6379,
+         })),
+       }),
+     ],
+   })
+   ```
+
+2. **Nginx/HAProxy Rate Limiting**
+   - Configure rate limiting at the reverse proxy level
+   - Provides protection before requests reach your application
+   - See: [Nginx rate limiting](https://www.nginx.com/blog/rate-limiting-nginx/)
+
+3. **API Gateway**
+   - Use cloud-based API gateways (AWS API Gateway, Azure APIM, etc.)
+   - Provides centralized rate limiting across all instances
+
+#### Current Configuration
+
+The application currently uses in-memory storage and is suitable for:
+- Development environments
+- Single-instance production deployments
+- Small-scale applications
+
+For high-availability production deployments with load balancing, **you must implement Redis-based rate limiting or use a reverse proxy/API gateway**.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

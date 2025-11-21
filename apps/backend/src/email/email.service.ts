@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   InternalServerErrorException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
@@ -17,7 +18,7 @@ import {
 } from './templates/base-email.template';
 
 @Injectable()
-export class EmailService {
+export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
   private transporter: Transporter;
 
@@ -57,6 +58,28 @@ export class EmailService {
     this.logger.log(
       `Email transport configured - Host: ${this.configService.get<string>('EMAIL_HOST')}, Port: ${emailPort}, Secure: ${isSecure}, RequireTLS: ${!isSecure}`,
     );
+  }
+
+  /**
+   * Verify SMTP connection on module initialization
+   * This ensures email service is properly configured before accepting requests
+   */
+  async onModuleInit() {
+    try {
+      this.logger.log('Verifying SMTP connection...');
+      await this.transporter.verify();
+      this.logger.log('✓ SMTP connection verified successfully');
+    } catch (error) {
+      this.logger.error(
+        '✗ SMTP connection verification failed. Email functionality may not work properly.',
+        error,
+      );
+      this.logger.warn(
+        'Please check your EMAIL_* environment variables and SMTP server availability.',
+      );
+      // Don't throw error to prevent app from crashing on startup
+      // Email functionality will fail at runtime instead
+    }
   }
 
   /**

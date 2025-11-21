@@ -27,15 +27,23 @@ export class CleanupDeletedFilesTask {
    */
   @Cron('0 3 1 * *')
   async handleCleanup() {
+    await this.performCleanup(this.RETENTION_DAYS);
+  }
+
+  /**
+   * Perform the actual cleanup logic
+   * Separated to allow custom retention days without type assertions
+   */
+  private async performCleanup(retentionDays: number) {
     const retentionDate = new Date();
-    retentionDate.setDate(retentionDate.getDate() - this.RETENTION_DAYS);
+    retentionDate.setDate(retentionDate.getDate() - retentionDays);
 
     this.logger.log(
-      `Starting cleanup of files deleted before ${retentionDate.toISOString()}`,
+      `Starting cleanup of files deleted before ${retentionDate.toISOString()} (${retentionDays} days retention)`,
     );
 
     try {
-      // Find files that were soft-deleted more than 30 days ago using Prisma ORM
+      // Find files that were soft-deleted more than the retention period using Prisma ORM
       const filesToDelete = await this.prisma.file.findMany({
         where: {
           deletedAt: {
@@ -123,18 +131,9 @@ export class CleanupDeletedFilesTask {
    * Can be called with a custom retention period
    */
   async manualCleanup(retentionDays: number = this.RETENTION_DAYS) {
-    const originalRetentionDays = this.RETENTION_DAYS;
-
-    try {
-      // Temporarily override retention days
-      (this as any).RETENTION_DAYS = retentionDays;
-      this.logger.log(
-        `Manual cleanup triggered with ${retentionDays} days retention`,
-      );
-      await this.handleCleanup();
-    } finally {
-      // Restore original retention days
-      (this as any).RETENTION_DAYS = originalRetentionDays;
-    }
+    this.logger.log(
+      `Manual cleanup triggered with ${retentionDays} days retention`,
+    );
+    await this.performCleanup(retentionDays);
   }
 }
