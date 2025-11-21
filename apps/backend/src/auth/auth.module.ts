@@ -25,7 +25,7 @@ import { AuditModule } from '../audit/audit.module';
         return {
           secret,
           signOptions: {
-            expiresIn: configService.get('JWT_EXPIRATION') || '7d',
+            expiresIn: configService.get('JWT_EXPIRATION') ?? '7d',
           },
         };
       },

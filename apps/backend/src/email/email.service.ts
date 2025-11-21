@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import {
+  escapeHtml,
   EMAIL_STYLES,
   EMAIL_CONTENT,
 } from './templates/email-styles.constants';
@@ -57,22 +58,6 @@ export class EmailService {
     this.logger.log(
       `Email transport configured - Host: ${this.configService.get<string>('EMAIL_HOST')}, Port: ${emailPort}, Secure: ${isSecure}, RequireTLS: ${!isSecure}`,
     );
-  }
-
-  /**
-   * Escape HTML special characters to prevent XSS attacks in email templates
-   */
-  private escapeHtml(text: string): string {
-    const htmlEscapeMap: Record<string, string> = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#x27;',
-      '/': '&#x2F;',
-    };
-
-    return text.replace(/[&<>"'\/]/g, (char) => htmlEscapeMap[char]);
   }
 
   /**
@@ -284,11 +269,11 @@ export class EmailService {
           <h1>Password Recovery</h1>
 
           <p class="message">
-            Hello ${this.escapeHtml(userName)},<br>
+            Hello ${escapeHtml(userName)},<br>
             We received a request to reset your password.
           </p>
 
-          <a href="${this.escapeHtml(resetLink)}" class="button">Reset Password</a>
+          <a href="${escapeHtml(resetLink)}" class="button">Reset Password</a>
 
           <p class="message">
             This link will expire in <strong>1 hour</strong>.
@@ -300,7 +285,7 @@ export class EmailService {
 
           <div class="link-text">
             <p>If the button doesn't work, copy and paste this link into your browser:</p>
-            <p>${this.escapeHtml(resetLink)}</p>
+            <p>${escapeHtml(resetLink)}</p>
           </div>
 
           <div class="footer">

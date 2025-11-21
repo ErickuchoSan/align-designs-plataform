@@ -13,6 +13,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -29,6 +36,8 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { RATE_LIMIT_USERS } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
 
+@ApiTags('users')
+@ApiBearerAuth()
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
@@ -38,6 +47,9 @@ export class UsersController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create new client', description: 'Admin-only: Create a new client user' })
+  @ApiResponse({ status: 201, description: 'Client created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input or email already exists' })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
@@ -69,12 +81,18 @@ export class UsersController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all users', description: 'Admin-only: Retrieve paginated list of all users' })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Roles(Role.ADMIN)
+  @Throttle({ default: RATE_LIMIT_USERS.LIST })
   findAll(@Query() paginationDto: PaginationDto) {
     return this.usersService.findAll(paginationDto);
   }
 
   @Get('profile')
+  @ApiOperation({ summary: 'Get current user profile', description: 'Retrieve the profile of the currently authenticated user' })
+  @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET_PROFILE })
   getProfile(@CurrentUser() user: UserPayload) {
     return this.usersService.findOne(user.userId, user.userId, user.role);
   }
@@ -95,6 +113,11 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a specific user by their ID' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.usersService.findOne(id, user.userId, user.role);
   }
@@ -138,6 +161,10 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete user', description: 'Admin-only: Soft delete a user account' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.DELETE })
   @HttpCode(HttpStatus.OK)

@@ -13,12 +13,19 @@ import {
   HttpStatus,
   Body,
   ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiConsumes,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -31,6 +38,8 @@ import { FileValidationPipe } from './pipes/file-validation.pipe';
 import { RATE_LIMIT_FILES } from '../common/constants/timeouts.constants';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
+@ApiTags('files')
+@ApiBearerAuth()
 @Controller('files')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class FilesController {
@@ -40,6 +49,12 @@ export class FilesController {
    * Upload file with optional comment
    */
   @Post(':projectId/upload')
+  @ApiOperation({ summary: 'Upload file to project', description: 'Upload a file with an optional comment to a specific project' })
+  @ApiParam({ name: 'projectId', description: 'Project UUID' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file or missing required fields' })
+  @ApiResponse({ status: 404, description: 'Project not found' })
   @Throttle({ default: RATE_LIMIT_FILES.UPLOAD })
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
@@ -66,6 +81,10 @@ export class FilesController {
    * Create only comment without file
    */
   @Post(':projectId/comment')
+  @ApiOperation({ summary: 'Create comment without file', description: 'Create a comment for a project without uploading a file' })
+  @ApiParam({ name: 'projectId', description: 'Project UUID' })
+  @ApiResponse({ status: 201, description: 'Comment created successfully' })
+  @ApiResponse({ status: 404, description: 'Project not found' })
   @Throttle({ default: RATE_LIMIT_FILES.CREATE_COMMENT })
   @HttpCode(HttpStatus.CREATED)
   async createComment(
@@ -85,6 +104,11 @@ export class FilesController {
    * Update comment and/or add file to an existing comment
    */
   @Patch(':id')
+  @ApiOperation({ summary: 'Update file or comment', description: 'Update an existing file record or add a file to a comment' })
+  @ApiParam({ name: 'id', description: 'File record UUID' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: 'File/comment updated successfully' })
+  @ApiResponse({ status: 404, description: 'File record not found' })
   @Throttle({ default: RATE_LIMIT_FILES.UPDATE })
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
@@ -105,6 +129,10 @@ export class FilesController {
   }
 
   @Get('project/:projectId')
+  @ApiOperation({ summary: 'Get project files', description: 'Retrieve paginated list of files for a specific project' })
+  @ApiParam({ name: 'projectId', description: 'Project UUID' })
+  @ApiResponse({ status: 200, description: 'Files retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Project not found' })
   async findAllByProject(
     @Param('projectId') projectId: string,
     @Query() paginationDto: PaginationDto,
@@ -118,12 +146,20 @@ export class FilesController {
   }
 
   @Get(':id/download')
+  @ApiOperation({ summary: 'Get file download URL', description: 'Generate a presigned URL for downloading a file' })
+  @ApiParam({ name: 'id', description: 'File UUID' })
+  @ApiResponse({ status: 200, description: 'Download URL generated successfully' })
+  @ApiResponse({ status: 404, description: 'File not found' })
   @Throttle({ default: RATE_LIMIT_FILES.DOWNLOAD })
   async getFileUrl(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.filesService.getFileUrl(id, user.userId, user.role);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete file', description: 'Soft delete a file record' })
+  @ApiParam({ name: 'id', description: 'File UUID' })
+  @ApiResponse({ status: 200, description: 'File deleted successfully' })
+  @ApiResponse({ status: 404, description: 'File not found' })
   @Throttle({ default: RATE_LIMIT_FILES.DELETE })
   @HttpCode(HttpStatus.OK)
   async deleteFile(@Param('id') id: string, @CurrentUser() user: UserPayload) {

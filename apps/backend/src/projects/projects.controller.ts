@@ -87,6 +87,7 @@ export class ProjectsController {
   }
 
   @Get()
+  @Throttle({ default: RATE_LIMIT_PROJECTS.LIST })
   @ApiOperation({
     summary: 'Get all projects',
     description:
@@ -117,6 +118,7 @@ export class ProjectsController {
   }
 
   @Get(':id')
+  @Throttle({ default: RATE_LIMIT_PROJECTS.GET })
   @ApiOperation({
     summary: 'Get project by ID',
     description: 'Retrieves a single project by ID',

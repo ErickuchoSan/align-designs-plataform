@@ -45,6 +45,8 @@ export const RATE_LIMIT_PROJECTS = {
   CREATE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
   UPDATE: { limit: 20, ttl: RATE_LIMIT_TTL_MS },
   DELETE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  LIST: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
+  GET: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
 };
 
 // Rate Limit: User operations
@@ -53,6 +55,9 @@ export const RATE_LIMIT_USERS = {
   UPDATE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
   DELETE: { limit: 5, ttl: RATE_LIMIT_TTL_MS },
   TOGGLE_STATUS: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  LIST: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
+  GET_PROFILE: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
+  GET: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
 };
 
 // JWT Configuration
@@ -60,6 +65,12 @@ export const JWT_DEFAULT_EXPIRATION = '7d';
 
 // Session Configuration
 export const SESSION_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+// OTP Cleanup Configuration
+export const OTP_CLEANUP_RETENTION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+// Transaction Configuration
+export const TRANSACTION_TIMEOUT_MS = 30000; // 30 seconds
 
 // Pagination Configuration
 export const DEFAULT_PAGE = 1;

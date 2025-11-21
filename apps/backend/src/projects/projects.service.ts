@@ -12,6 +12,7 @@ import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
 import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
+import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 
 @Injectable()
 export class ProjectsService {
@@ -384,7 +385,7 @@ export class ProjectsService {
         });
       },
       {
-        timeout: 30000, // 30 seconds timeout for projects with many files
+        timeout: TRANSACTION_TIMEOUT_MS, // 30 seconds timeout for projects with many files
       },
     );
 

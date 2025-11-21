@@ -91,7 +91,7 @@ async function bootstrap() {
 
   // Enable CORS with support for multiple origins
   const allowedOriginsStr =
-    process.env.ALLOWED_ORIGINS || 'http://localhost:3000';
+    process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000';
   const allowedOrigins = allowedOriginsStr
     .split(',')
     .map((origin) => origin.trim());

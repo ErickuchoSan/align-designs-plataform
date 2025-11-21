@@ -56,14 +56,14 @@ export class StorageService implements OnModuleInit {
 
   constructor(private configService: ConfigService) {
     // MinIO configuration - all required in production
-    const endpoint = this.configService.get<string>('MINIO_ENDPOINT') || '';
-    const port = this.configService.get<number>('MINIO_PORT') || 0;
+    const endpoint = this.configService.get<string>('MINIO_ENDPOINT') ?? '';
+    const port = this.configService.get<number>('MINIO_PORT') ?? 0;
     const useSSL =
       this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
-    const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY') || '';
-    const secretKey = this.configService.get<string>('MINIO_SECRET_KEY') || '';
+    const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY') ?? '';
+    const secretKey = this.configService.get<string>('MINIO_SECRET_KEY') ?? '';
 
-    this.bucketName = this.configService.get<string>('MINIO_BUCKET') || '';
+    this.bucketName = this.configService.get<string>('MINIO_BUCKET') ?? '';
     this.region = this.configService.get<string>('MINIO_REGION', 'us-east-1');
 
     // Validate required MinIO configuration

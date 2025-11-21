@@ -42,6 +42,7 @@ export interface BaseEmailParams {
 
 /**
  * Escape HTML to prevent XSS
+ * Escapes special HTML characters to their HTML entity equivalents
  */
 export function escapeHtml(text: string): string {
   const map: Record<string, string> = {
@@ -49,9 +50,10 @@ export function escapeHtml(text: string): string {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#039;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
   };
-  return text.replace(/[&<>"']/g, (char) => map[char]);
+  return text.replace(/[&<>"'\/]/g, (char) => map[char]);
 }
 
 /**
@@ -141,7 +143,7 @@ export function getBaseEmailTemplate(params: BaseEmailParams): string {
         ${warningMessage ? `<p class="warning">⚠️ ${warningMessage}</p>` : ''}
 
         <div class="footer">
-          <p>${footerText || 'This is an automated message, please do not reply.'}</p>
+          <p>${footerText ?? 'This is an automated message, please do not reply.'}</p>
           <p>&copy; ${new Date().getFullYear()} Align Designs. All rights reserved.</p>
         </div>
       </div>

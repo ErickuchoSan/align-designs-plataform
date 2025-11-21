@@ -10,6 +10,7 @@ import {
   OTP_MAX_VALUE,
   OTP_RATE_LIMIT_WINDOW_MS,
   MAX_OTP_PER_WINDOW,
+  OTP_CLEANUP_RETENTION_MS,
 } from '../common/constants/timeouts.constants';
 
 @Injectable()
@@ -161,7 +162,7 @@ export class OtpService {
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async cleanupExpiredTokens() {
     try {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(Date.now() - OTP_CLEANUP_RETENTION_MS);
 
       const result = await this.prisma.otpToken.deleteMany({
         where: {

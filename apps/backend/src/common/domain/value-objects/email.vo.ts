@@ -43,7 +43,11 @@ export class Email {
    * Get email domain
    */
   getDomain(): string {
-    return this.value.split('@')[1];
+    const parts = this.value.split('@');
+    if (parts.length !== 2) {
+      throw new Error('Invalid email format');
+    }
+    return parts[1];
   }
 
   /**
