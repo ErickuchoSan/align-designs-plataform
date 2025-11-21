@@ -1,17 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class CleanupDeletedFilesTask {
   private readonly logger = new Logger(CleanupDeletedFilesTask.name);
-  private readonly RETENTION_DAYS = 30;
+  private readonly RETENTION_DAYS: number;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // Load retention days from environment or use default
+    this.RETENTION_DAYS = this.configService.get<number>(
+      'FILE_RETENTION_DAYS',
+      30,
+    );
+  }
 
   /**
    * Runs monthly on the 1st at 3 AM
