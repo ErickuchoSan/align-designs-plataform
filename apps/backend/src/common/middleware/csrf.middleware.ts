@@ -4,6 +4,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
 
@@ -12,6 +13,8 @@ export class CsrfMiddleware implements NestMiddleware {
   private readonly logger = new Logger('CSRF');
   private readonly csrfTokenCookie = 'csrf-token';
   private readonly csrfHeaderName = 'x-csrf-token';
+
+  constructor(private readonly configService: ConfigService) {}
 
   // Public endpoints that don't require CSRF protection
   private readonly publicPaths = [
@@ -93,10 +96,16 @@ export class CsrfMiddleware implements NestMiddleware {
     const secret = crypto.randomBytes(32).toString('hex');
     const token = this.generateToken(secret);
 
+    // Get sameSite setting from config (default: 'strict')
+    const sameSite = this.configService.get<string>('CSRF_SAME_SITE', 'strict');
+    const validSameSite = ['strict', 'lax', 'none'].includes(sameSite)
+      ? (sameSite as 'strict' | 'lax' | 'none')
+      : 'strict';
+
     res.cookie(this.csrfTokenCookie, secret, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: validSameSite,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
