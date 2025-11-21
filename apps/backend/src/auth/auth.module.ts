@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtBlacklistService } from './jwt-blacklist.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OtpModule } from '../otp/otp.module';
 import { EmailModule } from '../email/email.module';
 import { AuditModule } from '../audit/audit.module';
@@ -35,8 +36,8 @@ import { AuditModule } from '../audit/audit.module';
     EmailModule,
     AuditModule,
   ],
-  providers: [AuthService, JwtStrategy, JwtBlacklistService],
+  providers: [AuthService, JwtStrategy, JwtBlacklistService, JwtAuthGuard],
   controllers: [AuthController],
-  exports: [AuthService, JwtStrategy, JwtBlacklistService],
+  exports: [AuthService, JwtStrategy, JwtBlacklistService, JwtAuthGuard],
 })
 export class AuthModule {}

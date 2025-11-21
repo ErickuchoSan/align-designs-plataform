@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import {
-  escapeHtml,
   EMAIL_STYLES,
   EMAIL_CONTENT,
 } from './templates/email-styles.constants';

@@ -111,8 +111,8 @@ export class AuthService {
         `${user.firstName} ${user.lastName}`,
       );
     } else {
-      // Existing user - send password recovery email
-      await this.emailService.sendPasswordRecoveryOtpEmail(
+      // Existing user - send login OTP email
+      await this.emailService.sendOtpEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`,

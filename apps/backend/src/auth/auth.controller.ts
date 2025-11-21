@@ -7,8 +7,9 @@ import {
   HttpStatus,
   UseGuards,
   Res,
+  Req,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -292,12 +293,13 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async logout(
     @CurrentUser() user: UserPayload,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
     // Extract token from request to revoke it
-    const token = this.extractTokenFromRequest(res.req);
+    const token = this.extractTokenFromRequest(req);
     if (token) {
       this.authService.revokeToken(token);
     }
@@ -330,7 +332,7 @@ export class AuthController {
     request: Request & { cookies?: Record<string, string> },
   ): string | null {
     // Check Authorization header first
-    const authHeader = request.headers?.authorization;
+    const authHeader = request.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.substring(7);
     }
