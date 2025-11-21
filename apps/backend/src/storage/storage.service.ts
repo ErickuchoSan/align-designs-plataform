@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
 import { STORAGE_PRESIGNED_URL_EXPIRY_SECONDS } from '../common/constants/timeouts.constants';
+import { FileMagicNumberValidator } from '../common/utils/file-magic-numbers.utils';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -206,6 +207,26 @@ export class StorageService implements OnModuleInit {
   }
 
   /**
+   * Validate file signature matches claimed MIME type
+   * Uses magic number validation to prevent file spoofing attacks
+   */
+  private validateFileSignature(file: Express.Multer.File): void {
+    const isValid = FileMagicNumberValidator.validateFileSignature(
+      file.buffer,
+      file.mimetype,
+    );
+
+    if (!isValid) {
+      this.logger.warn(
+        `File signature mismatch: file claims to be ${file.mimetype} but signature doesn't match`,
+      );
+      throw new BadRequestException(
+        'File content does not match the declared file type. This may indicate a malicious file.',
+      );
+    }
+  }
+
+  /**
    * Check if storage is healthy (for health endpoint)
    */
   async checkHealth(): Promise<boolean> {
@@ -252,6 +273,9 @@ export class StorageService implements OnModuleInit {
 
       // Validate project ID to prevent path traversal
       this.validateProjectId(projectId);
+
+      // Validate file signature matches claimed MIME type (prevents spoofing)
+      this.validateFileSignature(file);
 
       // Get secure extension based on MIME type (prevents double extension attacks)
       const fileExtension = this.getSecureExtension(file);
