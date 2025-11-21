@@ -30,6 +30,8 @@ import { FilesService } from './files.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { IpAddress } from '../auth/decorators/ip-address.decorator';
+import { UserAgent } from '../auth/decorators/user-agent.decorator';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
@@ -37,13 +39,17 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { FileValidationPipe } from './pipes/file-validation.pipe';
 import { RATE_LIMIT_FILES } from '../common/constants/timeouts.constants';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 @ApiTags('files')
 @ApiBearerAuth()
 @Controller('files')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(
+    private readonly filesService: FilesService,
+    private readonly auditService: AuditService,
+  ) {}
 
   /**
    * Upload file with optional comment
@@ -64,17 +70,37 @@ export class FilesController {
     file: Express.Multer.File | undefined,
     @Body() uploadFileDto: UploadFileDto,
     @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
   ) {
     if (!file) {
       throw new BadRequestException('File is required for upload');
     }
-    return this.filesService.uploadFile(
+    const result = await this.filesService.uploadFile(
       projectId,
       file,
       uploadFileDto.comment,
       user.userId,
       user.role,
     );
+
+    // Audit log for file upload
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.FILE_UPLOAD,
+      resourceType: 'file',
+      resourceId: result.id,
+      ipAddress,
+      userAgent,
+      details: {
+        projectId,
+        filename: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype,
+      },
+    });
+
+    return result;
   }
 
   /**
@@ -151,8 +177,25 @@ export class FilesController {
   @ApiResponse({ status: 200, description: 'Download URL generated successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
   @Throttle({ default: RATE_LIMIT_FILES.DOWNLOAD })
-  async getFileUrl(@Param('id') id: string, @CurrentUser() user: UserPayload) {
-    return this.filesService.getFileUrl(id, user.userId, user.role);
+  async getFileUrl(
+    @Param('id') id: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.filesService.getFileUrl(id, user.userId, user.role);
+
+    // Audit log for file download
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.FILE_DOWNLOAD,
+      resourceType: 'file',
+      resourceId: id,
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   }
 
   @Delete(':id')
@@ -162,7 +205,24 @@ export class FilesController {
   @ApiResponse({ status: 404, description: 'File not found' })
   @Throttle({ default: RATE_LIMIT_FILES.DELETE })
   @HttpCode(HttpStatus.OK)
-  async deleteFile(@Param('id') id: string, @CurrentUser() user: UserPayload) {
-    return this.filesService.deleteFile(id, user.userId, user.role);
+  async deleteFile(
+    @Param('id') id: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.filesService.deleteFile(id, user.userId, user.role);
+
+    // Audit log for file deletion
+    await this.auditService.log({
+      userId: user.userId,
+      action: AuditAction.FILE_DELETE,
+      resourceType: 'file',
+      resourceId: id,
+      ipAddress,
+      userAgent,
+    });
+
+    return result;
   }
 }
