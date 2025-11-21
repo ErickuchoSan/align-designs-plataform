@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtBlacklistService } from './jwt-blacklist.service';
 import { OtpModule } from '../otp/otp.module';
 import { EmailModule } from '../email/email.module';
 import { AuditModule } from '../audit/audit.module';
@@ -34,8 +35,8 @@ import { AuditModule } from '../audit/audit.module';
     EmailModule,
     AuditModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, JwtBlacklistService],
   controllers: [AuthController],
-  exports: [AuthService, JwtStrategy],
+  exports: [AuthService, JwtStrategy, JwtBlacklistService],
 })
 export class AuthModule {}

@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { OtpService } from '../otp/otp.service';
 import { EmailService } from '../email/email.service';
+import { JwtBlacklistService } from './jwt-blacklist.service';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
 import { PasswordValidationUtils } from '../common/utils/validation.utils';
@@ -28,6 +29,7 @@ export class AuthService {
     private configService: ConfigService,
     private otpService: OtpService,
     private emailService: EmailService,
+    private jwtBlacklistService: JwtBlacklistService,
   ) {}
 
   /**
@@ -405,6 +407,37 @@ export class AuthService {
     return {
       message: 'Password set successfully. Your account has been activated.',
     };
+  }
+
+  /**
+   * Revoke a JWT token by adding it to the blacklist
+   * @param token - The JWT token to revoke
+   */
+  revokeToken(token: string): void {
+    try {
+      // Decode the token to get expiration time
+      const decoded = this.jwtService.decode(token) as { exp?: number };
+
+      if (!decoded || !decoded.exp) {
+        this.logger.warn('Cannot revoke token: Invalid token or missing expiration');
+        return;
+      }
+
+      // Calculate time until expiration (in milliseconds)
+      const expiresAt = decoded.exp * 1000; // JWT exp is in seconds
+      const now = Date.now();
+      const expiresInMs = expiresAt - now;
+
+      // Only blacklist if token hasn't expired yet
+      if (expiresInMs > 0) {
+        this.jwtBlacklistService.addToBlacklist(token, expiresInMs);
+        this.logger.log('Token revoked and added to blacklist');
+      } else {
+        this.logger.debug('Token already expired, not adding to blacklist');
+      }
+    } catch (error) {
+      this.logger.error('Error revoking token:', error);
+    }
   }
 
   /**

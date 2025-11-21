@@ -296,6 +296,12 @@ export class AuthController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
+    // Extract token from request to revoke it
+    const token = this.extractTokenFromRequest(res.req);
+    if (token) {
+      this.authService.revokeToken(token);
+    }
+
     // Audit log for logout
     await this.auditService.log({
       userId: user.userId,
@@ -314,5 +320,27 @@ export class AuthController {
     });
 
     return { message: 'Logged out successfully' };
+  }
+
+  /**
+   * Extract JWT token from request
+   * Checks both Authorization header and httpOnly cookie
+   */
+  private extractTokenFromRequest(
+    request: Request & { cookies?: Record<string, string> },
+  ): string | null {
+    // Check Authorization header first
+    const authHeader = request.headers?.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+
+    // Check httpOnly cookie as fallback
+    const cookieToken = request.cookies?.access_token;
+    if (cookieToken) {
+      return cookieToken;
+    }
+
+    return null;
   }
 }

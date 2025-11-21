@@ -1,6 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
@@ -16,6 +16,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+import { IpThrottlerGuard } from './common/guards/ip-throttler.guard';
 import { validate } from './config/configuration.validation';
 
 @Module({
@@ -46,7 +47,7 @@ import { validate } from './config/configuration.validation';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: IpThrottlerGuard,
     },
   ],
 })
