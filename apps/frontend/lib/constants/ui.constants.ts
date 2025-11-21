@@ -28,7 +28,7 @@ export const INPUT_DELAY = {
 // Loading States
 export const LOADING_DELAY = {
   MIN_DISPLAY: 300, // Minimum time to show loading spinner (prevents flashing)
-  TIMEOUT: 30000, // 30 seconds - max time before showing error
+  TIMEOUT: 15000, // 15 seconds - reduced from 30s for better UX and faster error feedback
 } as const;
 
 // Pagination

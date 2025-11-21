@@ -35,7 +35,7 @@ export const RATE_LIMIT_AUTH = {
 export const RATE_LIMIT_FILES = {
   UPLOAD: { limit: 3, ttl: RATE_LIMIT_TTL_MS }, // 3×15GB = 45GB/min max
   UPDATE: { limit: 3, ttl: RATE_LIMIT_TTL_MS },
-  DOWNLOAD: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
+  DOWNLOAD: { limit: 5, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 10 to 5/min to prevent bandwidth DoS (5×15GB = 75GB/min max)
   CREATE_COMMENT: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
   DELETE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
 };

@@ -14,6 +14,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     const startTime = Date.now();
     const { method, originalUrl, ip } = req;
     const userAgent = req.get('user-agent') || '';
+    const requestId = req.requestId || req.headers['x-request-id'] || 'unknown';
 
     // Log when response finishes
     res.on('finish', () => {
@@ -23,8 +24,8 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       // Log level based on status code
       const logLevel = this.getLogLevel(statusCode);
 
-      // Format log message
-      const message = `${method} ${originalUrl} ${statusCode} ${responseTime}ms - ${userAgent} - ${ip}`;
+      // Format log message with request ID
+      const message = `[${requestId}] ${method} ${originalUrl} ${statusCode} ${responseTime}ms - ${userAgent} - ${ip}`;
 
       // Log with appropriate level
       if (logLevel === 'error') {
@@ -38,13 +39,13 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       // Log additional details for errors
       if (statusCode >= 400) {
         this.logger.warn({
+          requestId,
           method,
           url: originalUrl,
           statusCode,
           responseTime,
           userAgent,
           ip,
-          requestId: req.headers['x-request-id'],
         });
       }
     });

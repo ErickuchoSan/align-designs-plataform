@@ -52,7 +52,13 @@
       "Bash(git checkout:*)",
       "Bash(git push)",
       "Bash(timeout /t 3 /nobreak)",
-      "Bash(copy /b main.ts +,,)"
+      "Bash(copy /b main.ts +,,)",
+      "Bash(npx prisma migrate diff:*)",
+      "Bash(prisma/migrations/0_init/migration.sql)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(del \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\migrate-account-lockout.sql\")",
+      "Bash(del \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\migrate-password-history.sql\")",
+      "Bash(if exist \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\migrate-password-history.sql\" del \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\migrate-password-history.sql\")"
     ],
     "deny": [],
     "ask": []

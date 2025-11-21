@@ -16,6 +16,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+import { RequestSizeLimitMiddleware } from './common/middleware/request-size-limit.middleware';
 import { IpThrottlerGuard } from './common/guards/ip-throttler.guard';
 import { validate } from './config/configuration.validation';
 
@@ -54,7 +55,12 @@ import { validate } from './config/configuration.validation';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(RequestLoggingMiddleware, RequestIdMiddleware, CsrfMiddleware)
+      .apply(
+        RequestIdMiddleware,
+        RequestSizeLimitMiddleware,
+        RequestLoggingMiddleware,
+        CsrfMiddleware,
+      )
       .forRoutes('*');
   }
 }
