@@ -61,6 +61,47 @@ export class EmailService {
   }
 
   /**
+   * Generic method to send OTP emails
+   * Consolidates duplicate code for different OTP email types
+   */
+  private async sendOtpEmailGeneric(
+    to: string,
+    otpCode: string,
+    userName: string,
+    subject: string,
+    title: string,
+    preMessage: string,
+    warningMessage: string,
+    logPrefix: string,
+  ): Promise<void> {
+    try {
+      const emailFrom = this.configService.get<string>('EMAIL_FROM');
+
+      const mailOptions = {
+        from: emailFrom,
+        to: to,
+        subject: `${subject} - Align Designs`,
+        html: getBaseEmailTemplate({
+          title,
+          userName,
+          preMessage,
+          bodyContent: getOtpCodeHtml(otpCode),
+          postMessage: 'This code will expire in <strong>10 minutes</strong>.',
+          warningMessage,
+        }),
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`${logPrefix} email sent successfully to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send ${logPrefix} email to ${to}:`, error);
+      throw new InternalServerErrorException(
+        'Failed to send email. Please verify your email configuration.',
+      );
+    }
+  }
+
+  /**
    * Send OTP email for new user account verification and password setup
    */
   async sendNewUserOtpEmail(
@@ -68,48 +109,36 @@ export class EmailService {
     otpCode: string,
     userName: string,
   ): Promise<void> {
-    try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      const mailOptions = {
-        from: emailFrom,
-        to: to,
-        subject: 'Account Verification - Align Designs',
-        html: this.getNewUserOtpEmailTemplate(otpCode, userName),
-      };
-
-      await this.transporter.sendMail(mailOptions);
-      this.logger.log(`New user OTP email sent successfully to ${to}`);
-    } catch (error) {
-      this.logger.error(`Failed to send new user OTP email to ${to}:`, error);
-      throw new InternalServerErrorException(
-        'Failed to send email. Please verify your email configuration.',
-      );
-    }
+    return this.sendOtpEmailGeneric(
+      to,
+      otpCode,
+      userName,
+      'Account Verification',
+      'Account Verification',
+      'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:',
+      'If you did not create this account, please ignore this message.',
+      'New user OTP',
+    );
   }
+
+  /**
+   * Send OTP email for user login
+   */
   async sendOtpEmail(
     to: string,
     otpCode: string,
     userName: string,
   ): Promise<void> {
-    try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      const mailOptions = {
-        from: emailFrom,
-        to: to,
-        subject: 'Verification Code - Align Designs',
-        html: this.getOtpEmailTemplate(otpCode, userName),
-      };
-
-      await this.transporter.sendMail(mailOptions);
-      this.logger.log(`OTP email sent successfully to ${to}`);
-    } catch (error) {
-      this.logger.error(`Failed to send OTP email to ${to}:`, error);
-      throw new InternalServerErrorException(
-        'Failed to send email. Please verify your email configuration.',
-      );
-    }
+    return this.sendOtpEmailGeneric(
+      to,
+      otpCode,
+      userName,
+      'Verification Code',
+      'Verification Code',
+      'Hello {userName},<br>Use the following code to log in:',
+      'If you did not request this code, please ignore this message.',
+      'OTP',
+    );
   }
 
   /**
@@ -153,42 +182,18 @@ export class EmailService {
     otpCode: string,
     userName: string,
   ): Promise<void> {
-    try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      const mailOptions = {
-        from: emailFrom,
-        to: to,
-        subject: 'Password Recovery Code - Align Designs',
-        html: this.getPasswordRecoveryOtpEmailTemplate(otpCode, userName),
-      };
-
-      await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Password recovery OTP email sent successfully to ${to}`);
-    } catch (error) {
-      this.logger.error(
-        `Failed to send password recovery OTP email to ${to}:`,
-        error,
-      );
-      throw new InternalServerErrorException(
-        'Failed to send email. Please verify your email configuration.',
-      );
-    }
-  }
-
-  /**
-   * HTML template for OTP email
-   */
-  private getOtpEmailTemplate(otpCode: string, userName: string): string {
-    return getBaseEmailTemplate({
-      title: 'Verification Code',
+    return this.sendOtpEmailGeneric(
+      to,
+      otpCode,
       userName,
-      preMessage: 'Hello {userName},<br>Use the following code to log in:',
-      bodyContent: getOtpCodeHtml(otpCode),
-      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
-      warningMessage: 'If you did not request this code, please ignore this message.',
-    });
+      'Password Recovery Code',
+      'Password Recovery Code',
+      'Hello {userName},<br>Use this code to reset your password:',
+      'If you did not request this password reset, please ignore this message.',
+      'Password recovery OTP',
+    );
   }
+
 
   /**
    * HTML template for password reset email
@@ -298,39 +303,6 @@ export class EmailService {
     `;
   }
 
-  /**
-   * HTML template for password recovery OTP email
-   */
-  private getPasswordRecoveryOtpEmailTemplate(
-    otpCode: string,
-    userName: string,
-  ): string {
-    return getBaseEmailTemplate({
-      title: 'Password Recovery Code',
-      userName,
-      preMessage: 'Hello {userName},<br>Use this code to reset your password:',
-      bodyContent: getOtpCodeHtml(otpCode),
-      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
-      warningMessage: 'If you did not request this password reset, please ignore this message.',
-    });
-  }
-
-  /**
-   * HTML template for new user OTP email (account verification and password setup)
-   */
-  private getNewUserOtpEmailTemplate(
-    otpCode: string,
-    userName: string,
-  ): string {
-    return getBaseEmailTemplate({
-      title: 'Account Verification',
-      userName,
-      preMessage: 'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:',
-      bodyContent: getOtpCodeHtml(otpCode),
-      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
-      warningMessage: 'If you did not create this account, please ignore this message.',
-    });
-  }
 
   /**
    * Check if email service is healthy

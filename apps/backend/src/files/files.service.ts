@@ -11,6 +11,7 @@ import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
 import { UserContext } from '../common/interfaces/user-context.interface';
+import { PermissionUtils } from '../common/utils/permission.utils';
 
 @Injectable()
 export class FilesService {
@@ -46,11 +47,12 @@ export class FilesService {
     }
 
     // Verify permissions: client can only upload to their own projects
-    if (userRole === Role.CLIENT && project.clientId !== uploadedBy) {
-      throw new ForbiddenException(
-        'You do not have permission to upload files to this project',
-      );
-    }
+    PermissionUtils.verifyProjectAccess(
+      userRole,
+      uploadedBy,
+      project.clientId,
+      'You do not have permission to upload files to this project',
+    );
 
     // Generate filename and storage path
     const filename = `${Date.now()}-${file.originalname}`;
@@ -148,11 +150,12 @@ export class FilesService {
     }
 
     // Verify permissions: client can only upload to their own projects
-    if (userRole === Role.CLIENT && project.clientId !== uploadedBy) {
-      throw new ForbiddenException(
-        'You do not have permission to create comments in this project',
-      );
-    }
+    PermissionUtils.verifyProjectAccess(
+      userRole,
+      uploadedBy,
+      project.clientId,
+      'You do not have permission to create comments in this project',
+    );
 
     // Save comment in database (without file)
     const commentRecord = await this.prisma.file.create({
@@ -403,9 +406,12 @@ export class FilesService {
     }
 
     // Verify permissions
-    if (userRole === Role.CLIENT && file.project.clientId !== userId) {
-      throw new ForbiddenException('You do not have access to this entry');
-    }
+    PermissionUtils.verifyProjectAccess(
+      userRole,
+      userId,
+      file.project.clientId,
+      'You do not have access to this entry',
+    );
 
     // If it's only a comment without a file, there is no URL
     if (!file.storagePath) {

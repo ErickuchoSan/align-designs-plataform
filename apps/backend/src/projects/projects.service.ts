@@ -12,6 +12,7 @@ import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
 import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
+import { PermissionUtils } from '../common/utils/permission.utils';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 
 @Injectable()
@@ -222,11 +223,12 @@ export class ProjectsService {
     }
 
     // Client can only view their own projects
-    if (userRole === Role.CLIENT && project.clientId !== userId) {
-      throw new ForbiddenException(
-        'You do not have permission to view this project',
-      );
-    }
+    PermissionUtils.verifyProjectAccess(
+      userRole,
+      userId,
+      project.clientId,
+      'You do not have permission to view this project',
+    );
 
     // Separate files and comments count
     const { filesCount, commentsCount } = getFilesAndCommentsCounts(project.files);
@@ -274,11 +276,12 @@ export class ProjectsService {
     }
 
     // Client can only update their own projects
-    if (userRole === Role.CLIENT && project.clientId !== userId) {
-      throw new ForbiddenException(
-        'You do not have permission to update this project',
-      );
-    }
+    PermissionUtils.verifyProjectAccess(
+      userRole,
+      userId,
+      project.clientId,
+      'You do not have permission to update this project',
+    );
 
     // If clientId is being changed, verify the current client hasn't uploaded files
     if (updateProjectDto.clientId && updateProjectDto.clientId !== project.clientId) {
@@ -357,11 +360,12 @@ export class ProjectsService {
     }
 
     // Client can only delete their own projects
-    if (userRole === Role.CLIENT && project.clientId !== userId) {
-      throw new ForbiddenException(
-        'You do not have permission to delete this project',
-      );
-    }
+    PermissionUtils.verifyProjectAccess(
+      userRole,
+      userId,
+      project.clientId,
+      'You do not have permission to delete this project',
+    );
 
     // Soft delete the project and its files
     await this.prisma.$transaction(
