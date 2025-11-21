@@ -50,7 +50,9 @@
       "Bash(.gitignore)",
       "Bash(Pagination.tsx)",
       "Bash(git checkout:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(copy /b main.ts +,,)"
     ],
     "deny": [],
     "ask": []
