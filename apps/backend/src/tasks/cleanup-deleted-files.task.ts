@@ -27,15 +27,20 @@ export class CleanupDeletedFilesTask {
     );
 
     try {
-      // Find files that were soft-deleted more than 30 days ago
-      const filesToDelete = await this.prisma.$queryRaw<
-        Array<{ id: string; storagePath: string | null; filename: string }>
-      >`
-        SELECT id, storage_path as "storagePath", filename
-        FROM files
-        WHERE deleted_at IS NOT NULL
-          AND deleted_at < ${retentionDate}
-      `;
+      // Find files that were soft-deleted more than 30 days ago using Prisma ORM
+      const filesToDelete = await this.prisma.file.findMany({
+        where: {
+          deletedAt: {
+            not: null,
+            lt: retentionDate,
+          },
+        },
+        select: {
+          id: true,
+          storagePath: true,
+          filename: true,
+        },
+      });
 
       if (filesToDelete.length === 0) {
         this.logger.log('No files to clean up');
@@ -69,10 +74,10 @@ export class CleanupDeletedFilesTask {
             }
           }
 
-          // Hard delete from database
-          await this.prisma.$executeRaw`
-            DELETE FROM files WHERE id = ${file.id}
-          `;
+          // Hard delete from database using Prisma ORM
+          await this.prisma.file.delete({
+            where: { id: file.id },
+          });
 
           successCount++;
           this.logger.debug(

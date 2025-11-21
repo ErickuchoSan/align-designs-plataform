@@ -164,12 +164,6 @@ export class AuthService {
       throw new BadRequestException('Passwords do not match');
     }
 
-    if (newPassword === currentPassword) {
-      throw new BadRequestException(
-        'New password must be different from current password',
-      );
-    }
-
     // Validate the new password
     const passwordValidation =
       PasswordValidationUtils.validatePassword(newPassword);
@@ -201,6 +195,14 @@ export class AuthService {
     );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Check if new password is same as current (timing-safe comparison using hashes)
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
     }
 
     // Hash the new password
