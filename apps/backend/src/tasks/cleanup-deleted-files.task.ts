@@ -121,8 +121,11 @@ export class CleanupDeletedFilesTask {
         );
       }
     } catch (error) {
-      this.logger.error('Error during cleanup task:', error);
-      throw error;
+      // Log error but DO NOT rethrow - cron jobs should never crash the app
+      this.logger.error('Critical error during cleanup task:', error);
+      this.logger.error(
+        'Cleanup task failed but application will continue running',
+      );
     }
   }
 
