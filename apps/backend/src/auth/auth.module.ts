@@ -7,6 +7,8 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtBlacklistService } from './jwt-blacklist.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AccountLockoutService } from './services/account-lockout.service';
+import { PasswordService } from './services/password.service';
 import { OtpModule } from '../otp/otp.module';
 import { EmailModule } from '../email/email.module';
 import { AuditModule } from '../audit/audit.module';
@@ -36,8 +38,22 @@ import { AuditModule } from '../audit/audit.module';
     EmailModule,
     AuditModule,
   ],
-  providers: [AuthService, JwtStrategy, JwtBlacklistService, JwtAuthGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtBlacklistService,
+    JwtAuthGuard,
+    AccountLockoutService,
+    PasswordService,
+  ],
   controllers: [AuthController],
-  exports: [AuthService, JwtStrategy, JwtBlacklistService, JwtAuthGuard],
+  exports: [
+    AuthService,
+    JwtStrategy,
+    JwtBlacklistService,
+    JwtAuthGuard,
+    AccountLockoutService,
+    PasswordService,
+  ],
 })
 export class AuthModule {}

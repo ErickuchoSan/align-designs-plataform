@@ -10,14 +10,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OtpService } from '../otp/otp.service';
 import { EmailService } from '../email/email.service';
 import { JwtBlacklistService } from './jwt-blacklist.service';
-import * as bcrypt from 'bcrypt';
+import { AccountLockoutService } from './services/account-lockout.service';
+import { PasswordService } from './services/password.service';
 import { Role } from '@prisma/client';
-import { PasswordValidationUtils } from '../common/utils/validation.utils';
 import { User } from './interfaces/user.interface';
-
-// Bcrypt configuration - using 14 rounds for enhanced security
-// Higher rounds provide better protection against brute-force attacks
-const BCRYPT_SALT_ROUNDS = 14;
 
 @Injectable()
 export class AuthService {
@@ -30,6 +26,8 @@ export class AuthService {
     private otpService: OtpService,
     private emailService: EmailService,
     private jwtBlacklistService: JwtBlacklistService,
+    private accountLockoutService: AccountLockoutService,
+    private passwordService: PasswordService,
   ) {}
 
   /**
@@ -50,69 +48,22 @@ export class AuthService {
       }
 
       // Check if account is locked
-      if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
-        const lockoutMinutes = Math.ceil(
-          (user.accountLockedUntil.getTime() - Date.now()) / (1000 * 60),
-        );
-        this.logger.warn(
-          `Login attempt for locked account: ${email}. Locked for ${lockoutMinutes} more minutes`,
-        );
-        throw new UnauthorizedException(
-          `Account is locked due to multiple failed login attempts. Please try again in ${lockoutMinutes} minute${lockoutMinutes > 1 ? 's' : ''}.`,
-        );
-      }
+      this.accountLockoutService.validateAccountNotLocked(user);
 
       if (!user.passwordHash) {
         this.logger.warn(`Login attempt for user without password: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      const isPasswordValid = await this.passwordService.comparePassword(
+        password,
+        user.passwordHash,
+      );
 
       if (!isPasswordValid) {
-        // Increment failed login attempts
-        const maxAttempts = parseInt(
-          this.configService.get<string>('MAX_LOGIN_ATTEMPTS', '5'),
-          10,
-        );
-        const lockoutDuration = parseInt(
-          this.configService.get<string>('ACCOUNT_LOCKOUT_DURATION', '15'),
-          10,
-        );
-        const newFailedAttempts = user.failedLoginAttempts + 1;
-
-        // Check if we should lock the account
-        if (newFailedAttempts >= maxAttempts) {
-          const lockUntil = new Date(Date.now() + lockoutDuration * 60 * 1000);
-          await this.prisma.user.update({
-            where: { id: user.id },
-            data: {
-              failedLoginAttempts: newFailedAttempts,
-              lastFailedLoginAt: new Date(),
-              accountLockedUntil: lockUntil,
-            },
-          });
-          this.logger.warn(
-            `Account locked for user ${email} after ${newFailedAttempts} failed attempts`,
-          );
-          throw new UnauthorizedException(
-            `Account locked due to multiple failed login attempts. Please try again in ${lockoutDuration} minutes.`,
-          );
-        } else {
-          // Just increment the counter
-          await this.prisma.user.update({
-            where: { id: user.id },
-            data: {
-              failedLoginAttempts: newFailedAttempts,
-              lastFailedLoginAt: new Date(),
-            },
-          });
-          const remainingAttempts = maxAttempts - newFailedAttempts;
-          this.logger.warn(
-            `Failed login attempt for user: ${email}. ${remainingAttempts} attempts remaining`,
-          );
-          throw new UnauthorizedException('Invalid email or password');
-        }
+        // Handle failed login (increments counter and potentially locks account)
+        await this.accountLockoutService.handleFailedLogin(user);
+        // Note: handleFailedLogin always throws, so this line is never reached
       }
 
       if (!user.isActive) {
@@ -121,16 +72,7 @@ export class AuthService {
       }
 
       // Reset failed login attempts on successful login
-      if (user.failedLoginAttempts > 0 || user.accountLockedUntil) {
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: {
-            failedLoginAttempts: 0,
-            lastFailedLoginAt: null,
-            accountLockedUntil: null,
-          },
-        });
-      }
+      await this.accountLockoutService.resetFailedAttempts(user);
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
       return this.generateToken(user);
@@ -228,16 +170,8 @@ export class AuthService {
     newPassword: string,
     confirmPassword: string,
   ) {
-    if (newPassword !== confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
-
-    // Validate the new password
-    const passwordValidation =
-      PasswordValidationUtils.validatePassword(newPassword);
-    if (!passwordValidation.isValid) {
-      throw new BadRequestException(passwordValidation.error);
-    }
+    this.passwordService.validatePasswordsMatch(newPassword, confirmPassword);
+    this.passwordService.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -257,7 +191,7 @@ export class AuthService {
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(
+    const isPasswordValid = await this.passwordService.comparePassword(
       currentPassword,
       user.passwordHash,
     );
@@ -266,32 +200,22 @@ export class AuthService {
     }
 
     // Check if new password is same as current (timing-safe comparison using hashes)
-    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    const isSamePassword = await this.passwordService.comparePassword(
+      newPassword,
+      user.passwordHash,
+    );
     if (isSamePassword) {
       throw new BadRequestException(
         'New password must be different from current password',
       );
     }
 
-    // Check password history to prevent reuse
-    await this.validatePasswordHistory(userId, newPassword);
-
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
-
-    // Save current password to history before updating
-    await this.prisma.passwordHistory.create({
-      data: {
-        userId: user.id,
-        passwordHash: user.passwordHash,
-      },
-    });
-
-    // Update password
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash: hashedPassword },
-    });
+    // Update password with history tracking
+    await this.passwordService.updatePassword(
+      userId,
+      newPassword,
+      user.passwordHash,
+    );
 
     this.logger.log(`Password changed for user ${userId}`);
 
@@ -341,16 +265,8 @@ export class AuthService {
     confirmPassword: string,
   ) {
     // Validate that passwords match
-    if (newPassword !== confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
-
-    // Validate the new password
-    const passwordValidation =
-      PasswordValidationUtils.validatePassword(newPassword);
-    if (!passwordValidation.isValid) {
-      throw new BadRequestException(passwordValidation.error);
-    }
+    this.passwordService.validatePasswordsMatch(newPassword, confirmPassword);
+    this.passwordService.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -371,27 +287,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check password history to prevent reuse
-    await this.validatePasswordHistory(user.id, newPassword);
-
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
-
-    // Save current password to history if user has one
-    if (user.passwordHash) {
-      await this.prisma.passwordHistory.create({
-        data: {
-          userId: user.id,
-          passwordHash: user.passwordHash,
-        },
-      });
-    }
-
-    // Update password
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: hashedPassword },
-    });
+    // Update password with history tracking
+    await this.passwordService.updatePassword(
+      user.id,
+      newPassword,
+      user.passwordHash ?? undefined,
+    );
 
     this.logger.log(`Password reset for user ${user.id} via OTP`);
 
@@ -449,16 +350,8 @@ export class AuthService {
    * Set password for the first time and activate the account
    */
   async setPassword(userId: string, password: string, confirmPassword: string) {
-    if (password !== confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
-
-    // Validate the password
-    const passwordValidation =
-      PasswordValidationUtils.validatePassword(password);
-    if (!passwordValidation.isValid) {
-      throw new BadRequestException(passwordValidation.error);
-    }
+    this.passwordService.validatePasswordsMatch(password, confirmPassword);
+    this.passwordService.validatePasswordFormat(password);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -478,7 +371,7 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+    const hashedPassword = await this.passwordService.hashPassword(password);
 
     // Update password, activate account and verify email
     await this.prisma.user.update({
@@ -527,41 +420,6 @@ export class AuthService {
       }
     } catch (error) {
       this.logger.error('Error revoking token:', error);
-    }
-  }
-
-  /**
-   * Validate that a new password hasn't been used recently
-   * Prevents password reuse based on PASSWORD_HISTORY_COUNT
-   */
-  private async validatePasswordHistory(
-    userId: string,
-    newPassword: string,
-  ): Promise<void> {
-    const historyCount = parseInt(
-      this.configService.get<string>('PASSWORD_HISTORY_COUNT', '5'),
-      10,
-    );
-
-    // Get recent password history
-    const passwordHistory = await this.prisma.passwordHistory.findMany({
-      where: {
-        userId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: historyCount,
-    });
-
-    // Check if new password matches any in history
-    for (const history of passwordHistory) {
-      const matches = await bcrypt.compare(newPassword, history.passwordHash);
-      if (matches) {
-        throw new BadRequestException(
-          `Password has been used recently. Please choose a different password. You cannot reuse your last ${historyCount} passwords.`,
-        );
-      }
     }
   }
 
