@@ -58,9 +58,11 @@ export function useFileFilters(files: FileData[]): UseFileFiltersReturn {
   useEffect(() => {
     const types = new Set<string>();
     files.forEach((file) => {
-      const extension = getFileExtension(file.filename);
-      if (extension) {
-        types.add(extension);
+      if (file.filename) {
+        const extension = getFileExtension(file.filename);
+        if (extension) {
+          types.add(extension);
+        }
       }
     });
     setAvailableTypes(Array.from(types).sort());
@@ -76,13 +78,13 @@ export function useFileFilters(files: FileData[]): UseFileFiltersReturn {
   const applyFilters = useCallback(
     (filesToFilter: FileData[]): FileData[] => {
       return filesToFilter.filter((file) => {
-        // Filter by name
+        // Filter by name - skip if file has no filename (comment-only entries)
         const matchesName =
           nameFilter === '' ||
-          file.filename.toLowerCase().includes(nameFilter.toLowerCase());
+          (file.filename && file.filename.toLowerCase().includes(nameFilter.toLowerCase()));
 
-        // Filter by type
-        const fileExtension = getFileExtension(file.filename);
+        // Filter by type - handle null filename
+        const fileExtension = file.filename ? getFileExtension(file.filename) : null;
         const matchesType =
           typeFilter === 'all' ||
           (fileExtension && fileExtension === typeFilter);
