@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
 import { MESSAGE_DURATION, FILE_UPLOAD } from '@/lib/constants/ui.constants';
@@ -13,6 +13,28 @@ export function useFileOperations(
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deleting, setDeleting] = useState(false);
+
+  // Refs to track active timeouts for cleanup
+  const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
+
+  // Cleanup all active timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+      timeoutRefs.current = [];
+    };
+  }, []);
+
+  // Helper to set timeout with automatic tracking for cleanup
+  const setTrackedTimeout = useCallback((callback: () => void, delay: number) => {
+    const timeoutId = setTimeout(() => {
+      callback();
+      // Remove from tracking array after execution
+      timeoutRefs.current = timeoutRefs.current.filter(id => id !== timeoutId);
+    }, delay);
+    timeoutRefs.current.push(timeoutId);
+    return timeoutId;
+  }, []);
 
   const handleFileUpload = useCallback(
     async (file: File, comment: string) => {
@@ -49,7 +71,7 @@ export function useFileOperations(
         onSuccess('File uploaded successfully');
         await onRefresh();
 
-        setTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
         onError(getErrorMessage(error, 'Error uploading file'));
@@ -59,7 +81,7 @@ export function useFileOperations(
         setUploadProgress(0);
       }
     },
-    [projectId, onSuccess, onError, onRefresh]
+    [projectId, onSuccess, onError, onRefresh, setTrackedTimeout]
   );
 
   const handleCreateComment = useCallback(
@@ -76,7 +98,7 @@ export function useFileOperations(
         onSuccess('Comment created successfully');
         await onRefresh();
 
-        setTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
         onError(getErrorMessage(error, 'Error creating comment'));
@@ -85,7 +107,7 @@ export function useFileOperations(
         setUploading(false);
       }
     },
-    [projectId, onSuccess, onError, onRefresh]
+    [projectId, onSuccess, onError, onRefresh, setTrackedTimeout]
   );
 
   const handleEditEntry = useCallback(
@@ -114,7 +136,7 @@ export function useFileOperations(
         onSuccess('Entry updated successfully');
         await onRefresh();
 
-        setTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
         onError(getErrorMessage(error, 'Error updating entry'));
@@ -123,7 +145,7 @@ export function useFileOperations(
         setUploading(false);
       }
     },
-    [onSuccess, onError, onRefresh]
+    [onSuccess, onError, onRefresh, setTrackedTimeout]
   );
 
   const handleDownload = useCallback(
@@ -171,12 +193,12 @@ export function useFileOperations(
         window.URL.revokeObjectURL(url);
 
         onSuccess('File downloaded successfully');
-        setTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
       } catch (error) {
         onError(getErrorMessage(error, 'Error downloading file'));
       }
     },
-    [onSuccess, onError]
+    [onSuccess, onError, setTrackedTimeout]
   );
 
   const handleDelete = useCallback(
@@ -188,7 +210,7 @@ export function useFileOperations(
         onSuccess('File deleted successfully');
         await onRefresh();
 
-        setTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
         onError(getErrorMessage(error, 'Error deleting file'));
@@ -197,7 +219,7 @@ export function useFileOperations(
         setDeleting(false);
       }
     },
-    [onSuccess, onError, onRefresh]
+    [onSuccess, onError, onRefresh, setTrackedTimeout]
   );
 
   return {
