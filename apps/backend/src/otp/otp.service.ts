@@ -16,6 +16,8 @@ import {
 @Injectable()
 export class OtpService {
   private readonly logger = new Logger(OtpService.name);
+  private cleanupFailureCount = 0;
+  private readonly MAX_CLEANUP_FAILURES = 3;
 
   constructor(
     private prisma: PrismaService,
@@ -201,8 +203,25 @@ export class OtpService {
       this.logger.log(
         `OTP cleanup completed: ${result.count} tokens removed`,
       );
+
+      // Reset failure counter on success
+      this.cleanupFailureCount = 0;
     } catch (error) {
-      this.logger.error('Failed to cleanup expired OTP tokens', error);
+      this.cleanupFailureCount++;
+      this.logger.error(
+        `Failed to cleanup expired OTP tokens (failure ${this.cleanupFailureCount}/${this.MAX_CLEANUP_FAILURES})`,
+        error,
+      );
+
+      // Alert if cleanup fails repeatedly
+      if (this.cleanupFailureCount >= this.MAX_CLEANUP_FAILURES) {
+        this.logger.fatal(
+          `CRITICAL: OTP cleanup has failed ${this.cleanupFailureCount} consecutive times. ` +
+          'Database may accumulate stale OTP tokens. Manual intervention required.',
+        );
+        // In production, this should trigger alerting system (e.g., PagerDuty, Slack, email)
+        // Example: await this.alertingService.sendCriticalAlert('OTP cleanup failure', error);
+      }
     }
   }
 }
