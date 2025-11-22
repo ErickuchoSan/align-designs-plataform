@@ -1,9 +1,6 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
 
 export class CheckEmailDto {
-  @IsEmail({}, { message: 'Invalid email address' })
-  @IsNotEmpty({ message: 'Email is required' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @ValidateEmail()
   email: string;
 }

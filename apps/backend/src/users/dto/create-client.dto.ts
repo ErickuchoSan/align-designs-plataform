@@ -1,18 +1,15 @@
 import {
-  IsEmail,
   IsString,
   IsOptional,
   Length,
   Matches,
   IsNotEmpty,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
+import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
 
 export class CreateClientDto {
-  @IsEmail({}, { message: 'Invalid email address' })
-  @IsNotEmpty({ message: 'Email is required' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @ValidateEmail()
   email: string;
 
   @IsString({ message: 'First name must be a string' })

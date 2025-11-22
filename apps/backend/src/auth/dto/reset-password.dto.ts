@@ -1,14 +1,12 @@
-import { IsEmail } from 'class-validator';
-import { Transform } from 'class-transformer';
 import {
   ValidatePassword,
   ValidatePasswordConfirmation,
 } from '../../common/decorators/password-validation.decorator';
 import { ValidateOtp } from '../../common/decorators/otp-validation.decorator';
+import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
 
 export class ResetPasswordDto {
-  @IsEmail({}, { message: 'Email must be valid' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @ValidateEmail({ message: 'Email must be valid' })
   email: string;
 
   @ValidateOtp()

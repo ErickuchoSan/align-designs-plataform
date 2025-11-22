@@ -1,9 +1,8 @@
-import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsString, MinLength, MaxLength } from 'class-validator';
+import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
 
 export class LoginDto {
-  @IsEmail({}, { message: 'Invalid email address' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @ValidateEmail()
   email: string;
 
   @IsString()

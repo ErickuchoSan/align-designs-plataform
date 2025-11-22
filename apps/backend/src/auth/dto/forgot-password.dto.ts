@@ -1,8 +1,6 @@
-import { IsEmail } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
 
 export class ForgotPasswordDto {
-  @IsEmail({}, { message: 'Invalid email' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @ValidateEmail({ message: 'Invalid email' })
   email: string;
 }
