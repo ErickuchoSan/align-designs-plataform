@@ -301,7 +301,7 @@ export class AuthController {
     // Extract token from request to revoke it
     const token = this.extractTokenFromRequest(req);
     if (token) {
-      this.authService.revokeToken(token);
+      await this.authService.revokeToken(token);
     }
 
     // Audit log for logout

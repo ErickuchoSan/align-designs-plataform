@@ -396,7 +396,7 @@ export class AuthService {
    * Revoke a JWT token by adding it to the blacklist
    * @param token - The JWT token to revoke
    */
-  revokeToken(token: string): void {
+  async revokeToken(token: string): Promise<void> {
     try {
       // Decode the token to get expiration time
       const decoded = this.jwtService.decode(token) as { exp?: number };
@@ -420,6 +420,7 @@ export class AuthService {
       }
     } catch (error) {
       this.logger.error('Error revoking token:', error);
+      throw error; // Relanzar para que el controlador maneje el error
     }
   }
 

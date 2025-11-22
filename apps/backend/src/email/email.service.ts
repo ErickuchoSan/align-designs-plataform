@@ -21,6 +21,7 @@ import {
 export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
   private transporter: Transporter;
+  private isHealthy: boolean = false;
 
   constructor(private configService: ConfigService) {
     const emailPort = this.configService.get<number>('EMAIL_PORT', 587);
@@ -68,8 +69,10 @@ export class EmailService implements OnModuleInit {
     try {
       this.logger.log('Verifying SMTP connection...');
       await this.transporter.verify();
+      this.isHealthy = true;
       this.logger.log('✓ SMTP connection verified successfully');
     } catch (error) {
+      this.isHealthy = false;
       this.logger.error(
         '✗ SMTP connection verification failed. Email functionality may not work properly.',
         error,
@@ -77,9 +80,18 @@ export class EmailService implements OnModuleInit {
       this.logger.warn(
         'Please check your EMAIL_* environment variables and SMTP server availability.',
       );
-      // Don't throw error to prevent app from crashing on startup
-      // Email functionality will fail at runtime instead
+      // Throw error to fail fast - email is critical for OTP, password reset, etc.
+      throw new InternalServerErrorException(
+        'Failed to initialize email service. Please check SMTP configuration.',
+      );
     }
+  }
+
+  /**
+   * Check if the email service is healthy and ready to send emails
+   */
+  isServiceHealthy(): boolean {
+    return this.isHealthy;
   }
 
   /**
