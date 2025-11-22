@@ -29,6 +29,13 @@ export default function ProjectDetailsPage() {
   const params = useParams();
   const projectId = params?.id as string;
 
+  // Validate projectId exists
+  useEffect(() => {
+    if (!authLoading && !projectId) {
+      router.push('/dashboard');
+    }
+  }, [projectId, authLoading, router]);
+
   // Project and files state
   const {
     project,
@@ -255,6 +262,11 @@ export default function ProjectDetailsPage() {
       setItemsPerPage(limit);
     }
   };
+
+  // Validate projectId and show loader while redirecting
+  if (!projectId) {
+    return <PageLoader text="Invalid project..." />;
+  }
 
   if (authLoading || loading) {
     return <PageLoader text="Loading project..." />;
