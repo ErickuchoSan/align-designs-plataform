@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaService
@@ -20,14 +21,14 @@ export class PrismaService
     });
 
     // Log slow queries
-    this.$on('query' as never, (e: any) => {
+    this.$on('query' as never, (e: Prisma.QueryEvent) => {
       if (e.duration > 1000) {
         this.logger.warn(`Slow query detected: ${e.query} took ${e.duration}ms`);
       }
     });
 
     // Log errors
-    this.$on('error' as never, (e: any) => {
+    this.$on('error' as never, (e: Prisma.LogEvent) => {
       this.logger.error('Database error:', e);
     });
   }
