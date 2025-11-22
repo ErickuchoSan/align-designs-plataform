@@ -13,6 +13,8 @@ import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 // Hooks
 import { useProjectFiles } from './hooks/useProjectFiles';
 import { useFileOperations } from './hooks/useFileOperations';
+import { useFileModals } from './hooks/useFileModals';
+import { useFileFilters } from './hooks/useFileFilters';
 import type { FileData } from './hooks/useProjectFiles';
 
 // Components
@@ -57,18 +59,9 @@ export default function ProjectDetailsPage() {
     totalPages,
   } = useProjectFiles(projectId);
 
-  // Filters
-  const [nameFilter, setNameFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
-
-  // Modal states
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showCommentModal, setShowCommentModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [fileToEdit, setFileToEdit] = useState<FileData | null>(null);
-  const [fileToDelete, setFileToDelete] = useState<FileData | null>(null);
+  // Use custom hooks for modals and filters
+  const modals = useFileModals();
+  const filters = useFileFilters(files);
 
   // File operations
   const {
@@ -96,28 +89,14 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
-  // Extract available file types
-  useEffect(() => {
-    if (!Array.isArray(files)) return;
-
-    const types = Array.from(
-      new Set(
-        files
-          .filter(file => file.originalName)
-          .map(file => getFileExtension(file.originalName!))
-      )
-    );
-    setAvailableTypes(types);
-  }, [files]);
-
   // Local pagination state for filtered results
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
 
   // Check if filters are active - memoized to prevent recalculation
   const hasActiveFilters = useMemo(
-    () => nameFilter || typeFilter !== 'all',
-    [nameFilter, typeFilter]
+    () => filters.nameFilter || filters.typeFilter !== 'all',
+    [filters.nameFilter, filters.typeFilter]
   );
 
   // Apply filters and local pagination
@@ -127,89 +106,59 @@ export default function ProjectDetailsPage() {
       return;
     }
 
-    let filtered = files;
-
-    if (nameFilter) {
-      filtered = filtered.filter(file => {
-        if (!file.originalName) return false;
-        return file.originalName.toLowerCase().includes(nameFilter.toLowerCase());
-      });
-    }
-
-    if (typeFilter === 'comments') {
-      // Filter only comment-only entries (no file attached)
-      filtered = filtered.filter(file => !file.filename);
-    } else if (typeFilter !== 'all') {
-      // Filter by file type
-      filtered = filtered.filter(file =>
-        file.originalName && getFileExtension(file.originalName) === typeFilter
-      );
-    }
-
+    const filtered = filters.applyFilters(files);
     setFilteredFiles(filtered);
-  }, [files, nameFilter, typeFilter, setFilteredFiles]);
+  }, [files, filters, setFilteredFiles]);
 
   // Reset local pagination when filters change
   useEffect(() => {
     setLocalCurrentPage(1);
-  }, [nameFilter, typeFilter]);
+  }, [filters.nameFilter, filters.typeFilter]);
 
   // File operation handlers
   const handleUpload = useCallback(
     async (file: File, comment: string) => {
       const success = await handleFileUpload(file, comment);
       if (success) {
-        setShowUploadModal(false);
+        modals.closeUploadModal();
       }
       return success;
     },
-    [handleFileUpload]
+    [handleFileUpload, modals]
   );
 
   const handleComment = useCallback(
     async (comment: string) => {
       const success = await handleCreateComment(comment);
       if (success) {
-        setShowCommentModal(false);
+        modals.closeCommentModal();
       }
       return success;
     },
-    [handleCreateComment]
+    [handleCreateComment, modals]
   );
 
   const handleEdit = useCallback(
     async (fileToEdit: FileData, editComment: string, editFile: File | null) => {
       const success = await handleEditEntry(fileToEdit, editComment, editFile);
       if (success) {
-        setShowEditModal(false);
-        setFileToEdit(null);
+        modals.closeEditModal();
       }
       return success;
     },
-    [handleEditEntry]
+    [handleEditEntry, modals]
   );
 
   const handleDeleteConfirm = useCallback(
     async (file: FileData) => {
       const success = await handleDelete(file);
       if (success) {
-        setShowDeleteModal(false);
-        setFileToDelete(null);
+        modals.closeDeleteModal();
       }
       return success;
     },
-    [handleDelete]
+    [handleDelete, modals]
   );
-
-  const openEditModal = useCallback((file: FileData) => {
-    setFileToEdit(file);
-    setShowEditModal(true);
-  }, []);
-
-  const openDeleteConfirm = useCallback((file: FileData) => {
-    setFileToDelete(file);
-    setShowDeleteModal(true);
-  }, []);
 
   const canDeleteFile = useCallback(
     (file: FileData) => {
@@ -355,15 +304,15 @@ export default function ProjectDetailsPage() {
           {/* Filters and Upload button */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <FileFilters
-              nameFilter={nameFilter}
-              setNameFilter={setNameFilter}
-              typeFilter={typeFilter}
-              setTypeFilter={setTypeFilter}
-              availableTypes={availableTypes}
+              nameFilter={filters.nameFilter}
+              setNameFilter={filters.setNameFilter}
+              typeFilter={filters.typeFilter}
+              setTypeFilter={filters.setTypeFilter}
+              availableTypes={filters.availableTypes}
             />
             <div className="flex gap-3">
               <button
-                onClick={() => setShowCommentModal(true)}
+                onClick={modals.openCommentModal}
                 className="flex items-center gap-2 px-5 py-2.5 bg-gold-600 text-white rounded-lg hover:bg-gold-700 shadow-lg hover:shadow-xl transition-all"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,7 +321,7 @@ export default function ProjectDetailsPage() {
                 Create Comment
               </button>
               <button
-                onClick={() => setShowUploadModal(true)}
+                onClick={modals.openUploadModal}
                 className="flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-lg hover:bg-navy-700 shadow-lg hover:shadow-xl transition-all"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,8 +336,8 @@ export default function ProjectDetailsPage() {
           <FileList
             files={displayedFiles}
             onDownload={handleDownload}
-            onEdit={openEditModal}
-            onDelete={openDeleteConfirm}
+            onEdit={modals.openEditModal}
+            onDelete={modals.openDeleteModal}
             canDelete={canDeleteFile}
           />
 
@@ -408,9 +357,9 @@ export default function ProjectDetailsPage() {
 
       {/* Modals */}
       <FileUploadModal
-        show={showUploadModal}
+        show={modals.showUploadModal}
         onClose={() => {
-          setShowUploadModal(false);
+          modals.closeUploadModal();
           setError('');
         }}
         onUpload={handleUpload}
@@ -420,31 +369,25 @@ export default function ProjectDetailsPage() {
       />
 
       <CommentModal
-        show={showCommentModal}
-        onClose={() => setShowCommentModal(false)}
+        show={modals.showCommentModal}
+        onClose={modals.closeCommentModal}
         onSubmit={handleComment}
         uploading={uploading}
       />
 
       <FileEditModal
-        show={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setFileToEdit(null);
-        }}
+        show={modals.showEditModal}
+        onClose={modals.closeEditModal}
         onEdit={handleEdit}
-        file={fileToEdit}
+        file={modals.fileToEdit}
         uploading={uploading}
       />
 
       <FileDeleteModal
-        show={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setFileToDelete(null);
-        }}
+        show={modals.showDeleteModal}
+        onClose={modals.closeDeleteModal}
         onDelete={handleDeleteConfirm}
-        file={fileToDelete}
+        file={modals.fileToDelete}
         deleting={deleting}
       />
     </>
