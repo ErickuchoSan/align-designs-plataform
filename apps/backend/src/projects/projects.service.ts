@@ -12,7 +12,7 @@ import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
 import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
-import { PermissionUtils } from '../common/utils/permission.utils';
+import { PermissionContext } from '../common/strategies/permission.strategy';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 
 @Injectable()
@@ -223,8 +223,8 @@ export class ProjectsService {
     }
 
     // Client can only view their own projects
-    PermissionUtils.verifyProjectAccess(
-      userRole,
+    const permissionContext = new PermissionContext(userRole);
+    permissionContext.verifyProjectAccess(
       userId,
       project.clientId,
       'You do not have permission to view this project',
@@ -276,8 +276,8 @@ export class ProjectsService {
     }
 
     // Client can only update their own projects
-    PermissionUtils.verifyProjectAccess(
-      userRole,
+    const permissionContext = new PermissionContext(userRole);
+    permissionContext.verifyProjectAccess(
       userId,
       project.clientId,
       'You do not have permission to update this project',
@@ -360,8 +360,8 @@ export class ProjectsService {
     }
 
     // Client can only delete their own projects
-    PermissionUtils.verifyProjectAccess(
-      userRole,
+    const permissionContext = new PermissionContext(userRole);
+    permissionContext.verifyProjectAccess(
       userId,
       project.clientId,
       'You do not have permission to delete this project',

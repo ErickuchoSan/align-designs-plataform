@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role } from '@prisma/client';
-import { PermissionUtils } from '../../common/utils/permission.utils';
+import { PermissionContext } from '../../common/strategies/permission.strategy';
 
 /**
  * Service responsible for file and project permission verification
@@ -39,8 +39,8 @@ export class FilePermissionsService {
     }
 
     // Verify permissions: client can only access their own projects
-    PermissionUtils.verifyProjectAccess(
-      userRole,
+    const permissionContext = new PermissionContext(userRole);
+    permissionContext.verifyProjectAccess(
       userId,
       project.clientId,
       errorMessage || 'You do not have access to this project',
@@ -116,8 +116,8 @@ export class FilePermissionsService {
     }
 
     // Verify permissions
-    PermissionUtils.verifyProjectAccess(
-      userRole,
+    const permissionContext = new PermissionContext(userRole);
+    permissionContext.verifyProjectAccess(
       userId,
       file.project.clientId,
       'You do not have access to this entry',
