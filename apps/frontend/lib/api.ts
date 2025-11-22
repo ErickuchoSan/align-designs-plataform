@@ -33,6 +33,7 @@ async function fetchCsrfToken(): Promise<void> {
   try {
     const response = await axios.get(`${API_URL}/auth/csrf-token`, {
       withCredentials: true,
+      timeout: LOADING_DELAY.TIMEOUT,
     });
     csrfToken = response.headers['x-csrf-token'];
   } catch (error) {

@@ -18,6 +18,7 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { RequestSizeLimitMiddleware } from './common/middleware/request-size-limit.middleware';
 import { validate } from './config/configuration.validation';
+import { GLOBAL_RATE_LIMIT } from './common/constants/timeouts.constants';
 
 @Module({
   imports: [
@@ -26,12 +27,7 @@ import { validate } from './config/configuration.validation';
       validate,
     }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000, // 1 minute
-        limit: 10, // 10 requests per minute
-      },
-    ]),
+    ThrottlerModule.forRoot([GLOBAL_RATE_LIMIT]),
     PrismaModule,
     UsersModule,
     ProjectsModule,

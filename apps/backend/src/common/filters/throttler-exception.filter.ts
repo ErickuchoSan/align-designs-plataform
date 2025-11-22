@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { Response } from 'express';
+import { GLOBAL_RATE_LIMIT } from '../constants/timeouts.constants';
 
 @Catch(ThrottlerException)
 export class ThrottlerExceptionFilter implements ExceptionFilter {
@@ -14,8 +15,9 @@ export class ThrottlerExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
 
-    // Calculate approximate wait time (throttler uses TTL, usually 60 seconds)
-    const waitTimeSeconds = 60; // Default throttler TTL
+    // Calculate wait time based on configured TTL
+    const waitTimeMs = GLOBAL_RATE_LIMIT.ttl;
+    const waitTimeSeconds = Math.ceil(waitTimeMs / 1000);
     const waitTimeMinutes = Math.ceil(waitTimeSeconds / 60);
 
     response.status(status).json({

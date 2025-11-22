@@ -20,7 +20,7 @@ const ENV_CONFIG: EnvConfig = {
     description: 'Backend API URL',
     // Only use default in development, not in production
     ...(process.env.NODE_ENV === 'development' && {
-      defaultValue: 'http://localhost:4000',
+      defaultValue: 'http://localhost:4000/api/v1',
     }),
   },
 };

@@ -20,6 +20,12 @@ export const MAX_FILE_SIZE_MB = 15000; // 15GB in MB
 export const RATE_LIMIT_TTL_MS = 60000; // 1 minute
 export const RATE_LIMIT_TTL_5MIN_MS = 5 * 60 * 1000; // 5 minutes
 
+// Global Rate Limit (default for all endpoints)
+export const GLOBAL_RATE_LIMIT = {
+  ttl: RATE_LIMIT_TTL_MS, // 1 minute
+  limit: 30, // 30 requests per minute
+};
+
 // Rate Limit: Authentication endpoints
 export const RATE_LIMIT_AUTH = {
   CHECK_EMAIL: { limit: 2, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 10/min to 2/min to prevent email enumeration
