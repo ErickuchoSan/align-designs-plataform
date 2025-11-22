@@ -1,28 +1,11 @@
-import {
-  IsNotEmpty,
-  IsString,
-  MinLength,
-  MaxLength,
-  Matches,
-} from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { PasswordValidationUtils } from '../utils/validation.utils';
 import { PasswordValidation } from '../interfaces/password-strength.interface';
+import { ValidatePassword } from '../decorators/password-validation.decorator';
 
 export class PasswordDto {
   @IsNotEmpty({ message: 'Password is required' })
-  @IsString({ message: 'Password must be a string' })
-  @MinLength(12, { message: 'Password must be at least 12 characters long' })
-  @MaxLength(128, { message: 'Password cannot exceed 128 characters' })
-  @Matches(/[A-Z]/, {
-    message: 'Password must contain at least one uppercase letter',
-  })
-  @Matches(/[a-z]/, {
-    message: 'Password must contain at least one lowercase letter',
-  })
-  @Matches(/\d/, { message: 'Password must contain at least one number' })
-  @Matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, {
-    message: 'Password must contain at least one special character',
-  })
+  @ValidatePassword()
   password: string;
 
   constructor(password: string) {
