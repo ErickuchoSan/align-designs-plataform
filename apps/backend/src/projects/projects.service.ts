@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { IProjectRepository } from './repositories/project.repository.interface';
+import { IUserRepository } from '../users/repositories/user.repository.interface';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Role } from '@prisma/client';
@@ -13,15 +15,16 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
 import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
 import { PermissionContext } from '../common/strategies/permission.strategy';
-import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
 
   constructor(
-    private prisma: PrismaService,
-    private storageService: StorageService,
+    private readonly projectRepo: IProjectRepository,
+    private readonly userRepo: IUserRepository,
+    private readonly prisma: PrismaService, // Keep for complex queries not in repo
+    private readonly storageService: StorageService,
   ) {}
 
   /**
@@ -29,24 +32,20 @@ export class ProjectsService {
    */
   async create(createProjectDto: CreateProjectDto, createdBy: string) {
     // Verify that the client exists and is not deleted
-    const client = await this.prisma.user.findFirst({
-      where: {
-        id: createProjectDto.clientId,
-        deletedAt: null, // Only allow active (non-deleted) clients
-      },
-    });
+    const client = await this.userRepo.findById(createProjectDto.clientId);
 
     if (!client || client.role !== Role.CLIENT) {
       throw new NotFoundException('Client not found');
     }
 
-    const project = await this.prisma.project.create({
-      data: {
-        name: createProjectDto.name,
-        description: createProjectDto.description,
-        clientId: createProjectDto.clientId,
-        createdBy,
-      },
+    const project = await this.projectRepo.create({
+      ...createProjectDto,
+      createdBy,
+    });
+
+    // Fetch with relations for response
+    return this.prisma.project.findFirst({
+      where: { id: project.id },
       include: {
         client: {
           select: {
