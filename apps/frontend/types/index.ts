@@ -77,8 +77,8 @@ export interface OTPVerify {
 }
 
 export interface AuthResponse {
-  access_token: string;
   user: User;
+  // NOTE: access_token is NOT in response body - it's sent via httpOnly cookie only
 }
 
 export interface CreateClientDto {

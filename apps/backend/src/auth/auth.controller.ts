@@ -80,14 +80,13 @@ export class AuthController {
   @Throttle({ default: RATE_LIMIT_AUTH.LOGIN })
   @ApiOperation({
     summary: 'Login with email and password',
-    description: 'Authenticates admin or client users. Sets httpOnly cookie and returns JWT token + user data.',
+    description: 'Authenticates admin or client users. Sets httpOnly cookie with JWT and returns user data.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Login successful',
+    description: 'Login successful. JWT token is set in httpOnly cookie, not in response body.',
     schema: {
       example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
         user: {
           id: '123e4567-e89b-12d3-a456-426614174000',
           email: 'admin@example.com',
@@ -145,8 +144,8 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Return user data and token (token for backward compatibility)
-    return result;
+    // Return only user data (token is in httpOnly cookie, not in response body)
+    return { user: result.user };
   }
 
   @Post('otp/request')
@@ -220,8 +219,8 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Return user data and token (token for backward compatibility)
-    return result;
+    // Return only user data (token is in httpOnly cookie, not in response body)
+    return { user: result.user };
   }
 
   @Post('set-password')

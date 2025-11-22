@@ -36,8 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.post<AuthResponse>('/auth/login', credentials);
 
-      // Save auth data using centralized utility
-      AuthStorage.saveAuthData(data.access_token, data.user);
+      // Save user data (token is in httpOnly cookie, not in response)
+      AuthStorage.saveAuthData('', data.user); // Empty token param (kept for API compat)
       setUser(data.user);
     } catch (error) {
       logger.error('Error during login:', error);
@@ -58,8 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.post<AuthResponse>('/auth/otp/verify', otpData);
 
-      // Save auth data using centralized utility
-      AuthStorage.saveAuthData(data.access_token, data.user);
+      // Save user data (token is in httpOnly cookie, not in response)
+      AuthStorage.saveAuthData('', data.user); // Empty token param (kept for API compat)
       setUser(data.user);
     } catch (error) {
       logger.error('Error verifying OTP:', error);
