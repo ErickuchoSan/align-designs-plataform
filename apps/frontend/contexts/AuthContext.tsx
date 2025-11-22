@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, LoginCredentials, OTPRequest, OTPVerify, AuthResponse } from '@/types';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { storage } from '@/lib/storage';
+import { AuthStorage } from '@/lib/auth-storage';
 
 interface AuthContextType {
   user: User | null;
@@ -24,45 +24,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only execute on the client
-    if (typeof window !== 'undefined') {
-      const token = storage.getItem('access_token');
-
-      if (token) {
-        const userResult = storage.getJSON<User>('user');
-
-        if (userResult.success && userResult.data) {
-          setUser(userResult.data);
-        } else {
-          // If user data is corrupted, clear everything
-          logger.error('Error loading user from storage:', userResult.error);
-          storage.removeItem('user');
-          storage.removeItem('access_token');
-        }
-      }
-      setLoading(false);
+    // Load authentication data from storage
+    const userData = AuthStorage.loadAuthData();
+    if (userData) {
+      setUser(userData);
     }
+    setLoading(false);
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {
       const { data } = await api.post<AuthResponse>('/auth/login', credentials);
 
-      if (typeof window !== 'undefined') {
-        const tokenResult = storage.setItem('access_token', data.access_token);
-        const userResult = storage.setJSON('user', data.user);
-
-        if (!tokenResult.success || !userResult.success) {
-          logger.error('Failed to save auth data to storage', {
-            tokenError: tokenResult.error,
-            userError: userResult.error,
-          });
-          // Continue anyway - user is logged in, just won't persist across sessions
-          if (storage.usingFallback) {
-            logger.warn('Using in-memory storage. Session will not persist on page reload.');
-          }
-        }
-      }
+      // Save auth data using centralized utility
+      AuthStorage.saveAuthData(data.access_token, data.user);
       setUser(data.user);
     } catch (error) {
       logger.error('Error during login:', error);
@@ -83,20 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.post<AuthResponse>('/auth/otp/verify', otpData);
 
-      if (typeof window !== 'undefined') {
-        const tokenResult = storage.setItem('access_token', data.access_token);
-        const userResult = storage.setJSON('user', data.user);
-
-        if (!tokenResult.success || !userResult.success) {
-          logger.error('Failed to save auth data to storage', {
-            tokenError: tokenResult.error,
-            userError: userResult.error,
-          });
-          if (storage.usingFallback) {
-            logger.warn('Using in-memory storage. Session will not persist on page reload.');
-          }
-        }
-      }
+      // Save auth data using centralized utility
+      AuthStorage.saveAuthData(data.access_token, data.user);
       setUser(data.user);
     } catch (error) {
       logger.error('Error verifying OTP:', error);
@@ -112,11 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.error('Error during logout:', error);
       // Continue with logout even if API call fails
     } finally {
-      // Clear local storage (for backward compatibility)
-      if (typeof window !== 'undefined') {
-        storage.removeItem('access_token');
-        storage.removeItem('user');
-      }
+      // Clear authentication data using centralized utility
+      AuthStorage.clearAuthData();
       setUser(null);
     }
   };

@@ -1,5 +1,5 @@
 import { api, refreshCsrfToken } from '@/lib/api';
-import { storage } from '@/lib/storage';
+import { AuthStorage } from '@/lib/auth-storage';
 import { User } from '@/types';
 
 export interface LoginCredentials {
@@ -40,13 +40,8 @@ export class AuthService {
       credentials
     );
 
-    // Store token and user data
-    if (response.data.accessToken) {
-      storage.setItem('access_token', response.data.accessToken);
-    }
-    if (response.data.user) {
-      storage.setItem('user', JSON.stringify(response.data.user));
-    }
+    // Store token and user data using centralized utility
+    AuthStorage.saveAuthData(response.data.accessToken, response.data.user);
 
     return response.data;
   }
@@ -62,13 +57,8 @@ export class AuthService {
       credentials
     );
 
-    // Store token and user data
-    if (response.data.accessToken) {
-      storage.setItem('access_token', response.data.accessToken);
-    }
-    if (response.data.user) {
-      storage.setItem('user', JSON.stringify(response.data.user));
-    }
+    // Store token and user data using centralized utility
+    AuthStorage.saveAuthData(response.data.accessToken, response.data.user);
 
     return response.data;
   }
@@ -135,8 +125,7 @@ export class AuthService {
    * Logout and clear stored tokens
    */
   static logout(): void {
-    storage.removeItem('access_token');
-    storage.removeItem('user');
+    AuthStorage.clearAuthData();
     refreshCsrfToken(); // Refresh CSRF token after logout
   }
 
@@ -144,20 +133,13 @@ export class AuthService {
    * Get current user from storage
    */
   static getCurrentUser(): User | null {
-    const userStr = storage.getItem('user');
-    if (!userStr) return null;
-
-    try {
-      return JSON.parse(userStr) as User;
-    } catch {
-      return null;
-    }
+    return AuthStorage.getCurrentUser();
   }
 
   /**
    * Check if user is authenticated
    */
   static isAuthenticated(): boolean {
-    return !!storage.getItem('access_token');
+    return AuthStorage.isAuthenticated();
   }
 }
