@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 import { useProjectsList } from './useProjectsList';
 import { useProjectModals } from './useProjectModals';
 import { useProjectActions } from './useProjectActions';
+import { useAutoResetMessage } from './useAutoResetMessage';
 
 interface Client {
   id: string;
@@ -27,13 +27,15 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const [clients, setClients] = useState<Client[]>([]);
   const [success, setSuccess] = useState('');
 
+  // Auto-reset success messages
+  useAutoResetMessage(success, setSuccess);
+
   // Use composed hooks for specific responsibilities
   const projectsList = useProjectsList(isAuthenticated);
   const modals = useProjectModals();
 
   const handleSuccess = useCallback((message: string) => {
     setSuccess(message);
-    setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
   }, []);
 
   const actions = useProjectActions({

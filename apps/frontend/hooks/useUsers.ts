@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { User, CreateClientDto } from '@/types';
-import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 import { getErrorMessage } from '@/lib/errors';
+import { useAutoResetMessage } from './useAutoResetMessage';
 
 export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Auto-reset success messages
+  useAutoResetMessage(success, setSuccess);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,7 +72,6 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
         setFormData({ email: '', firstName: '', lastName: '', phone: '' });
         setSuccess('Client created successfully');
         fetchUsers();
-        setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
       } catch (err) {
         setError(getErrorMessage(err, 'Error creating client'));
       } finally {
@@ -98,7 +100,6 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       setShowToggleConfirm(false);
       setUserToToggle(null);
       fetchUsers();
-      setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
     } catch (err) {
       setError(getErrorMessage(err, 'Error changing status'));
     } finally {

@@ -12,8 +12,8 @@ import PasswordRequirements from '@/app/components/PasswordRequirements';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
-import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 import { getErrorMessage } from '@/lib/errors';
+import { useAutoResetMessage } from '@/hooks/useAutoResetMessage';
 
 export default function ProfilePage() {
   const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
@@ -33,6 +33,9 @@ export default function ProfilePage() {
   // General state
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Auto-reset success messages
+  useAutoResetMessage(success, setSuccess);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -69,8 +72,6 @@ export default function ProfilePage() {
           logger.error('Failed to update user in storage:', result.error);
         }
       }
-
-      setTimeout(() => setSuccess(''), MESSAGE_DURATION.SUCCESS);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
