@@ -16,13 +16,13 @@ import type { Request } from 'express';
  */
 @Injectable()
 export class IpThrottlerGuard extends ThrottlerGuard {
-  private readonly trustedProxies: string[];
-  private readonly trustProxy: boolean;
+  private trustedProxies: string[] = [];
+  private trustProxy = false;
 
   constructor(
-    @Inject('THROTTLER_OPTIONS') options: ThrottlerModuleOptions,
-    @Inject('THROTTLER_STORAGE') storageService: ThrottlerStorage,
-    reflector: Reflector,
+    @Inject('THROTTLER_OPTIONS') protected readonly options: ThrottlerModuleOptions,
+    @Inject('THROTTLER_STORAGE') protected readonly storageService: ThrottlerStorage,
+    protected readonly reflector: Reflector,
     private readonly configService: ConfigService,
   ) {
     super(options, storageService, reflector);
