@@ -338,79 +338,103 @@ export class PasswordValidationUtils {
   }
 
   /**
+   * Individual password validators - small, focused, testable
+   */
+  private static readonly PASSWORD_MIN_LENGTH = 12;
+  private static readonly COMMON_PATTERNS = [
+    '123456',
+    'password',
+    'qwerty',
+    'abc123',
+    'admin123',
+    'welcome123',
+  ];
+  private static readonly SEQUENTIAL_PATTERNS = [
+    'abcdefghijklmnopqrstuvwxyz',
+    '0123456789',
+  ];
+
+  private static validatePasswordNotEmpty(password: string): string | null {
+    return !password ? 'Password is required' : null;
+  }
+
+  private static validatePasswordLength(password: string): string | null {
+    return password.length < this.PASSWORD_MIN_LENGTH
+      ? `Password must be at least ${this.PASSWORD_MIN_LENGTH} characters long`
+      : null;
+  }
+
+  private static validatePasswordUppercase(password: string): string | null {
+    return !/[A-Z]/.test(password)
+      ? 'Password must contain at least one uppercase letter'
+      : null;
+  }
+
+  private static validatePasswordLowercase(password: string): string | null {
+    return !/[a-z]/.test(password)
+      ? 'Password must contain at least one lowercase letter'
+      : null;
+  }
+
+  private static validatePasswordNumber(password: string): string | null {
+    return !/\d/.test(password)
+      ? 'Password must contain at least one number'
+      : null;
+  }
+
+  private static validatePasswordSpecialChar(password: string): string | null {
+    return !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
+      ? 'Password must contain at least one special character'
+      : null;
+  }
+
+  private static validatePasswordCommonPatterns(
+    password: string,
+  ): string | null {
+    const lowerPassword = password.toLowerCase();
+    return this.COMMON_PATTERNS.some((pattern) => lowerPassword.includes(pattern))
+      ? 'Password contains common patterns'
+      : null;
+  }
+
+  private static validatePasswordSequential(password: string): string | null {
+    const lowerPassword = password.toLowerCase();
+    for (const pattern of this.SEQUENTIAL_PATTERNS) {
+      for (let i = 0; i < pattern.length - 2; i++) {
+        const substring = pattern.substring(i, i + 3);
+        if (lowerPassword.includes(substring)) {
+          return 'Password contains sequential characters';
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
    * Validate password against security requirements
+   * Refactored into composable validators for better maintainability
    */
   static validatePassword(password: string): {
     isValid: boolean;
     error?: string;
   } {
-    if (!password) {
-      return { isValid: false, error: 'Password is required' };
-    }
-
-    if (password.length < 12) {
-      return {
-        isValid: false,
-        error: 'Password must be at least 12 characters long',
-      };
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      return {
-        isValid: false,
-        error: 'Password must contain at least one uppercase letter',
-      };
-    }
-
-    if (!/[a-z]/.test(password)) {
-      return {
-        isValid: false,
-        error: 'Password must contain at least one lowercase letter',
-      };
-    }
-
-    if (!/\d/.test(password)) {
-      return {
-        isValid: false,
-        error: 'Password must contain at least one number',
-      };
-    }
-
-    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-      return {
-        isValid: false,
-        error: 'Password must contain at least one special character',
-      };
-    }
-
-    // Check for common patterns
-    const commonPatterns = [
-      '123456',
-      'password',
-      'qwerty',
-      'abc123',
-      'admin123',
-      'welcome123',
+    // Array of validators - easy to add/remove/reorder
+    const validators = [
+      this.validatePasswordNotEmpty,
+      this.validatePasswordLength,
+      this.validatePasswordUppercase,
+      this.validatePasswordLowercase,
+      this.validatePasswordNumber,
+      this.validatePasswordSpecialChar,
+      this.validatePasswordCommonPatterns,
+      this.validatePasswordSequential,
     ];
 
-    if (
-      commonPatterns.some((pattern) => password.toLowerCase().includes(pattern))
-    ) {
-      return { isValid: false, error: 'Password contains common patterns' };
-    }
-
-    // Check for sequential characters
-    const sequentialPatterns = ['abcdefghijklmnopqrstuvwxyz', '0123456789'];
-
-    for (const pattern of sequentialPatterns) {
-      for (let i = 0; i < pattern.length - 2; i++) {
-        const substring = pattern.substring(i, i + 3);
-        if (password.toLowerCase().includes(substring)) {
-          return {
-            isValid: false,
-            error: 'Password contains sequential characters',
-          };
-        }
+    // Run validators sequentially until one fails
+    for (const validator of validators) {
+      const error = validator.call(this, password);
+      if (error) {
+        return { isValid: false, error };
       }
     }
 
