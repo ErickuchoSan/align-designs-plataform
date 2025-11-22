@@ -4,20 +4,26 @@ import { User } from '@/types';
 
 /**
  * Centralized authentication storage utility
- * Eliminates code duplication for token and user management
+ * Manages user data in localStorage (non-sensitive data only)
+ *
+ * SECURITY NOTE: JWT tokens are managed exclusively via httpOnly cookies
+ * and are NEVER stored in localStorage to prevent XSS attacks.
  */
 export class AuthStorage {
-  private static readonly ACCESS_TOKEN_KEY = 'access_token';
   private static readonly USER_KEY = 'user';
 
   /**
-   * Save authentication data (token + user) to storage
-   * @param accessToken - JWT access token
-   * @param user - User data
+   * Save authentication data (user only) to storage
+   *
+   * NOTE: The accessToken parameter is kept for backward compatibility
+   * but is NOT stored. Token authentication relies exclusively on httpOnly cookies.
+   *
+   * @param accessToken - JWT access token (ignored, sent via httpOnly cookie)
+   * @param user - User data (non-sensitive information)
    * @returns Success status and any errors
    */
   static saveAuthData(
-    accessToken: string,
+    accessToken: string, // Parameter kept for API compatibility
     user: User
   ): { success: boolean; errors?: string[] } {
     if (typeof window === 'undefined') {
@@ -26,14 +32,11 @@ export class AuthStorage {
 
     const errors: string[] = [];
 
-    // Save access token
-    const tokenResult = storage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
-    if (!tokenResult.success) {
-      logger.error('Failed to save access token to storage', tokenResult.error);
-      errors.push('Failed to save access token');
-    }
+    // SECURITY: Do NOT save access token to localStorage
+    // Token is sent via httpOnly cookie by the backend
+    // This prevents XSS attacks from stealing the token
 
-    // Save user data
+    // Save user data (non-sensitive information only)
     const userResult = storage.setJSON(this.USER_KEY, user);
     if (!userResult.success) {
       logger.error('Failed to save user data to storage', userResult.error);
@@ -55,15 +58,14 @@ export class AuthStorage {
 
   /**
    * Load authentication data from storage
+   *
+   * Returns user data from localStorage. Authentication state is determined
+   * by the presence of a valid httpOnly cookie (managed by the backend).
+   *
    * @returns User data if available, null otherwise
    */
   static loadAuthData(): User | null {
     if (typeof window === 'undefined') {
-      return null;
-    }
-
-    const token = storage.getItem(this.ACCESS_TOKEN_KEY);
-    if (!token) {
       return null;
     }
 
@@ -74,20 +76,25 @@ export class AuthStorage {
     }
 
     // If user data is corrupted, clear everything
-    logger.error('Error loading user from storage:', userResult.error);
-    this.clearAuthData();
+    if (userResult.error) {
+      logger.error('Error loading user from storage:', userResult.error);
+      this.clearAuthData();
+    }
+
     return null;
   }
 
   /**
    * Clear all authentication data from storage
+   *
+   * NOTE: This only clears localStorage (user data).
+   * The httpOnly cookie is cleared by the backend on logout.
    */
   static clearAuthData(): void {
     if (typeof window === 'undefined') {
       return;
     }
 
-    storage.removeItem(this.ACCESS_TOKEN_KEY);
     storage.removeItem(this.USER_KEY);
   }
 
@@ -110,26 +117,20 @@ export class AuthStorage {
   }
 
   /**
-   * Check if user is authenticated
-   * @returns True if access token exists in storage
+   * Check if user data exists in storage
+   *
+   * NOTE: This only checks if user data exists in localStorage.
+   * True authentication state should be verified with the backend
+   * as it relies on httpOnly cookies.
+   *
+   * @returns True if user data exists in storage
    */
-  static isAuthenticated(): boolean {
+  static hasUserData(): boolean {
     if (typeof window === 'undefined') {
       return false;
     }
 
-    return !!storage.getItem(this.ACCESS_TOKEN_KEY);
-  }
-
-  /**
-   * Get access token from storage
-   * @returns Access token if available, null otherwise
-   */
-  static getAccessToken(): string | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-
-    return storage.getItem(this.ACCESS_TOKEN_KEY);
+    const userResult = storage.getJSON<User>(this.USER_KEY);
+    return userResult.success && !!userResult.data;
   }
 }

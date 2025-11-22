@@ -1,8 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { storage } from './storage';
 import { env } from './env-validator';
 import { LOADING_DELAY } from './constants/ui.constants';
 import { logger } from './logger';
+import { AuthStorage } from './auth-storage';
 
 // API Configuration
 // The backend uses URI versioning (e.g., /api/v1/endpoint)
@@ -72,21 +72,14 @@ const shouldRetry = (error: AxiosError): boolean => {
   );
 };
 
-// Interceptor to add JWT token and CSRF token to each request
-// Note: JWT is now sent via httpOnly cookies automatically (withCredentials: true)
-// Keeping fallback support for Authorization header for backward compatibility
+// Interceptor to add CSRF token to state-changing requests
+// NOTE: JWT authentication is handled exclusively via httpOnly cookies
+// sent automatically with withCredentials: true
 api.interceptors.request.use(
   async (config) => {
-    // Only access localStorage on the client side
+    // Only access CSRF token on the client side
     if (typeof window !== 'undefined') {
-      const token = storage.getItem('access_token');
-      if (token) {
-        // Fallback: If token exists in localStorage, send it via Authorization header
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      // JWT will be sent via cookie automatically due to withCredentials: true
-
-      // Add CSRF token for state-changing requests
+      // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
       const method = config.method?.toUpperCase();
       if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
         // If CSRF token is not available, fetch it
@@ -140,9 +133,8 @@ api.interceptors.response.use(
         window.location.pathname.includes('/login');
 
       if (!shouldNotRedirect) {
-        // Expired or invalid token - redirect to login
-        storage.removeItem('access_token');
-        storage.removeItem('user');
+        // Expired or invalid token - clear user data and redirect to login
+        AuthStorage.clearAuthData();
         window.location.href = '/login';
       }
     }
