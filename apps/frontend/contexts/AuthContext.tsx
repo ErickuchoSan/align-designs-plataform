@@ -36,6 +36,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.post<AuthResponse>('/auth/login', credentials);
 
+      // Validate response structure
+      if (!data || !data.user || !data.user.id || !data.user.email) {
+        logger.error('Invalid login response structure:', data);
+        throw new Error('Invalid server response. Please try again.');
+      }
+
       // Save user data (token is in httpOnly cookie, not in response)
       AuthStorage.saveAuthData('', data.user); // Empty token param (kept for API compat)
       setUser(data.user);
@@ -57,6 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyOTP = async (otpData: OTPVerify) => {
     try {
       const { data } = await api.post<AuthResponse>('/auth/otp/verify', otpData);
+
+      // Validate response structure
+      if (!data || !data.user || !data.user.id || !data.user.email) {
+        logger.error('Invalid OTP verification response structure:', data);
+        throw new Error('Invalid server response. Please try again.');
+      }
 
       // Save user data (token is in httpOnly cookie, not in response)
       AuthStorage.saveAuthData('', data.user); // Empty token param (kept for API compat)
