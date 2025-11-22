@@ -1,19 +1,17 @@
-import { IsEmail, IsString, Length, Matches } from 'class-validator';
+import { IsEmail } from 'class-validator';
 import { Transform } from 'class-transformer';
 import {
   ValidatePassword,
   ValidatePasswordConfirmation,
 } from '../../common/decorators/password-validation.decorator';
+import { ValidateOtp } from '../../common/decorators/otp-validation.decorator';
 
 export class ResetPasswordDto {
   @IsEmail({}, { message: 'Email must be valid' })
   @Transform(({ value }) => value?.toLowerCase().trim())
   email: string;
 
-  @IsString()
-  @Length(8, 8, { message: 'OTP code must have 8 digits' })
-  @Matches(/^\d{8}$/, { message: 'OTP code must contain only digits' })
-  @Transform(({ value }) => value?.trim())
+  @ValidateOtp()
   otp: string;
 
   @ValidatePassword({ fieldName: 'New password' })
