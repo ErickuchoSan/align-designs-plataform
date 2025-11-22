@@ -69,19 +69,24 @@ export class ProjectsController {
   ) {
     const project = await this.projectsService.create(createProjectDto, user.userId);
 
-    // Audit log for project creation
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.PROJECT_CREATE,
-      resourceType: 'project',
-      resourceId: project.id,
-      ipAddress,
-      userAgent,
-      details: {
-        name: createProjectDto.name,
-        clientId: createProjectDto.clientId,
-      },
-    });
+    // Audit log for project creation (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.PROJECT_CREATE,
+        resourceType: 'project',
+        resourceId: project.id,
+        ipAddress,
+        userAgent,
+        details: {
+          name: createProjectDto.name,
+          clientId: createProjectDto.clientId,
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block project creation
+      console.error('Failed to log audit for project creation:', error);
+    }
 
     return project;
   }
@@ -174,18 +179,23 @@ export class ProjectsController {
       user.role,
     );
 
-    // Audit log for project update
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.PROJECT_UPDATE,
-      resourceType: 'project',
-      resourceId: id,
-      ipAddress,
-      userAgent,
-      details: {
-        updatedFields: Object.keys(updateProjectDto).join(', '),
-      },
-    });
+    // Audit log for project update (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.PROJECT_UPDATE,
+        resourceType: 'project',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: {
+          updatedFields: Object.keys(updateProjectDto).join(', '),
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block project update
+      console.error('Failed to log audit for project update:', error);
+    }
 
     return project;
   }
@@ -219,15 +229,20 @@ export class ProjectsController {
   ) {
     const result = await this.projectsService.remove(id, user.userId, user.role);
 
-    // Audit log for project deletion
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.PROJECT_DELETE,
-      resourceType: 'project',
-      resourceId: id,
-      ipAddress,
-      userAgent,
-    });
+    // Audit log for project deletion (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.PROJECT_DELETE,
+        resourceType: 'project',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      // Audit failure should not block project deletion
+      console.error('Failed to log audit for project deletion:', error);
+    }
 
     return result;
   }

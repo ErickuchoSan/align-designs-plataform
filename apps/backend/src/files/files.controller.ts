@@ -93,21 +93,26 @@ export class FilesController {
       user.role,
     );
 
-    // Audit log for file upload
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.FILE_UPLOAD,
-      resourceType: 'file',
-      resourceId: result.id,
-      ipAddress,
-      userAgent,
-      details: {
-        projectId,
-        filename: file.originalname,
-        size: file.size,
-        mimeType: file.mimetype,
-      },
-    });
+    // Audit log for file upload (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.FILE_UPLOAD,
+        resourceType: 'file',
+        resourceId: result.id,
+        ipAddress,
+        userAgent,
+        details: {
+          projectId,
+          filename: file.originalname,
+          size: file.size,
+          mimeType: file.mimetype,
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block file upload
+      console.error('Failed to log audit for file upload:', error);
+    }
 
     return result;
   }
@@ -200,15 +205,20 @@ export class FilesController {
   ) {
     const result = await this.filesService.getFileUrl(id, user.userId, user.role);
 
-    // Audit log for file download
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.FILE_DOWNLOAD,
-      resourceType: 'file',
-      resourceId: id,
-      ipAddress,
-      userAgent,
-    });
+    // Audit log for file download (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.FILE_DOWNLOAD,
+        resourceType: 'file',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      // Audit failure should not block file download
+      console.error('Failed to log audit for file download:', error);
+    }
 
     return result;
   }
@@ -228,15 +238,20 @@ export class FilesController {
   ) {
     const result = await this.filesService.deleteFile(id, user.userId, user.role);
 
-    // Audit log for file deletion
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.FILE_DELETE,
-      resourceType: 'file',
-      resourceId: id,
-      ipAddress,
-      userAgent,
-    });
+    // Audit log for file deletion (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.FILE_DELETE,
+        resourceType: 'file',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      // Audit failure should not block file deletion
+      console.error('Failed to log audit for file deletion:', error);
+    }
 
     return result;
   }

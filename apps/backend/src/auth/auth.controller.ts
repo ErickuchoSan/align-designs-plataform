@@ -117,20 +117,25 @@ export class AuthController {
       loginDto.password,
     );
 
-    // Audit log for successful login
-    await this.auditService.log({
-      userId: result.user.id,
-      action: AuditAction.LOGIN,
-      resourceType: 'auth',
-      resourceId: result.user.id,
-      ipAddress,
-      userAgent,
-      details: {
-        email: loginDto.email,
-        role: result.user.role,
-        method: 'password',
-      },
-    });
+    // Audit log for successful login (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: result.user.id,
+        action: AuditAction.LOGIN,
+        resourceType: 'auth',
+        resourceId: result.user.id,
+        ipAddress,
+        userAgent,
+        details: {
+          email: loginDto.email,
+          role: result.user.role,
+          method: 'password',
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block login
+      console.error('Failed to log audit for login:', error);
+    }
 
     // Set JWT as httpOnly cookie for enhanced security
     res.cookie('access_token', result.access_token, {
@@ -154,16 +159,21 @@ export class AuthController {
   ) {
     const result = await this.authService.requestOtpForClient(requestOtpDto.email);
 
-    // Audit log for OTP request (userId not available yet)
-    await this.auditService.log({
-      action: AuditAction.OTP_REQUEST,
-      resourceType: 'auth',
-      ipAddress,
-      userAgent,
-      details: {
-        email: requestOtpDto.email,
-      },
-    });
+    // Audit log for OTP request (userId not available yet) (non-blocking)
+    try {
+      await this.auditService.log({
+        action: AuditAction.OTP_REQUEST,
+        resourceType: 'auth',
+        ipAddress,
+        userAgent,
+        details: {
+          email: requestOtpDto.email,
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block OTP request
+      console.error('Failed to log audit for OTP request:', error);
+    }
 
     return result;
   }
@@ -182,20 +192,25 @@ export class AuthController {
       verifyOtpDto.token,
     );
 
-    // Audit log for successful OTP verification
-    await this.auditService.log({
-      userId: result.user.id,
-      action: AuditAction.OTP_VERIFY,
-      resourceType: 'auth',
-      resourceId: result.user.id,
-      ipAddress,
-      userAgent,
-      details: {
-        email: verifyOtpDto.email,
-        role: result.user.role,
-        method: 'otp',
-      },
-    });
+    // Audit log for successful OTP verification (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: result.user.id,
+        action: AuditAction.OTP_VERIFY,
+        resourceType: 'auth',
+        resourceId: result.user.id,
+        ipAddress,
+        userAgent,
+        details: {
+          email: verifyOtpDto.email,
+          role: result.user.role,
+          method: 'otp',
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block OTP verification
+      console.error('Failed to log audit for OTP verification:', error);
+    }
 
     // Set JWT as httpOnly cookie for enhanced security
     res.cookie('access_token', result.access_token, {
@@ -239,15 +254,20 @@ export class AuthController {
       changePasswordDto.confirmPassword,
     );
 
-    // Audit log for password change
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.PASSWORD_CHANGE,
-      resourceType: 'user',
-      resourceId: user.userId,
-      ipAddress,
-      userAgent,
-    });
+    // Audit log for password change (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.PASSWORD_CHANGE,
+        resourceType: 'user',
+        resourceId: user.userId,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      // Audit failure should not block password change
+      console.error('Failed to log audit for password change:', error);
+    }
 
     return result;
   }
@@ -274,16 +294,21 @@ export class AuthController {
       resetPasswordDto.confirmPassword,
     );
 
-    // Audit log for password reset (userId not available in result)
-    await this.auditService.log({
-      action: AuditAction.PASSWORD_RESET,
-      resourceType: 'user',
-      ipAddress,
-      userAgent,
-      details: {
-        email: resetPasswordDto.email,
-      },
-    });
+    // Audit log for password reset (userId not available in result) (non-blocking)
+    try {
+      await this.auditService.log({
+        action: AuditAction.PASSWORD_RESET,
+        resourceType: 'user',
+        ipAddress,
+        userAgent,
+        details: {
+          email: resetPasswordDto.email,
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block password reset
+      console.error('Failed to log audit for password reset:', error);
+    }
 
     return result;
   }
@@ -304,15 +329,20 @@ export class AuthController {
       await this.authService.revokeToken(token);
     }
 
-    // Audit log for logout
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.LOGOUT,
-      resourceType: 'auth',
-      resourceId: user.userId,
-      ipAddress,
-      userAgent,
-    });
+    // Audit log for logout (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.LOGOUT,
+        resourceType: 'auth',
+        resourceId: user.userId,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      // Audit failure should not block logout
+      console.error('Failed to log audit for logout:', error);
+    }
 
     // Clear the access_token cookie
     res.clearCookie('access_token', {

@@ -61,21 +61,26 @@ export class UsersController {
   ) {
     const newUser = await this.usersService.createClient(createClientDto);
 
-    // Audit log for user creation
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.USER_CREATE,
-      resourceType: 'user',
-      resourceId: newUser.id,
-      ipAddress,
-      userAgent,
-      details: {
-        email: createClientDto.email,
-        firstName: createClientDto.firstName,
-        lastName: createClientDto.lastName,
-        role: 'CLIENT',
-      },
-    });
+    // Audit log for user creation (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.USER_CREATE,
+        resourceType: 'user',
+        resourceId: newUser.id,
+        ipAddress,
+        userAgent,
+        details: {
+          email: createClientDto.email,
+          firstName: createClientDto.firstName,
+          lastName: createClientDto.lastName,
+          role: 'CLIENT',
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block user creation
+      console.error('Failed to log audit for user creation:', error);
+    }
 
     return newUser;
   }
@@ -133,18 +138,23 @@ export class UsersController {
   ) {
     const updatedUser = await this.usersService.update(id, updateUserDto, user.userId, user.role);
 
-    // Audit log for user update
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.USER_UPDATE,
-      resourceType: 'user',
-      resourceId: id,
-      ipAddress,
-      userAgent,
-      details: {
-        updatedFields: Object.keys(updateUserDto).join(', '),
-      },
-    });
+    // Audit log for user update (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.USER_UPDATE,
+        resourceType: 'user',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: {
+          updatedFields: Object.keys(updateUserDto).join(', '),
+        },
+      });
+    } catch (error) {
+      // Audit failure should not block user update
+      console.error('Failed to log audit for user update:', error);
+    }
 
     return updatedUser;
   }
@@ -176,15 +186,20 @@ export class UsersController {
   ) {
     const result = await this.usersService.remove(id, user.userId);
 
-    // Audit log for user deletion
-    await this.auditService.log({
-      userId: user.userId,
-      action: AuditAction.USER_DELETE,
-      resourceType: 'user',
-      resourceId: id,
-      ipAddress,
-      userAgent,
-    });
+    // Audit log for user deletion (non-blocking)
+    try {
+      await this.auditService.log({
+        userId: user.userId,
+        action: AuditAction.USER_DELETE,
+        resourceType: 'user',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      // Audit failure should not block user deletion
+      console.error('Failed to log audit for user deletion:', error);
+    }
 
     return result;
   }
