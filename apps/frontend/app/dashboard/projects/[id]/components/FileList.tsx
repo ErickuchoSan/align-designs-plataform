@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { formatDate } from '@/lib/utils/date.utils';
 import { sanitizeText } from '@/lib/utils/text.utils';
 import { formatFileSize, getFileExtension } from '@/lib/utils/file.utils';
@@ -11,7 +12,7 @@ interface FileListProps {
   canDelete: (file: FileData) => boolean;
 }
 
-export default function FileList({
+function FileList({
   files,
   onDownload,
   onEdit,
@@ -158,3 +159,7 @@ export default function FileList({
     </div>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+// Only re-renders when files array or callback functions change
+export default memo(FileList);
