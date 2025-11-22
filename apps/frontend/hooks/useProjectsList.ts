@@ -42,7 +42,8 @@ export function useProjectsList(isAuthenticated: boolean) {
     if (isAuthenticated) {
       fetchProjects();
     }
-  }, [isAuthenticated, fetchProjects]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, currentPage, itemsPerPage]);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
