@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { Project } from '@/types';
 import { logger } from '@/lib/logger';
+import { usePagination } from './usePagination';
 
 /**
  * Hook for managing projects list, fetching, and pagination
@@ -11,24 +12,21 @@ export function useProjectsList(isAuthenticated: boolean) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  // Use centralized pagination hook
+  const pagination = usePagination();
 
   const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/projects', {
         params: {
-          page: currentPage,
-          limit: itemsPerPage,
+          page: pagination.currentPage,
+          limit: pagination.itemsPerPage,
         },
       });
       setProjects(data.data || []);
-      setTotalItems(data.meta?.total || 0);
-      setTotalPages(data.meta?.totalPages || 0);
+      pagination.setTotalItems(data.meta?.total || 0);
+      pagination.setTotalPages(data.meta?.totalPages || 0);
       setError('');
     } catch (err) {
       logger.error('Error fetching projects:', err);
@@ -36,35 +34,21 @@ export function useProjectsList(isAuthenticated: boolean) {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage]);
+  }, [pagination.currentPage, pagination.itemsPerPage, pagination]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchProjects();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, currentPage, itemsPerPage]);
-
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
-
-  const handleItemsPerPageChange = useCallback((limit: number) => {
-    setItemsPerPage(limit);
-    setCurrentPage(1); // Reset to first page when changing items per page
-  }, []);
+  }, [isAuthenticated, pagination.currentPage, pagination.itemsPerPage]);
 
   return {
     projects,
     setProjects,
     loading,
     error,
-    currentPage,
-    itemsPerPage,
-    totalItems,
-    totalPages,
-    handlePageChange,
-    handleItemsPerPageChange,
+    ...pagination,
     refetch: fetchProjects,
   };
 }

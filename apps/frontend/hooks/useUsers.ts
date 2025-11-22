@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { User, CreateClientDto } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
 import { useAutoResetMessage } from './useAutoResetMessage';
+import { usePagination } from './usePagination';
 
 export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const [users, setUsers] = useState<User[]>([]);
@@ -13,11 +14,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   // Auto-reset success messages
   useAutoResetMessage(success, setSuccess);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  // Use centralized pagination hook
+  const pagination = usePagination();
 
   // Create form state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -38,27 +36,27 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     if (isAuthenticated && isAdmin) {
       fetchUsers();
     }
-  }, [isAuthenticated, isAdmin, currentPage, itemsPerPage]);
+  }, [isAuthenticated, isAdmin, pagination.currentPage, pagination.itemsPerPage]);
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/users', {
         params: {
-          page: currentPage,
-          limit: itemsPerPage,
+          page: pagination.currentPage,
+          limit: pagination.itemsPerPage,
         },
       });
       setUsers(data.data || []);
-      setTotalItems(data.meta?.total || 0);
-      setTotalPages(data.meta?.totalPages || 0);
+      pagination.setTotalItems(data.meta?.total || 0);
+      pagination.setTotalPages(data.meta?.totalPages || 0);
       setError('');
     } catch (err) {
       setError(getErrorMessage(err, 'Error loading users'));
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage]);
+  }, [pagination.currentPage, pagination.itemsPerPage, pagination]);
 
   const handleCreateClient = useCallback(
     async (e: React.FormEvent) => {
@@ -118,13 +116,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     loading,
     error,
     success,
-    // Pagination
-    currentPage,
-    setCurrentPage,
-    itemsPerPage,
-    setItemsPerPage,
-    totalItems,
-    totalPages,
+    // Pagination (spread all pagination state and handlers)
+    ...pagination,
     // Create form
     showCreateForm,
     setShowCreateForm,
