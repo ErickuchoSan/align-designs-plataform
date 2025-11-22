@@ -35,6 +35,7 @@ import type { UserPayload } from '../auth/interfaces/user.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { RATE_LIMIT_USERS } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
+import { safeAuditLog } from '../audit/audit.helper';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -62,8 +63,9 @@ export class UsersController {
     const newUser = await this.usersService.createClient(createClientDto);
 
     // Audit log for user creation (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.USER_CREATE,
         resourceType: 'user',
@@ -76,11 +78,9 @@ export class UsersController {
           lastName: createClientDto.lastName,
           role: 'CLIENT',
         },
-      });
-    } catch (error) {
-      // Audit failure should not block user creation
-      console.error('Failed to log audit for user creation:', error);
-    }
+      },
+      'user creation',
+    );
 
     return newUser;
   }
@@ -139,8 +139,9 @@ export class UsersController {
     const updatedUser = await this.usersService.update(id, updateUserDto, user.userId, user.role);
 
     // Audit log for user update (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.USER_UPDATE,
         resourceType: 'user',
@@ -150,11 +151,9 @@ export class UsersController {
         details: {
           updatedFields: Object.keys(updateUserDto).join(', '),
         },
-      });
-    } catch (error) {
-      // Audit failure should not block user update
-      console.error('Failed to log audit for user update:', error);
-    }
+      },
+      'user update',
+    );
 
     return updatedUser;
   }
@@ -187,19 +186,18 @@ export class UsersController {
     const result = await this.usersService.remove(id, user.userId);
 
     // Audit log for user deletion (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.USER_DELETE,
         resourceType: 'user',
         resourceId: id,
         ipAddress,
         userAgent,
-      });
-    } catch (error) {
-      // Audit failure should not block user deletion
-      console.error('Failed to log audit for user deletion:', error);
-    }
+      },
+      'user deletion',
+    );
 
     return result;
   }

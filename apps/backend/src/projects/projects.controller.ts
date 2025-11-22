@@ -34,6 +34,7 @@ import type { UserPayload } from '../auth/interfaces/user.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { RATE_LIMIT_PROJECTS } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
+import { safeAuditLog } from '../audit/audit.helper';
 
 @ApiTags('projects')
 @ApiBearerAuth('JWT-auth')
@@ -70,8 +71,9 @@ export class ProjectsController {
     const project = await this.projectsService.create(createProjectDto, user.userId);
 
     // Audit log for project creation (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.PROJECT_CREATE,
         resourceType: 'project',
@@ -82,11 +84,9 @@ export class ProjectsController {
           name: createProjectDto.name,
           clientId: createProjectDto.clientId,
         },
-      });
-    } catch (error) {
-      // Audit failure should not block project creation
-      console.error('Failed to log audit for project creation:', error);
-    }
+      },
+      'project creation',
+    );
 
     return project;
   }
@@ -180,8 +180,9 @@ export class ProjectsController {
     );
 
     // Audit log for project update (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.PROJECT_UPDATE,
         resourceType: 'project',
@@ -191,11 +192,9 @@ export class ProjectsController {
         details: {
           updatedFields: Object.keys(updateProjectDto).join(', '),
         },
-      });
-    } catch (error) {
-      // Audit failure should not block project update
-      console.error('Failed to log audit for project update:', error);
-    }
+      },
+      'project update',
+    );
 
     return project;
   }
@@ -230,19 +229,18 @@ export class ProjectsController {
     const result = await this.projectsService.remove(id, user.userId, user.role);
 
     // Audit log for project deletion (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.PROJECT_DELETE,
         resourceType: 'project',
         resourceId: id,
         ipAddress,
         userAgent,
-      });
-    } catch (error) {
-      // Audit failure should not block project deletion
-      console.error('Failed to log audit for project deletion:', error);
-    }
+      },
+      'project deletion',
+    );
 
     return result;
   }

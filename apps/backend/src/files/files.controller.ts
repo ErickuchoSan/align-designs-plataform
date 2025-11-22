@@ -43,6 +43,7 @@ import {
 } from '../common/constants/timeouts.constants';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
+import { safeAuditLog } from '../audit/audit.helper';
 
 @ApiTags('files')
 @ApiBearerAuth()
@@ -94,8 +95,9 @@ export class FilesController {
     );
 
     // Audit log for file upload (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.FILE_UPLOAD,
         resourceType: 'file',
@@ -108,11 +110,9 @@ export class FilesController {
           size: file.size,
           mimeType: file.mimetype,
         },
-      });
-    } catch (error) {
-      // Audit failure should not block file upload
-      console.error('Failed to log audit for file upload:', error);
-    }
+      },
+      'file upload',
+    );
 
     return result;
   }
@@ -206,19 +206,18 @@ export class FilesController {
     const result = await this.filesService.getFileUrl(id, user.userId, user.role);
 
     // Audit log for file download (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.FILE_DOWNLOAD,
         resourceType: 'file',
         resourceId: id,
         ipAddress,
         userAgent,
-      });
-    } catch (error) {
-      // Audit failure should not block file download
-      console.error('Failed to log audit for file download:', error);
-    }
+      },
+      'file download',
+    );
 
     return result;
   }
@@ -239,19 +238,18 @@ export class FilesController {
     const result = await this.filesService.deleteFile(id, user.userId, user.role);
 
     // Audit log for file deletion (non-blocking)
-    try {
-      await this.auditService.log({
+    await safeAuditLog(
+      this.auditService,
+      {
         userId: user.userId,
         action: AuditAction.FILE_DELETE,
         resourceType: 'file',
         resourceId: id,
         ipAddress,
         userAgent,
-      });
-    } catch (error) {
-      // Audit failure should not block file deletion
-      console.error('Failed to log audit for file deletion:', error);
-    }
+      },
+      'file deletion',
+    );
 
     return result;
   }
