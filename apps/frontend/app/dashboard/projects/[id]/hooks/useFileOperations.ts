@@ -17,6 +17,19 @@ export function useFileOperations(
   // Refs to track active timeouts for cleanup
   const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
 
+  // Store latest callbacks in refs to avoid recreating handlers
+  // This prevents infinite loops when parent doesn't memoize callbacks
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  const onRefreshRef = useRef(onRefresh);
+
+  // Update callback refs when they change
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+    onRefreshRef.current = onRefresh;
+  }, [onSuccess, onError, onRefresh]);
+
   // Cleanup all active timeouts on unmount
   useEffect(() => {
     return () => {
@@ -42,7 +55,7 @@ export function useFileOperations(
       if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
         const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
         const maxSizeGB = (FILE_UPLOAD.MAX_SIZE_MB / 1000).toFixed(0);
-        onError(`File size (${fileSizeGB}GB) exceeds maximum allowed size of ${maxSizeGB}GB.`);
+        onErrorRef.current(`File size (${fileSizeGB}GB) exceeds maximum allowed size of ${maxSizeGB}GB.`);
         return false;
       }
 
@@ -68,20 +81,20 @@ export function useFileOperations(
           },
         });
 
-        onSuccess('File uploaded successfully');
-        await onRefresh();
+        onSuccessRef.current('File uploaded successfully');
+        await onRefreshRef.current();
 
-        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onError(getErrorMessage(error, 'Error uploading file'));
+        onErrorRef.current(getErrorMessage(error, 'Error uploading file'));
         return false;
       } finally {
         setUploading(false);
         setUploadProgress(0);
       }
     },
-    [projectId, onSuccess, onError, onRefresh, setTrackedTimeout]
+    [projectId, setTrackedTimeout]
   );
 
   const handleCreateComment = useCallback(
@@ -95,19 +108,19 @@ export function useFileOperations(
           comment: comment,
         });
 
-        onSuccess('Comment created successfully');
-        await onRefresh();
+        onSuccessRef.current('Comment created successfully');
+        await onRefreshRef.current();
 
-        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onError(getErrorMessage(error, 'Error creating comment'));
+        onErrorRef.current(getErrorMessage(error, 'Error creating comment'));
         return false;
       } finally {
         setUploading(false);
       }
     },
-    [projectId, onSuccess, onError, onRefresh, setTrackedTimeout]
+    [projectId, setTrackedTimeout]
   );
 
   const handleEditEntry = useCallback(
@@ -133,19 +146,19 @@ export function useFileOperations(
           },
         });
 
-        onSuccess('Entry updated successfully');
-        await onRefresh();
+        onSuccessRef.current('Entry updated successfully');
+        await onRefreshRef.current();
 
-        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onError(getErrorMessage(error, 'Error updating entry'));
+        onErrorRef.current(getErrorMessage(error, 'Error updating entry'));
         return false;
       } finally {
         setUploading(false);
       }
     },
-    [onSuccess, onError, onRefresh, setTrackedTimeout]
+    [setTrackedTimeout]
   );
 
   const handleDownload = useCallback(
@@ -179,7 +192,7 @@ export function useFileOperations(
 
         // Validate content type
         if (!contentType || !allowedMimeTypes.some(type => contentType.includes(type))) {
-          onError(`Invalid file type received: ${contentType || 'unknown'}. Download blocked for security.`);
+          onErrorRef.current(`Invalid file type received: ${contentType || 'unknown'}. Download blocked for security.`);
           return;
         }
 
@@ -192,13 +205,13 @@ export function useFileOperations(
         link.remove();
         window.URL.revokeObjectURL(url);
 
-        onSuccess('File downloaded successfully');
-        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        onSuccessRef.current('File downloaded successfully');
+        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
       } catch (error) {
-        onError(getErrorMessage(error, 'Error downloading file'));
+        onErrorRef.current(getErrorMessage(error, 'Error downloading file'));
       }
     },
-    [onSuccess, onError, setTrackedTimeout]
+    [setTrackedTimeout]
   );
 
   const handleDelete = useCallback(
@@ -207,19 +220,19 @@ export function useFileOperations(
 
       try {
         await api.delete(`/files/${fileToDelete.id}`);
-        onSuccess('File deleted successfully');
-        await onRefresh();
+        onSuccessRef.current('File deleted successfully');
+        await onRefreshRef.current();
 
-        setTrackedTimeout(() => onSuccess(''), MESSAGE_DURATION.SUCCESS);
+        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onError(getErrorMessage(error, 'Error deleting file'));
+        onErrorRef.current(getErrorMessage(error, 'Error deleting file'));
         return false;
       } finally {
         setDeleting(false);
       }
     },
-    [onSuccess, onError, onRefresh, setTrackedTimeout]
+    [setTrackedTimeout]
   );
 
   return {
