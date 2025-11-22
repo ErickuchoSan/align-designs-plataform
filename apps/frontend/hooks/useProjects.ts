@@ -7,12 +7,9 @@ import { useProjectModals } from './useProjectModals';
 import { useProjectActions } from './useProjectActions';
 import { useAutoResetMessage } from './useAutoResetMessage';
 
-interface Client {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+// Client type derived from Project interface to avoid duplication
+// Uses TypeScript utility type to extract the client property type
+type Client = NonNullable<Project['client']>;
 
 /**
  * Main hook for project management
