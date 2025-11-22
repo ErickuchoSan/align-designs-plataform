@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
+import { Project } from '@/types';
 import { useProjectsList } from './useProjectsList';
 import { useProjectModals } from './useProjectModals';
 import { useProjectActions } from './useProjectActions';
@@ -124,7 +125,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     editing: actions.editing,
     closeEditModal: modals.closeEditModal,
     handleEditProject,
-    openEditConfirm: (project) => {
+    openEditConfirm: (project: Project) => {
       modals.setEditingProject(project);
       modals.setShowEditConfirm(true);
     },

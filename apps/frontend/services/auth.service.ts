@@ -140,6 +140,6 @@ export class AuthService {
    * Check if user is authenticated
    */
   static isAuthenticated(): boolean {
-    return AuthStorage.isAuthenticated();
+    return AuthStorage.hasUserData();
   }
 }

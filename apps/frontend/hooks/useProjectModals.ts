@@ -49,7 +49,7 @@ export function useProjectModals() {
     setEditFormData({
       name: project.name,
       description: project.description || '',
-      clientId: project.client.id,
+      clientId: project.client?.id || '',
     });
     setShowEditModal(true);
 

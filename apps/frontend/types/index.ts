@@ -105,3 +105,11 @@ export interface UpdateProjectDto {
   name?: string;
   description?: string;
 }
+
+export interface PaginatedProjects {
+  projects: Project[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

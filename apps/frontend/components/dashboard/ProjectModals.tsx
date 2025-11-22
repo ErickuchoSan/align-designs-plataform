@@ -16,65 +16,64 @@ interface ProjectFormData {
   clientId: string;
 }
 
-interface ProjectModalsProps {
-  // Create modal
-  showCreateModal: boolean;
-  closeCreateModal: () => void;
-  createFormData: ProjectFormData;
-  setCreateFormData: (data: ProjectFormData) => void;
-  handleCreateProject: (e: React.FormEvent) => void;
-  creating: boolean;
+/**
+ * State and actions for the Create Project modal
+ */
+interface CreateModalState {
+  isOpen: boolean;
+  formData: ProjectFormData;
+  isSubmitting: boolean;
   clients: Client[];
-  // Edit modal
-  showEditConfirm: boolean;
-  setShowEditConfirm: (show: boolean) => void;
-  showEditModal: boolean;
-  closeEditModal: () => void;
-  editingProject: Project | null;
-  setEditingProject: (project: Project | null) => void;
-  editFormData: ProjectFormData;
-  setEditFormData: (data: ProjectFormData) => void;
-  handleEditProject: (e: React.FormEvent) => void;
-  editing: boolean;
-  confirmEdit: () => void;
+  onClose: () => void;
+  onFormChange: (data: ProjectFormData) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+/**
+ * State and actions for the Edit Project modal
+ */
+interface EditModalState {
+  isConfirmOpen: boolean;
+  isEditOpen: boolean;
+  project: Project | null;
+  formData: ProjectFormData;
+  isSubmitting: boolean;
   canChangeClient: boolean;
-  // Delete modal
-  showDeleteConfirm: boolean;
-  setShowDeleteConfirm: (show: boolean) => void;
-  projectToDelete: Project | null;
-  setProjectToDelete: (project: Project | null) => void;
-  handleDeleteProject: () => void;
-  deleting: boolean;
-  // Theme
+  onConfirmClose: (show: boolean) => void;
+  onEditClose: () => void;
+  onProjectChange: (project: Project | null) => void;
+  onFormChange: (data: ProjectFormData) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onConfirm: () => void;
+}
+
+/**
+ * State and actions for the Delete Project modal
+ */
+interface DeleteModalState {
+  isOpen: boolean;
+  project: Project | null;
+  isDeleting: boolean;
+  onClose: (show: boolean) => void;
+  onProjectChange: (project: Project | null) => void;
+  onConfirm: () => void;
+}
+
+/**
+ * Props for ProjectModals component
+ * Grouped by modal type to reduce prop drilling
+ */
+interface ProjectModalsProps {
+  createModal: CreateModalState;
+  editModal: EditModalState;
+  deleteModal: DeleteModalState;
   theme?: 'navy' | 'blue';
 }
 
 export default function ProjectModals({
-  showCreateModal,
-  closeCreateModal,
-  createFormData,
-  setCreateFormData,
-  handleCreateProject,
-  creating,
-  clients,
-  showEditConfirm,
-  setShowEditConfirm,
-  showEditModal,
-  closeEditModal,
-  editingProject,
-  setEditingProject,
-  editFormData,
-  setEditFormData,
-  handleEditProject,
-  editing,
-  confirmEdit,
-  canChangeClient,
-  showDeleteConfirm,
-  setShowDeleteConfirm,
-  projectToDelete,
-  setProjectToDelete,
-  handleDeleteProject,
-  deleting,
+  createModal,
+  editModal,
+  deleteModal,
   theme = 'navy',
 }: ProjectModalsProps) {
   const themeStyles = {
@@ -100,11 +99,11 @@ export default function ProjectModals({
     <>
       {/* Create Project Modal */}
       <Modal
-        isOpen={showCreateModal}
-        onClose={closeCreateModal}
+        isOpen={createModal.isOpen}
+        onClose={createModal.onClose}
         title={theme === 'navy' ? 'Crear Nuevo Proyecto' : 'Create New Project'}
       >
-        <form onSubmit={handleCreateProject} className="space-y-5">
+        <form onSubmit={createModal.onSubmit} className="space-y-5">
           <div>
             <label htmlFor="create-name" className={`block text-sm font-medium ${styles.label} mb-2`}>
               Project Name *
@@ -113,8 +112,8 @@ export default function ProjectModals({
               id="create-name"
               type="text"
               required
-              value={createFormData.name}
-              onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+              value={createModal.formData.name}
+              onChange={(e) => createModal.onFormChange({ ...createModal.formData, name: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
               placeholder="e.g., Logo Design"
             />
@@ -127,8 +126,8 @@ export default function ProjectModals({
             <textarea
               id="create-description"
               rows={4}
-              value={createFormData.description}
-              onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
+              value={createModal.formData.description}
+              onChange={(e) => createModal.onFormChange({ ...createModal.formData, description: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
               placeholder={theme === 'navy' ? 'Describe el proyecto...' : 'Describe the project...'}
             />
@@ -141,12 +140,12 @@ export default function ProjectModals({
             <select
               id="create-client"
               required
-              value={createFormData.clientId}
-              onChange={(e) => setCreateFormData({ ...createFormData, clientId: e.target.value })}
+              value={createModal.formData.clientId}
+              onChange={(e) => createModal.onFormChange({ ...createModal.formData, clientId: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
             >
               <option value="">Select a client</option>
-              {clients.map((client) => (
+              {createModal.clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.firstName} {client.lastName} ({client.email})
                 </option>
@@ -157,18 +156,18 @@ export default function ProjectModals({
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
             <button
               type="button"
-              onClick={closeCreateModal}
-              disabled={creating}
+              onClick={createModal.onClose}
+              disabled={createModal.isSubmitting}
               className={`px-5 py-2.5 text-sm font-medium ${styles.cancelButton} rounded-lg transition-colors disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={creating}
+              disabled={createModal.isSubmitting}
               className={`px-5 py-2.5 text-sm font-medium text-white ${styles.createButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
             >
-              {creating ? <ButtonLoader /> : (theme === 'navy' ? 'Crear Proyecto' : 'Create Project')}
+              {createModal.isSubmitting ? <ButtonLoader /> : (theme === 'navy' ? 'Crear Proyecto' : 'Create Project')}
             </button>
           </div>
         </form>
@@ -176,25 +175,25 @@ export default function ProjectModals({
 
       {/* Edit Confirmation Modal */}
       <ConfirmModal
-        isOpen={showEditConfirm}
+        isOpen={editModal.isConfirmOpen}
         onClose={() => {
-          setShowEditConfirm(false);
-          setEditingProject(null);
+          editModal.onConfirmClose(false);
+          editModal.onProjectChange(null);
         }}
-        onConfirm={confirmEdit}
+        onConfirm={editModal.onConfirm}
         title="Confirm Edit"
-        message={`Are you sure you want to edit the project "${editingProject?.name}"?`}
+        message={`Are you sure you want to edit the project "${editModal.project?.name}"?`}
         confirmText={theme === 'navy' ? 'Editar' : 'Edit'}
         variant="warning"
       />
 
       {/* Edit Project Modal */}
       <Modal
-        isOpen={showEditModal}
-        onClose={closeEditModal}
+        isOpen={editModal.isEditOpen}
+        onClose={editModal.onEditClose}
         title={theme === 'navy' ? 'Editar Proyecto' : 'Edit Project'}
       >
-        <form onSubmit={handleEditProject} className="space-y-5">
+        <form onSubmit={editModal.onSubmit} className="space-y-5">
           <div>
             <label htmlFor="edit-name" className={`block text-sm font-medium ${styles.label} mb-2`}>
               Project Name *
@@ -203,8 +202,8 @@ export default function ProjectModals({
               id="edit-name"
               type="text"
               required
-              value={editFormData.name}
-              onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+              value={editModal.formData.name}
+              onChange={(e) => editModal.onFormChange({ ...editModal.formData, name: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
               placeholder={theme === 'navy' ? 'Ej: Diseño de Logo' : 'e.g., Logo Design'}
             />
@@ -217,8 +216,8 @@ export default function ProjectModals({
             <textarea
               id="edit-description"
               rows={4}
-              value={editFormData.description}
-              onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+              value={editModal.formData.description}
+              onChange={(e) => editModal.onFormChange({ ...editModal.formData, description: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
               placeholder={theme === 'navy' ? 'Describe el proyecto...' : 'Describe the project...'}
             />
@@ -231,20 +230,20 @@ export default function ProjectModals({
             <select
               id="edit-client"
               required
-              value={editFormData.clientId}
-              onChange={(e) => setEditFormData({ ...editFormData, clientId: e.target.value })}
-              disabled={!canChangeClient}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} ${!canChangeClient ? 'opacity-50 cursor-not-allowed bg-stone-100' : ''}`}
-              title={!canChangeClient ? 'Cannot change client: current client has uploaded files or comments to this project' : ''}
+              value={editModal.formData.clientId}
+              onChange={(e) => editModal.onFormChange({ ...editModal.formData, clientId: e.target.value })}
+              disabled={!editModal.canChangeClient}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} ${!editModal.canChangeClient ? 'opacity-50 cursor-not-allowed bg-stone-100' : ''}`}
+              title={!editModal.canChangeClient ? 'Cannot change client: current client has uploaded files or comments to this project' : ''}
             >
               <option value="">Select a client</option>
-              {clients.map((client) => (
+              {createModal.clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.firstName} {client.lastName} ({client.email})
                 </option>
               ))}
             </select>
-            {!canChangeClient && (
+            {!editModal.canChangeClient && (
               <p className="mt-2 text-sm text-amber-600 flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -257,18 +256,18 @@ export default function ProjectModals({
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
             <button
               type="button"
-              onClick={closeEditModal}
-              disabled={editing}
+              onClick={editModal.onEditClose}
+              disabled={editModal.isSubmitting}
               className={`px-5 py-2.5 text-sm font-medium ${styles.cancelButton} rounded-lg transition-colors disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={editing}
+              disabled={editModal.isSubmitting}
               className={`px-5 py-2.5 text-sm font-medium text-white ${styles.editButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
             >
-              {editing ? <ButtonLoader /> : 'Save Changes'}
+              {editModal.isSubmitting ? <ButtonLoader /> : 'Save Changes'}
             </button>
           </div>
         </form>
@@ -276,16 +275,16 @@ export default function ProjectModals({
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal
-        isOpen={showDeleteConfirm}
+        isOpen={deleteModal.isOpen}
         onClose={() => {
-          setShowDeleteConfirm(false);
-          setProjectToDelete(null);
+          deleteModal.onClose(false);
+          deleteModal.onProjectChange(null);
         }}
-        onConfirm={handleDeleteProject}
+        onConfirm={deleteModal.onConfirm}
         title="Delete Project"
-        message={`Are you sure you want to delete the project "${projectToDelete?.name}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete the project "${deleteModal.project?.name}"? This action cannot be undone.`}
         confirmText="Delete"
-        isLoading={deleting}
+        isLoading={deleteModal.isDeleting}
         variant="danger"
       />
     </>

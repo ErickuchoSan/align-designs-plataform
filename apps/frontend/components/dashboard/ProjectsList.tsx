@@ -170,31 +170,41 @@ export default function ProjectsList({
 
       {/* Modals */}
       <ProjectModals
-        showCreateModal={projectsHook.showCreateModal}
-        closeCreateModal={projectsHook.closeCreateModal}
-        createFormData={projectsHook.createFormData}
-        setCreateFormData={projectsHook.setCreateFormData}
-        handleCreateProject={projectsHook.handleCreateProject}
-        creating={projectsHook.creating}
-        clients={projectsHook.clients}
-        showEditConfirm={projectsHook.showEditConfirm}
-        setShowEditConfirm={projectsHook.setShowEditConfirm}
-        showEditModal={projectsHook.showEditModal}
-        closeEditModal={projectsHook.closeEditModal}
-        editingProject={projectsHook.editingProject}
-        setEditingProject={projectsHook.setEditingProject}
-        editFormData={projectsHook.editFormData}
-        setEditFormData={projectsHook.setEditFormData}
-        handleEditProject={projectsHook.handleEditProject}
-        editing={projectsHook.editing}
-        confirmEdit={projectsHook.confirmEdit}
-        canChangeClient={projectsHook.canChangeClient}
-        showDeleteConfirm={projectsHook.showDeleteConfirm}
-        setShowDeleteConfirm={projectsHook.setShowDeleteConfirm}
-        projectToDelete={projectsHook.projectToDelete}
-        setProjectToDelete={projectsHook.setProjectToDelete}
-        handleDeleteProject={projectsHook.handleDeleteProject}
-        deleting={projectsHook.deleting}
+        createModal={{
+          isOpen: projectsHook.showCreateModal,
+          onClose: projectsHook.closeCreateModal,
+          formData: projectsHook.createFormData,
+          onFormChange: projectsHook.setCreateFormData,
+          onSubmit: projectsHook.handleCreateProject,
+          isSubmitting: projectsHook.creating,
+          clients: projectsHook.clients,
+        }}
+        editModal={{
+          isConfirmOpen: projectsHook.showEditConfirm,
+          onConfirmClose: (show: boolean) => {
+            projectsHook.setShowEditConfirm(show);
+          },
+          isEditOpen: projectsHook.showEditModal,
+          onEditClose: projectsHook.closeEditModal,
+          project: projectsHook.editingProject,
+          onProjectChange: projectsHook.setEditingProject,
+          formData: projectsHook.editFormData,
+          onFormChange: projectsHook.setEditFormData,
+          onSubmit: projectsHook.handleEditProject,
+          isSubmitting: projectsHook.editing,
+          onConfirm: projectsHook.confirmEdit,
+          canChangeClient: projectsHook.canChangeClient,
+        }}
+        deleteModal={{
+          isOpen: projectsHook.showDeleteConfirm,
+          onClose: (show: boolean) => {
+            projectsHook.setShowDeleteConfirm(show);
+          },
+          project: projectsHook.projectToDelete,
+          onProjectChange: projectsHook.setProjectToDelete,
+          onConfirm: projectsHook.handleDeleteProject,
+          isDeleting: projectsHook.deleting,
+        }}
         theme={theme}
       />
     </>
