@@ -47,8 +47,12 @@ export async function refreshCsrfToken(): Promise<void> {
 }
 
 // Initialize CSRF token on client-side
+// Note: This runs asynchronously in the background. CSRF token will be
+// available for subsequent requests after initial fetch completes.
 if (typeof window !== 'undefined') {
-  fetchCsrfToken();
+  fetchCsrfToken().catch((error) => {
+    logger.error('Failed to initialize CSRF token on startup:', error);
+  });
 }
 
 // Exponential backoff delay calculation
