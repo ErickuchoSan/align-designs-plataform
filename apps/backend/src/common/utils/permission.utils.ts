@@ -1,9 +1,12 @@
-import { ForbiddenException } from '@nestjs/common';
 import { Role } from '@prisma/client';
+import { PermissionContext } from '../strategies/permission.strategy';
 
 /**
  * Utility class for permission validation
- * Centralizes common permission checks to avoid code duplication
+ * Refactored to use Strategy Pattern for better extensibility (OCP compliance)
+ *
+ * @deprecated Use PermissionContext directly for new code
+ * This class is maintained for backward compatibility
  */
 export class PermissionUtils {
   /**
@@ -22,9 +25,8 @@ export class PermissionUtils {
     projectClientId: string,
     errorMessage = 'You do not have permission to access this project',
   ): void {
-    if (userRole === Role.CLIENT && projectClientId !== userId) {
-      throw new ForbiddenException(errorMessage);
-    }
+    const context = new PermissionContext(userRole);
+    context.verifyProjectAccess(userId, projectClientId, errorMessage);
   }
 
   /**
@@ -38,9 +40,8 @@ export class PermissionUtils {
     userRole: Role,
     errorMessage = 'This action requires administrator privileges',
   ): void {
-    if (userRole !== Role.ADMIN) {
-      throw new ForbiddenException(errorMessage);
-    }
+    const context = new PermissionContext(userRole);
+    context.verifyAdminRole(errorMessage);
   }
 
   /**
@@ -59,8 +60,7 @@ export class PermissionUtils {
     targetUserId: string,
     errorMessage = 'You do not have permission to access this user',
   ): void {
-    if (userRole === Role.CLIENT && requestUserId !== targetUserId) {
-      throw new ForbiddenException(errorMessage);
-    }
+    const context = new PermissionContext(userRole);
+    context.verifyUserAccess(requestUserId, targetUserId, errorMessage);
   }
 }
