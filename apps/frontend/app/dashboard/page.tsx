@@ -1,24 +1,17 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { PageLoader } from '@/app/components/Loader';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import ProjectsList from '@/components/dashboard/ProjectsList';
 import { Project } from '@/types';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading } = useProtectedRoute();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
-
-  if (authLoading || !user) {
+  if (loading || !user) {
     return <PageLoader text="Loading..." />;
   }
 

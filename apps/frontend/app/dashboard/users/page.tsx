@@ -1,8 +1,5 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import Modal from '@/app/components/Modal';
 import ConfirmModal from '@/app/components/ConfirmModal';
 import Pagination from '@/app/components/Pagination';
@@ -12,23 +9,13 @@ import EmailInput from '@/app/components/EmailInput';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import { formatDate } from '@/lib/utils/date.utils';
 import { useUsers } from '@/hooks/useUsers';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 export default function UsersPage() {
-  const { isAuthenticated, loading: authLoading, isAdmin } = useAuth();
-  const router = useRouter();
+  const { isAuthenticated, isAdmin, loading } = useProtectedRoute({ requireAdmin: true });
   const usersHook = useUsers(isAuthenticated, isAdmin || false);
 
-  useEffect(() => {
-    if (!authLoading) {
-      if (!isAuthenticated) {
-        router.push('/login');
-      } else if (!isAdmin) {
-        router.push('/dashboard');
-      }
-    }
-  }, [isAuthenticated, isAdmin, authLoading, router]);
-
-  if (authLoading || (usersHook.loading && usersHook.users.length === 0)) {
+  if (loading || (usersHook.loading && usersHook.users.length === 0)) {
     return <PageLoader text="Loading users..." />;
   }
 

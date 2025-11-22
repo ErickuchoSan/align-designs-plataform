@@ -1,8 +1,9 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { api } from '@/lib/api';
 import Modal from '@/app/components/Modal';
 import { ButtonLoader, PageLoader } from '@/app/components/Loader';
@@ -16,7 +17,8 @@ import { getErrorMessage } from '@/lib/errors';
 import { useAutoResetMessage } from '@/hooks/useAutoResetMessage';
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
+  const { user, loading } = useProtectedRoute();
+  const { logout } = useAuth();
   const router = useRouter();
 
   // Edit profile state
@@ -37,11 +39,6 @@ export default function ProfilePage() {
   // Auto-reset success messages
   useAutoResetMessage(success, setSuccess);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     if (user) {
@@ -106,7 +103,7 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
-  if (authLoading || !user) {
+  if (loading || !user) {
     return <PageLoader text="Loading profile..." />;
   }
 

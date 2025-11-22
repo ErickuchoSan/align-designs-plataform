@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { PageLoader } from '@/app/components/Loader';
@@ -9,6 +8,7 @@ import Pagination from '@/app/components/Pagination';
 import { formatDate } from '@/lib/utils/date.utils';
 import { getFileExtension } from '@/lib/utils/file.utils';
 import { api } from '@/lib/api';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 // Hooks
 import { useProjectFiles } from './hooks/useProjectFiles';
@@ -24,24 +24,24 @@ import FileList from './components/FileList';
 import CommentModal from './components/CommentModal';
 
 export default function ProjectDetailsPage() {
-  const { user, isAuthenticated, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, isAdmin, loading } = useProtectedRoute();
   const router = useRouter();
   const params = useParams();
   const projectId = params?.id as string;
 
   // Validate projectId exists
   useEffect(() => {
-    if (!authLoading && !projectId) {
+    if (!loading && !projectId) {
       router.push('/dashboard');
     }
-  }, [projectId, authLoading, router]);
+  }, [projectId, loading, router]);
 
   // Project and files state
   const {
     project,
     files,
     filteredFiles,
-    loading,
+    loading: filesLoading,
     error,
     success,
     setFilteredFiles,
@@ -87,12 +87,6 @@ export default function ProjectDetailsPage() {
     fetchFiles
   );
 
-  // Authentication check
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   // Fetch project and files
   useEffect(() => {
@@ -268,7 +262,7 @@ export default function ProjectDetailsPage() {
     return <PageLoader text="Invalid project..." />;
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return <PageLoader text="Loading project..." />;
   }
 
