@@ -4,14 +4,8 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { OtpService } from '../otp/otp.service';
-import { EmailService } from '../email/email.service';
-import { JwtBlacklistService } from './jwt-blacklist.service';
-import { AccountLockoutService } from './services/account-lockout.service';
-import { PasswordService } from './services/password.service';
+import { AuthDependenciesService } from './services/auth-dependencies.service';
 import { Role } from '@prisma/client';
 import { User } from './interfaces/user.interface';
 
@@ -21,13 +15,7 @@ export class AuthService {
 
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService,
-    private configService: ConfigService,
-    private otpService: OtpService,
-    private emailService: EmailService,
-    private jwtBlacklistService: JwtBlacklistService,
-    private accountLockoutService: AccountLockoutService,
-    private passwordService: PasswordService,
+    private deps: AuthDependenciesService,
   ) {}
 
   /**
@@ -48,21 +36,21 @@ export class AuthService {
       }
 
       // Check if account is locked
-      this.accountLockoutService.validateAccountNotLocked(user);
+      this.deps.accountLockout.validateAccountNotLocked(user);
 
       if (!user.passwordHash) {
         this.logger.warn(`Login attempt for user without password: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      const isPasswordValid = await this.passwordService.comparePassword(
+      const isPasswordValid = await this.deps.password.comparePassword(
         password,
         user.passwordHash,
       );
 
       if (!isPasswordValid) {
         // Handle failed login (increments counter and potentially locks account)
-        await this.accountLockoutService.handleFailedLogin(user);
+        await this.deps.accountLockout.handleFailedLogin(user);
         // Note: handleFailedLogin always throws, so this line is never reached
       }
 
@@ -72,7 +60,7 @@ export class AuthService {
       }
 
       // Reset failed login attempts on successful login
-      await this.accountLockoutService.resetFailedAttempts(user);
+      await this.deps.accountLockout.resetFailedAttempts(user);
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
       return this.generateToken(user);
@@ -108,19 +96,19 @@ export class AuthService {
     // We don't validate isActive here because new users will be inactive
     // until they set their password
 
-    const token = await this.otpService.createOtp(user.id);
+    const token = await this.deps.otp.createOtp(user.id);
 
     // Send appropriate email based on user status
     if (!user.passwordHash) {
       // New user - send account verification email
-      await this.emailService.sendNewUserOtpEmail(
+      await this.deps.email.sendNewUserOtpEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`,
       );
     } else {
       // Existing user - send login OTP email
-      await this.emailService.sendOtpEmail(
+      await this.deps.email.sendOtpEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`,
@@ -149,7 +137,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isValid = await this.otpService.verifyOtp(user.id, token);
+    const isValid = await this.deps.otp.verifyOtp(user.id, token);
     if (!isValid) {
       this.logger.warn(
         `Failed OTP verification for user ${user.id} (${email}): Invalid or expired token`,
@@ -170,8 +158,8 @@ export class AuthService {
     newPassword: string,
     confirmPassword: string,
   ) {
-    this.passwordService.validatePasswordsMatch(newPassword, confirmPassword);
-    this.passwordService.validatePasswordFormat(newPassword);
+    this.deps.password.validatePasswordsMatch(newPassword, confirmPassword);
+    this.deps.password.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -191,7 +179,7 @@ export class AuthService {
       );
     }
 
-    const isPasswordValid = await this.passwordService.comparePassword(
+    const isPasswordValid = await this.deps.password.comparePassword(
       currentPassword,
       user.passwordHash,
     );
@@ -200,7 +188,7 @@ export class AuthService {
     }
 
     // Check if new password is same as current (timing-safe comparison using hashes)
-    const isSamePassword = await this.passwordService.comparePassword(
+    const isSamePassword = await this.deps.password.comparePassword(
       newPassword,
       user.passwordHash,
     );
@@ -211,7 +199,7 @@ export class AuthService {
     }
 
     // Update password with history tracking
-    await this.passwordService.updatePassword(
+    await this.deps.password.updatePassword(
       userId,
       newPassword,
       user.passwordHash,
@@ -241,10 +229,10 @@ export class AuthService {
     }
 
     // Generate 6-digit OTP
-    const token = await this.otpService.createOtp(user.id);
+    const token = await this.deps.otp.createOtp(user.id);
 
     // Send OTP via email for password recovery
-    await this.emailService.sendPasswordRecoveryOtpEmail(
+    await this.deps.email.sendPasswordRecoveryOtpEmail(
       user.email,
       token,
       `${user.firstName} ${user.lastName}`,
@@ -265,8 +253,8 @@ export class AuthService {
     confirmPassword: string,
   ) {
     // Validate that passwords match
-    this.passwordService.validatePasswordsMatch(newPassword, confirmPassword);
-    this.passwordService.validatePasswordFormat(newPassword);
+    this.deps.password.validatePasswordsMatch(newPassword, confirmPassword);
+    this.deps.password.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -281,14 +269,14 @@ export class AuthService {
     }
 
     // Verify OTP
-    const isValid = await this.otpService.verifyOtp(user.id, otp);
+    const isValid = await this.deps.otp.verifyOtp(user.id, otp);
 
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Update password with history tracking
-    await this.passwordService.updatePassword(
+    await this.deps.password.updatePassword(
       user.id,
       newPassword,
       user.passwordHash ?? undefined,
@@ -350,8 +338,8 @@ export class AuthService {
    * Set password for the first time and activate the account
    */
   async setPassword(userId: string, password: string, confirmPassword: string) {
-    this.passwordService.validatePasswordsMatch(password, confirmPassword);
-    this.passwordService.validatePasswordFormat(password);
+    this.deps.password.validatePasswordsMatch(password, confirmPassword);
+    this.deps.password.validatePasswordFormat(password);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -371,7 +359,7 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await this.passwordService.hashPassword(password);
+    const hashedPassword = await this.deps.password.hashPassword(password);
 
     // Update password, activate account and verify email
     await this.prisma.user.update({
@@ -399,7 +387,7 @@ export class AuthService {
   async revokeToken(token: string): Promise<void> {
     try {
       // Decode the token to get expiration time
-      const decoded = this.jwtService.decode(token) as { exp?: number };
+      const decoded = this.deps.jwt.decode(token) as { exp?: number };
 
       if (!decoded || !decoded.exp) {
         this.logger.warn('Cannot revoke token: Invalid token or missing expiration');
@@ -413,7 +401,7 @@ export class AuthService {
 
       // Only blacklist if token hasn't expired yet
       if (expiresInMs > 0) {
-        this.jwtBlacklistService.addToBlacklist(token, expiresInMs);
+        this.deps.jwtBlacklist.addToBlacklist(token, expiresInMs);
         this.logger.log('Token revoked and added to blacklist');
       } else {
         this.logger.debug('Token already expired, not adding to blacklist');
@@ -434,8 +422,8 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('JWT_EXPIRATION', '7d'),
+    const accessToken = this.deps.jwt.sign(payload, {
+      expiresIn: this.deps.config.get('JWT_EXPIRATION', '7d'),
       audience: 'align-designs-client',
       issuer: 'align-designs-api',
     });

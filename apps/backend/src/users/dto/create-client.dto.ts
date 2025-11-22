@@ -5,6 +5,7 @@ import {
   Matches,
   IsNotEmpty,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
 

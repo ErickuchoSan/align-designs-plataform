@@ -9,6 +9,7 @@ import { JwtBlacklistService } from './jwt-blacklist.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AccountLockoutService } from './services/account-lockout.service';
 import { PasswordService } from './services/password.service';
+import { AuthDependenciesService } from './services/auth-dependencies.service';
 import { OtpModule } from '../otp/otp.module';
 import { EmailModule } from '../email/email.module';
 import { AuditModule } from '../audit/audit.module';
@@ -45,6 +46,7 @@ import { AuditModule } from '../audit/audit.module';
     JwtAuthGuard,
     AccountLockoutService,
     PasswordService,
+    AuthDependenciesService,
   ],
   controllers: [AuthController],
   exports: [
