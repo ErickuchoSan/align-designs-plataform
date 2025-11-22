@@ -11,6 +11,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { UserResponse } from '../common/interfaces/user-response.interface';
+import { getActiveRecordsWhere, getActiveRecordsWhereWith } from '../common/helpers/prisma.helpers';
 
 @Injectable()
 export class UsersService {
@@ -24,10 +25,9 @@ export class UsersService {
   async createClient(createClientDto: CreateClientDto) {
     // Check if email already exists (only check active users, not soft-deleted)
     const existingUser = await this.prisma.user.findFirst({
-      where: {
+      where: getActiveRecordsWhereWith({
         email: createClientDto.email,
-        deletedAt: null, // Only check active users
-      },
+      }),
     });
 
     if (existingUser) {
@@ -71,9 +71,7 @@ export class UsersService {
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
-        where: {
-          deletedAt: null, // Exclude soft deleted users
-        },
+        where: getActiveRecordsWhere(),
         select: {
           id: true,
           email: true,
@@ -93,9 +91,7 @@ export class UsersService {
         take: limit,
       }),
       this.prisma.user.count({
-        where: {
-          deletedAt: null, // Exclude soft deleted users from count
-        },
+        where: getActiveRecordsWhere(),
       }),
     ]);
 
@@ -130,10 +126,7 @@ export class UsersService {
     }
 
     const user = await this.prisma.user.findFirst({
-      where: {
-        id,
-        deletedAt: null, // Only return non-deleted users
-      },
+      where: getActiveRecordsWhereWith({ id }),
       select: {
         id: true,
         email: true,
@@ -182,10 +175,7 @@ export class UsersService {
     }
 
     const user = await this.prisma.user.findFirst({
-      where: {
-        id,
-        deletedAt: null, // Only allow updating non-deleted users
-      },
+      where: getActiveRecordsWhereWith({ id }),
     });
 
     if (!user) {
@@ -216,10 +206,7 @@ export class UsersService {
    */
   async toggleStatus(id: string, isActive: boolean) {
     const user = await this.prisma.user.findFirst({
-      where: {
-        id,
-        deletedAt: null, // Only allow toggling status of non-deleted users
-      },
+      where: getActiveRecordsWhereWith({ id }),
     });
 
     if (!user) {
@@ -254,10 +241,7 @@ export class UsersService {
    */
   async remove(id: string, deletedBy?: string) {
     const user = await this.prisma.user.findFirst({
-      where: {
-        id,
-        deletedAt: null, // Only allow deleting non-deleted users
-      },
+      where: getActiveRecordsWhereWith({ id }),
     });
 
     if (!user) {
