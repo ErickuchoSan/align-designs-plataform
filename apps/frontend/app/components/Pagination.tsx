@@ -24,6 +24,17 @@ function Pagination({
   const paginationRef = useRef<HTMLElement>(null);
   const previousPageRef = useRef<number>(currentPage);
 
+  // Store latest callbacks in refs to avoid recreating handlers
+  // This prevents infinite loops when parent doesn't memoize callbacks
+  const onPageChangeRef = useRef(onPageChange);
+  const onItemsPerPageChangeRef = useRef(onItemsPerPageChange);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onPageChangeRef.current = onPageChange;
+    onItemsPerPageChangeRef.current = onItemsPerPageChange;
+  }, [onPageChange, onItemsPerPageChange]);
+
   // Scroll to pagination when page changes (but not on initial render)
   useEffect(() => {
     if (previousPageRef.current !== currentPage && paginationRef.current) {
@@ -66,21 +77,21 @@ function Pagination({
 
   const handlePrevious = useCallback(() => {
     if (currentPage > PAGINATION.MIN_PAGE) {
-      onPageChange(currentPage - 1);
+      onPageChangeRef.current(currentPage - 1);
     }
-  }, [currentPage, onPageChange]);
+  }, [currentPage]);
 
   const handleNext = useCallback(() => {
     if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
+      onPageChangeRef.current(currentPage + 1);
     }
-  }, [currentPage, totalPages, onPageChange]);
+  }, [currentPage, totalPages]);
 
   const handlePageClick = useCallback((page: number | string) => {
     if (typeof page === 'number') {
-      onPageChange(page);
+      onPageChangeRef.current(page);
     }
-  }, [onPageChange]);
+  }, []);
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -96,7 +107,7 @@ function Pagination({
           <select
             id="items-per-page"
             value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            onChange={(e) => onItemsPerPageChangeRef.current(Number(e.target.value))}
             className="px-4 py-2 border border-stone-300 rounded-lg bg-white text-sm font-medium text-navy-900 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all hover:border-gold-400 cursor-pointer shadow-sm"
             aria-label="Items per page"
           >
