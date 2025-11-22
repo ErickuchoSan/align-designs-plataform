@@ -14,6 +14,42 @@ interface ProjectsListProps {
   showUsersButton?: boolean;
 }
 
+// Theme styles defined outside component to avoid recalculation on every render
+const THEME_STYLES = {
+  navy: {
+    successBg: 'bg-forest-50',
+    successBorder: 'border-forest-200',
+    successIcon: 'text-forest-600',
+    successText: 'text-forest-800',
+    errorBg: 'bg-red-50',
+    errorBorder: 'border-red-200',
+    errorIcon: 'text-red-600',
+    errorText: 'text-red-800',
+    title: 'text-navy-900',
+    usersButton: 'bg-steel-700 hover:bg-steel-600',
+    createButton: 'bg-navy-800 hover:bg-navy-700',
+    emptyIcon: 'bg-stone-100 text-stone-700',
+    emptyTitle: 'text-navy-900',
+    emptyText: 'text-stone-700',
+  },
+  blue: {
+    successBg: 'bg-green-50',
+    successBorder: 'border-green-200',
+    successIcon: 'text-green-600',
+    successText: 'text-green-800',
+    errorBg: 'bg-red-50',
+    errorBorder: 'border-red-200',
+    errorIcon: 'text-red-600',
+    errorText: 'text-red-800',
+    title: 'text-gray-900',
+    usersButton: 'bg-gradient-to-r from-purple-600 to-pink-600',
+    createButton: 'bg-gradient-to-r from-blue-600 to-indigo-600',
+    emptyIcon: 'bg-gray-100 text-gray-700',
+    emptyTitle: 'text-gray-700',
+    emptyText: 'text-gray-700',
+  },
+} as const;
+
 export default function ProjectsList({
   isAuthenticated,
   userRole,
@@ -25,42 +61,7 @@ export default function ProjectsList({
   const projectsHook = useProjects(isAuthenticated, userRole);
   const isAdmin = userRole === 'ADMIN';
 
-  const themeStyles = {
-    navy: {
-      successBg: 'bg-forest-50',
-      successBorder: 'border-forest-200',
-      successIcon: 'text-forest-600',
-      successText: 'text-forest-800',
-      errorBg: 'bg-red-50',
-      errorBorder: 'border-red-200',
-      errorIcon: 'text-red-600',
-      errorText: 'text-red-800',
-      title: 'text-navy-900',
-      usersButton: 'bg-steel-700 hover:bg-steel-600',
-      createButton: 'bg-navy-800 hover:bg-navy-700',
-      emptyIcon: 'bg-stone-100 text-stone-700',
-      emptyTitle: 'text-navy-900',
-      emptyText: 'text-stone-700',
-    },
-    blue: {
-      successBg: 'bg-green-50',
-      successBorder: 'border-green-200',
-      successIcon: 'text-green-600',
-      successText: 'text-green-800',
-      errorBg: 'bg-red-50',
-      errorBorder: 'border-red-200',
-      errorIcon: 'text-red-600',
-      errorText: 'text-red-800',
-      title: 'text-gray-900',
-      usersButton: 'bg-gradient-to-r from-purple-600 to-pink-600',
-      createButton: 'bg-gradient-to-r from-blue-600 to-indigo-600',
-      emptyIcon: 'bg-gray-100 text-gray-700',
-      emptyTitle: 'text-gray-700',
-      emptyText: 'text-gray-700',
-    },
-  };
-
-  const styles = themeStyles[theme];
+  const styles = THEME_STYLES[theme];
 
   return (
     <>
