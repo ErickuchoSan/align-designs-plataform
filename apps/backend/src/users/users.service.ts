@@ -4,8 +4,11 @@ import {
   ConflictException,
   ForbiddenException,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { IUserRepository } from './repositories/user.repository.interface';
+import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '@prisma/client';
@@ -17,34 +20,28 @@ import { getActiveRecordsWhere, getActiveRecordsWhereWith } from '../common/help
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @Inject(INJECTION_TOKENS.USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
+    private readonly prisma: PrismaService, // Keep for complex queries
+  ) {}
 
   /**
    * Create a new client (Admin only)
    */
   async createClient(createClientDto: CreateClientDto) {
     // Check if email already exists (only check active users, not soft-deleted)
-    const existingUser = await this.prisma.user.findFirst({
-      where: getActiveRecordsWhereWith({
-        email: createClientDto.email,
-      }),
-    });
+    const existingUser = await this.userRepo.findByEmail(createClientDto.email);
 
     if (existingUser) {
       throw new ConflictException('Email already registered');
     }
 
-    const client = await this.prisma.user.create({
-      data: {
-        email: createClientDto.email,
-        firstName: createClientDto.firstName,
-        lastName: createClientDto.lastName,
-        phone: createClientDto.phone,
-        role: Role.CLIENT,
-        passwordHash: null, // Clients use OTP, no initial password
-        isActive: true,
-        emailVerified: false,
-      },
+    const client = await this.userRepo.create(createClientDto);
+
+    // Return with selected fields for response
+    return this.prisma.user.findFirst({
+      where: { id: client.id },
       select: {
         id: true,
         email: true,
