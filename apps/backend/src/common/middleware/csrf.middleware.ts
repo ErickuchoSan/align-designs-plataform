@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
+import { COOKIE_MAX_AGE_ONE_DAY } from '../constants/time.constants';
 
 @Injectable()
 export class CsrfMiddleware implements NestMiddleware {
@@ -106,7 +107,7 @@ export class CsrfMiddleware implements NestMiddleware {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: validSameSite,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: COOKIE_MAX_AGE_ONE_DAY,
     });
 
     // Store the token in response locals and header for frontend access

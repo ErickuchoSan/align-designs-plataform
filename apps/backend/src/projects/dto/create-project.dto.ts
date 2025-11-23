@@ -7,19 +7,25 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
+import {
+  PROJECT_NAME_CONSTRAINTS,
+  PROJECT_DESCRIPTION_CONSTRAINTS,
+} from '../../common/constants/validation.constants';
 
 export class CreateProjectDto {
   @IsString()
   @MinLength(1, { message: 'Project name cannot be empty' })
-  @MaxLength(255, { message: 'Project name cannot exceed 255 characters' })
+  @MaxLength(PROJECT_NAME_CONSTRAINTS.MAX_LENGTH, {
+    message: `Project name cannot exceed ${PROJECT_NAME_CONSTRAINTS.MAX_LENGTH} characters`,
+  })
   @Transform(({ value }) => value?.trim())
   @Sanitize()
   name: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(5000, {
-    message: 'Project description cannot exceed 5000 characters',
+  @MaxLength(PROJECT_DESCRIPTION_CONSTRAINTS.MAX_LENGTH, {
+    message: `Project description cannot exceed ${PROJECT_DESCRIPTION_CONSTRAINTS.MAX_LENGTH} characters`,
   })
   @Transform(({ value }) => value?.trim())
   @Sanitize()

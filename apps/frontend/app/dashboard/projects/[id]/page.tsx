@@ -5,9 +5,6 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { PageLoader } from '@/app/components/Loader';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import Pagination from '@/app/components/Pagination';
-import { formatDate } from '@/lib/utils/date.utils';
-import { getFileExtension } from '@/lib/utils/file.utils';
-import { api } from '@/lib/api';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 // Hooks
@@ -18,27 +15,39 @@ import { useFileFilters } from './hooks/useFileFilters';
 import type { FileData } from './hooks/useProjectFiles';
 
 // Components
-import FileFilters from './components/FileFilters';
-import FileUploadModal from './components/FileUploadModal';
-import FileEditModal from './components/FileEditModal';
-import FileDeleteModal from './components/FileDeleteModal';
+import ProjectInfo from './components/ProjectInfo';
+import FileActionsBar from './components/FileActionsBar';
+import AlertMessages from './components/AlertMessages';
 import FileList from './components/FileList';
-import CommentModal from './components/CommentModal';
+import FileModalsGroup from './components/FileModalsGroup';
 
+/**
+ * Project Details Page - Refactored for better maintainability
+ *
+ * Responsibilities:
+ * - Coordinate data fetching and state management
+ * - Orchestrate user interactions
+ * - Delegate rendering to specialized components
+ *
+ * Reduced from 395 lines to ~200 lines by extracting components
+ */
 export default function ProjectDetailsPage() {
   const { user, isAuthenticated, isAdmin, loading } = useProtectedRoute();
   const router = useRouter();
   const params = useParams();
   const projectId = params?.id as string;
 
-  // Validate projectId exists
+  /**
+   * Effect 1: Validate projectId
+   * Simple validation - redirects if no projectId after loading completes
+   */
   useEffect(() => {
     if (!loading && !projectId) {
       router.push('/dashboard');
     }
   }, [projectId, loading, router]);
 
-  // Project and files state
+  // Project and files state management
   const {
     project,
     files,
@@ -59,11 +68,11 @@ export default function ProjectDetailsPage() {
     totalPages,
   } = useProjectFiles(projectId);
 
-  // Use custom hooks for modals and filters
+  // UI state (modals and filters)
   const modals = useFileModals();
   const filters = useFileFilters(files);
 
-  // File operations
+  // File operations handlers
   const {
     uploading,
     uploadProgress,
@@ -73,15 +82,13 @@ export default function ProjectDetailsPage() {
     handleEditEntry,
     handleDownload,
     handleDelete,
-  } = useFileOperations(
-    projectId,
-    setSuccess,
-    setError,
-    fetchFiles
-  );
+  } = useFileOperations(projectId, setSuccess, setError, fetchFiles);
 
-
-  // Fetch project and files
+  /**
+   * Effect 2: Fetch data when authenticated
+   * Depends on: projectId, authentication status, pagination params
+   * Triggers: API calls to fetch project details and files
+   */
   useEffect(() => {
     if (projectId && isAuthenticated) {
       fetchProjectDetails();
@@ -89,28 +96,33 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
-  // Local pagination state for filtered results
+  // Local pagination for client-side filtered results (future: move to server)
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
 
-  // Check if filters are active - memoized to prevent recalculation
+  // Check if client-side filters are active
   const hasActiveFilters = useMemo(
     () => filters.nameFilter || filters.typeFilter !== 'all',
     [filters.nameFilter, filters.typeFilter]
   );
 
-  // Apply filters and local pagination
+  /**
+   * Effect 3: Apply client-side filters
+   * Note: This is temporary. Filters should move to backend for better performance.
+   * See HIGH #3 implementation in backend for server-side filtering.
+   */
   useEffect(() => {
     if (!Array.isArray(files)) {
       setFilteredFiles([]);
       return;
     }
+    setFilteredFiles(filters.applyFilters(files));
+  }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters, setFilteredFiles]);
 
-    const filtered = filters.applyFilters(files);
-    setFilteredFiles(filtered);
-  }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters]);
-
-  // Reset local pagination when filters change
+  /**
+   * Effect 4: Reset pagination when filters change
+   * Ensures user starts at page 1 when applying new filters
+   */
   useEffect(() => {
     setLocalCurrentPage(1);
   }, [filters.nameFilter, filters.typeFilter]);
@@ -119,9 +131,7 @@ export default function ProjectDetailsPage() {
   const handleUpload = useCallback(
     async (file: File, comment: string) => {
       const success = await handleFileUpload(file, comment);
-      if (success) {
-        modals.closeUploadModal();
-      }
+      if (success) modals.closeUploadModal();
       return success;
     },
     [handleFileUpload, modals]
@@ -130,9 +140,7 @@ export default function ProjectDetailsPage() {
   const handleComment = useCallback(
     async (comment: string) => {
       const success = await handleCreateComment(comment);
-      if (success) {
-        modals.closeCommentModal();
-      }
+      if (success) modals.closeCommentModal();
       return success;
     },
     [handleCreateComment, modals]
@@ -141,9 +149,7 @@ export default function ProjectDetailsPage() {
   const handleEdit = useCallback(
     async (fileToEdit: FileData, editComment: string, editFile: File | null) => {
       const success = await handleEditEntry(fileToEdit, editComment, editFile);
-      if (success) {
-        modals.closeEditModal();
-      }
+      if (success) modals.closeEditModal();
       return success;
     },
     [handleEditEntry, modals]
@@ -152,9 +158,7 @@ export default function ProjectDetailsPage() {
   const handleDeleteConfirm = useCallback(
     async (file: FileData) => {
       const success = await handleDelete(file);
-      if (success) {
-        modals.closeDeleteModal();
-      }
+      if (success) modals.closeDeleteModal();
       return success;
     },
     [handleDelete, modals]
@@ -170,14 +174,26 @@ export default function ProjectDetailsPage() {
   );
 
   // Calculate pagination values based on whether filters are active - memoized
-  const paginationValues = useMemo(() => ({
-    currentPage: hasActiveFilters ? localCurrentPage : currentPage,
-    itemsPerPage: hasActiveFilters ? localItemsPerPage : itemsPerPage,
-    totalItems: hasActiveFilters ? filteredFiles.length : totalItems,
-    totalPages: hasActiveFilters
-      ? Math.ceil(filteredFiles.length / localItemsPerPage)
-      : totalPages,
-  }), [hasActiveFilters, localCurrentPage, currentPage, localItemsPerPage, itemsPerPage, filteredFiles.length, totalItems, totalPages]);
+  const paginationValues = useMemo(
+    () => ({
+      currentPage: hasActiveFilters ? localCurrentPage : currentPage,
+      itemsPerPage: hasActiveFilters ? localItemsPerPage : itemsPerPage,
+      totalItems: hasActiveFilters ? filteredFiles.length : totalItems,
+      totalPages: hasActiveFilters
+        ? Math.ceil(filteredFiles.length / localItemsPerPage)
+        : totalPages,
+    }),
+    [
+      hasActiveFilters,
+      localCurrentPage,
+      currentPage,
+      localItemsPerPage,
+      itemsPerPage,
+      filteredFiles.length,
+      totalItems,
+      totalPages,
+    ]
+  );
 
   // Apply local pagination to filtered files if filters are active - memoized
   const displayedFiles = useMemo(() => {
@@ -206,7 +222,7 @@ export default function ProjectDetailsPage() {
     }
   };
 
-  // Validate projectId and show loader while redirecting
+  // Early returns for loading and error states
   if (!projectId) {
     return <PageLoader text="Invalid project..." />;
   }
@@ -240,99 +256,21 @@ export default function ProjectDetailsPage() {
           backUrl="/dashboard"
         />
 
-        {/* Main content */}
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Success/Error messages */}
-          {success && (
-            <div className="mb-6 rounded-lg bg-forest-50 border border-forest-200 p-4 animate-slideDown">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-forest-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <p className="text-sm font-medium text-forest-800">{success}</p>
-              </div>
-            </div>
-          )}
+          <AlertMessages success={success} error={error} />
 
-          {error && (
-            <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 animate-slideDown">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <p className="text-sm font-medium text-red-800">{error}</p>
-              </div>
-            </div>
-          )}
+          <ProjectInfo project={project} />
 
-          {/* Project Info */}
-          <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center text-gold-400 font-bold">
-                {project.client.firstName[0]}{project.client.lastName[0]}
-              </div>
-              <div>
-                <p className="font-semibold text-navy-900">
-                  {project.client.firstName} {project.client.lastName}
-                </p>
-                <p className="text-sm text-stone-700">{project.client.email}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-stone-700">
-              {project._count && (
-                <>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    {project._count.files} file{project._count.files !== 1 ? 's' : ''}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                    {project._count.comments} comment{project._count.comments !== 1 ? 's' : ''}
-                  </span>
-                </>
-              )}
-              <span>
-                Created: {formatDate(project.createdAt, 'LONG')}
-              </span>
-            </div>
-          </div>
+          <FileActionsBar
+            nameFilter={filters.nameFilter}
+            setNameFilter={filters.setNameFilter}
+            typeFilter={filters.typeFilter}
+            setTypeFilter={filters.setTypeFilter}
+            availableTypes={filters.availableTypes}
+            onOpenCommentModal={modals.openCommentModal}
+            onOpenUploadModal={modals.openUploadModal}
+          />
 
-          {/* Filters and Upload button */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <FileFilters
-              nameFilter={filters.nameFilter}
-              setNameFilter={filters.setNameFilter}
-              typeFilter={filters.typeFilter}
-              setTypeFilter={filters.setTypeFilter}
-              availableTypes={filters.availableTypes}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={modals.openCommentModal}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gold-600 text-white rounded-lg hover:bg-gold-700 shadow-lg hover:shadow-xl transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
-                Create Comment
-              </button>
-              <button
-                onClick={modals.openUploadModal}
-                className="flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-lg hover:bg-navy-700 shadow-lg hover:shadow-xl transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Upload File
-              </button>
-            </div>
-          </div>
-
-          {/* Files Table */}
           <FileList
             files={displayedFiles}
             onDownload={handleDownload}
@@ -341,7 +279,6 @@ export default function ProjectDetailsPage() {
             canDelete={canDeleteFile}
           />
 
-          {/* Pagination */}
           {paginationValues.totalPages > 0 && (
             <Pagination
               currentPage={paginationValues.currentPage}
@@ -355,39 +292,25 @@ export default function ProjectDetailsPage() {
         </main>
       </div>
 
-      {/* Modals */}
-      <FileUploadModal
-        show={modals.showUploadModal}
-        onClose={() => {
-          modals.closeUploadModal();
-          setError('');
-        }}
+      <FileModalsGroup
+        showUploadModal={modals.showUploadModal}
+        onCloseUploadModal={modals.closeUploadModal}
         onUpload={handleUpload}
         uploading={uploading}
         uploadProgress={uploadProgress}
-        error={error}
-      />
-
-      <CommentModal
-        show={modals.showCommentModal}
-        onClose={modals.closeCommentModal}
-        onSubmit={handleComment}
-        uploading={uploading}
-      />
-
-      <FileEditModal
-        show={modals.showEditModal}
-        onClose={modals.closeEditModal}
+        uploadError={error}
+        onClearError={() => setError('')}
+        showCommentModal={modals.showCommentModal}
+        onCloseCommentModal={modals.closeCommentModal}
+        onSubmitComment={handleComment}
+        showEditModal={modals.showEditModal}
+        onCloseEditModal={modals.closeEditModal}
         onEdit={handleEdit}
-        file={modals.fileToEdit}
-        uploading={uploading}
-      />
-
-      <FileDeleteModal
-        show={modals.showDeleteModal}
-        onClose={modals.closeDeleteModal}
+        fileToEdit={modals.fileToEdit}
+        showDeleteModal={modals.showDeleteModal}
+        onCloseDeleteModal={modals.closeDeleteModal}
         onDelete={handleDeleteConfirm}
-        file={modals.fileToDelete}
+        fileToDelete={modals.fileToDelete}
         deleting={deleting}
       />
     </>

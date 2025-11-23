@@ -1,13 +1,15 @@
 import {
   IsString,
   IsOptional,
-  Length,
+  MinLength,
+  MaxLength,
   Matches,
   IsNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 import { ValidateEmail } from '../../common/decorators/email-validation.decorator';
+import { NAME_CONSTRAINTS } from '../../common/constants/validation.constants';
 
 export class CreateClientDto {
   @ValidateEmail()
@@ -15,7 +17,12 @@ export class CreateClientDto {
 
   @IsString({ message: 'First name must be a string' })
   @IsNotEmpty({ message: 'First name is required' })
-  @Length(1, 50, { message: 'First name must be between 1 and 50 characters' })
+  @MinLength(NAME_CONSTRAINTS.MIN_LENGTH, {
+    message: 'First name cannot be empty',
+  })
+  @MaxLength(NAME_CONSTRAINTS.MAX_LENGTH, {
+    message: `First name cannot exceed ${NAME_CONSTRAINTS.MAX_LENGTH} characters`,
+  })
   @Matches(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
     message:
       'First name can only contain letters, spaces, hyphens, and apostrophes',
@@ -26,7 +33,12 @@ export class CreateClientDto {
 
   @IsString({ message: 'Last name must be a string' })
   @IsNotEmpty({ message: 'Last name is required' })
-  @Length(1, 50, { message: 'Last name must be between 1 and 50 characters' })
+  @MinLength(NAME_CONSTRAINTS.MIN_LENGTH, {
+    message: 'Last name cannot be empty',
+  })
+  @MaxLength(NAME_CONSTRAINTS.MAX_LENGTH, {
+    message: `Last name cannot exceed ${NAME_CONSTRAINTS.MAX_LENGTH} characters`,
+  })
   @Matches(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
     message:
       'Last name can only contain letters, spaces, hyphens, and apostrophes',

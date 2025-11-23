@@ -11,8 +11,9 @@ export interface IRepository<T, CreateDto, UpdateDto> {
 
   /**
    * Find all entities with optional filtering
+   * Filter structure varies by model (Prisma-specific)
    */
-  findAll(filter?: any): Promise<T[]>;
+  findAll(filter?: Record<string, unknown>): Promise<T[]>;
 
   /**
    * Create a new entity

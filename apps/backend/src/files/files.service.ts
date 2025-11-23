@@ -7,11 +7,13 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { FileFiltersDto } from './dto/file-filters.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
 import { UserContext } from '../common/interfaces/user-context.interface';
 import { FilePermissionsService } from './services/file-permissions.service';
 import { FileStorageCoordinatorService } from './services/file-storage-coordinator.service';
 import { FileTransformerService } from './services/file-transformer.service';
+import { PaginationHelper } from '../common/helpers/pagination.helper';
 
 /**
  * Main service for file operations
@@ -131,7 +133,7 @@ export class FilesService {
 
   async findAllByProject(
     projectId: string,
-    paginationDto: PaginationDto,
+    fileFilters: FileFiltersDto,
     userContext: UserContext,
   ): Promise<PaginatedResult<FileResponse>> {
     // Verify project access
@@ -141,58 +143,55 @@ export class FilesService {
       userContext.role,
     );
 
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(fileFilters);
 
-    // Get total count for pagination metadata
-    const total = await this.prisma.file.count({
-      where: {
-        projectId,
-        deletedAt: null,
-      },
-    });
+    // Build where clause with filters
+    const where: Record<string, unknown> = {
+      projectId,
+      deletedAt: null,
+    };
 
-    // Get paginated files
-    const files = await this.prisma.file.findMany({
-      where: {
-        projectId,
-        deletedAt: null,
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            role: true,
+    // Apply name filter (case-insensitive partial match)
+    if (fileFilters.name) {
+      where.OR = [
+        { filename: { contains: fileFilters.name, mode: 'insensitive' } },
+        { originalName: { contains: fileFilters.name, mode: 'insensitive' } },
+        { comment: { contains: fileFilters.name, mode: 'insensitive' } },
+      ];
+    }
+
+    // Apply type filter (file extension)
+    if (fileFilters.type && fileFilters.type !== 'all') {
+      where.mimeType = { contains: fileFilters.type, mode: 'insensitive' };
+    }
+
+    const [total, files] = await Promise.all([
+      this.prisma.file.count({ where }),
+      this.prisma.file.findMany({
+        where,
+        include: {
+          uploader: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+            },
           },
         },
-      },
-      orderBy: {
-        uploadedAt: 'desc',
-      },
-      skip,
-      take: limit,
-    });
+        orderBy: {
+          uploadedAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+    ]);
 
     // Transform files for response
     const data = this.transformer.transformFileRecords(files);
 
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return PaginationHelper.buildPaginatedResult(data, total, fileFilters);
   }
 
   async getFileUrl(fileId: string, userId: string, userRole: Role) {

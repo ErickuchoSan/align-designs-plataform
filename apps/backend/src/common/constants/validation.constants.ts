@@ -42,3 +42,19 @@ export const PROJECT_NAME_CONSTRAINTS = {
 export const PROJECT_DESCRIPTION_CONSTRAINTS = {
   MAX_LENGTH: 5000,
 } as const;
+
+/**
+ * Comment validation constraints
+ */
+export const COMMENT_CONSTRAINTS = {
+  MAX_LENGTH: 2000,
+} as const;
+
+/**
+ * Phone number validation constraints
+ */
+export const PHONE_CONSTRAINTS = {
+  NUMBER_LENGTH: 10,
+  COUNTRY_CODE_MIN_LENGTH: 1,
+  COUNTRY_CODE_MAX_LENGTH: 3,
+} as const;

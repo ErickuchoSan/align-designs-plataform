@@ -12,6 +12,7 @@ import {
   MAX_OTP_PER_WINDOW,
   OTP_CLEANUP_RETENTION_MS,
 } from '../common/constants/timeouts.constants';
+import { MIN_RESPONSE_DELAY_MS } from '../common/constants/time.constants';
 
 @Injectable()
 export class OtpService {
@@ -161,7 +162,7 @@ export class OtpService {
     // Add constant-time delay to prevent timing attacks
     // This ensures all responses take approximately the same time
     const elapsedTime = Date.now() - startTime;
-    const minimumDelay = 100; // 100ms minimum response time
+    const minimumDelay = MIN_RESPONSE_DELAY_MS;
     const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
 
     if (delayNeeded > 0) {

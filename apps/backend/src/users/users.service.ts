@@ -15,6 +15,13 @@ import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { UserResponse } from '../common/interfaces/user-response.interface';
 import { getActiveRecordsWhere, getActiveRecordsWhereWith } from '../common/helpers/prisma.helpers';
+import { PaginationHelper } from '../common/helpers/pagination.helper';
+import {
+  USER_BASIC_SELECT,
+  USER_FULL_SELECT,
+  USER_UPDATE_SELECT,
+  USER_STATUS_SELECT,
+} from './constants/user-selects';
 
 @Injectable()
 export class UsersService {
@@ -42,19 +49,8 @@ export class UsersService {
     // Return with selected fields for response
     return this.prisma.user.findFirst({
       where: { id: client.id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
+      select: USER_BASIC_SELECT,
     });
-
-    return client;
   }
 
   /**
@@ -63,24 +59,12 @@ export class UsersService {
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<UserResponse>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where: getActiveRecordsWhere(),
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-          role: true,
-          isActive: true,
-          emailVerified: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        select: USER_FULL_SELECT,
         orderBy: {
           createdAt: 'desc',
         },
@@ -92,19 +76,7 @@ export class UsersService {
       }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: users,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return PaginationHelper.buildPaginatedResult(users, total, paginationDto);
   }
 
   /**
@@ -124,18 +96,7 @@ export class UsersService {
 
     const user = await this.prisma.user.findFirst({
       where: getActiveRecordsWhereWith({ id }),
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        role: true,
-        isActive: true,
-        emailVerified: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: USER_FULL_SELECT,
     });
 
     if (!user) {
@@ -182,17 +143,7 @@ export class UsersService {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        role: true,
-        isActive: true,
-        emailVerified: true,
-        updatedAt: true,
-      },
+      select: USER_UPDATE_SELECT,
     });
 
     return updatedUser;
@@ -218,13 +169,7 @@ export class UsersService {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: { isActive },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        isActive: true,
-      },
+      select: USER_STATUS_SELECT,
     });
 
     return {

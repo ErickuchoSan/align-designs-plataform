@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DEFAULT_AUDIT_LOG_LIMIT } from './audit.constants';
 
 export enum AuditAction {
   CREATE = 'CREATE',
@@ -65,7 +66,7 @@ export class AuditService {
     }
   }
 
-  async findByUser(userId: string, limit = 100) {
+  async findByUser(userId: string, limit = DEFAULT_AUDIT_LOG_LIMIT) {
     return this.prisma.auditLog.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -73,7 +74,11 @@ export class AuditService {
     });
   }
 
-  async findByResource(resourceType: string, resourceId: string, limit = 100) {
+  async findByResource(
+    resourceType: string,
+    resourceId: string,
+    limit = DEFAULT_AUDIT_LOG_LIMIT,
+  ) {
     return this.prisma.auditLog.findMany({
       where: { resourceType, resourceId },
       orderBy: { createdAt: 'desc' },
@@ -81,7 +86,7 @@ export class AuditService {
     });
   }
 
-  async findByAction(action: AuditAction, limit = 100) {
+  async findByAction(action: AuditAction, limit = DEFAULT_AUDIT_LOG_LIMIT) {
     return this.prisma.auditLog.findMany({
       where: { action },
       orderBy: { createdAt: 'desc' },

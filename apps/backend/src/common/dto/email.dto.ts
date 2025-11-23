@@ -6,13 +6,18 @@ import {
   MinLength,
 } from 'class-validator';
 import { EmailValidationUtils } from '../utils/validation.utils';
+import { EMAIL_CONSTRAINTS } from '../constants/validation.constants';
 
 export class EmailDto {
   @IsNotEmpty({ message: 'Email is required' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsString({ message: 'Email must be a string' })
-  @MinLength(5, { message: 'Email must be at least 5 characters long' })
-  @MaxLength(320, { message: 'Email cannot exceed 320 characters' })
+  @MinLength(EMAIL_CONSTRAINTS.MIN_LENGTH, {
+    message: `Email must be at least ${EMAIL_CONSTRAINTS.MIN_LENGTH} characters long`,
+  })
+  @MaxLength(EMAIL_CONSTRAINTS.MAX_LENGTH, {
+    message: `Email cannot exceed ${EMAIL_CONSTRAINTS.MAX_LENGTH} characters`,
+  })
   email: string;
 
   constructor(email: string) {
