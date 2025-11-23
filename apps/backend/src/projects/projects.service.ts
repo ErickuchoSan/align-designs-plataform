@@ -18,7 +18,35 @@ import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
 import { PermissionContext } from '../common/strategies/permission.strategy';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
+import { PaginationHelper } from '../common/helpers/pagination.helper';
+import { BigIntTransformer } from '../common/helpers/bigint-transformer.helper';
+import {
+  USER_BASIC_INFO_SELECT,
+  FILE_BASIC_SELECT,
+  FILE_WITH_UPLOADER_SELECT,
+  FILE_MINIMAL_SELECT,
+} from './constants/project-selects';
 
+/**
+ * Projects Service
+ *
+ * Architecture Decision: Hybrid Repository + Prisma Pattern
+ * ========================================================
+ * This service intentionally uses BOTH repository pattern AND direct Prisma access:
+ *
+ * Repository Pattern (projectRepo, userRepo):
+ * - Used for: Simple CRUD operations (create, findById, update, delete)
+ * - Benefits: Abstraction, easier testing, decoupling from ORM
+ * - Examples: Creating projects, finding users by ID
+ *
+ * Direct Prisma Access (prisma):
+ * - Used for: Complex queries with joins, aggregations, and filters
+ * - Benefits: Type safety, performance, flexibility for complex operations
+ * - Examples: Listing projects with counts, nested includes, soft-delete queries
+ *
+ * Rationale: This hybrid approach balances clean architecture with pragmatism.
+ * Adding all complex queries to repositories would create bloated interfaces.
+ */
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
@@ -28,7 +56,7 @@ export class ProjectsService {
     private readonly projectRepo: IProjectRepository,
     @Inject(INJECTION_TOKENS.USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
-    private readonly prisma: PrismaService, // Keep for complex queries not in repo
+    private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
   ) {}
 
@@ -53,30 +81,13 @@ export class ProjectsService {
       where: { id: project.id },
       include: {
         client: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         creator: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         files: {
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            uploadedAt: true,
-          },
+          select: FILE_BASIC_SELECT,
         },
       },
     });
@@ -86,13 +97,7 @@ export class ProjectsService {
     }
 
     // Convert BigInt to number for JSON serialization
-    return {
-      ...fullProject,
-      files: fullProject.files.map((file) => ({
-        ...file,
-        sizeBytes: Number(file.sizeBytes),
-      })),
-    };
+    return BigIntTransformer.transformProjectWithFiles(fullProject);
   }
 
   /**
@@ -104,8 +109,7 @@ export class ProjectsService {
     userRole: Role,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<ProjectResponse>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
     const where = {
       deletedAt: null, // Only include non-deleted projects
       ...(userRole === Role.CLIENT ? { clientId: userId } : {}),
@@ -117,20 +121,13 @@ export class ProjectsService {
         where,
         include: {
           client: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
+            select: USER_BASIC_INFO_SELECT,
           },
           files: {
             where: {
               deletedAt: null,
             },
-            select: {
-              filename: true,
-            },
+            select: FILE_MINIMAL_SELECT,
           },
         },
         orderBy: {
@@ -141,8 +138,6 @@ export class ProjectsService {
       }),
       this.prisma.project.count({ where }),
     ]);
-
-    const totalPages = Math.ceil(total / limit);
 
     // Transform projects to include separate counts from already-loaded files
     const projectsWithCounts = projects.map((project) => {
@@ -160,17 +155,7 @@ export class ProjectsService {
       };
     });
 
-    return {
-      data: projectsWithCounts,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return PaginationHelper.buildPaginatedResult(projectsWithCounts, total, paginationDto);
   }
 
   /**
@@ -184,41 +169,16 @@ export class ProjectsService {
       },
       include: {
         client: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         creator: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         files: {
           where: {
             deletedAt: null, // Only include non-deleted files
           },
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            uploadedAt: true,
-            uploader: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
+          select: FILE_WITH_UPLOADER_SELECT,
           orderBy: {
             uploadedAt: 'desc',
           },
@@ -293,28 +253,11 @@ export class ProjectsService {
 
     // If clientId is being changed, verify the current client hasn't uploaded files
     if (updateProjectDto.clientId && updateProjectDto.clientId !== project.clientId) {
-      // Verify the new client exists and is active
-      const newClient = await this.prisma.user.findFirst({
-        where: {
-          id: updateProjectDto.clientId,
-          deletedAt: null,
-        },
-      });
-
-      if (!newClient || newClient.role !== Role.CLIENT) {
-        throw new NotFoundException('New client not found');
-      }
-
-      // Check if current client has uploaded any files or comments (using already-loaded data)
-      const clientUploads = project.files.filter(
-        (file) => file.uploadedBy === project.clientId,
-      ).length;
-
-      if (clientUploads > 0) {
-        throw new ForbiddenException(
-          'Cannot change client: current client has uploaded files or comments to this project',
-        );
-      }
+      await this.validateClientChange(
+        updateProjectDto.clientId,
+        project.clientId,
+        project.files,
+      );
     }
 
     const updatedProject = await this.prisma.project.update({
@@ -322,34 +265,16 @@ export class ProjectsService {
       data: updateProjectDto,
       include: {
         client: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         files: {
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            uploadedAt: true,
-          },
+          select: FILE_BASIC_SELECT,
         },
       },
     });
 
     // Convert BigInt to number for JSON serialization
-    return {
-      ...updatedProject,
-      files: updatedProject.files.map((file) => ({
-        ...file,
-        sizeBytes: Number(file.sizeBytes),
-      })),
-    };
+    return BigIntTransformer.transformProjectWithFiles(updatedProject);
   }
 
   /**
@@ -403,5 +328,40 @@ export class ProjectsService {
 
     this.logger.log(`Project ${id} soft deleted by user ${userId}`);
     return { message: 'Project deleted successfully' };
+  }
+
+  /**
+   * Validates if a project's client can be changed
+   * Checks if new client exists and if current client has uploaded files
+   * @throws NotFoundException if new client doesn't exist or isn't a CLIENT
+   * @throws ForbiddenException if current client has uploaded files
+   */
+  private async validateClientChange(
+    newClientId: string,
+    currentClientId: string,
+    files: Array<{ uploadedBy: string }>,
+  ): Promise<void> {
+    // Verify the new client exists and is active
+    const newClient = await this.prisma.user.findFirst({
+      where: {
+        id: newClientId,
+        deletedAt: null,
+      },
+    });
+
+    if (!newClient || newClient.role !== Role.CLIENT) {
+      throw new NotFoundException('New client not found');
+    }
+
+    // Check if current client has uploaded any files (using already-loaded data)
+    const clientUploads = files.filter(
+      (file) => file.uploadedBy === currentClientId,
+    ).length;
+
+    if (clientUploads > 0) {
+      throw new ForbiddenException(
+        'Cannot change client: current client has uploaded files or comments to this project',
+      );
+    }
   }
 }

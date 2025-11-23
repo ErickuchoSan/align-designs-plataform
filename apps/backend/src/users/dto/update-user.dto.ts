@@ -8,12 +8,15 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
+import { NAME_CONSTRAINTS } from '../../common/constants/validation.constants';
 
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(1, { message: 'First name cannot be empty' })
-  @MaxLength(50, { message: 'First name cannot exceed 50 characters' })
+  @MaxLength(NAME_CONSTRAINTS.MAX_LENGTH, {
+    message: `First name cannot exceed ${NAME_CONSTRAINTS.MAX_LENGTH} characters`,
+  })
   @Matches(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
     message:
       'First name can only contain letters, spaces, hyphens, and apostrophes',
@@ -25,7 +28,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(1, { message: 'Last name cannot be empty' })
-  @MaxLength(50, { message: 'Last name cannot exceed 50 characters' })
+  @MaxLength(NAME_CONSTRAINTS.MAX_LENGTH, {
+    message: `Last name cannot exceed ${NAME_CONSTRAINTS.MAX_LENGTH} characters`,
+  })
   @Matches(/^[a-zA-ZÀ-ÿ\s'-]+$/, {
     message:
       'Last name can only contain letters, spaces, hyphens, and apostrophes',

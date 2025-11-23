@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
+import { FILE_WITH_UPLOADER_INCLUDE } from '../constants/file-selects';
 
 /**
  * Service responsible for coordinating file storage operations between database and MinIO
@@ -41,16 +42,7 @@ export class FileStorageCoordinatorService {
         projectId,
         uploadedBy,
       },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      include: FILE_WITH_UPLOADER_INCLUDE,
     });
 
     try {
@@ -61,16 +53,7 @@ export class FileStorageCoordinatorService {
       const updatedFileRecord = await this.prisma.file.update({
         where: { id: fileRecord.id },
         data: { storagePath },
-        include: {
-          uploader: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
+        include: FILE_WITH_UPLOADER_INCLUDE,
       });
 
       this.logger.log(
@@ -140,49 +123,19 @@ export class FileStorageCoordinatorService {
       const updatedFile = await this.prisma.file.update({
         where: { id: fileId },
         data: updateData,
-        include: {
-          uploader: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
+        include: FILE_WITH_UPLOADER_INCLUDE,
       });
 
       // Clean up old file from MinIO if a new file was uploaded successfully
       if (file && oldStoragePath) {
-        try {
-          await this.storageService.deleteFile(oldStoragePath);
-          this.logger.debug(
-            `Deleted old file from storage: ${oldStoragePath}`,
-          );
-        } catch (error) {
-          // Log but don't fail - old file might already be deleted
-          this.logger.warn(
-            `Failed to delete old file from storage: ${oldStoragePath}`,
-            error,
-          );
-        }
+        await this.cleanupOldFile(oldStoragePath);
       }
 
       return updatedFile;
     } catch (error) {
       // Rollback: If DB update failed and we uploaded a new file, delete it
       if (newStoragePath) {
-        try {
-          await this.storageService.deleteFile(newStoragePath);
-          this.logger.warn(
-            `Rolled back new file upload from storage: ${newStoragePath}`,
-          );
-        } catch (rollbackError) {
-          this.logger.error(
-            `Failed to rollback new file from storage: ${newStoragePath}`,
-            rollbackError,
-          );
-        }
+        await this.rollbackNewFileUpload(newStoragePath);
       }
       throw error;
     }
@@ -193,5 +146,42 @@ export class FileStorageCoordinatorService {
    */
   async getFileDownloadUrl(storagePath: string) {
     return this.storageService.getDownloadUrl(storagePath);
+  }
+
+  /**
+   * Attempts to delete an old file from storage
+   * Logs warnings on failure but doesn't throw (old file might already be deleted)
+   */
+  private async cleanupOldFile(oldStoragePath: string): Promise<void> {
+    try {
+      await this.storageService.deleteFile(oldStoragePath);
+      this.logger.debug(`Deleted old file from storage: ${oldStoragePath}`);
+    } catch (error) {
+      // Log but don't fail - old file might already be deleted
+      this.logger.warn(
+        `Failed to delete old file from storage: ${oldStoragePath}`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Attempts to rollback a newly uploaded file from storage
+   * Called when database update fails after successful file upload
+   */
+  private async rollbackNewFileUpload(
+    newStoragePath: string,
+  ): Promise<void> {
+    try {
+      await this.storageService.deleteFile(newStoragePath);
+      this.logger.warn(
+        `Rolled back new file upload from storage: ${newStoragePath}`,
+      );
+    } catch (rollbackError) {
+      this.logger.error(
+        `Failed to rollback new file from storage: ${newStoragePath}`,
+        rollbackError,
+      );
+    }
   }
 }

@@ -6,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDependenciesService } from './services/auth-dependencies.service';
+import { TokenService } from './services/token.service';
 import { Role } from '@prisma/client';
 import { User } from './interfaces/user.interface';
+import { MIN_RESPONSE_DELAY_MS } from '../common/constants/time.constants';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +17,8 @@ export class AuthService {
 
   constructor(
     private prisma: PrismaService,
-    private deps: AuthDependenciesService,
+    private authDependencies: AuthDependenciesService,
+    private tokenService: TokenService,
   ) {}
 
   /**
@@ -36,34 +39,36 @@ export class AuthService {
       }
 
       // Check if account is locked
-      this.deps.accountLockout.validateAccountNotLocked(user);
+      this.authDependencies.accountLockout.validateAccountNotLocked(user);
 
       if (!user.passwordHash) {
         this.logger.warn(`Login attempt for user without password: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      const isPasswordValid = await this.deps.password.comparePassword(
+      // Check if user account is active BEFORE validating password
+      // This ensures inactive users cannot attempt login and avoids unnecessary password validation
+      if (!user.isActive) {
+        this.logger.warn(`Login attempt for inactive user: ${email}`);
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      const isPasswordValid = await this.authDependencies.password.comparePassword(
         password,
         user.passwordHash,
       );
 
       if (!isPasswordValid) {
         // Handle failed login (increments counter and potentially locks account)
-        await this.deps.accountLockout.handleFailedLogin(user);
+        await this.authDependencies.accountLockout.handleFailedLogin(user);
         // Note: handleFailedLogin always throws, so this line is never reached
       }
 
-      if (!user.isActive) {
-        this.logger.warn(`Login attempt for inactive user: ${email}`);
-        throw new UnauthorizedException('Invalid email or password');
-      }
-
       // Reset failed login attempts on successful login
-      await this.deps.accountLockout.resetFailedAttempts(user);
+      await this.authDependencies.accountLockout.resetFailedAttempts(user);
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
-      return this.generateToken(user);
+      return this.tokenService.generateToken(user);
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -96,19 +101,19 @@ export class AuthService {
     // We don't validate isActive here because new users will be inactive
     // until they set their password
 
-    const token = await this.deps.otp.createOtp(user.id);
+    const token = await this.authDependencies.otp.createOtp(user.id);
 
     // Send appropriate email based on user status
     if (!user.passwordHash) {
       // New user - send account verification email
-      await this.deps.email.sendNewUserOtpEmail(
+      await this.authDependencies.email.sendNewUserOtpEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`,
       );
     } else {
       // Existing user - send login OTP email
-      await this.deps.email.sendOtpEmail(
+      await this.authDependencies.email.sendOtpEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`,
@@ -137,7 +142,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isValid = await this.deps.otp.verifyOtp(user.id, token);
+    const isValid = await this.authDependencies.otp.verifyOtp(user.id, token);
     if (!isValid) {
       this.logger.warn(
         `Failed OTP verification for user ${user.id} (${email}): Invalid or expired token`,
@@ -146,7 +151,7 @@ export class AuthService {
     }
 
     this.logger.log(`Successful OTP verification for user ${user.id} (${email})`);
-    return this.generateToken(user);
+    return this.tokenService.generateToken(user);
   }
 
   /**
@@ -158,8 +163,8 @@ export class AuthService {
     newPassword: string,
     confirmPassword: string,
   ) {
-    this.deps.password.validatePasswordsMatch(newPassword, confirmPassword);
-    this.deps.password.validatePasswordFormat(newPassword);
+    this.authDependencies.password.validatePasswordsMatch(newPassword, confirmPassword);
+    this.authDependencies.password.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -179,7 +184,7 @@ export class AuthService {
       );
     }
 
-    const isPasswordValid = await this.deps.password.comparePassword(
+    const isPasswordValid = await this.authDependencies.password.comparePassword(
       currentPassword,
       user.passwordHash,
     );
@@ -188,7 +193,7 @@ export class AuthService {
     }
 
     // Check if new password is same as current (timing-safe comparison using hashes)
-    const isSamePassword = await this.deps.password.comparePassword(
+    const isSamePassword = await this.authDependencies.password.comparePassword(
       newPassword,
       user.passwordHash,
     );
@@ -199,7 +204,7 @@ export class AuthService {
     }
 
     // Update password with history tracking
-    await this.deps.password.updatePassword(
+    await this.authDependencies.password.updatePassword(
       userId,
       newPassword,
       user.passwordHash,
@@ -229,10 +234,10 @@ export class AuthService {
     }
 
     // Generate 8-digit OTP
-    const token = await this.deps.otp.createOtp(user.id);
+    const token = await this.authDependencies.otp.createOtp(user.id);
 
     // Send OTP via email for password recovery
-    await this.deps.email.sendPasswordRecoveryOtpEmail(
+    await this.authDependencies.email.sendPasswordRecoveryOtpEmail(
       user.email,
       token,
       `${user.firstName} ${user.lastName}`,
@@ -253,8 +258,8 @@ export class AuthService {
     confirmPassword: string,
   ) {
     // Validate that passwords match
-    this.deps.password.validatePasswordsMatch(newPassword, confirmPassword);
-    this.deps.password.validatePasswordFormat(newPassword);
+    this.authDependencies.password.validatePasswordsMatch(newPassword, confirmPassword);
+    this.authDependencies.password.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -269,14 +274,14 @@ export class AuthService {
     }
 
     // Verify OTP
-    const isValid = await this.deps.otp.verifyOtp(user.id, otp);
+    const isValid = await this.authDependencies.otp.verifyOtp(user.id, otp);
 
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Update password with history tracking
-    await this.deps.password.updatePassword(
+    await this.authDependencies.password.updatePassword(
       user.id,
       newPassword,
       user.passwordHash ?? undefined,
@@ -324,7 +329,7 @@ export class AuthService {
     // Add constant-time delay to prevent timing attacks
     // This ensures all responses take approximately the same time
     const elapsedTime = Date.now() - startTime;
-    const minimumDelay = 100; // 100ms minimum response time
+    const minimumDelay = MIN_RESPONSE_DELAY_MS;
     const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
 
     if (delayNeeded > 0) {
@@ -338,8 +343,8 @@ export class AuthService {
    * Set password for the first time and activate the account
    */
   async setPassword(userId: string, password: string, confirmPassword: string) {
-    this.deps.password.validatePasswordsMatch(password, confirmPassword);
-    this.deps.password.validatePasswordFormat(password);
+    this.authDependencies.password.validatePasswordsMatch(password, confirmPassword);
+    this.authDependencies.password.validatePasswordFormat(password);
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -359,7 +364,7 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await this.deps.password.hashPassword(password);
+    const hashedPassword = await this.authDependencies.password.hashPassword(password);
 
     // Update password, activate account and verify email
     await this.prisma.user.update({
@@ -382,62 +387,10 @@ export class AuthService {
 
   /**
    * Revoke a JWT token by adding it to the blacklist
+   * Delegated to TokenService for better separation of concerns
    * @param token - The JWT token to revoke
    */
   async revokeToken(token: string): Promise<void> {
-    try {
-      // Decode the token to get expiration time
-      const decoded = this.deps.jwt.decode(token) as { exp?: number };
-
-      if (!decoded || !decoded.exp) {
-        this.logger.warn('Cannot revoke token: Invalid token or missing expiration');
-        return;
-      }
-
-      // Calculate time until expiration (in milliseconds)
-      const expiresAt = decoded.exp * 1000; // JWT exp is in seconds
-      const now = Date.now();
-      const expiresInMs = expiresAt - now;
-
-      // Only blacklist if token hasn't expired yet
-      if (expiresInMs > 0) {
-        this.deps.jwtBlacklist.addToBlacklist(token, expiresInMs);
-        this.logger.log('Token revoked and added to blacklist');
-      } else {
-        this.logger.debug('Token already expired, not adding to blacklist');
-      }
-    } catch (error) {
-      this.logger.error('Error revoking token:', error);
-      throw error; // Relanzar para que el controlador maneje el error
-    }
-  }
-
-  /**
-   * Generate a JWT token
-   */
-  private generateToken(user: User) {
-    const payload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const accessToken = this.deps.jwt.sign(payload, {
-      expiresIn: this.deps.config.get('JWT_EXPIRATION', '1d'),
-      audience: 'align-designs-client',
-      issuer: 'align-designs-api',
-    });
-
-    return {
-      access_token: accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-        role: user.role,
-      },
-    };
+    return this.tokenService.revokeToken(token);
   }
 }

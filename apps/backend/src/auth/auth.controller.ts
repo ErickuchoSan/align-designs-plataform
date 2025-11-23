@@ -29,6 +29,7 @@ import type { UserPayload } from './interfaces/user.interface';
 import { RATE_LIMIT_AUTH } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
+import { COOKIE_MAX_AGE_ONE_DAY } from '../common/constants/time.constants';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -37,6 +38,19 @@ export class AuthController {
     private authService: AuthService,
     private auditService: AuditService,
   ) {}
+
+  /**
+   * Set authentication cookie with secure settings
+   * Centralizes cookie configuration to follow DRY principle
+   */
+  private setAuthCookie(res: Response, token: string): void {
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: COOKIE_MAX_AGE_ONE_DAY,
+    });
+  }
 
   @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
@@ -137,12 +151,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
-    });
+    this.setAuthCookie(res, result.access_token);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
@@ -210,12 +219,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
-    });
+    this.setAuthCookie(res, result.access_token);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };

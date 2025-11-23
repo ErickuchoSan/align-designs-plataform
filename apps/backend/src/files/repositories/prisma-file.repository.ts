@@ -35,7 +35,7 @@ export class PrismaFileRepository implements IFileRepository {
     });
   }
 
-  async findAll(filter?: any): Promise<File[]> {
+  async findAll(filter?: Record<string, unknown>): Promise<File[]> {
     return this.prisma.file.findMany({
       where: filter,
     });

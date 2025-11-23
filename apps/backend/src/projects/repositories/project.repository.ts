@@ -132,7 +132,7 @@ export class ProjectRepository implements IProjectRepository {
     );
   }
 
-  async count(where?: any): Promise<number> {
+  async count(where?: Record<string, unknown>): Promise<number> {
     return this.prisma.project.count({
       where: { deletedAt: null, ...where },
     });
