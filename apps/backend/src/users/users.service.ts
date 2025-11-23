@@ -7,6 +7,8 @@ import {
   Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheManagerService } from '../cache/services/cache-manager.service';
+import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
 import type { IUserRepository } from './repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -30,7 +32,8 @@ export class UsersService {
   constructor(
     @Inject(INJECTION_TOKENS.USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
-    private readonly prisma: PrismaService, // Keep for complex queries
+    private readonly prisma: PrismaService,
+    private readonly cacheManager: CacheManagerService,
   ) {}
 
   /**
@@ -45,6 +48,9 @@ export class UsersService {
     }
 
     const client = await this.userRepo.create(createClientDto);
+
+    // Invalidate user list cache
+    await this.cacheManager.invalidateUserCaches();
 
     // Return with selected fields for response
     return this.prisma.user.findFirst({
@@ -61,6 +67,11 @@ export class UsersService {
   ): Promise<PaginatedResult<UserResponse>> {
     const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
 
+    // Try cache first
+    const cacheKey = CACHE_KEYS.USERS.LIST(page, limit);
+    const cached = await this.cacheManager.get<PaginatedResult<UserResponse>>(cacheKey);
+    if (cached) return cached;
+
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where: getActiveRecordsWhere(),
@@ -76,7 +87,9 @@ export class UsersService {
       }),
     ]);
 
-    return PaginationHelper.buildPaginatedResult(users, total, paginationDto);
+    const result = PaginationHelper.buildPaginatedResult(users, total, paginationDto);
+    await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    return result;
   }
 
   /**
@@ -94,6 +107,11 @@ export class UsersService {
       );
     }
 
+    // Try cache first
+    const cacheKey = CACHE_KEYS.USERS.DETAIL(id);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached;
+
     const user = await this.prisma.user.findFirst({
       where: getActiveRecordsWhereWith({ id }),
       select: USER_FULL_SELECT,
@@ -103,6 +121,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    await this.cacheManager.set(cacheKey, user, CACHE_TTL.FIVE_MINUTES);
     return user;
   }
 
@@ -146,6 +165,9 @@ export class UsersService {
       select: USER_UPDATE_SELECT,
     });
 
+    // Invalidate caches
+    await this.cacheManager.invalidateUserCaches(id);
+
     return updatedUser;
   }
 
@@ -171,6 +193,9 @@ export class UsersService {
       data: { isActive },
       select: USER_STATUS_SELECT,
     });
+
+    // Invalidate caches
+    await this.cacheManager.invalidateUserCaches(id);
 
     return {
       message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
@@ -203,6 +228,9 @@ export class UsersService {
         deletedBy: deletedBy || null,
       },
     });
+
+    // Invalidate caches
+    await this.cacheManager.invalidateUserCaches(id);
 
     this.logger.log(`User ${id} soft deleted by ${deletedBy || 'system'}`);
 

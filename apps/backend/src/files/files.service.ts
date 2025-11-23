@@ -14,6 +14,8 @@ import { FilePermissionsService } from './services/file-permissions.service';
 import { FileStorageCoordinatorService } from './services/file-storage-coordinator.service';
 import { FileTransformerService } from './services/file-transformer.service';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
+import { CacheManagerService } from '../cache/services/cache-manager.service';
+import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
 
 /**
  * Main service for file operations
@@ -28,6 +30,7 @@ export class FilesService {
     private readonly permissions: FilePermissionsService,
     private readonly storageCoordinator: FileStorageCoordinatorService,
     private readonly transformer: FileTransformerService,
+    private readonly cacheManager: CacheManagerService,
   ) {}
 
   async uploadFile(
@@ -56,6 +59,9 @@ export class FilesService {
       uploadedBy,
       comment,
     );
+
+    // Invalidate caches
+    await this.cacheManager.invalidateFileCaches(projectId, fileRecord.id);
 
     // Transform and return
     return this.transformer.transformFileRecord(fileRecord);
@@ -97,6 +103,9 @@ export class FilesService {
       },
     });
 
+    // Invalidate caches
+    await this.cacheManager.invalidateFileCaches(projectId, commentRecord.id);
+
     // Transform and return
     return this.transformer.transformFileRecord(commentRecord);
   }
@@ -127,6 +136,9 @@ export class FilesService {
       comment,
     );
 
+    // Invalidate caches
+    await this.cacheManager.invalidateFileCaches(existingFile.projectId, fileId);
+
     // Transform and return
     return this.transformer.transformFileRecord(updatedFile);
   }
@@ -144,6 +156,15 @@ export class FilesService {
     );
 
     const { page, limit, skip } = PaginationHelper.extractPaginationParams(fileFilters);
+
+    // Only cache if there are no filters (name/type filters would create too many cache variations)
+    const shouldCache = !fileFilters.name && (!fileFilters.type || fileFilters.type === 'all');
+
+    if (shouldCache) {
+      const cacheKey = CACHE_KEYS.FILES.LIST(projectId, page, limit);
+      const cached = await this.cacheManager.get<PaginatedResult<FileResponse>>(cacheKey);
+      if (cached) return cached;
+    }
 
     // Build where clause with filters
     const where: Record<string, unknown> = {
@@ -191,7 +212,15 @@ export class FilesService {
     // Transform files for response
     const data = this.transformer.transformFileRecords(files);
 
-    return PaginationHelper.buildPaginatedResult(data, total, fileFilters);
+    const result = PaginationHelper.buildPaginatedResult(data, total, fileFilters);
+
+    // Cache result if eligible
+    if (shouldCache) {
+      const cacheKey = CACHE_KEYS.FILES.LIST(projectId, page, limit);
+      await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    }
+
+    return result;
   }
 
   async getFileUrl(fileId: string, userId: string, userRole: Role) {
@@ -235,6 +264,9 @@ export class FilesService {
         deletedBy: userId,
       },
     });
+
+    // Invalidate caches
+    await this.cacheManager.invalidateFileCaches(file.projectId, fileId);
 
     this.logger.log(`File ${fileId} soft deleted by user ${userId}`);
 

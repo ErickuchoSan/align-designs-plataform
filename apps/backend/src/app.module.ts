@@ -14,6 +14,7 @@ import { StorageModule } from './storage/storage.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { TasksModule } from './tasks/tasks.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
@@ -29,6 +30,7 @@ import { GLOBAL_RATE_LIMIT } from './common/constants/timeouts.constants';
     }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([GLOBAL_RATE_LIMIT]),
+    MetricsModule, // Metrics module (Prometheus) - must be before CacheModule
     CacheModule, // Cache module (global)
     PrismaModule,
     UsersModule,

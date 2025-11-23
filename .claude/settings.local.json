@@ -65,7 +65,8 @@
       "Bash(powershell -command \"Get-Content ''''CODE_QUALITY_ANALYSIS_REPORT.md'''' | Select-String -Pattern ''''rate.limit'''' -Context 3,3\" 2)",
       "Bash($null)",
       "Bash(timeout /t 10 /nobreak)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(powershell -command \"$input | Select-String -Pattern ''''files\\.service\\.ts|Found.*error''''\")"
     ],
     "deny": [],
     "ask": []

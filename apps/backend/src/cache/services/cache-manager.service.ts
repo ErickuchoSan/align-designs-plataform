@@ -1,7 +1,8 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger, Optional } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { CACHE_KEYS, CACHE_TTL } from '../constants/cache-keys';
+import type { MetricsService } from '../../metrics/metrics.service';
 
 /**
  * Centralized cache management service
@@ -11,7 +12,10 @@ import { CACHE_KEYS, CACHE_TTL } from '../constants/cache-keys';
 export class CacheManagerService {
   private readonly logger = new Logger(CacheManagerService.name);
 
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Optional() @Inject('MetricsService') private metricsService?: MetricsService,
+  ) {}
 
   /**
    * Get value from cache
@@ -20,7 +24,12 @@ export class CacheManagerService {
    */
   async get<T>(key: string): Promise<T | undefined> {
     try {
-      return await this.cacheManager.get<T>(key);
+      const value = await this.cacheManager.get<T>(key);
+      // Record cache hit or miss
+      if (this.metricsService) {
+        this.metricsService.recordCacheOperation(value !== undefined ? 'hit' : 'miss', key);
+      }
+      return value;
     } catch (error) {
       this.logger.error(`Error getting cache key "${key}":`, error);
       return undefined;
@@ -37,6 +46,10 @@ export class CacheManagerService {
     try {
       await this.cacheManager.set(key, value, ttl);
       this.logger.debug(`Cached key "${key}" with TTL ${ttl || 'default'}`);
+      // Record cache set operation
+      if (this.metricsService) {
+        this.metricsService.recordCacheOperation('set', key);
+      }
     } catch (error) {
       this.logger.error(`Error setting cache key "${key}":`, error);
     }
@@ -50,6 +63,10 @@ export class CacheManagerService {
     try {
       await this.cacheManager.del(key);
       this.logger.debug(`Deleted cache key "${key}"`);
+      // Record cache delete operation
+      if (this.metricsService) {
+        this.metricsService.recordCacheOperation('delete', key);
+      }
     } catch (error) {
       this.logger.error(`Error deleting cache key "${key}":`, error);
     }
