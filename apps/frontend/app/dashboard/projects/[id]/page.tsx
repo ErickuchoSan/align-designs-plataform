@@ -37,14 +37,17 @@ export default function ProjectDetailsPage() {
   const params = useParams();
   const projectId = params?.id as string;
 
-  // Validate projectId exists
+  /**
+   * Effect 1: Validate projectId
+   * Simple validation - redirects if no projectId after loading completes
+   */
   useEffect(() => {
     if (!loading && !projectId) {
       router.push('/dashboard');
     }
   }, [projectId, loading, router]);
 
-  // Project and files state
+  // Project and files state management
   const {
     project,
     files,
@@ -65,11 +68,11 @@ export default function ProjectDetailsPage() {
     totalPages,
   } = useProjectFiles(projectId);
 
-  // Modals and filters
+  // UI state (modals and filters)
   const modals = useFileModals();
   const filters = useFileFilters(files);
 
-  // File operations
+  // File operations handlers
   const {
     uploading,
     uploadProgress,
@@ -81,7 +84,11 @@ export default function ProjectDetailsPage() {
     handleDelete,
   } = useFileOperations(projectId, setSuccess, setError, fetchFiles);
 
-  // Fetch project and files
+  /**
+   * Effect 2: Fetch data when authenticated
+   * Depends on: projectId, authentication status, pagination params
+   * Triggers: API calls to fetch project details and files
+   */
   useEffect(() => {
     if (projectId && isAuthenticated) {
       fetchProjectDetails();
@@ -89,28 +96,33 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
-  // Local pagination state for filtered results
+  // Local pagination for client-side filtered results (future: move to server)
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
 
-  // Check if filters are active - memoized to prevent recalculation
+  // Check if client-side filters are active
   const hasActiveFilters = useMemo(
     () => filters.nameFilter || filters.typeFilter !== 'all',
     [filters.nameFilter, filters.typeFilter]
   );
 
-  // Apply filters and local pagination
+  /**
+   * Effect 3: Apply client-side filters
+   * Note: This is temporary. Filters should move to backend for better performance.
+   * See HIGH #3 implementation in backend for server-side filtering.
+   */
   useEffect(() => {
     if (!Array.isArray(files)) {
       setFilteredFiles([]);
       return;
     }
-
-    const filtered = filters.applyFilters(files);
-    setFilteredFiles(filtered);
+    setFilteredFiles(filters.applyFilters(files));
   }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters, setFilteredFiles]);
 
-  // Reset local pagination when filters change
+  /**
+   * Effect 4: Reset pagination when filters change
+   * Ensures user starts at page 1 when applying new filters
+   */
   useEffect(() => {
     setLocalCurrentPage(1);
   }, [filters.nameFilter, filters.typeFilter]);

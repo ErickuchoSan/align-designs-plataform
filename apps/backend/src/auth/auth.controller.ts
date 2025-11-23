@@ -29,6 +29,7 @@ import type { UserPayload } from './interfaces/user.interface';
 import { RATE_LIMIT_AUTH } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
+import { COOKIE_MAX_AGE_ONE_DAY } from '../common/constants/time.constants';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -141,7 +142,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
+      maxAge: COOKIE_MAX_AGE_ONE_DAY,
     });
 
     // Return only user data (token is in httpOnly cookie, not in response body)
@@ -214,7 +215,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
+      maxAge: COOKIE_MAX_AGE_ONE_DAY,
     });
 
     // Return only user data (token is in httpOnly cookie, not in response body)

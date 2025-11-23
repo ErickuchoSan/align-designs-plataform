@@ -21,6 +21,26 @@ import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import { BigIntTransformer } from '../common/helpers/bigint-transformer.helper';
 
+/**
+ * Projects Service
+ *
+ * Architecture Decision: Hybrid Repository + Prisma Pattern
+ * ========================================================
+ * This service intentionally uses BOTH repository pattern AND direct Prisma access:
+ *
+ * Repository Pattern (projectRepo, userRepo):
+ * - Used for: Simple CRUD operations (create, findById, update, delete)
+ * - Benefits: Abstraction, easier testing, decoupling from ORM
+ * - Examples: Creating projects, finding users by ID
+ *
+ * Direct Prisma Access (prisma):
+ * - Used for: Complex queries with joins, aggregations, and filters
+ * - Benefits: Type safety, performance, flexibility for complex operations
+ * - Examples: Listing projects with counts, nested includes, soft-delete queries
+ *
+ * Rationale: This hybrid approach balances clean architecture with pragmatism.
+ * Adding all complex queries to repositories would create bloated interfaces.
+ */
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
@@ -30,7 +50,7 @@ export class ProjectsService {
     private readonly projectRepo: IProjectRepository,
     @Inject(INJECTION_TOKENS.USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
-    private readonly prisma: PrismaService, // Keep for complex queries not in repo
+    private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
   ) {}
 

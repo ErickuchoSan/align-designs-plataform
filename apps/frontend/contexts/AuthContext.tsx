@@ -83,9 +83,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Call backend logout endpoint to clear httpOnly cookie
       await api.post('/auth/logout');
-    } catch (error) {
-      logger.error('Error during logout:', error);
-      // Continue with logout even if API call fails
+    } catch (error: any) {
+      // Distinguish between recoverable and non-recoverable errors
+      const isNetworkError = error?.code === 'ECONNABORTED' || error?.code === 'ERR_NETWORK';
+      const isServerError = error?.response?.status >= 500;
+
+      if (isNetworkError) {
+        logger.warn('Network error during logout - continuing with local cleanup', error);
+      } else if (isServerError) {
+        logger.warn('Server error during logout - continuing with local cleanup', error);
+      } else {
+        // For auth errors (401, 403) or other client errors, log but continue
+        logger.error('Error during logout:', error);
+      }
+
+      // Always continue with local logout regardless of server response
+      // This ensures users can always log out even if the server is unreachable
     } finally {
       // Clear authentication data using centralized utility
       AuthStorage.clearAuthData();

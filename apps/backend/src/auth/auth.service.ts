@@ -9,6 +9,7 @@ import { AuthDependenciesService } from './services/auth-dependencies.service';
 import { TokenService } from './services/token.service';
 import { Role } from '@prisma/client';
 import { User } from './interfaces/user.interface';
+import { MIN_RESPONSE_DELAY_MS } from '../common/constants/time.constants';
 
 @Injectable()
 export class AuthService {
@@ -326,7 +327,7 @@ export class AuthService {
     // Add constant-time delay to prevent timing attacks
     // This ensures all responses take approximately the same time
     const elapsedTime = Date.now() - startTime;
-    const minimumDelay = 100; // 100ms minimum response time
+    const minimumDelay = MIN_RESPONSE_DELAY_MS;
     const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
 
     if (delayNeeded > 0) {
