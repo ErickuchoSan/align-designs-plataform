@@ -46,6 +46,13 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
+      // Check if user account is active BEFORE validating password
+      // This prevents timing attacks and ensures correct error flow
+      if (!user.isActive) {
+        this.logger.warn(`Login attempt for inactive user: ${email}`);
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
       const isPasswordValid = await this.authDependencies.password.comparePassword(
         password,
         user.passwordHash,
@@ -55,11 +62,6 @@ export class AuthService {
         // Handle failed login (increments counter and potentially locks account)
         await this.authDependencies.accountLockout.handleFailedLogin(user);
         // Note: handleFailedLogin always throws, so this line is never reached
-      }
-
-      if (!user.isActive) {
-        this.logger.warn(`Login attempt for inactive user: ${email}`);
-        throw new UnauthorizedException('Invalid email or password');
       }
 
       // Reset failed login attempts on successful login
