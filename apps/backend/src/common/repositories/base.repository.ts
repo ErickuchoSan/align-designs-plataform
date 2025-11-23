@@ -34,13 +34,21 @@ export interface IBaseRepository<T, CreateDto, UpdateDto> {
   /**
    * Count entities (excluding soft-deleted)
    */
-  count(where?: any): Promise<number>;
+  count(where?: Record<string, unknown>): Promise<number>;
 }
 
+/**
+ * Options for findAll queries
+ * Uses Record<string, unknown> for Prisma-specific types to maintain type safety
+ * while allowing flexibility across different models
+ */
 export interface FindAllOptions {
   skip?: number;
   take?: number;
-  where?: any;
-  orderBy?: any;
-  include?: any;
+  /** Prisma where clause - structure varies by model */
+  where?: Record<string, unknown>;
+  /** Prisma orderBy clause - structure varies by model */
+  orderBy?: Record<string, unknown>;
+  /** Prisma include clause - structure varies by model */
+  include?: Record<string, unknown>;
 }

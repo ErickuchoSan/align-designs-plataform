@@ -21,7 +21,7 @@ export interface IProjectRepository
   findPaginated(
     page: number,
     limit: number,
-    filter?: any,
+    filter?: Record<string, unknown>,
   ): Promise<PaginatedResult<Project>>;
 
   /**
@@ -53,10 +53,10 @@ export interface IProjectRepository
   /**
    * Count total projects
    */
-  count(filter?: any): Promise<number>;
+  count(filter?: Record<string, unknown>): Promise<number>;
 
   /**
    * Find all projects with relations (client, creator, counts)
    */
-  findAllWithRelations(filter?: any): Promise<Project[]>;
+  findAllWithRelations(filter?: Record<string, unknown>): Promise<Project[]>;
 }

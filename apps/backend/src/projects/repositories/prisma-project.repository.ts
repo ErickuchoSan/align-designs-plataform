@@ -72,13 +72,13 @@ export class PrismaProjectRepository implements IProjectRepository {
     });
   }
 
-  async findAll(filter?: any): Promise<Project[]> {
+  async findAll(filter?: Record<string, unknown>): Promise<Project[]> {
     return this.prisma.project.findMany({
       where: filter,
     });
   }
 
-  async findAllWithRelations(filter?: any): Promise<Project[]> {
+  async findAllWithRelations(filter?: Record<string, unknown>): Promise<Project[]> {
     return this.prisma.project.findMany({
       where: filter,
       include: {
@@ -113,7 +113,7 @@ export class PrismaProjectRepository implements IProjectRepository {
   async findPaginated(
     page: number,
     limit: number,
-    filter?: any,
+    filter?: Record<string, unknown>,
   ): Promise<PaginatedResult<Project>> {
     const skip = (page - 1) * limit;
 
@@ -195,7 +195,7 @@ export class PrismaProjectRepository implements IProjectRepository {
     return count > 0;
   }
 
-  async count(filter?: any): Promise<number> {
+  async count(filter?: Record<string, unknown>): Promise<number> {
     return this.prisma.project.count({
       where: filter,
     });

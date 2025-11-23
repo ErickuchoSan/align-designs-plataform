@@ -146,7 +146,7 @@ export class FilesService {
     const { page, limit, skip } = PaginationHelper.extractPaginationParams(fileFilters);
 
     // Build where clause with filters
-    const where: any = {
+    const where: Record<string, unknown> = {
       projectId,
       deletedAt: null,
     };

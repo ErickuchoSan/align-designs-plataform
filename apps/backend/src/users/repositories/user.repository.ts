@@ -107,7 +107,7 @@ export class UserRepository implements IUserRepository {
     });
   }
 
-  async count(where?: any): Promise<number> {
+  async count(where?: Record<string, unknown>): Promise<number> {
     return this.prisma.user.count({
       where: { deletedAt: null, ...where },
     });

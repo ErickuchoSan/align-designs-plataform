@@ -42,7 +42,7 @@ export class PrismaUserRepository implements IUserRepository {
     return userWithoutPassword as User;
   }
 
-  async findAll(filter?: any): Promise<User[]> {
+  async findAll(filter?: Record<string, unknown>): Promise<User[]> {
     const users = await this.prisma.user.findMany({
       where: filter,
     });
