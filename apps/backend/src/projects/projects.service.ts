@@ -20,6 +20,12 @@ import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import { BigIntTransformer } from '../common/helpers/bigint-transformer.helper';
+import {
+  USER_BASIC_INFO_SELECT,
+  FILE_BASIC_SELECT,
+  FILE_WITH_UPLOADER_SELECT,
+  FILE_MINIMAL_SELECT,
+} from './constants/project-selects';
 
 /**
  * Projects Service
@@ -75,30 +81,13 @@ export class ProjectsService {
       where: { id: project.id },
       include: {
         client: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         creator: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         files: {
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            uploadedAt: true,
-          },
+          select: FILE_BASIC_SELECT,
         },
       },
     });
@@ -132,20 +121,13 @@ export class ProjectsService {
         where,
         include: {
           client: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
+            select: USER_BASIC_INFO_SELECT,
           },
           files: {
             where: {
               deletedAt: null,
             },
-            select: {
-              filename: true,
-            },
+            select: FILE_MINIMAL_SELECT,
           },
         },
         orderBy: {
@@ -187,41 +169,16 @@ export class ProjectsService {
       },
       include: {
         client: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         creator: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         files: {
           where: {
             deletedAt: null, // Only include non-deleted files
           },
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            uploadedAt: true,
-            uploader: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
+          select: FILE_WITH_UPLOADER_SELECT,
           orderBy: {
             uploadedAt: 'desc',
           },
@@ -325,22 +282,10 @@ export class ProjectsService {
       data: updateProjectDto,
       include: {
         client: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: USER_BASIC_INFO_SELECT,
         },
         files: {
-          select: {
-            id: true,
-            filename: true,
-            originalName: true,
-            mimeType: true,
-            sizeBytes: true,
-            uploadedAt: true,
-          },
+          select: FILE_BASIC_SELECT,
         },
       },
     });
