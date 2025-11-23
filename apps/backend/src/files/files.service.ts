@@ -165,7 +165,6 @@ export class FilesService {
       where.mimeType = { contains: fileFilters.type, mode: 'insensitive' };
     }
 
-    // Get total count and paginated files in parallel
     const [total, files] = await Promise.all([
       this.prisma.file.count({ where }),
       this.prisma.file.findMany({

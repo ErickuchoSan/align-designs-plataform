@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtBlacklistService } from '../jwt-blacklist.service';
 import { User } from '../interfaces/user.interface';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 /**
  * Token Service - Handles JWT token generation and revocation
@@ -59,7 +60,7 @@ export class TokenService {
   async revokeToken(token: string): Promise<void> {
     try {
       // Decode the token to get expiration time
-      const decoded = this.jwt.decode(token) as { exp?: number };
+      const decoded = this.jwt.decode(token) as JwtPayload;
 
       if (!decoded || !decoded.exp) {
         this.logger.warn('Cannot revoke token: Invalid token or missing expiration');
@@ -87,14 +88,14 @@ export class TokenService {
   /**
    * Decode a JWT token without verification
    */
-  decodeToken(token: string): any {
-    return this.jwt.decode(token);
+  decodeToken(token: string): JwtPayload | null {
+    return this.jwt.decode(token) as JwtPayload | null;
   }
 
   /**
    * Verify a JWT token
    */
-  async verifyToken(token: string): Promise<any> {
+  async verifyToken(token: string): Promise<JwtPayload> {
     try {
       return await this.jwt.verifyAsync(token);
     } catch (error) {
