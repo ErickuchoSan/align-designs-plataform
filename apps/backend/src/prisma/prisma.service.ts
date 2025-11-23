@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
+import { SLOW_QUERY_THRESHOLD_MS } from './prisma.constants';
 
 @Injectable()
 export class PrismaService
@@ -22,7 +23,7 @@ export class PrismaService
 
     // Log slow queries
     this.$on('query' as never, (e: Prisma.QueryEvent) => {
-      if (e.duration > 1000) {
+      if (e.duration > SLOW_QUERY_THRESHOLD_MS) {
         this.logger.warn(`Slow query detected: ${e.query} took ${e.duration}ms`);
       }
     });
