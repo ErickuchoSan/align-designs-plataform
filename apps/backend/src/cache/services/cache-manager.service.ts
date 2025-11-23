@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger, Optional } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { CACHE_KEYS, CACHE_TTL } from '../constants/cache-keys';
+import { CACHE_KEYS } from '../constants/cache-keys';
 import type { MetricsService } from '../../metrics/metrics.service';
 
 /**
@@ -14,7 +14,9 @@ export class CacheManagerService {
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    @Optional() @Inject('MetricsService') private metricsService?: MetricsService,
+    @Optional()
+    @Inject('MetricsService')
+    private metricsService?: MetricsService,
   ) {}
 
   /**
@@ -27,7 +29,10 @@ export class CacheManagerService {
       const value = await this.cacheManager.get<T>(key);
       // Record cache hit or miss
       if (this.metricsService) {
-        this.metricsService.recordCacheOperation(value !== undefined ? 'hit' : 'miss', key);
+        this.metricsService.recordCacheOperation(
+          value !== undefined ? 'hit' : 'miss',
+          key,
+        );
       }
       return value;
     } catch (error) {
@@ -78,7 +83,9 @@ export class CacheManagerService {
    * Use with caution!
    */
   async reset(): Promise<void> {
-    this.logger.warn('Cache reset requested - not implemented for current store');
+    this.logger.warn(
+      'Cache reset requested - not implemented for current store',
+    );
     // If using Redis directly, you can implement this with FLUSHDB command
   }
 
@@ -116,7 +123,10 @@ export class CacheManagerService {
    * Invalidate all file-related caches for a project
    * Call this when files are added, updated, or deleted
    */
-  async invalidateFileCaches(projectId: string, fileId?: string): Promise<void> {
+  async invalidateFileCaches(
+    projectId: string,
+    fileId?: string,
+  ): Promise<void> {
     if (fileId) {
       await this.del(CACHE_KEYS.FILES.DETAIL(fileId));
     }
