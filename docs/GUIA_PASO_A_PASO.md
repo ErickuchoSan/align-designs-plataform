@@ -49,11 +49,38 @@ Vamos a transformar tu aplicación de desarrollo local a un ambiente de producci
      - Necesitarás agregar una tarjeta (te cobran $1 para verificar y te lo regresan)
 
 #### Dominio (Opcional pero Recomendado)
-1. ¿Tienes un dominio?
-   - ✅ **SÍ:** Anota tu dominio: `_________________.com`
-   - ❌ **NO:** Puedes comprarlo después, por ahora usa la IP del servidor
 
-**💡 Tip:** Si no tienes dominio, puedes usar Namecheap (~$8/año) o Cloudflare (~$10/año)
+**⚠️ IMPORTANTE:** DigitalOcean **NO** te da un dominio. Solo te da una **IP pública** (ej: 167.99.123.45)
+
+**Tus opciones:**
+
+1. **Opción A: Usar solo la IP** (Para empezar/testing)
+   - ✅ Gratis, funciona inmediatamente
+   - ❌ Difícil de recordar, no profesional
+   - ❌ Sin SSL/HTTPS fácilmente
+   - **Úsalo para:** Desarrollo, testing, demos internos
+
+2. **Opción B: Comprar un dominio** (Para producción)
+   - ✅ Profesional (aligndesigns.com)
+   - ✅ SSL/HTTPS gratis con Let's Encrypt
+   - ✅ Fácil de recordar y compartir
+   - **Costo:** ~$8-12/año (menos de $1/mes)
+   - **Úsalo para:** Aplicación en producción con clientes reales
+
+**¿Dónde comprar dominios?**
+
+| Proveedor | Precio/año | Recomendación |
+|-----------|------------|---------------|
+| **Namecheap** | $8-12 | 🏆 Mejor opción (fácil y barato) |
+| **Cloudflare** | $10 | Excelente DNS incluido |
+| **Porkbun** | $7-10 | Más barato |
+| **Google Domains** | $12 | Si usas Google Workspace |
+
+**💡 Mi recomendación:**
+- **Si estás empezando:** Usa la IP por ahora, compra dominio después
+- **Si es para producción:** Compra dominio en Namecheap ($10/año)
+
+**¿Ya tienes dominio?** ✅ Anótalo aquí: `_________________.com`
 
 ---
 
@@ -1157,26 +1184,107 @@ git push origin main
 
 ## 🔒 FASE 5: Configurar SSL y Dominio (30 min - 1 hora)
 
-### Paso 5.1: Configura tu Dominio (Si Tienes Uno)
+**⚠️ Recordatorio:** Tienes 2 opciones aquí:
+- **Opción A:** Solo usar la IP (más rápido, para testing)
+- **Opción B:** Configurar dominio + SSL (profesional, para producción)
 
-Ve al panel de tu proveedor de dominios (Namecheap, GoDaddy, Cloudflare, etc.):
+---
 
-**Agrega estos DNS records:**
+### Paso 5.0: Comprar Dominio (Si Decidiste Comprarlo)
 
-| Type | Name | Value | TTL |
-|------|------|-------|-----|
-| A | @ | TU_DROPLET_IP | 3600 |
-| A | www | TU_DROPLET_IP | 3600 |
-| A | api | TU_DROPLET_IP | 3600 |
+**¿Ya tienes dominio?** → Salta al Paso 5.1
 
-**Espera 10-30 minutos** para que DNS se propague.
+**¿Necesitas comprar uno?** Sigue estos pasos:
 
-**Verifica:**
-```bash
-# En tu computadora
-dig tudominio.com +short
-# Debe mostrar tu IP del droplet
+1. **Ve a Namecheap:** https://www.namecheap.com
+2. **Busca tu dominio:** Escribe "aligndesigns" (o el nombre que quieras)
+3. **Verifica disponibilidad:**
+   - ✅ `.com` disponible → Cómpralo ($10-12/año)
+   - ❌ `.com` tomado → Prueba `.io`, `.app`, `.dev` (~$15-20/año)
+4. **Agregar al carrito** y pagar
+5. **Espera 5 minutos** → Recibirás email de confirmación
+6. **Ve a tu panel:** Dashboard → Domain List
+
+**💡 Tip:** NO compres servicios extra (hosting, email, etc.). Solo necesitas el dominio.
+
+---
+
+### Paso 5.1: Configura tu Dominio
+
+#### Opción A: Si compraste en Namecheap
+
+1. **Login en Namecheap:** https://ap.www.namecheap.com/
+2. **Domain List** → Click en "Manage" en tu dominio
+3. **Advanced DNS** tab
+4. **Elimina** todos los records existentes
+5. **Agrega estos records:**
+
 ```
+Type: A Record
+Host: @
+Value: TU_DROPLET_IP (ej: 167.99.123.45)
+TTL: Automatic
+
+Type: A Record
+Host: www
+Value: TU_DROPLET_IP
+TTL: Automatic
+
+Type: A Record
+Host: api
+Value: TU_DROPLET_IP
+TTL: Automatic
+```
+
+6. **Guarda cambios** (botón verde)
+
+#### Opción B: Si compraste en otro proveedor
+
+El proceso es similar, busca "DNS Management" o "DNS Settings" en tu panel.
+
+---
+
+### Paso 5.1b: Verifica que DNS Funcione
+
+**Espera 10-30 minutos** (toma un café ☕)
+
+```bash
+# En tu computadora, prueba:
+dig tudominio.com +short
+# Debe mostrar tu IP: 167.99.123.45
+
+dig www.tudominio.com +short
+# Debe mostrar tu IP: 167.99.123.45
+
+dig api.tudominio.com +short
+# Debe mostrar tu IP: 167.99.123.45
+```
+
+**❌ ¿No funciona?**
+- Espera más tiempo (puede tardar hasta 2 horas)
+- Verifica que pusiste la IP correcta
+- Verifica que guardaste los cambios
+
+**✅ ¿Funciona?** ¡Continúa al siguiente paso!
+
+---
+
+### Paso 5.1c: (Alternativa) Si NO Tienes Dominio
+
+Si decidiste usar solo la IP por ahora:
+
+**Tu aplicación estará en:**
+```
+Frontend: http://TU_DROPLET_IP:3001
+Backend:  http://TU_DROPLET_IP:3000
+```
+
+**Limitaciones:**
+- ❌ No podrás usar SSL fácilmente (no HTTPS)
+- ❌ Tendrás que recordar la IP
+- ❌ No es profesional para mostrar a clientes
+
+**Para usar solo IP, salta directamente al Paso 5.2**
 
 ---
 
