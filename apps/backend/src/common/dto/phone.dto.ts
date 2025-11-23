@@ -1,20 +1,23 @@
 import { IsNotEmpty, IsString, Matches, Length } from 'class-validator';
 import { PhoneValidationUtils } from '../utils/validation.utils';
+import { PHONE_CONSTRAINTS } from '../constants/validation.constants';
 
 export class PhoneDto {
   @IsNotEmpty({ message: 'Country code is required' })
   @IsString({ message: 'Country code must be a string' })
-  @Matches(/^\+\d{1,3}$/, {
-    message: 'Country code must start with + and contain 1-3 digits',
+  @Matches(new RegExp(`^\\+\\d{${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH},${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH}}$`), {
+    message: `Country code must start with + and contain ${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH}-${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH} digits`,
   })
   countryCode: string;
 
   @IsNotEmpty({ message: 'Phone number is required' })
   @IsString({ message: 'Phone number must be a string' })
-  @Matches(/^\d{10}$/, {
-    message: 'Phone number must contain exactly 10 digits',
+  @Matches(new RegExp(`^\\d{${PHONE_CONSTRAINTS.NUMBER_LENGTH}}$`), {
+    message: `Phone number must contain exactly ${PHONE_CONSTRAINTS.NUMBER_LENGTH} digits`,
   })
-  @Length(10, 10, { message: 'Phone number must be exactly 10 digits long' })
+  @Length(PHONE_CONSTRAINTS.NUMBER_LENGTH, PHONE_CONSTRAINTS.NUMBER_LENGTH, {
+    message: `Phone number must be exactly ${PHONE_CONSTRAINTS.NUMBER_LENGTH} digits long`,
+  })
   phoneNumber: string;
 
   constructor(countryCode: string, phoneNumber: string) {
