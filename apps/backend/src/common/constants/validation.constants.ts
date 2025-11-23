@@ -42,3 +42,10 @@ export const PROJECT_NAME_CONSTRAINTS = {
 export const PROJECT_DESCRIPTION_CONSTRAINTS = {
   MAX_LENGTH: 5000,
 } as const;
+
+/**
+ * Comment validation constraints
+ */
+export const COMMENT_CONSTRAINTS = {
+  MAX_LENGTH: 2000,
+} as const;
