@@ -603,7 +603,7 @@ Para prevenir ataques de fuerza bruta:
 ### Validaciones de Archivos
 
 ```typescript
-// Tamaño máximo: 15 GB por archivo
+// Tamaño máximo: 8 GB por archivo
 // Tipos permitidos:
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',

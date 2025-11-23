@@ -84,7 +84,7 @@ align-designs-demo/                 # Monorepo raíz
 - Ver archivos asociados al proyecto
 
 ### 4. Gestión de Archivos
-- Subir archivos a MinIO (hasta 15GB por archivo)
+- Subir archivos a MinIO (hasta 8GB por archivo)
 - Listar archivos por proyecto con paginación
 - Generar URLs de descarga presignadas (15 minutos de expiración)
 - Eliminar archivos (admin cualquiera, cliente solo de sus proyectos)
@@ -278,7 +278,7 @@ DELETE /files/:id                     # Eliminar archivo o comentario
 - ✅ CORS configurado con whitelist
 - ✅ Throttling personalizado por endpoint
 - ✅ OTP de 8 dígitos con expiración (10 minutos)
-- ✅ Límite de tamaño de archivo (15GB)
+- ✅ Límite de tamaño de archivo (8GB)
 - ✅ Interceptores de autenticación en frontend
 
 ## Permisos por Rol

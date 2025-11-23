@@ -42,8 +42,8 @@ export const PAGINATION = {
 
 // File Upload Configuration
 export const FILE_UPLOAD = {
-  MAX_SIZE_MB: 15000, // 15GB in MB
-  MAX_SIZE_BYTES: 15 * 1024 * 1024 * 1024, // 15GB in bytes
+  MAX_SIZE_MB: 8000, // 8GB in MB
+  MAX_SIZE_BYTES: 8 * 1024 * 1024 * 1024, // 8GB in bytes
 } as const;
 
 // OTP Configuration

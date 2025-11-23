@@ -110,7 +110,7 @@ Bienvenido a la documentación completa del proyecto Align Designs Demo. Este pr
 - [x] Sistema OTP para clientes de 8 dígitos (10 minutos de expiración)
 - [x] CRUD de usuarios con roles (ADMIN, CLIENT)
 - [x] CRUD de proyectos
-- [x] Upload de archivos a MinIO (hasta 15GB) con URLs firmadas (15 min)
+- [x] Upload de archivos a MinIO (hasta 8GB) con URLs firmadas (15 min)
 - [x] Sistema de comentarios para archivos y proyectos
 - [x] Comentarios sin archivos (entradas solo de texto)
 - [x] Edición de comentarios y archivos
@@ -133,7 +133,7 @@ Bienvenido a la documentación completa del proyecto Align Designs Demo. Este pr
 - [x] Gestión de proyectos (lista, crear, editar, eliminar)
 - [x] Gestión de usuarios - Admin (lista, crear, editar, toggle status, eliminar)
 - [x] Página de detalles de proyecto con lista de archivos
-- [x] Upload de archivos hasta 15GB con comentario opcional
+- [x] Upload de archivos hasta 8GB con comentario opcional
 - [x] Barra de progreso en subida de archivos
 - [x] Descarga de archivos con URLs firmadas temporales (15 min)
 - [x] Sistema de comentarios en archivos
@@ -154,7 +154,7 @@ Bienvenido a la documentación completa del proyecto Align Designs Demo. Este pr
 - [x] Guía de troubleshooting de red Hyper-V
 - [x] Accesos y credenciales actualizadas
 - [x] README principal actualizado con todos los cambios
-- [x] Documentación de límites de archivo (15GB)
+- [x] Documentación de límites de archivo (8GB)
 - [x] Documentación de OTP de 8 dígitos
 - [x] Changelog completo con fechas
 
@@ -459,12 +459,12 @@ Este proyecto es privado y confidencial.
 ### Cambios Recientes
 
 **19/11/2025 - Optimizaciones y Límites de Archivo**:
-- ✅ **Aumento de límite de archivos: 50MB → 15GB**
+- ✅ **Aumento de límite de archivos: 50MB → 15GB → 8GB (ajustado por seguridad)**
   - Backend: Actualizado `MAX_FILE_SIZE_BYTES` y `MAX_FILE_SIZE_MB` en `timeouts.constants.ts`
   - Frontend: Actualizado `FILE_UPLOAD` constants en `ui.constants.ts`
   - Pipe de validación: Actualizado para mostrar tamaño en GB
   - UI: Mensajes de error y límites mostrados en GB
-  - Rate limiting ajustado: 3×15GB = 45GB/min max
+  - Rate limiting ajustado: 3×8GB = 24GB/min max
 - ✅ **Cambio de OTP: 6 dígitos → 8 dígitos**
   - Backend: Actualizado generador de OTP y DTOs de validación
   - Frontend: Actualizado inputs y placeholders (maxLength=8)
