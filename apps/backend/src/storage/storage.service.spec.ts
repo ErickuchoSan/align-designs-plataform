@@ -184,7 +184,7 @@ describe('StorageService', () => {
       expect(mockMinioClient.presignedGetObject).toHaveBeenCalledWith(
         'test-bucket',
         storagePath,
-        604800, // STORAGE_PRESIGNED_URL_EXPIRY_SECONDS (7 days)
+        900, // STORAGE_PRESIGNED_URL_EXPIRY_SECONDS (15 minutes)
       );
     });
 
