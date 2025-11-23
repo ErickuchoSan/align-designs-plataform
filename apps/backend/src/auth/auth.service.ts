@@ -47,7 +47,7 @@ export class AuthService {
       }
 
       // Check if user account is active BEFORE validating password
-      // This prevents timing attacks and ensures correct error flow
+      // This ensures inactive users cannot attempt login and avoids unnecessary password validation
       if (!user.isActive) {
         this.logger.warn(`Login attempt for inactive user: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
