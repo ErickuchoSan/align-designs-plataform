@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfileMenu } from './hooks/useProfileMenu';
 
 interface DashboardHeaderProps {
   title: string;
@@ -19,7 +19,7 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const { isOpen: showProfileMenu, toggle: toggleProfileMenu, close: closeProfileMenu, menuRef } = useProfileMenu();
 
   if (!user) return null;
 
@@ -53,9 +53,9 @@ export default function DashboardHeader({
           )}
 
           {/* Profile Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              onClick={toggleProfileMenu}
               className="flex items-center gap-3 rounded-lg bg-navy-800 px-4 py-2 text-sm font-medium text-white hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-navy-900 transition-colors"
             >
               <div className="w-8 h-8 bg-gradient-to-br from-gold-500 to-gold-600 rounded-full flex items-center justify-center text-navy-900 font-bold text-sm">
@@ -74,14 +74,7 @@ export default function DashboardHeader({
 
             {/* Dropdown Menu */}
             {showProfileMenu && (
-              <>
-                {/* Overlay to close menu when clicking outside */}
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowProfileMenu(false)}
-                />
-
-                <div className="absolute right-0 mt-2 w-56 rounded-lg bg-white shadow-xl border border-stone-200 py-2 z-20 animate-slideDown">
+              <div className="absolute right-0 mt-2 w-56 rounded-lg bg-white shadow-xl border border-stone-200 py-2 z-20 animate-slideDown">
                   <a
                     href="/dashboard/profile"
                     className="flex items-center gap-3 px-4 py-3 text-sm text-navy-900 hover:bg-stone-50 transition-colors"
@@ -105,7 +98,6 @@ export default function DashboardHeader({
                     <span className="font-medium">Log out</span>
                   </button>
                 </div>
-              </>
             )}
           </div>
         </div>

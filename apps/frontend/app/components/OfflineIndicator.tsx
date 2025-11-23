@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Component that displays an offline indicator when the user loses internet connection
@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 export default function OfflineIndicator() {
   const [isOnline, setIsOnline] = useState(true);
   const [showReconnected, setShowReconnected] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Check initial status
@@ -17,13 +18,24 @@ export default function OfflineIndicator() {
     const handleOnline = () => {
       setIsOnline(true);
       setShowReconnected(true);
+
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
       // Hide reconnected message after 3 seconds
-      setTimeout(() => setShowReconnected(false), 3000);
+      timeoutRef.current = setTimeout(() => setShowReconnected(false), 3000);
     };
 
     const handleOffline = () => {
       setIsOnline(false);
       setShowReconnected(false);
+
+      // Clear timeout when going offline
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
 
     window.addEventListener('online', handleOnline);
@@ -32,6 +44,11 @@ export default function OfflineIndicator() {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+
+      // Cleanup timeout on unmount
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 

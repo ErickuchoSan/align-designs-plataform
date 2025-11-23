@@ -16,10 +16,13 @@ export class FileSecurityService {
    * Enhanced validation using path normalization
    */
   validateProjectId(projectId: string): void {
+    this.logger.debug(`Validating project ID: "${projectId}" (type: ${typeof projectId}, length: ${projectId?.length})`);
+
     // UUID format validation (strict check first)
     const uuidPattern =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidPattern.test(projectId)) {
+      this.logger.warn(`UUID pattern test failed for: "${projectId}"`);
       throw new BadRequestException('Invalid project ID format');
     }
 
@@ -53,7 +56,8 @@ export class FileSecurityService {
     }
 
     // Additional validation: normalize path and ensure it doesn't escape
-    const normalizedPath = path.normalize(`/${projectId}`);
+    // Use POSIX path for consistent behavior across Windows and Unix
+    const normalizedPath = path.posix.normalize(`/${projectId}`);
     if (normalizedPath !== `/${projectId}`) {
       this.logger.warn(
         `Path normalization mismatch: ${projectId} -> ${normalizedPath}`,
@@ -61,10 +65,9 @@ export class FileSecurityService {
       throw new BadRequestException('Invalid project ID format');
     }
 
-    // Ensure path doesn't contain path separators after normalization
+    // Ensure path doesn't contain path traversal attempts
     if (
       normalizedPath.includes('..') ||
-      normalizedPath.includes(path.sep) ||
       normalizedPath.split('/').length > 2
     ) {
       this.logger.warn(`Path traversal in normalized path: ${normalizedPath}`);
@@ -96,7 +99,8 @@ export class FileSecurityService {
    * Validate that a path is safe (doesn't contain traversal attempts)
    */
   validatePathSafety(filePath: string): void {
-    const normalizedPath = path.normalize(filePath);
+    // Use POSIX path for consistent behavior across Windows and Unix
+    const normalizedPath = path.posix.normalize(filePath);
 
     // Check if normalization changed the path (indication of traversal attempt)
     if (normalizedPath !== filePath) {

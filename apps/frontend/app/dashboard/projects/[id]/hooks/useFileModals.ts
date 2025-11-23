@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useModal, useModalWithData } from '@/hooks/useModal';
 import type { FileData } from './useProjectFiles';
 
 export interface FileModalsState {
@@ -52,73 +53,37 @@ export interface UseFileModalsReturn extends FileModalsState, FileModalsActions 
  * }
  */
 export function useFileModals(): UseFileModalsReturn {
-  // Modal visibility states
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showCommentModal, setShowCommentModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  // Modal data states
-  const [fileToEdit, setFileToEdit] = useState<FileData | null>(null);
-  const [fileToDelete, setFileToDelete] = useState<FileData | null>(null);
-
-  // Upload modal handlers
-  const openUploadModal = useCallback(() => setShowUploadModal(true), []);
-  const closeUploadModal = useCallback(() => setShowUploadModal(false), []);
-
-  // Comment modal handlers
-  const openCommentModal = useCallback(() => setShowCommentModal(true), []);
-  const closeCommentModal = useCallback(() => setShowCommentModal(false), []);
-
-  // Edit modal handlers
-  const openEditModal = useCallback((file: FileData) => {
-    setFileToEdit(file);
-    setShowEditModal(true);
-  }, []);
-
-  const closeEditModal = useCallback(() => {
-    setShowEditModal(false);
-    setFileToEdit(null);
-  }, []);
-
-  // Delete modal handlers
-  const openDeleteModal = useCallback((file: FileData) => {
-    setFileToDelete(file);
-    setShowDeleteModal(true);
-  }, []);
-
-  const closeDeleteModal = useCallback(() => {
-    setShowDeleteModal(false);
-    setFileToDelete(null);
-  }, []);
+  // Use generic modal hooks to reduce boilerplate
+  const uploadModal = useModal();
+  const commentModal = useModal();
+  const editModal = useModalWithData<FileData>();
+  const deleteModal = useModalWithData<FileData>();
 
   // Close all modals utility
   const closeAllModals = useCallback(() => {
-    setShowUploadModal(false);
-    setShowCommentModal(false);
-    setShowEditModal(false);
-    setShowDeleteModal(false);
-    setFileToEdit(null);
-    setFileToDelete(null);
-  }, []);
+    uploadModal.close();
+    commentModal.close();
+    editModal.close();
+    deleteModal.close();
+  }, [uploadModal, commentModal, editModal, deleteModal]);
 
   return {
     // State
-    showUploadModal,
-    showCommentModal,
-    showEditModal,
-    showDeleteModal,
-    fileToEdit,
-    fileToDelete,
+    showUploadModal: uploadModal.isOpen,
+    showCommentModal: commentModal.isOpen,
+    showEditModal: editModal.isOpen,
+    showDeleteModal: deleteModal.isOpen,
+    fileToEdit: editModal.data,
+    fileToDelete: deleteModal.data,
     // Actions
-    openUploadModal,
-    closeUploadModal,
-    openCommentModal,
-    closeCommentModal,
-    openEditModal,
-    closeEditModal,
-    openDeleteModal,
-    closeDeleteModal,
+    openUploadModal: uploadModal.open,
+    closeUploadModal: uploadModal.close,
+    openCommentModal: commentModal.open,
+    closeCommentModal: commentModal.close,
+    openEditModal: editModal.open,
+    closeEditModal: editModal.close,
+    openDeleteModal: deleteModal.open,
+    closeDeleteModal: deleteModal.close,
     closeAllModals,
   };
 }

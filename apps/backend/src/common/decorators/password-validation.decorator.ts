@@ -1,13 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import { IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { PASSWORD_REGEX } from '../constants/password-regex.constants';
+import { PASSWORD_CONSTRAINTS } from '../constants/validation.constants';
 
 /**
  * Composite decorator for password validation
  *
  * Centralizes all password validation rules to avoid duplication across DTOs.
  * Password requirements:
- * - Minimum 12 characters
- * - Maximum 128 characters
+ * - Minimum ${PASSWORD_CONSTRAINTS.MIN_LENGTH} characters
+ * - Maximum ${PASSWORD_CONSTRAINTS.MAX_LENGTH} characters
  * - At least one uppercase letter
  * - At least one lowercase letter
  * - At least one number
@@ -32,22 +34,22 @@ export function ValidatePassword(options?: { fieldName?: string }) {
 
   return applyDecorators(
     IsString({ message: `${fieldName} must be a string` }),
-    MinLength(12, {
-      message: `${fieldName} must be at least 12 characters long`,
+    MinLength(PASSWORD_CONSTRAINTS.MIN_LENGTH, {
+      message: `${fieldName} must be at least ${PASSWORD_CONSTRAINTS.MIN_LENGTH} characters long`,
     }),
-    MaxLength(128, {
-      message: `${fieldName} cannot exceed 128 characters`,
+    MaxLength(PASSWORD_CONSTRAINTS.MAX_LENGTH, {
+      message: `${fieldName} cannot exceed ${PASSWORD_CONSTRAINTS.MAX_LENGTH} characters`,
     }),
-    Matches(/[A-Z]/, {
+    Matches(PASSWORD_REGEX.UPPERCASE, {
       message: `${fieldName} must contain at least one uppercase letter`,
     }),
-    Matches(/[a-z]/, {
+    Matches(PASSWORD_REGEX.LOWERCASE, {
       message: `${fieldName} must contain at least one lowercase letter`,
     }),
-    Matches(/\d/, {
+    Matches(PASSWORD_REGEX.NUMBER, {
       message: `${fieldName} must contain at least one number`,
     }),
-    Matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, {
+    Matches(PASSWORD_REGEX.SPECIAL_CHAR, {
       message: `${fieldName} must contain at least one special character`,
     }),
   );
@@ -79,11 +81,11 @@ export function ValidatePasswordConfirmation(options?: { fieldName?: string }) {
 
   return applyDecorators(
     IsString({ message: `${fieldName} must be a string` }),
-    MinLength(12, {
-      message: `${fieldName} must be at least 12 characters long`,
+    MinLength(PASSWORD_CONSTRAINTS.MIN_LENGTH, {
+      message: `${fieldName} must be at least ${PASSWORD_CONSTRAINTS.MIN_LENGTH} characters long`,
     }),
-    MaxLength(128, {
-      message: `${fieldName} cannot exceed 128 characters`,
+    MaxLength(PASSWORD_CONSTRAINTS.MAX_LENGTH, {
+      message: `${fieldName} cannot exceed ${PASSWORD_CONSTRAINTS.MAX_LENGTH} characters`,
     }),
   );
 }

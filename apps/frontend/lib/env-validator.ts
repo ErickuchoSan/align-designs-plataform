@@ -3,13 +3,13 @@
  * Validates that all required environment variables are defined
  */
 
-type EnvConfig = {
+interface EnvConfig {
   [key: string]: {
     required: boolean;
     description: string;
     defaultValue?: string;
   };
-};
+}
 
 /**
  * Required and optional environment variables configuration

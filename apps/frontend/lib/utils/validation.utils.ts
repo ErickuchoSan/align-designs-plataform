@@ -3,67 +3,50 @@
  * These must match the backend validation rules
  */
 
+import { PASSWORD_REGEX } from '../constants/password-regex.constants';
+import { PASSWORD_REQUIREMENTS } from '../constants/validation.constants';
+
+// Re-export PASSWORD_REQUIREMENTS for backward compatibility
+export { PASSWORD_REQUIREMENTS };
+
 /**
- * Password requirements - MUST match backend validation
+ * RFC 5322 compliant email regex
+ * Simplified but robust version that covers most valid emails
  */
-export const PASSWORD_REQUIREMENTS = {
-  MIN_LENGTH: 12,
-  REQUIRE_UPPERCASE: true,
-  REQUIRE_LOWERCASE: true,
-  REQUIRE_NUMBER: true,
-  REQUIRE_SYMBOL: true,
-} as const;
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+/**
+ * Validate email local part (before @)
+ */
+function isValidLocalPart(localPart: string): boolean {
+  return Boolean(localPart) &&
+         localPart.length <= 64 &&
+         !localPart.startsWith('.') &&
+         !localPart.endsWith('.');
+}
+
+/**
+ * Validate email domain part (after @)
+ */
+function isValidDomain(domain: string): boolean {
+  return Boolean(domain) &&
+         domain.length <= 255 &&
+         domain.includes('.');
+}
 
 /**
  * Validate email format using RFC 5322 standard
  * Returns true if email is valid, false otherwise
  */
 export function isValidEmail(email: string): boolean {
-  // Basic format check
-  if (!email || typeof email !== 'string') {
-    return false;
-  }
+  if (!email || typeof email !== 'string') return false;
 
-  // Trim whitespace
-  email = email.trim();
+  const trimmedEmail = email.trim();
+  if (!EMAIL_REGEX.test(trimmedEmail)) return false;
+  if (trimmedEmail.includes('..')) return false;
 
-  // RFC 5322 compliant email regex
-  // This is a simplified but robust version that covers most valid emails
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-
-  if (!emailRegex.test(email)) {
-    return false;
-  }
-
-  // Additional validation rules
-  const [localPart, domain] = email.split('@');
-
-  // Local part (before @) validations
-  if (!localPart || localPart.length > 64) {
-    return false;
-  }
-
-  // Domain validations
-  if (!domain || domain.length > 255) {
-    return false;
-  }
-
-  // Domain must have at least one dot
-  if (!domain.includes('.')) {
-    return false;
-  }
-
-  // Check for consecutive dots
-  if (email.includes('..')) {
-    return false;
-  }
-
-  // Check for leading/trailing dots
-  if (localPart.startsWith('.') || localPart.endsWith('.')) {
-    return false;
-  }
-
-  return true;
+  const [localPart, domain] = trimmedEmail.split('@');
+  return isValidLocalPart(localPart) && isValidDomain(domain);
 }
 
 /**
@@ -100,28 +83,28 @@ export function validatePassword(password: string): {
     };
   }
 
-  if (PASSWORD_REQUIREMENTS.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
+  if (PASSWORD_REQUIREMENTS.REQUIRE_UPPERCASE && !PASSWORD_REGEX.UPPERCASE.test(password)) {
     return {
       isValid: false,
       error: 'Password must contain at least one uppercase letter',
     };
   }
 
-  if (PASSWORD_REQUIREMENTS.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
+  if (PASSWORD_REQUIREMENTS.REQUIRE_LOWERCASE && !PASSWORD_REGEX.LOWERCASE.test(password)) {
     return {
       isValid: false,
       error: 'Password must contain at least one lowercase letter',
     };
   }
 
-  if (PASSWORD_REQUIREMENTS.REQUIRE_NUMBER && !/\d/.test(password)) {
+  if (PASSWORD_REQUIREMENTS.REQUIRE_NUMBER && !PASSWORD_REGEX.NUMBER.test(password)) {
     return {
       isValid: false,
       error: 'Password must contain at least one number',
     };
   }
 
-  if (PASSWORD_REQUIREMENTS.REQUIRE_SYMBOL && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+  if (PASSWORD_REQUIREMENTS.REQUIRE_SYMBOL && !PASSWORD_REGEX.SPECIAL_CHAR.test(password)) {
     return {
       isValid: false,
       error: 'Password must contain at least one special character',
@@ -149,10 +132,10 @@ export function getPasswordStrength(password: string): {
 } {
   const requirements = {
     length: password.length >= PASSWORD_REQUIREMENTS.MIN_LENGTH,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /\d/.test(password),
-    symbol: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+    uppercase: PASSWORD_REGEX.UPPERCASE.test(password),
+    lowercase: PASSWORD_REGEX.LOWERCASE.test(password),
+    number: PASSWORD_REGEX.NUMBER.test(password),
+    symbol: PASSWORD_REGEX.SPECIAL_CHAR.test(password),
   };
 
   const score = Object.values(requirements).filter(Boolean).length;

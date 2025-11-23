@@ -5,11 +5,11 @@
 
 import { logger } from './logger';
 
-type StorageResult<T> = {
+interface StorageResult<T> {
   success: boolean;
   data?: T;
   error?: string;
-};
+}
 
 class SafeStorage {
   private isAvailable: boolean;

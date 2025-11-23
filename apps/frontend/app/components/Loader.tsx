@@ -1,5 +1,3 @@
-'use client';
-
 interface LoaderProps {
   size?: 'sm' | 'md' | 'lg';
   color?: 'blue' | 'white' | 'gray';

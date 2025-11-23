@@ -27,6 +27,12 @@ export function useAutoResetMessage(
   duration: number = MESSAGE_DURATION.SUCCESS,
 ): void {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const durationRef = useRef(duration);
+
+  // Update duration ref when it changes
+  useEffect(() => {
+    durationRef.current = duration;
+  }, [duration]);
 
   useEffect(() => {
     // Clear any existing timeout
@@ -40,7 +46,7 @@ export function useAutoResetMessage(
       timeoutRef.current = setTimeout(() => {
         setMessage('');
         timeoutRef.current = null;
-      }, duration);
+      }, durationRef.current);
     }
 
     // Cleanup on unmount or when dependencies change
@@ -50,7 +56,7 @@ export function useAutoResetMessage(
         timeoutRef.current = null;
       }
     };
-  }, [message, setMessage, duration]);
+  }, [message, setMessage]);
 }
 
 /**

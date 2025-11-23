@@ -98,6 +98,10 @@ function Pagination({
 
   return (
     <nav ref={paginationRef} className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg" aria-label="Pagination">
+      {/* Screen reader announcement for page changes */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        Page {currentPage} of {totalPages}
+      </div>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6">
         {/* Items per page selector */}
         <div className="flex items-center gap-3">

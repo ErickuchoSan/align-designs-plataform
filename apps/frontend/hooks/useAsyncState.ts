@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getErrorMessage } from '@/lib/errors';
 
 export interface AsyncState<T> {
   data: T | null;
@@ -67,8 +68,7 @@ export function useAsyncState<T = any>(
           });
           return result;
         } catch (err) {
-          const errorMessage =
-            err instanceof Error ? err.message : 'An error occurred';
+          const errorMessage = getErrorMessage(err, 'An error occurred');
           setState((prev) => ({
             ...prev,
             loading: false,
