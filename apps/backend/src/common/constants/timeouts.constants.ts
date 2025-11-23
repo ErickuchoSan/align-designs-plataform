@@ -13,8 +13,8 @@ export const PASSWORD_RESET_EXPIRATION_HOURS = 24;
 
 // File Storage Configuration
 export const STORAGE_PRESIGNED_URL_EXPIRY_SECONDS = 900; // 15 minutes - reduced from 1 hour for security
-export const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024 * 1024; // 15GB
-export const MAX_FILE_SIZE_MB = 15000; // 15GB in MB
+export const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 * 1024; // 8GB
+export const MAX_FILE_SIZE_MB = 8000; // 8GB in MB
 
 // Rate Limiting Configuration (ttl in milliseconds)
 export const RATE_LIMIT_TTL_MS = 60000; // 1 minute
@@ -37,11 +37,11 @@ export const RATE_LIMIT_AUTH = {
 };
 
 // Rate Limit: File operations
-// Reduced limits to prevent storage exhaustion DoS (3×15GB = 45GB/min max - adjust as needed)
+// Reduced limits to prevent storage exhaustion DoS (3×8GB = 24GB/min max - adjust as needed)
 export const RATE_LIMIT_FILES = {
-  UPLOAD: { limit: 3, ttl: RATE_LIMIT_TTL_MS }, // 3×15GB = 45GB/min max
+  UPLOAD: { limit: 3, ttl: RATE_LIMIT_TTL_MS }, // 3×8GB = 24GB/min max
   UPDATE: { limit: 3, ttl: RATE_LIMIT_TTL_MS },
-  DOWNLOAD: { limit: 5, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 10 to 5/min to prevent bandwidth DoS (5×15GB = 75GB/min max)
+  DOWNLOAD: { limit: 5, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 10 to 5/min to prevent bandwidth DoS (5×8GB = 40GB/min max)
   CREATE_COMMENT: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
   DELETE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
 };
@@ -51,8 +51,8 @@ export const RATE_LIMIT_PROJECTS = {
   CREATE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
   UPDATE: { limit: 20, ttl: RATE_LIMIT_TTL_MS },
   DELETE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
-  LIST: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
-  GET: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
+  LIST: { limit: 30, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 100 to prevent data scraping
+  GET: { limit: 60, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 100 to prevent enumeration
 };
 
 // Rate Limit: User operations
@@ -61,13 +61,13 @@ export const RATE_LIMIT_USERS = {
   UPDATE: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
   DELETE: { limit: 5, ttl: RATE_LIMIT_TTL_MS },
   TOGGLE_STATUS: { limit: 10, ttl: RATE_LIMIT_TTL_MS },
-  LIST: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
-  GET_PROFILE: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
-  GET: { limit: 100, ttl: RATE_LIMIT_TTL_MS },
+  LIST: { limit: 30, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 100 to prevent user enumeration
+  GET_PROFILE: { limit: 60, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 100
+  GET: { limit: 60, ttl: RATE_LIMIT_TTL_MS }, // Reduced from 100 to prevent user enumeration
 };
 
 // JWT Configuration
-export const JWT_DEFAULT_EXPIRATION = '7d';
+export const JWT_DEFAULT_EXPIRATION = '1d';
 
 // Session Configuration
 export const SESSION_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000; // 7 days

@@ -3,8 +3,16 @@ import { Injectable, Logger } from '@nestjs/common';
 /**
  * Service to manage JWT token blacklist/revocation
  *
- * This implementation uses an in-memory Set for simplicity.
- * For production with multiple server instances, consider using Redis.
+ * ⚠️ SECURITY CONSIDERATION - IN-MEMORY STORAGE LIMITATION:
+ * This implementation uses an in-memory Set which has the following limitations:
+ * 1. Lost on server restart - revoked tokens become valid again
+ * 2. Not shared across multiple server instances in load-balanced environments
+ * 3. No persistence - cannot audit revoked tokens after server restart
+ *
+ * ✅ PRODUCTION RECOMMENDATION:
+ * For production deployments, migrate to Redis or database-backed storage:
+ * - Redis: Fast, supports TTL, shared across instances
+ * - Database: Persistent, auditable, but slower than Redis
  *
  * Tokens are automatically removed from the blacklist after their expiration time
  * to prevent memory leaks.
