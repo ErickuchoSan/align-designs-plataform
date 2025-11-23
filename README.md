@@ -128,7 +128,7 @@ MINIO_BUCKET=align-designs
 
 ```env
 JWT_SECRET=your-super-secret-key-change-in-production
-JWT_EXPIRES_IN=7d
+JWT_EXPIRES_IN=1d
 JWT_AUDIENCE=align-designs-client
 JWT_ISSUER=align-designs-api
 ```
@@ -266,7 +266,7 @@ DELETE /files/:id                     # Eliminar archivo o comentario
 
 ## Seguridad
 
-- ✅ Autenticación JWT con expiración (7 días)
+- ✅ Autenticación JWT con expiración (1 día)
 - ✅ Protección de rutas con guards (JWT + Roles)
 - ✅ Control de acceso basado en roles (RBAC)
 - ✅ Validación de DTOs con class-validator

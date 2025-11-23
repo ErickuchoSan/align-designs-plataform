@@ -106,7 +106,7 @@ Bienvenido a la documentación completa del proyecto Align Designs Demo. Este pr
 **Backend NestJS:**
 - [x] Estructura de módulos (Auth, Users, Projects, Files, Storage)
 - [x] Prisma schema y migraciones
-- [x] Autenticación JWT (7 días de expiración)
+- [x] Autenticación JWT (1 día de expiración)
 - [x] Sistema OTP para clientes de 8 dígitos (10 minutos de expiración)
 - [x] CRUD de usuarios con roles (ADMIN, CLIENT)
 - [x] CRUD de proyectos

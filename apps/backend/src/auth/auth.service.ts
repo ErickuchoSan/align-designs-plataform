@@ -423,7 +423,7 @@ export class AuthService {
     };
 
     const accessToken = this.deps.jwt.sign(payload, {
-      expiresIn: this.deps.config.get('JWT_EXPIRATION', '7d'),
+      expiresIn: this.deps.config.get('JWT_EXPIRATION', '1d'),
       audience: 'align-designs-client',
       issuer: 'align-designs-api',
     });
