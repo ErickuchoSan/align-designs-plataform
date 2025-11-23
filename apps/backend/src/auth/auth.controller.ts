@@ -39,6 +39,19 @@ export class AuthController {
     private auditService: AuditService,
   ) {}
 
+  /**
+   * Set authentication cookie with secure settings
+   * Centralizes cookie configuration to follow DRY principle
+   */
+  private setAuthCookie(res: Response, token: string): void {
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: COOKIE_MAX_AGE_ONE_DAY,
+    });
+  }
+
   @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -138,12 +151,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: COOKIE_MAX_AGE_ONE_DAY,
-    });
+    this.setAuthCookie(res, result.access_token);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
@@ -211,12 +219,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: COOKIE_MAX_AGE_ONE_DAY,
-    });
+    this.setAuthCookie(res, result.access_token);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
