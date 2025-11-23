@@ -108,7 +108,7 @@ export default function ProjectDetailsPage() {
 
     const filtered = filters.applyFilters(files);
     setFilteredFiles(filtered);
-  }, [files, filters, setFilteredFiles]);
+  }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters]);
 
   // Reset local pagination when filters change
   useEffect(() => {
