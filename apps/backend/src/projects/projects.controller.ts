@@ -70,6 +70,10 @@ export class ProjectsController {
   ) {
     const project = await this.projectsService.create(createProjectDto, user.userId);
 
+    if (!project) {
+      throw new Error('Failed to create project');
+    }
+
     // Audit log for project creation (non-blocking)
     await safeAuditLog(
       this.auditService,

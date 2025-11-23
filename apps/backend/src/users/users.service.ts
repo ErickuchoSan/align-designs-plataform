@@ -7,7 +7,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { IUserRepository } from './repositories/user.repository.interface';
+import type { IUserRepository } from './repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateUserDto } from './dto/update-user.dto';

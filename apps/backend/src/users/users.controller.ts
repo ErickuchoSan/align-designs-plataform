@@ -62,6 +62,10 @@ export class UsersController {
   ) {
     const newUser = await this.usersService.createClient(createClientDto);
 
+    if (!newUser) {
+      throw new Error('Failed to create user');
+    }
+
     // Audit log for user creation (non-blocking)
     await safeAuditLog(
       this.auditService,

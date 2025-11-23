@@ -8,7 +8,12 @@ import { UpdateProjectDto } from '../dto/update-project.dto';
  * Abstracts data access for Project entities
  */
 export interface IProjectRepository
-  extends IBaseRepository<Project, CreateProjectDto, UpdateProjectDto> {
+  extends Omit<IBaseRepository<Project, CreateProjectDto, UpdateProjectDto>, 'create'> {
+  /**
+   * Create new project with createdBy
+   */
+  create(data: CreateProjectDto & { createdBy: string }): Promise<Project>;
+
   /**
    * Find project by ID with related data
    */
