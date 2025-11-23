@@ -78,7 +78,9 @@ export class ProjectRepository implements IProjectRepository {
     return { data, total };
   }
 
-  async create(data: CreateProjectDto & { createdBy: string }): Promise<Project> {
+  async create(
+    data: CreateProjectDto & { createdBy: string },
+  ): Promise<Project> {
     return this.prisma.project.create({
       data: {
         name: data.name,

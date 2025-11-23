@@ -93,7 +93,9 @@ describe('ProjectsService', () => {
   describe('create', () => {
     it('should create project successfully for admin', async () => {
       jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(mockUser);
-      jest.spyOn(prismaService.project, 'create').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'create')
+        .mockResolvedValue(mockProject);
 
       const result = await service.create(
         {
@@ -163,18 +165,30 @@ describe('ProjectsService', () => {
 
   describe('findOne', () => {
     it('should return project for admin', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
-      const result = await service.findOne('project-123', 'admin-123', Role.ADMIN);
+      const result = await service.findOne(
+        'project-123',
+        'admin-123',
+        Role.ADMIN,
+      );
 
       expect(result).toBeDefined();
       expect(result.id).toBe('project-123');
     });
 
     it('should return project for project client', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
-      const result = await service.findOne('project-123', 'client-123', Role.CLIENT);
+      const result = await service.findOne(
+        'project-123',
+        'client-123',
+        Role.CLIENT,
+      );
 
       expect(result).toBeDefined();
     });
@@ -188,7 +202,9 @@ describe('ProjectsService', () => {
     });
 
     it('should throw ForbiddenException for client accessing other project', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       await expect(
         service.findOne('project-123', 'different-client', Role.CLIENT),
@@ -224,7 +240,11 @@ describe('ProjectsService', () => {
         .spyOn(prismaService.project, 'findFirst')
         .mockResolvedValue(projectWithFiles as any);
 
-      const result = await service.findOne('project-123', 'admin-123', Role.ADMIN);
+      const result = await service.findOne(
+        'project-123',
+        'admin-123',
+        Role.ADMIN,
+      );
 
       expect(result._count.files).toBe(2); // Files with actual files
       expect(result._count.comments).toBe(1); // Comments without files
@@ -233,9 +253,13 @@ describe('ProjectsService', () => {
 
   describe('update', () => {
     it('should update project successfully for admin', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
       const updatedProject = { ...mockProject, name: 'Updated Name' };
-      jest.spyOn(prismaService.project, 'update').mockResolvedValue(updatedProject);
+      jest
+        .spyOn(prismaService.project, 'update')
+        .mockResolvedValue(updatedProject);
 
       const result = await service.update(
         'project-123',
@@ -248,7 +272,9 @@ describe('ProjectsService', () => {
     });
 
     it('should throw ForbiddenException for client updating other project', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       await expect(
         service.update(
@@ -261,7 +287,9 @@ describe('ProjectsService', () => {
     });
 
     it('should validate new client when changing clientId', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
       jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(mockUser);
       jest.spyOn(prismaService.file, 'count').mockResolvedValue(0);
       const updatedProject = {
@@ -269,7 +297,9 @@ describe('ProjectsService', () => {
         clientId: 'new-client-123',
         files: [],
       };
-      jest.spyOn(prismaService.project, 'update').mockResolvedValue(updatedProject as any);
+      jest
+        .spyOn(prismaService.project, 'update')
+        .mockResolvedValue(updatedProject as any);
 
       await service.update(
         'project-123',
@@ -293,7 +323,9 @@ describe('ProjectsService', () => {
           { id: '2', uploadedBy: 'client-123' },
         ],
       };
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(projectWithFiles as any);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(projectWithFiles as any);
       jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(mockUser);
 
       await expect(
@@ -309,9 +341,12 @@ describe('ProjectsService', () => {
 
   describe('remove', () => {
     it('should soft delete project for admin', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
-      jest.spyOn(prismaService.$transaction, 'mockImplementation' as any).mockImplementation(
-        async (callback: any) => {
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.$transaction, 'mockImplementation' as any)
+        .mockImplementation(async (callback: any) => {
           return callback({
             project: {
               update: jest.fn().mockResolvedValue({
@@ -323,16 +358,21 @@ describe('ProjectsService', () => {
               updateMany: jest.fn(),
             },
           });
-        },
-      );
+        });
 
-      const result = await service.remove('project-123', 'admin-123', Role.ADMIN);
+      const result = await service.remove(
+        'project-123',
+        'admin-123',
+        Role.ADMIN,
+      );
 
       expect(result.message).toContain('deleted');
     });
 
     it('should throw ForbiddenException for client deleting other project', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       await expect(
         service.remove('project-123', 'different-client', Role.CLIENT),
@@ -348,9 +388,9 @@ describe('ProjectsService', () => {
         ],
       };
 
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(
-        projectWithFiles as any,
-      );
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(projectWithFiles as any);
 
       const mockTx = {
         project: {
@@ -381,14 +421,15 @@ describe('ProjectsService', () => {
   describe('findAll', () => {
     it('should return all projects for admin', async () => {
       const mockProjects = [mockProject];
-      jest.spyOn(prismaService.project, 'findMany').mockResolvedValue(mockProjects);
+      jest
+        .spyOn(prismaService.project, 'findMany')
+        .mockResolvedValue(mockProjects);
       jest.spyOn(prismaService.project, 'count').mockResolvedValue(1);
 
-      const result = await service.findAll(
-        'admin-123',
-        Role.ADMIN,
-        { page: 1, limit: 10 },
-      );
+      const result = await service.findAll('admin-123', Role.ADMIN, {
+        page: 1,
+        limit: 10,
+      });
 
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -396,14 +437,15 @@ describe('ProjectsService', () => {
 
     it('should return only client projects for CLIENT role', async () => {
       const clientProjects = [mockProject];
-      jest.spyOn(prismaService.project, 'findMany').mockResolvedValue(clientProjects);
+      jest
+        .spyOn(prismaService.project, 'findMany')
+        .mockResolvedValue(clientProjects);
       jest.spyOn(prismaService.project, 'count').mockResolvedValue(1);
 
-      const result = await service.findAll(
-        'client-123',
-        Role.CLIENT,
-        { page: 1, limit: 10 },
-      );
+      const result = await service.findAll('client-123', Role.CLIENT, {
+        page: 1,
+        limit: 10,
+      });
 
       expect(result.data).toHaveLength(1);
       // Check that count was called with where clause including clientId
@@ -416,14 +458,15 @@ describe('ProjectsService', () => {
     });
 
     it('should handle pagination correctly', async () => {
-      jest.spyOn(prismaService.project, 'findMany').mockResolvedValue([mockProject]);
+      jest
+        .spyOn(prismaService.project, 'findMany')
+        .mockResolvedValue([mockProject]);
       jest.spyOn(prismaService.project, 'count').mockResolvedValue(25);
 
-      const result = await service.findAll(
-        'admin-123',
-        Role.ADMIN,
-        { page: 2, limit: 10 },
-      );
+      const result = await service.findAll('admin-123', Role.ADMIN, {
+        page: 2,
+        limit: 10,
+      });
 
       expect(result.meta.page).toBe(2);
       expect(result.meta.limit).toBe(10);

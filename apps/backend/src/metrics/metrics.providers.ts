@@ -1,4 +1,8 @@
-import { makeCounterProvider, makeHistogramProvider, makeGaugeProvider } from '@willsoto/nestjs-prometheus';
+import {
+  makeCounterProvider,
+  makeHistogramProvider,
+  makeGaugeProvider,
+} from '@willsoto/nestjs-prometheus';
 
 /**
  * Custom Prometheus metric providers

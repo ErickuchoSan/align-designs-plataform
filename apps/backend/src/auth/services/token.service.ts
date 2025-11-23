@@ -60,10 +60,12 @@ export class TokenService {
   async revokeToken(token: string): Promise<void> {
     try {
       // Decode the token to get expiration time
-      const decoded = this.jwt.decode(token) as JwtPayload;
+      const decoded = this.jwt.decode(token);
 
       if (!decoded || !decoded.exp) {
-        this.logger.warn('Cannot revoke token: Invalid token or missing expiration');
+        this.logger.warn(
+          'Cannot revoke token: Invalid token or missing expiration',
+        );
         return;
       }
 
@@ -89,7 +91,7 @@ export class TokenService {
    * Decode a JWT token without verification
    */
   decodeToken(token: string): JwtPayload | null {
-    return this.jwt.decode(token) as JwtPayload | null;
+    return this.jwt.decode(token);
   }
 
   /**

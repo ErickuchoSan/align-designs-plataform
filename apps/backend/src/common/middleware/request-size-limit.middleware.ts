@@ -71,7 +71,7 @@ export class RequestSizeLimitMiddleware implements NestMiddleware {
       jsonParser(req, res, (err) => {
         if (err) {
           this.logger.warn(
-            `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit!)})`,
+            `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit)})`,
           );
           return next(err);
         }
@@ -79,7 +79,7 @@ export class RequestSizeLimitMiddleware implements NestMiddleware {
         urlencodedParser(req, res, (err) => {
           if (err) {
             this.logger.warn(
-              `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit!)})`,
+              `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit)})`,
             );
             return next(err);
           }

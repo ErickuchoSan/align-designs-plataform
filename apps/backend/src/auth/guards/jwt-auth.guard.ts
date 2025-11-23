@@ -36,12 +36,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return true;
   }
 
-  private extractTokenFromRequest(
-    request: { headers?: Record<string, string | string[] | undefined>; cookies?: Record<string, string> },
-  ): string | null {
+  private extractTokenFromRequest(request: {
+    headers?: Record<string, string | string[] | undefined>;
+    cookies?: Record<string, string>;
+  }): string | null {
     // Check Authorization header first
     const authHeader = request.headers?.authorization;
-    const authHeaderValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+    const authHeaderValue = Array.isArray(authHeader)
+      ? authHeader[0]
+      : authHeader;
     if (authHeaderValue && authHeaderValue.startsWith('Bearer ')) {
       return authHeaderValue.substring(7);
     }

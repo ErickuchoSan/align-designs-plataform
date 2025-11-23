@@ -7,11 +7,7 @@ import { IRepository } from '../../common/interfaces/repository.interface';
  * Services depend on this interface, not on Prisma implementation
  */
 export interface IFileRepository
-  extends IRepository<
-    File,
-    Prisma.FileCreateInput,
-    Prisma.FileUpdateInput
-  > {
+  extends IRepository<File, Prisma.FileCreateInput, Prisma.FileUpdateInput> {
   /**
    * Find files by project ID
    */

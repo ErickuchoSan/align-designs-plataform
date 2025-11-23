@@ -16,7 +16,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { UserResponse } from '../common/interfaces/user-response.interface';
-import { getActiveRecordsWhere, getActiveRecordsWhereWith } from '../common/helpers/prisma.helpers';
+import {
+  getActiveRecordsWhere,
+  getActiveRecordsWhereWith,
+} from '../common/helpers/prisma.helpers';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import {
   USER_BASIC_SELECT,
@@ -65,11 +68,13 @@ export class UsersService {
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<UserResponse>> {
-    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
+    const { page, limit, skip } =
+      PaginationHelper.extractPaginationParams(paginationDto);
 
     // Try cache first
     const cacheKey = CACHE_KEYS.USERS.LIST(page, limit);
-    const cached = await this.cacheManager.get<PaginatedResult<UserResponse>>(cacheKey);
+    const cached =
+      await this.cacheManager.get<PaginatedResult<UserResponse>>(cacheKey);
     if (cached) return cached;
 
     const [users, total] = await Promise.all([
@@ -87,7 +92,11 @@ export class UsersService {
       }),
     ]);
 
-    const result = PaginationHelper.buildPaginatedResult(users, total, paginationDto);
+    const result = PaginationHelper.buildPaginatedResult(
+      users,
+      total,
+      paginationDto,
+    );
     await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
     return result;
   }

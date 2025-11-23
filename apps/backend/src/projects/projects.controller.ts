@@ -68,7 +68,10 @@ export class ProjectsController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const project = await this.projectsService.create(createProjectDto, user.userId);
+    const project = await this.projectsService.create(
+      createProjectDto,
+      user.userId,
+    );
 
     if (!project) {
       throw new Error('Failed to create project');
@@ -142,7 +145,10 @@ export class ProjectsController {
     description: 'Project retrieved successfully',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - No access to this project' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - No access to this project',
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.projectsService.findOne(id, user.userId, user.role);
@@ -230,7 +236,11 @@ export class ProjectsController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.projectsService.remove(id, user.userId, user.role);
+    const result = await this.projectsService.remove(
+      id,
+      user.userId,
+      user.role,
+    );
 
     // Audit log for project deletion (non-blocking)
     await safeAuditLog(

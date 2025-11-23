@@ -105,9 +105,14 @@ describe('AuthService', () => {
       const hashedPassword = await bcrypt.hash('password123', 14);
       const userWithHash = { ...mockUser, passwordHash: hashedPassword };
 
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(userWithHash);
+      jest
+        .spyOn(prismaService.user, 'findFirst')
+        .mockResolvedValue(userWithHash);
 
-      const result = await service.loginAdmin('test@example.com', 'password123');
+      const result = await service.loginAdmin(
+        'test@example.com',
+        'password123',
+      );
 
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('user');
@@ -127,7 +132,9 @@ describe('AuthService', () => {
       const hashedPassword = await bcrypt.hash('correctpassword', 14);
       const userWithHash = { ...mockUser, passwordHash: hashedPassword };
 
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(userWithHash);
+      jest
+        .spyOn(prismaService.user, 'findFirst')
+        .mockResolvedValue(userWithHash);
 
       await expect(
         service.loginAdmin('test@example.com', 'wrongpassword'),
@@ -136,9 +143,15 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException for inactive user', async () => {
       const hashedPassword = await bcrypt.hash('password123', 14);
-      const inactiveUser = { ...mockUser, passwordHash: hashedPassword, isActive: false };
+      const inactiveUser = {
+        ...mockUser,
+        passwordHash: hashedPassword,
+        isActive: false,
+      };
 
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(inactiveUser);
+      jest
+        .spyOn(prismaService.user, 'findFirst')
+        .mockResolvedValue(inactiveUser);
 
       await expect(
         service.loginAdmin('test@example.com', 'password123'),
@@ -166,7 +179,9 @@ describe('AuthService', () => {
       const clientUser = { ...mockUser, role: Role.CLIENT };
       jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(clientUser);
       jest.spyOn(otpService, 'createOtp').mockResolvedValue('123456');
-      jest.spyOn(emailService, 'sendPasswordRecoveryOtpEmail').mockResolvedValue();
+      jest
+        .spyOn(emailService, 'sendPasswordRecoveryOtpEmail')
+        .mockResolvedValue();
 
       const result = await service.requestOtpForClient('test@example.com');
 
@@ -190,7 +205,9 @@ describe('AuthService', () => {
     it('should return generic message for non-existent email', async () => {
       jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
 
-      const result = await service.requestOtpForClient('nonexistent@example.com');
+      const result = await service.requestOtpForClient(
+        'nonexistent@example.com',
+      );
 
       expect(result.message).toContain('If the email exists');
       expect(otpService.createOtp).not.toHaveBeenCalled();

@@ -16,7 +16,9 @@ export class FileSecurityService {
    * Enhanced validation using path normalization
    */
   validateProjectId(projectId: string): void {
-    this.logger.debug(`Validating project ID: "${projectId}" (type: ${typeof projectId}, length: ${projectId?.length})`);
+    this.logger.debug(
+      `Validating project ID: "${projectId}" (type: ${typeof projectId}, length: ${projectId?.length})`,
+    );
 
     // UUID format validation (strict check first)
     const uuidPattern =
@@ -66,10 +68,7 @@ export class FileSecurityService {
     }
 
     // Ensure path doesn't contain path traversal attempts
-    if (
-      normalizedPath.includes('..') ||
-      normalizedPath.split('/').length > 2
-    ) {
+    if (normalizedPath.includes('..') || normalizedPath.split('/').length > 2) {
       this.logger.warn(`Path traversal in normalized path: ${normalizedPath}`);
       throw new BadRequestException('Invalid project ID format');
     }

@@ -48,9 +48,15 @@ export class UsersController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create new client', description: 'Admin-only: Create a new client user' })
+  @ApiOperation({
+    summary: 'Create new client',
+    description: 'Admin-only: Create a new client user',
+  })
   @ApiResponse({ status: 201, description: 'Client created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input or email already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or email already exists',
+  })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
@@ -90,7 +96,10 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all users', description: 'Admin-only: Retrieve paginated list of all users' })
+  @ApiOperation({
+    summary: 'Get all users',
+    description: 'Admin-only: Retrieve paginated list of all users',
+  })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
@@ -99,7 +108,10 @@ export class UsersController {
   }
 
   @Get('profile')
-  @ApiOperation({ summary: 'Get current user profile', description: 'Retrieve the profile of the currently authenticated user' })
+  @ApiOperation({
+    summary: 'Get current user profile',
+    description: 'Retrieve the profile of the currently authenticated user',
+  })
   @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
   @Throttle({ default: RATE_LIMIT_USERS.GET_PROFILE })
   getProfile(@CurrentUser() user: UserPayload) {
@@ -122,7 +134,10 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID', description: 'Retrieve a specific user by their ID' })
+  @ApiOperation({
+    summary: 'Get user by ID',
+    description: 'Retrieve a specific user by their ID',
+  })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -140,7 +155,12 @@ export class UsersController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const updatedUser = await this.usersService.update(id, updateUserDto, user.userId, user.role);
+    const updatedUser = await this.usersService.update(
+      id,
+      updateUserDto,
+      user.userId,
+      user.role,
+    );
 
     // Audit log for user update (non-blocking)
     await safeAuditLog(
@@ -174,7 +194,10 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete user', description: 'Admin-only: Soft delete a user account' })
+  @ApiOperation({
+    summary: 'Delete user',
+    description: 'Admin-only: Soft delete a user account',
+  })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })

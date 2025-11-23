@@ -52,7 +52,10 @@ export class MetricsService {
   /**
    * Record cache operation (hit or miss)
    */
-  recordCacheOperation(operation: 'hit' | 'miss' | 'set' | 'delete', key?: string) {
+  recordCacheOperation(
+    operation: 'hit' | 'miss' | 'set' | 'delete',
+    key?: string,
+  ) {
     this.cacheOperationsCounter.inc({
       operation,
       key_prefix: key ? key.split(':')[0] : 'unknown',

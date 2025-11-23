@@ -1,5 +1,8 @@
 import { Project } from '@prisma/client';
-import { IBaseRepository, FindAllOptions } from '../../common/repositories/base.repository';
+import {
+  IBaseRepository,
+  FindAllOptions,
+} from '../../common/repositories/base.repository';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 
@@ -8,7 +11,10 @@ import { UpdateProjectDto } from '../dto/update-project.dto';
  * Abstracts data access for Project entities
  */
 export interface IProjectRepository
-  extends Omit<IBaseRepository<Project, CreateProjectDto, UpdateProjectDto>, 'create'> {
+  extends Omit<
+    IBaseRepository<Project, CreateProjectDto, UpdateProjectDto>,
+    'create'
+  > {
   /**
    * Create new project with createdBy
    */
@@ -22,7 +28,10 @@ export interface IProjectRepository
   /**
    * Find all projects for a specific client
    */
-  findByClientId(clientId: string, options?: FindAllOptions): Promise<Project[]>;
+  findByClientId(
+    clientId: string,
+    options?: FindAllOptions,
+  ): Promise<Project[]>;
 
   /**
    * Find projects with pagination and relations

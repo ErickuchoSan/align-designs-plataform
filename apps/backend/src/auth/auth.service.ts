@@ -53,10 +53,11 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      const isPasswordValid = await this.authDependencies.password.comparePassword(
-        password,
-        user.passwordHash,
-      );
+      const isPasswordValid =
+        await this.authDependencies.password.comparePassword(
+          password,
+          user.passwordHash,
+        );
 
       if (!isPasswordValid) {
         // Handle failed login (increments counter and potentially locks account)
@@ -150,7 +151,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired OTP code');
     }
 
-    this.logger.log(`Successful OTP verification for user ${user.id} (${email})`);
+    this.logger.log(
+      `Successful OTP verification for user ${user.id} (${email})`,
+    );
     return this.tokenService.generateToken(user);
   }
 
@@ -163,7 +166,10 @@ export class AuthService {
     newPassword: string,
     confirmPassword: string,
   ) {
-    this.authDependencies.password.validatePasswordsMatch(newPassword, confirmPassword);
+    this.authDependencies.password.validatePasswordsMatch(
+      newPassword,
+      confirmPassword,
+    );
     this.authDependencies.password.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
@@ -184,10 +190,11 @@ export class AuthService {
       );
     }
 
-    const isPasswordValid = await this.authDependencies.password.comparePassword(
-      currentPassword,
-      user.passwordHash,
-    );
+    const isPasswordValid =
+      await this.authDependencies.password.comparePassword(
+        currentPassword,
+        user.passwordHash,
+      );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
@@ -258,7 +265,10 @@ export class AuthService {
     confirmPassword: string,
   ) {
     // Validate that passwords match
-    this.authDependencies.password.validatePasswordsMatch(newPassword, confirmPassword);
+    this.authDependencies.password.validatePasswordsMatch(
+      newPassword,
+      confirmPassword,
+    );
     this.authDependencies.password.validatePasswordFormat(newPassword);
 
     const user = await this.prisma.user.findFirst({
@@ -333,7 +343,7 @@ export class AuthService {
     const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
 
     if (delayNeeded > 0) {
-      await new Promise(resolve => setTimeout(resolve, delayNeeded));
+      await new Promise((resolve) => setTimeout(resolve, delayNeeded));
     }
 
     return response;
@@ -343,7 +353,10 @@ export class AuthService {
    * Set password for the first time and activate the account
    */
   async setPassword(userId: string, password: string, confirmPassword: string) {
-    this.authDependencies.password.validatePasswordsMatch(password, confirmPassword);
+    this.authDependencies.password.validatePasswordsMatch(
+      password,
+      confirmPassword,
+    );
     this.authDependencies.password.validatePasswordFormat(password);
 
     const user = await this.prisma.user.findFirst({
@@ -364,7 +377,8 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await this.authDependencies.password.hashPassword(password);
+    const hashedPassword =
+      await this.authDependencies.password.hashPassword(password);
 
     // Update password, activate account and verify email
     await this.prisma.user.update({

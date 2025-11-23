@@ -228,7 +228,6 @@ export class EmailService implements OnModuleInit {
     );
   }
 
-
   /**
    * HTML template for password reset email
    */
@@ -336,7 +335,6 @@ export class EmailService implements OnModuleInit {
       </html>
     `;
   }
-
 
   /**
    * Check if email service is healthy

@@ -38,9 +38,9 @@ describe('StorageService', () => {
     } as any;
 
     // Mock the Client constructor
-    (Client.Client as jest.MockedClass<typeof Client.Client>).mockImplementation(
-      () => mockMinioClient,
-    );
+    (
+      Client.Client as jest.MockedClass<typeof Client.Client>
+    ).mockImplementation(() => mockMinioClient);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

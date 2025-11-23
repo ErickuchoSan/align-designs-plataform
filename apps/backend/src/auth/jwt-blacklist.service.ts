@@ -79,7 +79,7 @@ export class JwtBlacklistService {
    */
   clearAll(): void {
     // Clear all timers
-    this.expirationTimers.forEach(timer => clearTimeout(timer));
+    this.expirationTimers.forEach((timer) => clearTimeout(timer));
     this.expirationTimers.clear();
 
     // Clear the blacklist

@@ -115,7 +115,8 @@ export class ProjectsService {
     userRole: Role,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<ProjectResponse>> {
-    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
+    const { page, limit, skip } =
+      PaginationHelper.extractPaginationParams(paginationDto);
 
     // Generate cache key based on user role and pagination
     const cacheKey = CACHE_KEYS.PROJECTS.LIST(
@@ -125,7 +126,8 @@ export class ProjectsService {
     );
 
     // Try to get from cache first
-    const cached = await this.cacheManager.get<PaginatedResult<ProjectResponse>>(cacheKey);
+    const cached =
+      await this.cacheManager.get<PaginatedResult<ProjectResponse>>(cacheKey);
     if (cached) {
       this.logger.debug(`Cache hit for projects list: ${cacheKey}`);
       return cached;
@@ -162,7 +164,9 @@ export class ProjectsService {
 
     // Transform projects to include separate counts from already-loaded files
     const projectsWithCounts = projects.map((project) => {
-      const { filesCount, commentsCount } = getFilesAndCommentsCounts(project.files);
+      const { filesCount, commentsCount } = getFilesAndCommentsCounts(
+        project.files,
+      );
 
       // Remove the files array and replace with counts
       const { files, ...projectWithoutFiles } = project;
@@ -176,7 +180,11 @@ export class ProjectsService {
       };
     });
 
-    const result = PaginationHelper.buildPaginatedResult(projectsWithCounts, total, paginationDto);
+    const result = PaginationHelper.buildPaginatedResult(
+      projectsWithCounts,
+      total,
+      paginationDto,
+    );
 
     // Cache the result for 5 minutes
     await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
@@ -194,7 +202,11 @@ export class ProjectsService {
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) {
       const permissionContext = new PermissionContext(userRole);
-      permissionContext.verifyProjectAccess(userId, (cached as any).clientId, 'You do not have permission to view this project');
+      permissionContext.verifyProjectAccess(
+        userId,
+        (cached as any).clientId,
+        'You do not have permission to view this project',
+      );
       return cached;
     }
 
@@ -235,7 +247,9 @@ export class ProjectsService {
     );
 
     // Separate files and comments count
-    const { filesCount, commentsCount } = getFilesAndCommentsCounts(project.files);
+    const { filesCount, commentsCount } = getFilesAndCommentsCounts(
+      project.files,
+    );
 
     // Convert BigInt to number for JSON serialization and remove files array
     const { files, ...projectWithoutFiles } = project;
@@ -292,7 +306,10 @@ export class ProjectsService {
     );
 
     // If clientId is being changed, verify the current client hasn't uploaded files
-    if (updateProjectDto.clientId && updateProjectDto.clientId !== project.clientId) {
+    if (
+      updateProjectDto.clientId &&
+      updateProjectDto.clientId !== project.clientId
+    ) {
       await this.validateClientChange(
         updateProjectDto.clientId,
         project.clientId,

@@ -13,7 +13,10 @@ import {
 class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
-  @MinLength(64, { message: 'JWT_SECRET must be at least 64 characters long for production security' })
+  @MinLength(64, {
+    message:
+      'JWT_SECRET must be at least 64 characters long for production security',
+  })
   JWT_SECRET: string;
 
   @IsString()

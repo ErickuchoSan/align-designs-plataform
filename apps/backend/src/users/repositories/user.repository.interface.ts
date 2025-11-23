@@ -1,5 +1,8 @@
 import { User, Role } from '@prisma/client';
-import { IBaseRepository, FindAllOptions } from '../../common/repositories/base.repository';
+import {
+  IBaseRepository,
+  FindAllOptions,
+} from '../../common/repositories/base.repository';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 

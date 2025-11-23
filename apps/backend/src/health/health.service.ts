@@ -73,7 +73,8 @@ export class HealthService {
     };
 
     const allHealthy = Object.values(checks).every(
-      (check) => check.status === 'healthy' || check.status === 'not_configured',
+      (check) =>
+        check.status === 'healthy' || check.status === 'not_configured',
     );
     const anyUnhealthy = Object.values(checks).some(
       (check) => check.status === 'unhealthy',
@@ -89,10 +90,12 @@ export class HealthService {
     const externalMB = Math.round(memoryUsage.external / 1024 / 1024);
 
     // Calculate CPU usage (simple approximation)
-    const loadAverage = process.cpuUsage ? process.cpuUsage() : { user: 0, system: 0 };
-    const cpuUsage = Math.round(
-      ((loadAverage.user + loadAverage.system) / 1000000) * 100
-    ) / 100;
+    const loadAverage = process.cpuUsage
+      ? process.cpuUsage()
+      : { user: 0, system: 0 };
+    const cpuUsage =
+      Math.round(((loadAverage.user + loadAverage.system) / 1000000) * 100) /
+      100;
 
     return {
       status,

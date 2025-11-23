@@ -56,7 +56,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Get CSRF token',
-    description: 'Returns a CSRF token for subsequent requests. The token will be sent in the X-CSRF-Token header.',
+    description:
+      'Returns a CSRF token for subsequent requests. The token will be sent in the X-CSRF-Token header.',
   })
   @ApiResponse({
     status: 200,
@@ -77,7 +78,8 @@ export class AuthController {
   @Throttle({ default: RATE_LIMIT_AUTH.CHECK_EMAIL })
   @ApiOperation({
     summary: 'Check if email exists and requires password setup',
-    description: 'Returns minimal information to prevent user enumeration. Used for UI flow decisions.',
+    description:
+      'Returns minimal information to prevent user enumeration. Used for UI flow decisions.',
   })
   @ApiResponse({
     status: 200,
@@ -95,11 +97,13 @@ export class AuthController {
   @Throttle({ default: RATE_LIMIT_AUTH.LOGIN })
   @ApiOperation({
     summary: 'Login with email and password',
-    description: 'Authenticates admin or client users. Sets httpOnly cookie with JWT and returns user data.',
+    description:
+      'Authenticates admin or client users. Sets httpOnly cookie with JWT and returns user data.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Login successful. JWT token is set in httpOnly cookie, not in response body.',
+    description:
+      'Login successful. JWT token is set in httpOnly cookie, not in response body.',
     schema: {
       example: {
         user: {
@@ -165,7 +169,9 @@ export class AuthController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.authService.requestOtpForClient(requestOtpDto.email);
+    const result = await this.authService.requestOtpForClient(
+      requestOtpDto.email,
+    );
 
     // Audit log for OTP request (userId not available yet) (non-blocking)
     await safeAuditLog(

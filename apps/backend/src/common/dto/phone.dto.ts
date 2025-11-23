@@ -5,9 +5,14 @@ import { PHONE_CONSTRAINTS } from '../constants/validation.constants';
 export class PhoneDto {
   @IsNotEmpty({ message: 'Country code is required' })
   @IsString({ message: 'Country code must be a string' })
-  @Matches(new RegExp(`^\\+\\d{${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH},${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH}}$`), {
-    message: `Country code must start with + and contain ${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH}-${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH} digits`,
-  })
+  @Matches(
+    new RegExp(
+      `^\\+\\d{${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH},${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH}}$`,
+    ),
+    {
+      message: `Country code must start with + and contain ${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH}-${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH} digits`,
+    },
+  )
   countryCode: string;
 
   @IsNotEmpty({ message: 'Phone number is required' })

@@ -113,7 +113,9 @@ export class PasswordValidationUtils {
     password: string,
   ): string | null {
     const lowerPassword = password.toLowerCase();
-    return this.COMMON_PATTERNS.some((pattern) => lowerPassword.includes(pattern))
+    return this.COMMON_PATTERNS.some((pattern) =>
+      lowerPassword.includes(pattern),
+    )
       ? 'Password contains common patterns'
       : null;
   }

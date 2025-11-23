@@ -1,4 +1,10 @@
-import { IsString, IsOptional, MaxLength, MinLength, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  MaxLength,
+  MinLength,
+  IsUUID,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 import {

@@ -82,24 +82,24 @@ export function validateEnvironmentVariables(): void {
 
     if (missingVars.length > 0) {
       errors.push(
-        `Missing required environment variables:\n  - ${missingVars.join('\n  - ')}`
+        `Missing required environment variables:\n  - ${missingVars.join('\n  - ')}`,
       );
     }
 
     if (emptyVars.length > 0) {
       errors.push(
-        `Empty environment variables (must have values):\n  - ${emptyVars.join('\n  - ')}`
+        `Empty environment variables (must have values):\n  - ${emptyVars.join('\n  - ')}`,
       );
     }
 
     logger.error('Environment validation failed!');
     logger.error(errors.join('\n\n'));
     logger.error(
-      '\nPlease check your .env file and ensure all required variables are set.'
+      '\nPlease check your .env file and ensure all required variables are set.',
     );
 
     throw new Error(
-      `Environment validation failed. Missing or empty variables detected. See logs above for details.`
+      `Environment validation failed. Missing or empty variables detected. See logs above for details.`,
     );
   }
 
@@ -121,13 +121,13 @@ function validateJwtSecret(): void {
 
   if (secret.length < 32) {
     throw new Error(
-      'JWT_SECRET must be at least 32 characters long for security'
+      'JWT_SECRET must be at least 32 characters long for security',
     );
   }
 
   if (process.env.NODE_ENV === 'production' && secret.endsWith('-dev')) {
     throw new Error(
-      'JWT_SECRET appears to be a development secret. Use a strong, random secret in production'
+      'JWT_SECRET appears to be a development secret. Use a strong, random secret in production',
     );
   }
 }
@@ -152,7 +152,7 @@ function validateNodeEnv(): void {
 
   if (!validEnvs.includes(env)) {
     throw new Error(
-      `NODE_ENV must be one of: ${validEnvs.join(', ')}. Got: ${env}`
+      `NODE_ENV must be one of: ${validEnvs.join(', ')}. Got: ${env}`,
     );
   }
 }

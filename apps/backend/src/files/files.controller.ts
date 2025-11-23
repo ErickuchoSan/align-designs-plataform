@@ -60,11 +60,17 @@ export class FilesController {
    * Upload file with optional comment
    */
   @Post(':projectId/upload')
-  @ApiOperation({ summary: 'Upload file to project', description: 'Upload a file with an optional comment to a specific project' })
+  @ApiOperation({
+    summary: 'Upload file to project',
+    description: 'Upload a file with an optional comment to a specific project',
+  })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'File uploaded successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid file or missing required fields' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file or missing required fields',
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @Throttle({ default: RATE_LIMIT_FILES.UPLOAD })
   @HttpCode(HttpStatus.CREATED)
@@ -122,7 +128,10 @@ export class FilesController {
    * Create only comment without file
    */
   @Post(':projectId/comment')
-  @ApiOperation({ summary: 'Create comment without file', description: 'Create a comment for a project without uploading a file' })
+  @ApiOperation({
+    summary: 'Create comment without file',
+    description: 'Create a comment for a project without uploading a file',
+  })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
   @ApiResponse({ status: 201, description: 'Comment created successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
@@ -145,10 +154,16 @@ export class FilesController {
    * Update comment and/or add file to an existing comment
    */
   @Patch(':id')
-  @ApiOperation({ summary: 'Update file or comment', description: 'Update an existing file record or add a file to a comment' })
+  @ApiOperation({
+    summary: 'Update file or comment',
+    description: 'Update an existing file record or add a file to a comment',
+  })
   @ApiParam({ name: 'id', description: 'File record UUID' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ status: 200, description: 'File/comment updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'File/comment updated successfully',
+  })
   @ApiResponse({ status: 404, description: 'File record not found' })
   @Throttle({ default: RATE_LIMIT_FILES.UPDATE })
   @HttpCode(HttpStatus.OK)
@@ -176,7 +191,11 @@ export class FilesController {
   }
 
   @Get('project/:projectId')
-  @ApiOperation({ summary: 'Get project files', description: 'Retrieve paginated and filtered list of files for a specific project' })
+  @ApiOperation({
+    summary: 'Get project files',
+    description:
+      'Retrieve paginated and filtered list of files for a specific project',
+  })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
   @ApiResponse({ status: 200, description: 'Files retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
@@ -185,17 +204,22 @@ export class FilesController {
     @Query() fileFilters: FileFiltersDto,
     @CurrentUser() user: UserPayload,
   ) {
-    return this.filesService.findAllByProject(
-      projectId,
-      fileFilters,
-      { userId: user.userId, role: user.role },
-    );
+    return this.filesService.findAllByProject(projectId, fileFilters, {
+      userId: user.userId,
+      role: user.role,
+    });
   }
 
   @Get(':id/download')
-  @ApiOperation({ summary: 'Get file download URL', description: 'Generate a presigned URL for downloading a file' })
+  @ApiOperation({
+    summary: 'Get file download URL',
+    description: 'Generate a presigned URL for downloading a file',
+  })
   @ApiParam({ name: 'id', description: 'File UUID' })
-  @ApiResponse({ status: 200, description: 'Download URL generated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Download URL generated successfully',
+  })
   @ApiResponse({ status: 404, description: 'File not found' })
   @Throttle({ default: RATE_LIMIT_FILES.DOWNLOAD })
   async getFileUrl(
@@ -204,7 +228,11 @@ export class FilesController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.filesService.getFileUrl(id, user.userId, user.role);
+    const result = await this.filesService.getFileUrl(
+      id,
+      user.userId,
+      user.role,
+    );
 
     // Audit log for file download (non-blocking)
     await safeAuditLog(
@@ -224,7 +252,10 @@ export class FilesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete file', description: 'Soft delete a file record' })
+  @ApiOperation({
+    summary: 'Delete file',
+    description: 'Soft delete a file record',
+  })
   @ApiParam({ name: 'id', description: 'File UUID' })
   @ApiResponse({ status: 200, description: 'File deleted successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
@@ -236,7 +267,11 @@ export class FilesController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.filesService.deleteFile(id, user.userId, user.role);
+    const result = await this.filesService.deleteFile(
+      id,
+      user.userId,
+      user.role,
+    );
 
     // Audit log for file deletion (non-blocking)
     await safeAuditLog(

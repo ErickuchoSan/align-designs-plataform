@@ -12,7 +12,10 @@ export class HealthController {
 
   @Get()
   @Throttle({
-    default: { limit: HEALTH_CHECK_RATE_LIMIT, ttl: HEALTH_CHECK_RATE_WINDOW_MS },
+    default: {
+      limit: HEALTH_CHECK_RATE_LIMIT,
+      ttl: HEALTH_CHECK_RATE_WINDOW_MS,
+    },
   })
   check() {
     return this.healthService.check();

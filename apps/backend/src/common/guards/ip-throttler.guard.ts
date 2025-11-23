@@ -1,6 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import type { ThrottlerModuleOptions, ThrottlerStorage } from '@nestjs/throttler';
+import type {
+  ThrottlerModuleOptions,
+  ThrottlerStorage,
+} from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
@@ -20,8 +23,10 @@ export class IpThrottlerGuard extends ThrottlerGuard {
   private trustProxy = false;
 
   constructor(
-    @Inject('THROTTLER_OPTIONS') protected readonly options: ThrottlerModuleOptions,
-    @Inject('THROTTLER_STORAGE') protected readonly storageService: ThrottlerStorage,
+    @Inject('THROTTLER_OPTIONS')
+    protected readonly options: ThrottlerModuleOptions,
+    @Inject('THROTTLER_STORAGE')
+    protected readonly storageService: ThrottlerStorage,
     protected readonly reflector: Reflector,
     private readonly configService: ConfigService,
   ) {

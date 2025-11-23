@@ -5,7 +5,6 @@ import {
 } from '../../common/constants/timeouts.constants';
 import { FileMagicNumberValidator } from '../../common/utils/file-magic-numbers.utils';
 
-
 @Injectable()
 export class FileValidationPipe implements PipeTransform {
   // Allow images, PDFs, documents and design files

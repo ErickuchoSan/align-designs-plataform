@@ -169,9 +169,7 @@ export class FileStorageCoordinatorService {
    * Attempts to rollback a newly uploaded file from storage
    * Called when database update fails after successful file upload
    */
-  private async rollbackNewFileUpload(
-    newStoragePath: string,
-  ): Promise<void> {
+  private async rollbackNewFileUpload(newStoragePath: string): Promise<void> {
     try {
       await this.storageService.deleteFile(newStoragePath);
       this.logger.warn(

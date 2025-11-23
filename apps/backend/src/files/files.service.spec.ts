@@ -116,9 +116,15 @@ describe('FilesService', () => {
           lastName: 'User',
         },
       };
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
-      jest.spyOn(prismaService.file, 'create').mockResolvedValue(mockFileRecord);
-      jest.spyOn(prismaService.file, 'update').mockResolvedValue(updatedFileRecord as any);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.file, 'create')
+        .mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'update')
+        .mockResolvedValue(updatedFileRecord as any);
       jest.spyOn(storageService, 'uploadFile').mockResolvedValue(undefined);
 
       const result = await service.uploadFile(
@@ -145,9 +151,15 @@ describe('FilesService', () => {
           lastName: 'User',
         },
       };
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
-      jest.spyOn(prismaService.file, 'create').mockResolvedValue(mockFileRecord);
-      jest.spyOn(prismaService.file, 'update').mockResolvedValue(updatedFileRecord as any);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.file, 'create')
+        .mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'update')
+        .mockResolvedValue(updatedFileRecord as any);
       jest.spyOn(storageService, 'uploadFile').mockResolvedValue(undefined);
 
       const result = await service.uploadFile(
@@ -177,7 +189,9 @@ describe('FilesService', () => {
     });
 
     it('should throw ForbiddenException for client accessing other project', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       await expect(
         service.uploadFile(
@@ -191,7 +205,9 @@ describe('FilesService', () => {
     });
 
     it('should throw BadRequestException when file is null', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       await expect(
         service.uploadFile(
@@ -205,9 +221,15 @@ describe('FilesService', () => {
     });
 
     it('should rollback database record if storage upload fails', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
-      jest.spyOn(prismaService.file, 'create').mockResolvedValue(mockFileRecord);
-      jest.spyOn(prismaService.file, 'delete').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.file, 'create')
+        .mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'delete')
+        .mockResolvedValue(mockFileRecord);
       jest
         .spyOn(storageService, 'uploadFile')
         .mockRejectedValue(new Error('Storage error'));
@@ -233,7 +255,9 @@ describe('FilesService', () => {
 
   describe('createComment', () => {
     it('should create comment without file', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
       const commentRecord = {
         ...mockFileRecord,
         filename: null,
@@ -245,7 +269,9 @@ describe('FilesService', () => {
           lastName: 'Client',
         },
       };
-      jest.spyOn(prismaService.file, 'create').mockResolvedValue(commentRecord as any);
+      jest
+        .spyOn(prismaService.file, 'create')
+        .mockResolvedValue(commentRecord as any);
 
       const result = await service.createComment(
         'project-123',
@@ -260,7 +286,9 @@ describe('FilesService', () => {
     });
 
     it('should throw ForbiddenException for client on other project', async () => {
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       await expect(
         service.createComment(
@@ -275,18 +303,26 @@ describe('FilesService', () => {
 
   describe('getFileUrl', () => {
     it('should return presigned URL for admin', async () => {
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(mockFileRecord);
       jest
         .spyOn(storageService, 'getDownloadUrl')
         .mockResolvedValue('https://presigned-url.com');
 
-      const result = await service.getFileUrl('file-123', 'admin-123', Role.ADMIN);
+      const result = await service.getFileUrl(
+        'file-123',
+        'admin-123',
+        Role.ADMIN,
+      );
 
       expect(result.downloadUrl).toBe('https://presigned-url.com');
     });
 
     it('should return presigned URL for project client', async () => {
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(mockFileRecord);
       jest
         .spyOn(storageService, 'getDownloadUrl')
         .mockResolvedValue('https://presigned-url.com');
@@ -309,7 +345,9 @@ describe('FilesService', () => {
     });
 
     it('should throw ForbiddenException for client accessing other project', async () => {
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(mockFileRecord);
 
       await expect(
         service.getFileUrl('file-123', 'different-client', Role.CLIENT),
@@ -318,7 +356,9 @@ describe('FilesService', () => {
 
     it('should throw BadRequestException for comment without file', async () => {
       const commentOnly = { ...mockFileRecord, storagePath: null };
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(commentOnly);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(commentOnly);
 
       await expect(
         service.getFileUrl('file-123', 'admin-123', Role.ADMIN),
@@ -328,14 +368,20 @@ describe('FilesService', () => {
 
   describe('deleteFile', () => {
     it('should soft delete file for admin', async () => {
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(mockFileRecord);
       jest.spyOn(prismaService.file, 'update').mockResolvedValue({
         ...mockFileRecord,
         deletedAt: new Date(),
         deletedBy: 'admin-123',
       });
 
-      const result = await service.deleteFile('file-123', 'admin-123', Role.ADMIN);
+      const result = await service.deleteFile(
+        'file-123',
+        'admin-123',
+        Role.ADMIN,
+      );
 
       expect(result.message).toContain('deleted');
       expect(prismaService.file.update).toHaveBeenCalledWith(
@@ -349,7 +395,9 @@ describe('FilesService', () => {
     });
 
     it('should soft delete file for project client', async () => {
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(mockFileRecord);
       jest.spyOn(prismaService.file, 'update').mockResolvedValue({
         ...mockFileRecord,
         deletedAt: new Date(),
@@ -361,7 +409,9 @@ describe('FilesService', () => {
     });
 
     it('should throw ForbiddenException for client deleting other project file', async () => {
-      jest.spyOn(prismaService.file, 'findFirst').mockResolvedValue(mockFileRecord);
+      jest
+        .spyOn(prismaService.file, 'findFirst')
+        .mockResolvedValue(mockFileRecord);
 
       await expect(
         service.deleteFile('file-123', 'different-client', Role.CLIENT),
@@ -374,7 +424,9 @@ describe('FilesService', () => {
       const mockFiles = [mockFileRecord];
       jest.spyOn(prismaService.file, 'findMany').mockResolvedValue(mockFiles);
       jest.spyOn(prismaService.file, 'count').mockResolvedValue(1);
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       const result = await service.findAllByProject(
         'project-123',
@@ -391,7 +443,9 @@ describe('FilesService', () => {
       const mockFiles = [mockFileRecord];
       jest.spyOn(prismaService.file, 'findMany').mockResolvedValue(mockFiles);
       jest.spyOn(prismaService.file, 'count').mockResolvedValue(1);
-      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue(mockProject);
+      jest
+        .spyOn(prismaService.project, 'findFirst')
+        .mockResolvedValue(mockProject);
 
       const result = await service.findAllByProject(
         'project-123',

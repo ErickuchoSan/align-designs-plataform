@@ -137,7 +137,10 @@ export class FilesService {
     );
 
     // Invalidate caches
-    await this.cacheManager.invalidateFileCaches(existingFile.projectId, fileId);
+    await this.cacheManager.invalidateFileCaches(
+      existingFile.projectId,
+      fileId,
+    );
 
     // Transform and return
     return this.transformer.transformFileRecord(updatedFile);
@@ -155,14 +158,17 @@ export class FilesService {
       userContext.role,
     );
 
-    const { page, limit, skip } = PaginationHelper.extractPaginationParams(fileFilters);
+    const { page, limit, skip } =
+      PaginationHelper.extractPaginationParams(fileFilters);
 
     // Only cache if there are no filters (name/type filters would create too many cache variations)
-    const shouldCache = !fileFilters.name && (!fileFilters.type || fileFilters.type === 'all');
+    const shouldCache =
+      !fileFilters.name && (!fileFilters.type || fileFilters.type === 'all');
 
     if (shouldCache) {
       const cacheKey = CACHE_KEYS.FILES.LIST(projectId, page, limit);
-      const cached = await this.cacheManager.get<PaginatedResult<FileResponse>>(cacheKey);
+      const cached =
+        await this.cacheManager.get<PaginatedResult<FileResponse>>(cacheKey);
       if (cached) return cached;
     }
 
@@ -212,7 +218,11 @@ export class FilesService {
     // Transform files for response
     const data = this.transformer.transformFileRecords(files);
 
-    const result = PaginationHelper.buildPaginatedResult(data, total, fileFilters);
+    const result = PaginationHelper.buildPaginatedResult(
+      data,
+      total,
+      fileFilters,
+    );
 
     // Cache result if eligible
     if (shouldCache) {
@@ -239,8 +249,9 @@ export class FilesService {
     }
 
     // Get download URL from storage
-    const downloadUrl =
-      await this.storageCoordinator.getFileDownloadUrl(file.storagePath);
+    const downloadUrl = await this.storageCoordinator.getFileDownloadUrl(
+      file.storagePath,
+    );
 
     return {
       ...this.transformer.transformFileRecord(file),

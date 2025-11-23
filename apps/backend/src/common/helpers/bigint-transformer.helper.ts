@@ -15,9 +15,10 @@ export class BigIntTransformer {
   ): Omit<T, 'sizeBytes'> & { sizeBytes: number | null } {
     return {
       ...file,
-      sizeBytes: file.sizeBytes !== null && file.sizeBytes !== undefined
-        ? Number(file.sizeBytes)
-        : null,
+      sizeBytes:
+        file.sizeBytes !== null && file.sizeBytes !== undefined
+          ? Number(file.sizeBytes)
+          : null,
     };
   }
 

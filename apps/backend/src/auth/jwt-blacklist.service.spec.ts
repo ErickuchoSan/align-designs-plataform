@@ -101,13 +101,13 @@ describe('JwtBlacklistService', () => {
     it('should handle multiple different tokens', () => {
       const tokens = ['token1', 'token2', 'token3', 'token4', 'token5'];
 
-      tokens.forEach(token => {
+      tokens.forEach((token) => {
         service.addToBlacklist(token, 5000);
       });
 
       expect(service.getBlacklistSize()).toBe(5);
 
-      tokens.forEach(token => {
+      tokens.forEach((token) => {
         expect(service.isBlacklisted(token)).toBe(true);
       });
     });

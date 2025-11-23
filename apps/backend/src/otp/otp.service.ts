@@ -46,7 +46,9 @@ export class OtpService {
    */
   async createOtp(userId: string): Promise<string> {
     // Rate limiting: max 5 OTP creations per 15 minutes per user
-    const rateLimitWindowStart = new Date(Date.now() - OTP_RATE_LIMIT_WINDOW_MS);
+    const rateLimitWindowStart = new Date(
+      Date.now() - OTP_RATE_LIMIT_WINDOW_MS,
+    );
     const recentOtps = await this.prisma.otpToken.findMany({
       where: {
         userId,
@@ -72,7 +74,9 @@ export class OtpService {
     if (recentOtpCount >= MAX_OTP_PER_WINDOW) {
       // Calculate when the oldest OTP will expire from the rate limit window
       const oldestOtp = recentOtps[0];
-      const waitUntil = new Date(oldestOtp.createdAt.getTime() + OTP_RATE_LIMIT_WINDOW_MS);
+      const waitUntil = new Date(
+        oldestOtp.createdAt.getTime() + OTP_RATE_LIMIT_WINDOW_MS,
+      );
       const waitMinutes = Math.ceil((waitUntil.getTime() - Date.now()) / 60000);
 
       this.logger.warn(
@@ -201,9 +205,7 @@ export class OtpService {
         },
       });
 
-      this.logger.log(
-        `OTP cleanup completed: ${result.count} tokens removed`,
-      );
+      this.logger.log(`OTP cleanup completed: ${result.count} tokens removed`);
 
       // Reset failure counter on success
       this.cleanupFailureCount = 0;
@@ -218,7 +220,7 @@ export class OtpService {
       if (this.cleanupFailureCount >= this.MAX_CLEANUP_FAILURES) {
         this.logger.fatal(
           `CRITICAL: OTP cleanup has failed ${this.cleanupFailureCount} consecutive times. ` +
-          'Database may accumulate stale OTP tokens. Manual intervention required.',
+            'Database may accumulate stale OTP tokens. Manual intervention required.',
         );
         // In production, this should trigger alerting system (e.g., PagerDuty, Slack, email)
         // Example: await this.alertingService.sendCriticalAlert('OTP cleanup failure', error);
