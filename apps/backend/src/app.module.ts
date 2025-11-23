@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
+import { CacheModule } from './cache/cache.module';
 import { UsersModule } from './users/users.module';
 import { ProjectsModule } from './projects/projects.module';
 import { FilesModule } from './files/files.module';
@@ -28,6 +29,7 @@ import { GLOBAL_RATE_LIMIT } from './common/constants/timeouts.constants';
     }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([GLOBAL_RATE_LIMIT]),
+    CacheModule, // Cache module (global)
     PrismaModule,
     UsersModule,
     ProjectsModule,

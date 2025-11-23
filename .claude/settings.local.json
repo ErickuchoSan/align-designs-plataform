@@ -64,7 +64,8 @@
       "Bash(\"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\src\\users\\repositories\\index.ts\")",
       "Bash(powershell -command \"Get-Content ''''CODE_QUALITY_ANALYSIS_REPORT.md'''' | Select-String -Pattern ''''rate.limit'''' -Context 3,3\" 2)",
       "Bash($null)",
-      "Bash(timeout /t 10 /nobreak)"
+      "Bash(timeout /t 10 /nobreak)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

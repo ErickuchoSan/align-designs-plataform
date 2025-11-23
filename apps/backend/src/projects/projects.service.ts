@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { CacheManagerService } from '../cache/services/cache-manager.service';
+import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
 import type { IProjectRepository } from './repositories/project.repository.interface';
 import type { IUserRepository } from '../users/repositories/user.repository.interface';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -58,6 +60,7 @@ export class ProjectsService {
     private readonly userRepo: IUserRepository,
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly cacheManager: CacheManagerService,
   ) {}
 
   /**
@@ -96,6 +99,9 @@ export class ProjectsService {
       throw new NotFoundException('Project not found after creation');
     }
 
+    // Invalidate project list caches since a new project was created
+    await this.cacheManager.invalidateProjectCaches();
+
     // Convert BigInt to number for JSON serialization
     return BigIntTransformer.transformProjectWithFiles(fullProject);
   }
@@ -110,6 +116,21 @@ export class ProjectsService {
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<ProjectResponse>> {
     const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
+
+    // Generate cache key based on user role and pagination
+    const cacheKey = CACHE_KEYS.PROJECTS.LIST(
+      page,
+      limit,
+      userRole === Role.CLIENT ? userId : undefined,
+    );
+
+    // Try to get from cache first
+    const cached = await this.cacheManager.get<PaginatedResult<ProjectResponse>>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for projects list: ${cacheKey}`);
+      return cached;
+    }
+
     const where = {
       deletedAt: null, // Only include non-deleted projects
       ...(userRole === Role.CLIENT ? { clientId: userId } : {}),
@@ -155,13 +176,28 @@ export class ProjectsService {
       };
     });
 
-    return PaginationHelper.buildPaginatedResult(projectsWithCounts, total, paginationDto);
+    const result = PaginationHelper.buildPaginatedResult(projectsWithCounts, total, paginationDto);
+
+    // Cache the result for 5 minutes
+    await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    this.logger.debug(`Cached projects list: ${cacheKey}`);
+
+    return result;
   }
 
   /**
    * Get a project by ID
    */
   async findOne(id: string, userId: string, userRole: Role) {
+    // Try cache first
+    const cacheKey = CACHE_KEYS.PROJECTS.DETAIL(id);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      const permissionContext = new PermissionContext(userRole);
+      permissionContext.verifyProjectAccess(userId, (cached as any).clientId, 'You do not have permission to view this project');
+      return cached;
+    }
+
     const project = await this.prisma.project.findFirst({
       where: {
         id,
@@ -203,13 +239,17 @@ export class ProjectsService {
 
     // Convert BigInt to number for JSON serialization and remove files array
     const { files, ...projectWithoutFiles } = project;
-    return {
+    const result = {
       ...projectWithoutFiles,
       _count: {
         files: filesCount,
         comments: commentsCount,
       },
     };
+
+    // Cache for 5 minutes
+    await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    return result;
   }
 
   /**
@@ -273,6 +313,9 @@ export class ProjectsService {
       },
     });
 
+    // Invalidate caches
+    await this.cacheManager.invalidateProjectCaches(id);
+
     // Convert BigInt to number for JSON serialization
     return BigIntTransformer.transformProjectWithFiles(updatedProject);
   }
@@ -325,6 +368,9 @@ export class ProjectsService {
         timeout: TRANSACTION_TIMEOUT_MS, // 30 seconds timeout for projects with many files
       },
     );
+
+    // Invalidate caches
+    await this.cacheManager.invalidateProjectCaches(id);
 
     this.logger.log(`Project ${id} soft deleted by user ${userId}`);
     return { message: 'Project deleted successfully' };
