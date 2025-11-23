@@ -253,28 +253,11 @@ export class ProjectsService {
 
     // If clientId is being changed, verify the current client hasn't uploaded files
     if (updateProjectDto.clientId && updateProjectDto.clientId !== project.clientId) {
-      // Verify the new client exists and is active
-      const newClient = await this.prisma.user.findFirst({
-        where: {
-          id: updateProjectDto.clientId,
-          deletedAt: null,
-        },
-      });
-
-      if (!newClient || newClient.role !== Role.CLIENT) {
-        throw new NotFoundException('New client not found');
-      }
-
-      // Check if current client has uploaded any files or comments (using already-loaded data)
-      const clientUploads = project.files.filter(
-        (file) => file.uploadedBy === project.clientId,
-      ).length;
-
-      if (clientUploads > 0) {
-        throw new ForbiddenException(
-          'Cannot change client: current client has uploaded files or comments to this project',
-        );
-      }
+      await this.validateClientChange(
+        updateProjectDto.clientId,
+        project.clientId,
+        project.files,
+      );
     }
 
     const updatedProject = await this.prisma.project.update({
@@ -345,5 +328,40 @@ export class ProjectsService {
 
     this.logger.log(`Project ${id} soft deleted by user ${userId}`);
     return { message: 'Project deleted successfully' };
+  }
+
+  /**
+   * Validates if a project's client can be changed
+   * Checks if new client exists and if current client has uploaded files
+   * @throws NotFoundException if new client doesn't exist or isn't a CLIENT
+   * @throws ForbiddenException if current client has uploaded files
+   */
+  private async validateClientChange(
+    newClientId: string,
+    currentClientId: string,
+    files: Array<{ uploadedBy: string }>,
+  ): Promise<void> {
+    // Verify the new client exists and is active
+    const newClient = await this.prisma.user.findFirst({
+      where: {
+        id: newClientId,
+        deletedAt: null,
+      },
+    });
+
+    if (!newClient || newClient.role !== Role.CLIENT) {
+      throw new NotFoundException('New client not found');
+    }
+
+    // Check if current client has uploaded any files (using already-loaded data)
+    const clientUploads = files.filter(
+      (file) => file.uploadedBy === currentClientId,
+    ).length;
+
+    if (clientUploads > 0) {
+      throw new ForbiddenException(
+        'Cannot change client: current client has uploaded files or comments to this project',
+      );
+    }
   }
 }
