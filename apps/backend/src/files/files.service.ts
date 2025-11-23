@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { FileFiltersDto } from './dto/file-filters.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
 import { UserContext } from '../common/interfaces/user-context.interface';
 import { FilePermissionsService } from './services/file-permissions.service';
@@ -132,7 +133,7 @@ export class FilesService {
 
   async findAllByProject(
     projectId: string,
-    paginationDto: PaginationDto,
+    fileFilters: FileFiltersDto,
     userContext: UserContext,
   ): Promise<PaginatedResult<FileResponse>> {
     // Verify project access
@@ -142,21 +143,33 @@ export class FilesService {
       userContext.role,
     );
 
-    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(fileFilters);
+
+    // Build where clause with filters
+    const where: any = {
+      projectId,
+      deletedAt: null,
+    };
+
+    // Apply name filter (case-insensitive partial match)
+    if (fileFilters.name) {
+      where.OR = [
+        { filename: { contains: fileFilters.name, mode: 'insensitive' } },
+        { originalName: { contains: fileFilters.name, mode: 'insensitive' } },
+        { comment: { contains: fileFilters.name, mode: 'insensitive' } },
+      ];
+    }
+
+    // Apply type filter (file extension)
+    if (fileFilters.type && fileFilters.type !== 'all') {
+      where.mimeType = { contains: fileFilters.type, mode: 'insensitive' };
+    }
 
     // Get total count and paginated files in parallel
     const [total, files] = await Promise.all([
-      this.prisma.file.count({
-        where: {
-          projectId,
-          deletedAt: null,
-        },
-      }),
+      this.prisma.file.count({ where }),
       this.prisma.file.findMany({
-        where: {
-          projectId,
-          deletedAt: null,
-        },
+        where,
         include: {
           uploader: {
             select: {
@@ -179,7 +192,7 @@ export class FilesService {
     // Transform files for response
     const data = this.transformer.transformFileRecords(files);
 
-    return PaginationHelper.buildPaginatedResult(data, total, paginationDto);
+    return PaginationHelper.buildPaginatedResult(data, total, fileFilters);
   }
 
   async getFileUrl(fileId: string, userId: string, userRole: Role) {

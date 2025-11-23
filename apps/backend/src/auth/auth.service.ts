@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDependenciesService } from './services/auth-dependencies.service';
+import { TokenService } from './services/token.service';
 import { Role } from '@prisma/client';
 import { User } from './interfaces/user.interface';
 
@@ -16,6 +17,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private deps: AuthDependenciesService,
+    private tokenService: TokenService,
   ) {}
 
   /**
@@ -63,7 +65,7 @@ export class AuthService {
       await this.deps.accountLockout.resetFailedAttempts(user);
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
-      return this.generateToken(user);
+      return this.tokenService.generateToken(user);
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -146,7 +148,7 @@ export class AuthService {
     }
 
     this.logger.log(`Successful OTP verification for user ${user.id} (${email})`);
-    return this.generateToken(user);
+    return this.tokenService.generateToken(user);
   }
 
   /**
@@ -382,62 +384,10 @@ export class AuthService {
 
   /**
    * Revoke a JWT token by adding it to the blacklist
+   * Delegated to TokenService for better separation of concerns
    * @param token - The JWT token to revoke
    */
   async revokeToken(token: string): Promise<void> {
-    try {
-      // Decode the token to get expiration time
-      const decoded = this.deps.jwt.decode(token) as { exp?: number };
-
-      if (!decoded || !decoded.exp) {
-        this.logger.warn('Cannot revoke token: Invalid token or missing expiration');
-        return;
-      }
-
-      // Calculate time until expiration (in milliseconds)
-      const expiresAt = decoded.exp * 1000; // JWT exp is in seconds
-      const now = Date.now();
-      const expiresInMs = expiresAt - now;
-
-      // Only blacklist if token hasn't expired yet
-      if (expiresInMs > 0) {
-        this.deps.jwtBlacklist.addToBlacklist(token, expiresInMs);
-        this.logger.log('Token revoked and added to blacklist');
-      } else {
-        this.logger.debug('Token already expired, not adding to blacklist');
-      }
-    } catch (error) {
-      this.logger.error('Error revoking token:', error);
-      throw error; // Relanzar para que el controlador maneje el error
-    }
-  }
-
-  /**
-   * Generate a JWT token
-   */
-  private generateToken(user: User) {
-    const payload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const accessToken = this.deps.jwt.sign(payload, {
-      expiresIn: this.deps.config.get('JWT_EXPIRATION', '1d'),
-      audience: 'align-designs-client',
-      issuer: 'align-designs-api',
-    });
-
-    return {
-      access_token: accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-        role: user.role,
-      },
-    };
+    return this.tokenService.revokeToken(token);
   }
 }

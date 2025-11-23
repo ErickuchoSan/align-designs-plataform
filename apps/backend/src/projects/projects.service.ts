@@ -19,6 +19,7 @@ import { PermissionContext } from '../common/strategies/permission.strategy';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
+import { BigIntTransformer } from '../common/helpers/bigint-transformer.helper';
 
 @Injectable()
 export class ProjectsService {
@@ -87,13 +88,7 @@ export class ProjectsService {
     }
 
     // Convert BigInt to number for JSON serialization
-    return {
-      ...fullProject,
-      files: fullProject.files.map((file) => ({
-        ...file,
-        sizeBytes: Number(file.sizeBytes),
-      })),
-    };
+    return BigIntTransformer.transformProjectWithFiles(fullProject);
   }
 
   /**
@@ -331,13 +326,7 @@ export class ProjectsService {
     });
 
     // Convert BigInt to number for JSON serialization
-    return {
-      ...updatedProject,
-      files: updatedProject.files.map((file) => ({
-        ...file,
-        sizeBytes: Number(file.sizeBytes),
-      })),
-    };
+    return BigIntTransformer.transformProjectWithFiles(updatedProject);
   }
 
   /**

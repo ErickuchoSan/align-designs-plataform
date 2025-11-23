@@ -42,6 +42,7 @@ import {
   MAX_FILE_SIZE_BYTES,
 } from '../common/constants/timeouts.constants';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { FileFiltersDto } from './dto/file-filters.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
 
@@ -175,18 +176,18 @@ export class FilesController {
   }
 
   @Get('project/:projectId')
-  @ApiOperation({ summary: 'Get project files', description: 'Retrieve paginated list of files for a specific project' })
+  @ApiOperation({ summary: 'Get project files', description: 'Retrieve paginated and filtered list of files for a specific project' })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
   @ApiResponse({ status: 200, description: 'Files retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   async findAllByProject(
     @Param('projectId') projectId: string,
-    @Query() paginationDto: PaginationDto,
+    @Query() fileFilters: FileFiltersDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.filesService.findAllByProject(
       projectId,
-      paginationDto,
+      fileFilters,
       { userId: user.userId, role: user.role },
     );
   }
