@@ -48,8 +48,8 @@ export class Password {
       );
     }
 
-    // Hash password
-    const saltRounds = 12;
+    // Hash password with 14 rounds for enhanced security
+    const saltRounds = 14;
     const hash = await bcrypt.hash(plainPassword, saltRounds);
 
     return new Password(hash);

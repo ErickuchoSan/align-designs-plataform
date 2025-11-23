@@ -270,7 +270,7 @@ DELETE /files/:id                     # Eliminar archivo o comentario
 - ✅ Protección de rutas con guards (JWT + Roles)
 - ✅ Control de acceso basado en roles (RBAC)
 - ✅ Validación de DTOs con class-validator
-- ✅ Hasheado de contraseñas con bcrypt (12 rounds)
+- ✅ Hasheado de contraseñas con bcrypt (14 rounds)
 - ✅ URLs presignadas con expiración (15 minutos)
 - ✅ Rate limiting en todos los endpoints críticos
 - ✅ Validación de magic numbers en archivos (anti-spoofing)

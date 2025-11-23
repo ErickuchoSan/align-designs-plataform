@@ -228,7 +228,7 @@ export class AuthService {
       };
     }
 
-    // Generate 6-digit OTP
+    // Generate 8-digit OTP
     const token = await this.deps.otp.createOtp(user.id);
 
     // Send OTP via email for password recovery
