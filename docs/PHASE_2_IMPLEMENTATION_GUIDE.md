@@ -1058,7 +1058,7 @@ JWT_SECRET=REPLACE_WITH_SECURE_SECRET
 CSRF_SECRET=REPLACE_WITH_SECURE_SECRET
 
 # Frontend
-NEXT_PUBLIC_API_URL=https://api.yourdo main.com
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 
 # Email
 SMTP_HOST=smtp.sendgrid.net
