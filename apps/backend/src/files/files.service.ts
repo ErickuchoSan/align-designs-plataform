@@ -12,6 +12,7 @@ import { UserContext } from '../common/interfaces/user-context.interface';
 import { FilePermissionsService } from './services/file-permissions.service';
 import { FileStorageCoordinatorService } from './services/file-storage-coordinator.service';
 import { FileTransformerService } from './services/file-transformer.service';
+import { PaginationHelper } from '../common/helpers/pagination.helper';
 
 /**
  * Main service for file operations
@@ -141,58 +142,44 @@ export class FilesService {
       userContext.role,
     );
 
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
 
-    // Get total count for pagination metadata
-    const total = await this.prisma.file.count({
-      where: {
-        projectId,
-        deletedAt: null,
-      },
-    });
-
-    // Get paginated files
-    const files = await this.prisma.file.findMany({
-      where: {
-        projectId,
-        deletedAt: null,
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            role: true,
+    // Get total count and paginated files in parallel
+    const [total, files] = await Promise.all([
+      this.prisma.file.count({
+        where: {
+          projectId,
+          deletedAt: null,
+        },
+      }),
+      this.prisma.file.findMany({
+        where: {
+          projectId,
+          deletedAt: null,
+        },
+        include: {
+          uploader: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+            },
           },
         },
-      },
-      orderBy: {
-        uploadedAt: 'desc',
-      },
-      skip,
-      take: limit,
-    });
+        orderBy: {
+          uploadedAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+    ]);
 
     // Transform files for response
     const data = this.transformer.transformFileRecords(files);
 
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return PaginationHelper.buildPaginatedResult(data, total, paginationDto);
   }
 
   async getFileUrl(fileId: string, userId: string, userRole: Role) {

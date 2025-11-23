@@ -1,0 +1,395 @@
+'use client';
+
+import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { PageLoader } from '@/app/components/Loader';
+import DashboardHeader from '@/app/components/DashboardHeader';
+import Pagination from '@/app/components/Pagination';
+import { formatDate } from '@/lib/utils/date.utils';
+import { getFileExtension } from '@/lib/utils/file.utils';
+import { api } from '@/lib/api';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+
+// Hooks
+import { useProjectFiles } from './hooks/useProjectFiles';
+import { useFileOperations } from './hooks/useFileOperations';
+import { useFileModals } from './hooks/useFileModals';
+import { useFileFilters } from './hooks/useFileFilters';
+import type { FileData } from './hooks/useProjectFiles';
+
+// Components
+import FileFilters from './components/FileFilters';
+import FileUploadModal from './components/FileUploadModal';
+import FileEditModal from './components/FileEditModal';
+import FileDeleteModal from './components/FileDeleteModal';
+import FileList from './components/FileList';
+import CommentModal from './components/CommentModal';
+
+export default function ProjectDetailsPage() {
+  const { user, isAuthenticated, isAdmin, loading } = useProtectedRoute();
+  const router = useRouter();
+  const params = useParams();
+  const projectId = params?.id as string;
+
+  // Validate projectId exists
+  useEffect(() => {
+    if (!loading && !projectId) {
+      router.push('/dashboard');
+    }
+  }, [projectId, loading, router]);
+
+  // Project and files state
+  const {
+    project,
+    files,
+    filteredFiles,
+    loading: filesLoading,
+    error,
+    success,
+    setFilteredFiles,
+    setError,
+    setSuccess,
+    fetchProjectDetails,
+    fetchFiles,
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    totalItems,
+    totalPages,
+  } = useProjectFiles(projectId);
+
+  // Use custom hooks for modals and filters
+  const modals = useFileModals();
+  const filters = useFileFilters(files);
+
+  // File operations
+  const {
+    uploading,
+    uploadProgress,
+    deleting,
+    handleFileUpload,
+    handleCreateComment,
+    handleEditEntry,
+    handleDownload,
+    handleDelete,
+  } = useFileOperations(
+    projectId,
+    setSuccess,
+    setError,
+    fetchFiles
+  );
+
+
+  // Fetch project and files
+  useEffect(() => {
+    if (projectId && isAuthenticated) {
+      fetchProjectDetails();
+      fetchFiles();
+    }
+  }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
+
+  // Local pagination state for filtered results
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
+
+  // Check if filters are active - memoized to prevent recalculation
+  const hasActiveFilters = useMemo(
+    () => filters.nameFilter || filters.typeFilter !== 'all',
+    [filters.nameFilter, filters.typeFilter]
+  );
+
+  // Apply filters and local pagination
+  useEffect(() => {
+    if (!Array.isArray(files)) {
+      setFilteredFiles([]);
+      return;
+    }
+
+    const filtered = filters.applyFilters(files);
+    setFilteredFiles(filtered);
+  }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters]);
+
+  // Reset local pagination when filters change
+  useEffect(() => {
+    setLocalCurrentPage(1);
+  }, [filters.nameFilter, filters.typeFilter]);
+
+  // File operation handlers
+  const handleUpload = useCallback(
+    async (file: File, comment: string) => {
+      const success = await handleFileUpload(file, comment);
+      if (success) {
+        modals.closeUploadModal();
+      }
+      return success;
+    },
+    [handleFileUpload, modals]
+  );
+
+  const handleComment = useCallback(
+    async (comment: string) => {
+      const success = await handleCreateComment(comment);
+      if (success) {
+        modals.closeCommentModal();
+      }
+      return success;
+    },
+    [handleCreateComment, modals]
+  );
+
+  const handleEdit = useCallback(
+    async (fileToEdit: FileData, editComment: string, editFile: File | null) => {
+      const success = await handleEditEntry(fileToEdit, editComment, editFile);
+      if (success) {
+        modals.closeEditModal();
+      }
+      return success;
+    },
+    [handleEditEntry, modals]
+  );
+
+  const handleDeleteConfirm = useCallback(
+    async (file: FileData) => {
+      const success = await handleDelete(file);
+      if (success) {
+        modals.closeDeleteModal();
+      }
+      return success;
+    },
+    [handleDelete, modals]
+  );
+
+  const canDeleteFile = useCallback(
+    (file: FileData) => {
+      if (isAdmin) return true;
+      if (user && file.uploadedBy === user.id) return true;
+      return false;
+    },
+    [isAdmin, user]
+  );
+
+  // Calculate pagination values based on whether filters are active - memoized
+  const paginationValues = useMemo(() => ({
+    currentPage: hasActiveFilters ? localCurrentPage : currentPage,
+    itemsPerPage: hasActiveFilters ? localItemsPerPage : itemsPerPage,
+    totalItems: hasActiveFilters ? filteredFiles.length : totalItems,
+    totalPages: hasActiveFilters
+      ? Math.ceil(filteredFiles.length / localItemsPerPage)
+      : totalPages,
+  }), [hasActiveFilters, localCurrentPage, currentPage, localItemsPerPage, itemsPerPage, filteredFiles.length, totalItems, totalPages]);
+
+  // Apply local pagination to filtered files if filters are active - memoized
+  const displayedFiles = useMemo(() => {
+    if (!hasActiveFilters) return filteredFiles;
+
+    return filteredFiles.slice(
+      (localCurrentPage - 1) * localItemsPerPage,
+      localCurrentPage * localItemsPerPage
+    );
+  }, [hasActiveFilters, filteredFiles, localCurrentPage, localItemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    if (hasActiveFilters) {
+      setLocalCurrentPage(page);
+    } else {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (limit: number) => {
+    if (hasActiveFilters) {
+      setLocalItemsPerPage(limit);
+      setLocalCurrentPage(1);
+    } else {
+      setItemsPerPage(limit);
+    }
+  };
+
+  // Validate projectId and show loader while redirecting
+  if (!projectId) {
+    return <PageLoader text="Invalid project..." />;
+  }
+
+  if (loading) {
+    return <PageLoader text="Loading project..." />;
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-navy-900 font-medium">Project not found</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="min-h-screen bg-stone-50">
+        <DashboardHeader
+          title={project.name}
+          showBackButton
+          backUrl="/dashboard"
+        />
+
+        {/* Main content */}
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Success/Error messages */}
+          {success && (
+            <div className="mb-6 rounded-lg bg-forest-50 border border-forest-200 p-4 animate-slideDown">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-forest-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-sm font-medium text-forest-800">{success}</p>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 animate-slideDown">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <p className="text-sm font-medium text-red-800">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Project Info */}
+          <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center text-gold-400 font-bold">
+                {project.client.firstName[0]}{project.client.lastName[0]}
+              </div>
+              <div>
+                <p className="font-semibold text-navy-900">
+                  {project.client.firstName} {project.client.lastName}
+                </p>
+                <p className="text-sm text-stone-700">{project.client.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-stone-700">
+              {project._count && (
+                <>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    {project._count.files} file{project._count.files !== 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    {project._count.comments} comment{project._count.comments !== 1 ? 's' : ''}
+                  </span>
+                </>
+              )}
+              <span>
+                Created: {formatDate(project.createdAt, 'LONG')}
+              </span>
+            </div>
+          </div>
+
+          {/* Filters and Upload button */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <FileFilters
+              nameFilter={filters.nameFilter}
+              setNameFilter={filters.setNameFilter}
+              typeFilter={filters.typeFilter}
+              setTypeFilter={filters.setTypeFilter}
+              availableTypes={filters.availableTypes}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={modals.openCommentModal}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gold-600 text-white rounded-lg hover:bg-gold-700 shadow-lg hover:shadow-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                Create Comment
+              </button>
+              <button
+                onClick={modals.openUploadModal}
+                className="flex items-center gap-2 px-5 py-2.5 bg-navy-800 text-white rounded-lg hover:bg-navy-700 shadow-lg hover:shadow-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Upload File
+              </button>
+            </div>
+          </div>
+
+          {/* Files Table */}
+          <FileList
+            files={displayedFiles}
+            onDownload={handleDownload}
+            onEdit={modals.openEditModal}
+            onDelete={modals.openDeleteModal}
+            canDelete={canDeleteFile}
+          />
+
+          {/* Pagination */}
+          {paginationValues.totalPages > 0 && (
+            <Pagination
+              currentPage={paginationValues.currentPage}
+              totalPages={paginationValues.totalPages}
+              totalItems={paginationValues.totalItems}
+              itemsPerPage={paginationValues.itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
+          )}
+        </main>
+      </div>
+
+      {/* Modals */}
+      <FileUploadModal
+        show={modals.showUploadModal}
+        onClose={() => {
+          modals.closeUploadModal();
+          setError('');
+        }}
+        onUpload={handleUpload}
+        uploading={uploading}
+        uploadProgress={uploadProgress}
+        error={error}
+      />
+
+      <CommentModal
+        show={modals.showCommentModal}
+        onClose={modals.closeCommentModal}
+        onSubmit={handleComment}
+        uploading={uploading}
+      />
+
+      <FileEditModal
+        show={modals.showEditModal}
+        onClose={modals.closeEditModal}
+        onEdit={handleEdit}
+        file={modals.fileToEdit}
+        uploading={uploading}
+      />
+
+      <FileDeleteModal
+        show={modals.showDeleteModal}
+        onClose={modals.closeDeleteModal}
+        onDelete={handleDeleteConfirm}
+        file={modals.fileToDelete}
+        deleting={deleting}
+      />
+    </>
+  );
+}

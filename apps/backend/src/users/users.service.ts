@@ -15,6 +15,7 @@ import { Role } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { UserResponse } from '../common/interfaces/user-response.interface';
 import { getActiveRecordsWhere, getActiveRecordsWhereWith } from '../common/helpers/prisma.helpers';
+import { PaginationHelper } from '../common/helpers/pagination.helper';
 
 @Injectable()
 export class UsersService {
@@ -53,8 +54,6 @@ export class UsersService {
         createdAt: true,
       },
     });
-
-    return client;
   }
 
   /**
@@ -63,8 +62,7 @@ export class UsersService {
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<UserResponse>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -92,19 +90,7 @@ export class UsersService {
       }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: users,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return PaginationHelper.buildPaginatedResult(users, total, paginationDto);
   }
 
   /**

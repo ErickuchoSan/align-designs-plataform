@@ -18,6 +18,7 @@ import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
 import { PermissionContext } from '../common/strategies/permission.strategy';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
+import { PaginationHelper } from '../common/helpers/pagination.helper';
 
 @Injectable()
 export class ProjectsService {
@@ -104,8 +105,7 @@ export class ProjectsService {
     userRole: Role,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<ProjectResponse>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = PaginationHelper.extractPaginationParams(paginationDto);
     const where = {
       deletedAt: null, // Only include non-deleted projects
       ...(userRole === Role.CLIENT ? { clientId: userId } : {}),
@@ -142,8 +142,6 @@ export class ProjectsService {
       this.prisma.project.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
     // Transform projects to include separate counts from already-loaded files
     const projectsWithCounts = projects.map((project) => {
       const { filesCount, commentsCount } = getFilesAndCommentsCounts(project.files);
@@ -160,17 +158,7 @@ export class ProjectsService {
       };
     });
 
-    return {
-      data: projectsWithCounts,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return PaginationHelper.buildPaginatedResult(projectsWithCounts, total, paginationDto);
   }
 
   /**
