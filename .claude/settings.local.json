@@ -61,7 +61,10 @@
       "Bash(if exist \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\migrate-password-history.sql\" del \"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\migrate-password-history.sql\")",
       "Bash(powershell -command \"(Get-Content ''apps\\frontend\\app\\dashboard\\projects\\[id]\\page.tsx'' | Measure-Object -Line).Lines\")",
       "Bash(\"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\src\\projects\\repositories\\index.ts\")",
-      "Bash(\"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\src\\users\\repositories\\index.ts\")"
+      "Bash(\"d:\\Desarrollos\\Align Designs\\align-designs-demo\\apps\\backend\\src\\users\\repositories\\index.ts\")",
+      "Bash(powershell -command \"Get-Content ''''CODE_QUALITY_ANALYSIS_REPORT.md'''' | Select-String -Pattern ''''rate.limit'''' -Context 3,3\" 2)",
+      "Bash($null)",
+      "Bash(timeout /t 10 /nobreak)"
     ],
     "deny": [],
     "ask": []
