@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
+import { FILE_WITH_UPLOADER_INCLUDE } from '../constants/file-selects';
 
 /**
  * Service responsible for coordinating file storage operations between database and MinIO
@@ -41,16 +42,7 @@ export class FileStorageCoordinatorService {
         projectId,
         uploadedBy,
       },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      include: FILE_WITH_UPLOADER_INCLUDE,
     });
 
     try {
@@ -61,16 +53,7 @@ export class FileStorageCoordinatorService {
       const updatedFileRecord = await this.prisma.file.update({
         where: { id: fileRecord.id },
         data: { storagePath },
-        include: {
-          uploader: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
+        include: FILE_WITH_UPLOADER_INCLUDE,
       });
 
       this.logger.log(
@@ -140,16 +123,7 @@ export class FileStorageCoordinatorService {
       const updatedFile = await this.prisma.file.update({
         where: { id: fileId },
         data: updateData,
-        include: {
-          uploader: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
+        include: FILE_WITH_UPLOADER_INCLUDE,
       });
 
       // Clean up old file from MinIO if a new file was uploaded successfully
