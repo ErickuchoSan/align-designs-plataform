@@ -3,11 +3,12 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
+import { CacheModule } from '../cache/cache.module';
 import { UserRepository } from './repositories/user.repository';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 
 @Module({
-  imports: [AuditModule, AuthModule],
+  imports: [AuditModule, AuthModule, CacheModule],
   providers: [
     UsersService,
     {

@@ -5,11 +5,12 @@ import { StorageModule } from '../storage/storage.module';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { CacheModule } from '../cache/cache.module';
 import { ProjectRepository } from './repositories/project.repository';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 
 @Module({
-  imports: [StorageModule, AuditModule, AuthModule, UsersModule],
+  imports: [StorageModule, AuditModule, AuthModule, UsersModule, CacheModule],
   providers: [
     ProjectsService,
     {

@@ -190,8 +190,8 @@ Las variables de entorno **NO cambian**:
 
 **Backend** (`apps/backend/.env`):
 ```env
-DATABASE_URL="postgresql://Alfonso:NoloseBaseDeDatos12345@@192.168.0.139:5432/AlignDesignsDemo?schema=aligndesigns"
-MINIO_ENDPOINT=192.168.0.139
+DATABASE_URL="postgresql://your_app_user:YOUR_APP_PASSWORD@YOUR_SERVER_IP:5432/AlignDesignsPlatform?schema=your_minio_user"
+MINIO_ENDPOINT=YOUR_SERVER_IP
 # ... resto igual
 ```
 

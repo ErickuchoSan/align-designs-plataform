@@ -17,30 +17,30 @@
           │                │  SSH (22)
           │                │  ┌────────────────────────────────┐
           │                └──┤                                │
-          │                   │  IP: 192.168.0.139             │
+          │                   │  IP: YOUR_SERVER_IP             │
           │  PostgreSQL (5432)│                                │
           │  ┌────────────────┤  Hyper-V VM                    │
           │  │                │  "Ebionix-Software-Design"     │
           │  │                │                                │
           │  │   ┌────────────┴─────────────────────────────┐  │
           │  │   │  Ubuntu Server 22.04 LTS                 │  │
-          │  │   │  User: erick                             │  │
+          │  │   │  User: your_username                             │  │
           │  │   │  RAM: 6 GB, CPU: 2 cores, Disk: 80 GB    │  │
           │  │   │                                          │  │
           │  │   │  ┌──────────────────────────────────┐   │  │
           │  │   │  │  Docker Engine 29.0.1            │   │  │
           │  │   │  │                                  │   │  │
           │  │   │  │  ┌────────────────────────────┐  │   │  │
-          │  └───┼──┼──┤ aligndesigns-postgres      │  │   │  │
+          │  └───┼──┼──┤ your_minio_user-postgres      │  │   │  │
           │      │  │  │ Image: infra-db (custom)   │  │   │  │
           │      │  │  │ Port: 5432                 │  │   │  │
           │      │  │  │ Volume: postgres_data      │  │   │  │
-          │      │  │  │ DB: AlignDesignsDemo       │  │   │  │
-          │      │  │  │ User: Alfonso / postgres   │  │   │  │
+          │      │  │  │ DB: AlignDesignsPlatform   │  │   │  │
+          │      │  │  │ User: your_app_user / postgres   │  │   │  │
           │      │  │  └────────────────────────────┘  │   │  │
           │      │  │                                  │   │  │
           │      │  │  ┌────────────────────────────┐  │   │  │
-          └──────┼──┼──┤ aligndesigns-minio         │  │   │  │
+          └──────┼──┼──┤ your_minio_user-minio         │  │   │  │
                  │  │  │ Image: minio/minio:latest  │  │   │  │
                  │  │  │ Ports: 9000, 9001          │  │   │  │
                  │  │  │ Volume: minio_data         │  │   │  │
@@ -70,7 +70,7 @@
   - **CPU:** 2 vCPUs
   - **Disco:** 80 GB (dinámico, VHDX)
 - **Red:** External-Switch (conectado a adaptador físico "Ethernet")
-- **IP Asignada:** 192.168.0.139 (DHCP automático de la red local)
+- **IP Asignada:** YOUR_SERVER_IP (DHCP automático de la red local)
 
 **Ubicación de archivos:**
 ```
@@ -88,7 +88,7 @@ D:\VMs\Ebionix-Software-Design\
 **Versión:** 22.04.5 LTS (Jammy Jellyfish)
 - **Kernel:** 5.15.0-161-generic
 - **Arquitectura:** x86_64
-- **Usuario del sistema:** erick
+- **Usuario del sistema:** your_username
 - **Hostname:** ebionix-software-design
 
 **Particiones:**
@@ -111,7 +111,7 @@ D:\VMs\Ebionix-Software-Design\
 #### Container 1: PostgreSQL
 
 ```yaml
-Nombre: aligndesigns-postgres
+Nombre: your_minio_user-postgres
 Imagen: infra-db (custom build)
 Base: postgres:16.11
 Puerto: 5432
@@ -121,8 +121,8 @@ Health Check: pg_isready -U postgres
 ```
 
 **Base de Datos:**
-- **Nombre:** AlignDesignsDemo
-- **Esquema:** aligndesigns
+- **Nombre:** AlignDesignsPlatform
+- **Esquema:** your_minio_user
 - **Extensiones:**
   - `uuid-ossp` - Generación de UUIDs
   - `pgcrypto` - Funciones criptográficas
@@ -131,14 +131,14 @@ Health Check: pg_isready -U postgres
 ```sql
 -- Usuario administrativo (superuser)
 Usuario: postgres
-Password: NolosePostgres12345!
+Password: YOUR_POSTGRES_PASSWORD
 Permisos: Todos
 
 -- Usuario de aplicación (limitado)
-Usuario: Alfonso
-Password: NoloseBaseDeDatos12345@
+Usuario: your_app_user
+Password: YOUR_APP_PASSWORD
 Permisos:
-  - USAGE en schema aligndesigns
+  - USAGE en schema your_minio_user
   - SELECT, INSERT, UPDATE, DELETE en todas las tablas
   - Permisos por defecto en nuevas tablas
 ```
@@ -147,13 +147,13 @@ Permisos:
 ```
 /docker-entrypoint-initdb.d/
 ├── 01-init.sql     # Crea DB, schema, extensiones
-└── 02-user.sql     # Crea usuario Alfonso y permisos
+└── 02-user.sql     # Crea usuario your_app_user y permisos
 ```
 
 #### Container 2: MinIO
 
 ```yaml
-Nombre: aligndesigns-minio
+Nombre: your_minio_user-minio
 Imagen: minio/minio:latest
 Puertos:
   - 9000: API (S3-compatible)
@@ -166,8 +166,8 @@ Comando: server /data --address ":9000" --console-address ":9001"
 **⚠️ Importante**: El flag `--address ":9000"` es crítico. Sin él, MinIO puede no escuchar correctamente en todas las interfaces.
 
 **Credenciales:**
-- **Usuario:** aligndesigns
-- **Password:** NoloseMinIO12345!
+- **Usuario:** your_minio_user
+- **Password:** YOUR_MINIO_PASSWORD
 
 **Uso:** Almacenamiento de archivos del proyecto (archivos .zip, .pdf, .docx, imágenes, etc.)
 
@@ -180,13 +180,13 @@ Comando: server /data --address ":9000" --console-address ":9001"
 ```yaml
 services:
   db:
-    container_name: aligndesigns-postgres
+    container_name: your_minio_user-postgres
     build: ./db/postgres
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: AlignDesignsDemo
+      POSTGRES_DB: AlignDesignsPlatform
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -196,7 +196,7 @@ services:
       retries: 5
 
   storage:
-    container_name: aligndesigns-minio
+    container_name: your_minio_user-minio
     image: minio/minio:latest
     ports:
       - "9000:9000"
@@ -227,7 +227,7 @@ networks:
 - **Adaptador:** eth0
 - **Switch:** External-Switch
 - **Tipo:** DHCP (automático)
-- **IP Asignada:** 192.168.0.139 (obtenida del router/DHCP local)
+- **IP Asignada:** YOUR_SERVER_IP (obtenida del router/DHCP local)
 - **Subnet:** 192.168.0.0/24
 - **Gateway:** 192.168.0.1 (Router de la red local)
 
@@ -243,8 +243,8 @@ networks:
 
 **Contenedores en la red:**
 ```
-aligndesigns-postgres  → 172.18.0.2
-aligndesigns-minio     → 172.18.0.3
+your_minio_user-postgres  → 172.18.0.2
+your_minio_user-minio     → 172.18.0.3
 ```
 
 Los contenedores pueden comunicarse entre sí usando sus nombres como hostname:
@@ -262,22 +262,22 @@ ping db       # → 172.18.0.2
 
 | Servicio   | Puerto | Protocolo | Acceso                        |
 |------------|--------|-----------|-------------------------------|
-| SSH        | 22     | TCP       | ssh erick@192.168.0.139       |
-| PostgreSQL | 5432   | TCP       | psql -h 192.168.0.139         |
-| MinIO API  | 9000   | TCP       | http://192.168.0.139:9000     |
-| MinIO Web  | 9001   | TCP       | http://192.168.0.139:9001     |
+| SSH        | 22     | TCP       | ssh your_username@YOUR_SERVER_IP       |
+| PostgreSQL | 5432   | TCP       | psql -h YOUR_SERVER_IP         |
+| MinIO API  | 9000   | TCP       | http://YOUR_SERVER_IP:9000     |
+| MinIO Web  | 9001   | TCP       | http://YOUR_SERVER_IP:9001     |
 
 **Verificación de conectividad**:
 ```powershell
 # Test de ping
-ping 192.168.0.139
+ping YOUR_SERVER_IP
 
 # Test de puertos específicos
-Test-NetConnection -ComputerName 192.168.0.139 -Port 9000
-Test-NetConnection -ComputerName 192.168.0.139 -Port 5432
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 9000
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 5432
 
 # Health check de MinIO
-curl http://192.168.0.139:9000/minio/health/ready
+curl http://YOUR_SERVER_IP:9000/minio/health/ready
 ```
 
 ### Backend y Frontend (En desarrollo)
@@ -287,7 +287,7 @@ curl http://192.168.0.139:9000/minio/health/ready
 | NestJS API    | 4000   | HTTP      | http://localhost:4000         |
 | Next.js App   | 3000   | HTTP      | http://localhost:3000         |
 
-**Nota**: Backend y Frontend corren en Windows (no en la VM) y conectan a MinIO en la VM mediante la IP 192.168.0.139.
+**Nota**: Backend y Frontend corren en Windows (no en la VM) y conectan a MinIO en la VM mediante la IP YOUR_SERVER_IP.
 
 ## Almacenamiento
 
@@ -306,7 +306,7 @@ D:\
 ### Dentro de la VM (Ubuntu)
 
 ```
-/home/erick/
+/home/your_username/
 └── infra/                    # Configuración de Docker
     ├── .env                  # Variables de entorno
     ├── compose.yml           # Docker Compose
@@ -375,14 +375,14 @@ sudo ufw status verbose
 ### PostgreSQL Security
 
 ```sql
--- Usuario Alfonso tiene permisos LIMITADOS:
+-- Usuario your_app_user tiene permisos LIMITADOS:
 NOSUPERUSER      -- No puede crear otros superusers
 NOCREATEDB       -- No puede crear bases de datos
 NOCREATEROLE     -- No puede crear otros roles
 NOINHERIT        -- No hereda permisos de otros roles
 
 -- Solo puede:
-SELECT, INSERT, UPDATE, DELETE en schema aligndesigns
+SELECT, INSERT, UPDATE, DELETE en schema your_minio_user
 ```
 
 ## Monitoreo y Logs
@@ -391,14 +391,14 @@ SELECT, INSERT, UPDATE, DELETE en schema aligndesigns
 
 ```bash
 # Ver logs en tiempo real
-sudo docker logs -f aligndesigns-postgres
-sudo docker logs -f aligndesigns-minio
+sudo docker logs -f your_minio_user-postgres
+sudo docker logs -f your_minio_user-minio
 
 # Ver últimas 100 líneas
-sudo docker logs --tail 100 aligndesigns-postgres
+sudo docker logs --tail 100 your_minio_user-postgres
 
 # Ver logs con timestamps
-sudo docker logs -t aligndesigns-postgres
+sudo docker logs -t your_minio_user-postgres
 ```
 
 ### Métricas Docker
@@ -408,7 +408,7 @@ sudo docker logs -t aligndesigns-postgres
 sudo docker stats
 
 # Inspeccionar contenedor
-sudo docker inspect aligndesigns-postgres
+sudo docker inspect your_minio_user-postgres
 
 # Ver eventos
 sudo docker events

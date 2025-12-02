@@ -950,7 +950,7 @@ SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-specific-password
-SMTP_FROM="Align Designs <noreply@aligndesigns.com>"
+SMTP_FROM="Align Designs <noreply@your_minio_user.com>"
 
 # ============================================
 # Monitoring (Optional)

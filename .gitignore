@@ -66,3 +66,6 @@ next-env.d.ts
 # Misc
 .turbo
 nul
+
+# Documentation with sensitive development data
+docs/dev/

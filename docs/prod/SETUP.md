@@ -18,12 +18,12 @@ Esta guía documenta todo el proceso de creación de la infraestructura para el 
 
 El proyecto incluye un script PowerShell que automatiza la creación de la VM en Hyper-V:
 
-**Ubicación:** `align-designs-demo/infra/scripts/hyperv-create-vm.ps1`
+**Ubicación:** `align-designs-platform/infra/scripts/hyperv-create-vm.ps1`
 
 ### Ejecución
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "d:\Desarrollos\Align Designs\align-designs-demo\infra\scripts\hyperv-create-vm.ps1"
+powershell -ExecutionPolicy Bypass -File "d:\Desarrollos\Align Designs\align-designs-platform\infra\scripts\hyperv-create-vm.ps1"
 ```
 
 ### Lo que hace el script
@@ -91,7 +91,7 @@ vmconnect localhost 'Ebionix-Software-Design'
 
 #### Paso 3: Configuración de Red
 - **Automática (DHCP)** - La VM recibe una IP del conmutador
-- IP asignada: `192.168.0.139` (puede variar según tu red)
+- IP asignada: `YOUR_SERVER_IP` (puede variar según tu red)
 - ✅ Anota la IP que se muestra
 
 #### Paso 4: Proxy y Mirror
@@ -115,9 +115,9 @@ LVM libre     38.47 GB  (para futuro crecimiento)
 ```
 Your name:              Erick
 Server name:            Ebionix-Software-Design
-Username:               erick  (minúscula)
-Password:               NoloseMaquinaVirtual12345
-Confirm password:       NoloseMaquinaVirtual12345
+Username:               your_username  (minúscula)
+Password:               YOUR_VM_PASSWORD
+Confirm password:       YOUR_VM_PASSWORD
 ```
 
 ⚠️ **IMPORTANTE:** El username se crea en minúsculas automáticamente
@@ -155,8 +155,8 @@ Restart-VM -Name 'Ebionix-Software-Design' -Force
 
 En la consola de la VM:
 ```
-Username: erick
-Password: NoloseMaquinaVirtual12345
+Username: your_username
+Password: YOUR_VM_PASSWORD
 ```
 
 #### Obtener la IP
@@ -164,7 +164,7 @@ Password: NoloseMaquinaVirtual12345
 Una vez dentro:
 ```bash
 ip addr show
-# Busca la línea con inet (ejemplo): inet 192.168.0.139/24
+# Busca la línea con inet (ejemplo): inet YOUR_SERVER_IP/24
 ```
 
 ---
@@ -177,10 +177,10 @@ Desde tu Windows, ejecuta:
 
 ```bash
 # Copiar carpeta infra a la VM
-scp -r "d:\Desarrollos\Align Designs\align-designs-demo\infra" erick@192.168.0.139:~/
+scp -r "d:\Desarrollos\Align Designs\align-designs-platform\infra" your_username@YOUR_SERVER_IP:~/
 
 # Conectarse por SSH
-ssh erick@192.168.0.139
+ssh your_username@YOUR_SERVER_IP
 
 # En la VM, ejecutar el script
 bash ~/infra/scripts/bootstrap-ubuntu.sh
@@ -207,7 +207,7 @@ sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 # 5. Agregar usuario al grupo docker
-sudo usermod -aG docker erick
+sudo usermod -aG docker your_username
 
 # 6. Verificar instalación
 sudo docker --version
@@ -237,7 +237,7 @@ infra/
         ├── Dockerfile            # Build custom de Postgres
         └── init/
             ├── 01-init.sql       # Crea DB, schema y extensiones
-            └── 02-user.sql       # Crea usuario Alfonso y permisos
+            └── 02-user.sql       # Crea usuario your_app_user y permisos
 ```
 
 ### Variables de Entorno
@@ -245,11 +245,11 @@ infra/
 El archivo `infra/.env` contiene:
 
 ```env
-POSTGRES_PASSWORD=NolosePostgres12345!
-MINIO_USER=aligndesigns
-MINIO_PASSWORD=NoloseMinIO12345!
-DB_APP_USER=Alfonso
-DB_APP_PASSWORD=NoloseBaseDeDatos12345@
+POSTGRES_PASSWORD=YOUR_POSTGRES_PASSWORD
+MINIO_USER=your_minio_user
+MINIO_PASSWORD=YOUR_MINIO_PASSWORD
+DB_APP_USER=your_app_user
+DB_APP_PASSWORD=YOUR_APP_PASSWORD
 ```
 
 ### Levantar Contenedores
@@ -284,45 +284,45 @@ Docker Postgres ejecuta automáticamente los scripts en orden:
 
 ```sql
 -- Crea la base de datos
-CREATE DATABASE AlignDesignsDemo;
+CREATE DATABASE AlignDesignsPlatform;
 
 -- Conecta a la BD
-\c AlignDesignsDemo
+\c AlignDesignsPlatform
 
 -- Crea el esquema
-CREATE SCHEMA IF NOT EXISTS aligndesigns;
+CREATE SCHEMA IF NOT EXISTS your_minio_user;
 
 -- Instala extensiones
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA aligndesigns;
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA aligndesigns;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA your_minio_user;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA your_minio_user;
 ```
 
 #### 2. `02-user.sql` - Crea usuario y permisos
 
 ```sql
--- Crea usuario Alfonso
-CREATE ROLE "Alfonso" LOGIN PASSWORD 'NoloseBaseDeDatos12345@'
+-- Crea usuario your_app_user
+CREATE ROLE "your_app_user" LOGIN PASSWORD 'YOUR_APP_PASSWORD'
   NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
 
 -- Otorga permisos
-GRANT USAGE ON SCHEMA aligndesigns TO "Alfonso";
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA aligndesigns TO "Alfonso";
-ALTER DEFAULT PRIVILEGES IN SCHEMA aligndesigns
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "Alfonso";
+GRANT USAGE ON SCHEMA your_minio_user TO "your_app_user";
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA your_minio_user TO "your_app_user";
+ALTER DEFAULT PRIVILEGES IN SCHEMA your_minio_user
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "your_app_user";
 ```
 
 ### Verificación de la Base de Datos
 
 ```bash
-# Test de conexión con usuario Alfonso
-sudo docker exec aligndesigns-postgres psql -U Alfonso -d AlignDesignsDemo -c "SELECT current_database(), current_user;"
+# Test de conexión con usuario your_app_user
+sudo docker exec your_minio_user-postgres psql -U your_app_user -d AlignDesignsPlatform -c "SELECT current_database(), current_user;"
 ```
 
 Output esperado:
 ```
  current_database | current_user
 ------------------+--------------
- AlignDesignsDemo | Alfonso
+ AlignDesignsPlatform | your_app_user
 ```
 
 ---
@@ -339,40 +339,40 @@ Get-VM -Name 'Ebionix-Software-Design'
 
 ✅ **SSH Funcional**
 ```bash
-ssh erick@192.168.0.139
+ssh your_username@YOUR_SERVER_IP
 ```
 
 ✅ **Docker Instalado**
 ```bash
-ssh erick@192.168.0.139 "docker --version"
+ssh your_username@YOUR_SERVER_IP "docker --version"
 # Docker version 29.0.1
 ```
 
 ✅ **Contenedores Corriendo**
 ```bash
-ssh erick@192.168.0.139 "sudo docker ps"
-# 2 contenedores: aligndesigns-postgres y aligndesigns-minio
+ssh your_username@YOUR_SERVER_IP "sudo docker ps"
+# 2 contenedores: your_minio_user-postgres y your_minio_user-minio
 ```
 
 ✅ **PostgreSQL Accesible**
 
 Desde Windows (si tienes psql instalado):
 ```bash
-psql -h 192.168.0.139 -U Alfonso -d AlignDesignsDemo -c "SELECT 1;"
+psql -h YOUR_SERVER_IP -U your_app_user -d AlignDesignsPlatform -c "SELECT 1;"
 ```
 
 O desde pgAdmin:
-- Host: `192.168.0.139`
+- Host: `YOUR_SERVER_IP`
 - Port: `5432`
-- Database: `AlignDesignsDemo`
-- Username: `Alfonso`
-- Password: `NoloseBaseDeDatos12345@`
+- Database: `AlignDesignsPlatform`
+- Username: `your_app_user`
+- Password: `YOUR_APP_PASSWORD`
 
 ✅ **MinIO Accesible**
 
-Abre en navegador: http://192.168.0.139:9001
-- Usuario: `aligndesigns`
-- Contraseña: `NoloseMinIO12345!`
+Abre en navegador: http://YOUR_SERVER_IP:9001
+- Usuario: `your_minio_user`
+- Contraseña: `YOUR_MINIO_PASSWORD`
 
 ---
 
@@ -402,17 +402,17 @@ sudo systemctl status ssh
 
 3. Prueba conectividad desde Windows:
 ```powershell
-Test-NetConnection -ComputerName 192.168.0.139 -Port 22
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 22
 ```
 
 ### Los contenedores no inician
 
 ```bash
 # Ver logs de Postgres
-sudo docker logs aligndesigns-postgres
+sudo docker logs your_minio_user-postgres
 
 # Ver logs de MinIO
-sudo docker logs aligndesigns-minio
+sudo docker logs your_minio_user-minio
 
 # Recrear desde cero
 cd ~/infra
@@ -420,7 +420,7 @@ sudo docker compose down -v
 sudo docker compose up -d
 ```
 
-### Error "role Alfonso does not exist"
+### Error "role your_app_user does not exist"
 
 Esto significa que los scripts de init no se ejecutaron correctamente. Solución:
 

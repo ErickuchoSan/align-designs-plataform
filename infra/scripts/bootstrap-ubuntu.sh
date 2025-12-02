@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="${REPO_DIR:-$HOME/align-designs-demo}"
+REPO_DIR="${REPO_DIR:-$HOME/align-designs-platform}"
 INFRA_DIR="$REPO_DIR/infra"
 
 sudo apt update

@@ -22,6 +22,7 @@ import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import { BigIntTransformer } from '../common/helpers/bigint-transformer.helper';
+import { executeTransactionWithRetry } from '../common/helpers/transaction.helpers';
 import {
   USER_BASIC_INFO_SELECT,
   FILE_BASIC_SELECT,
@@ -360,8 +361,9 @@ export class ProjectsService {
       'You do not have permission to delete this project',
     );
 
-    // Soft delete the project and its files
-    await this.prisma.$transaction(
+    // Soft delete the project and its files with automatic retry on deadlocks
+    await executeTransactionWithRetry(
+      this.prisma,
       async (tx) => {
         // Soft delete all files in the project
         await tx.file.updateMany({
@@ -382,6 +384,7 @@ export class ProjectsService {
         });
       },
       {
+        maxRetries: 3, // Retry up to 3 times on transient errors
         timeout: TRANSACTION_TIMEOUT_MS, // 30 seconds timeout for projects with many files
       },
     );

@@ -3,7 +3,7 @@ services:
     build: ./db/postgres
     container_name: aligndesigns-postgres
     environment:
-      POSTGRES_DB: AlignDesignsDemo
+      POSTGRES_DB: AlignDesignsPlatform
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DB_APP_USER: ${DB_APP_USER}

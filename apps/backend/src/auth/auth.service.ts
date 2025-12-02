@@ -19,13 +19,14 @@ export class AuthService {
     private prisma: PrismaService,
     private authDependencies: AuthDependenciesService,
     private tokenService: TokenService,
-  ) {}
+  ) { }
 
   /**
    * Login with email and password (for ADMIN and CLIENT)
    */
   async loginAdmin(email: string, password: string) {
     try {
+      this.logger.log(`Attempting login for: ${email}`);
       const user = await this.prisma.user.findFirst({
         where: {
           email,
@@ -37,6 +38,7 @@ export class AuthService {
         this.logger.warn(`Login attempt for non-existent user: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
       }
+      this.logger.log(`User found: ${user.id}, Role: ${user.role}, Active: ${user.isActive}`);
 
       // Check if account is locked
       this.authDependencies.accountLockout.validateAccountNotLocked(user);
@@ -53,11 +55,14 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
+      this.logger.log(`Verifying password...`);
       const isPasswordValid =
         await this.authDependencies.password.comparePassword(
           password,
           user.passwordHash,
         );
+
+      this.logger.log(`Password valid: ${isPasswordValid}`);
 
       if (!isPasswordValid) {
         // Handle failed login (increments counter and potentially locks account)
@@ -71,11 +76,8 @@ export class AuthService {
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
       return this.tokenService.generateToken(user);
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      this.logger.error(`Error during login for ${email}:`, error);
-      throw new UnauthorizedException('Login failed');
+      this.logger.error(`Login failed for ${email}: ${(error as any).message}`, (error as any).stack);
+      throw error;
     }
   }
 

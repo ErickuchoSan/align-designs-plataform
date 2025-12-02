@@ -27,24 +27,6 @@ async function main() {
 
   console.log('✅ Admin user created:', admin.email);
 
-  // Crear un cliente de ejemplo para pruebas: alfonso_guzalba@hotmail.com
-  const client = await prisma.user.upsert({
-    where: { email: 'alfonso_guzalba@hotmail.com' },
-    update: {},
-    create: {
-      email: 'alfonso_guzalba@hotmail.com',
-      firstName: 'Alfonso',
-      lastName: 'Guzalba',
-      phone: '+19565344110',
-      passwordHash: null, // Cliente no tiene contraseña inicial, usa OTP
-      role: Role.CLIENT,
-      isActive: true,
-      emailVerified: false,
-    },
-  });
-
-  console.log('✅ Client user created:', client.email);
-
   console.log('🎉 Seeding completed!');
 }
 

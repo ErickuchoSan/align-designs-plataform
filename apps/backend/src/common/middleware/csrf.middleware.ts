@@ -15,25 +15,30 @@ export class CsrfMiddleware implements NestMiddleware {
   private readonly csrfTokenCookie = 'csrf-token';
   private readonly csrfHeaderName = 'x-csrf-token';
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   // Public endpoints that don't require CSRF protection
+  // Security: Use exact paths instead of prefixes to prevent bypass
   private readonly publicPaths = [
     '/health',
     '/api/docs',
-    '/auth/csrf-token',
-    '/auth/login',
-    '/auth/logout',
-    '/auth/register',
-    '/auth/check-email',
-    '/auth/request-password-reset',
-    '/auth/otp',
+    '/api/v1/auth/csrf-token',
+    '/api/v1/auth/login',
+    '/api/v1/auth/logout',
+    '/api/v1/auth/register',
+    '/api/v1/auth/check-email',
+    '/api/v1/auth/request-password-reset',
+    '/api/v1/auth/otp/request',  // Specific OTP endpoints
+    '/api/v1/auth/otp/verify',
   ];
 
   use(req: Request, res: Response, next: NextFunction) {
     // Skip CSRF validation for public endpoints
     // Use exact match or proper prefix check to prevent bypass
-    if (this.isPublicPath(req.path)) {
+    // Use originalUrl to ensure we check the full path including global prefix
+    const isPublic = this.isPublicPath(req.originalUrl);
+
+    if (isPublic) {
       return next();
     }
 
@@ -48,7 +53,6 @@ export class CsrfMiddleware implements NestMiddleware {
       this.generateAndSetToken(req, res);
     }
 
-    // Validate CSRF token for state-changing operations
     const token = req.cookies[this.csrfTokenCookie];
     const submittedToken = req.headers[this.csrfHeaderName] || req.body._csrf;
 

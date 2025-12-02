@@ -37,7 +37,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private auditService: AuditService,
-  ) {}
+  ) { }
 
   /**
    * Set authentication cookie with secure settings
@@ -130,6 +130,7 @@ export class AuthController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
+    console.log('AuthController.login called for:', loginDto.email);
     const result = await this.authService.loginAdmin(
       loginDto.email,
       loginDto.password,

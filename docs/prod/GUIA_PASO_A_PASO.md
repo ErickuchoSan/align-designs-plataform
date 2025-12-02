@@ -61,7 +61,7 @@ Vamos a transformar tu aplicación de desarrollo local a un ambiente de producci
    - **Úsalo para:** Desarrollo, testing, demos internos
 
 2. **Opción B: Comprar un dominio** (Para producción)
-   - ✅ Profesional (aligndesigns.com)
+   - ✅ Profesional (your_minio_user.com)
    - ✅ SSL/HTTPS gratis con Let's Encrypt
    - ✅ Fácil de recordar y compartir
    - **Costo:** ~$8-12/año (menos de $1/mes)
@@ -1197,7 +1197,7 @@ git push origin main
 **¿Necesitas comprar uno?** Sigue estos pasos:
 
 1. **Ve a Namecheap:** https://www.namecheap.com
-2. **Busca tu dominio:** Escribe "aligndesigns" (o el nombre que quieras)
+2. **Busca tu dominio:** Escribe "your_minio_user" (o el nombre que quieras)
 3. **Verifica disponibilidad:**
    - ✅ `.com` disponible → Cómpralo ($10-12/año)
    - ❌ `.com` tomado → Prueba `.io`, `.app`, `.dev` (~$15-20/año)
@@ -1310,7 +1310,7 @@ Ahora si vas a `http://TU_DROPLET_IP` deberías ver la página de bienvenida de 
 
 ```bash
 # Crear configuración
-sudo nano /etc/nginx/sites-available/aligndesigns
+sudo nano /etc/nginx/sites-available/your_minio_user
 ```
 
 Pega esto (CAMBIA `tudominio.com` por tu dominio real):
@@ -1347,7 +1347,7 @@ server {
 **Activa la configuración:**
 ```bash
 # Crear symlink
-sudo ln -s /etc/nginx/sites-available/aligndesigns /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/your_minio_user /etc/nginx/sites-enabled/
 
 # Remover config default
 sudo rm /etc/nginx/sites-enabled/default

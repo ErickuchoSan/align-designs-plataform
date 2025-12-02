@@ -43,27 +43,27 @@ sudo systemctl status nginx
 **En tu proveedor de dominios (ej. Namecheap, GoDaddy, Cloudflare):**
 
 ```
-# Ejemplo: aligndesigns.com
+# Ejemplo: your_minio_user.com
 
 # Record Type | Name          | Value                  | TTL
 A             | @             | your-droplet-ip        | 3600
 A             | www           | your-droplet-ip        | 3600
 A             | api           | your-droplet-ip        | 3600
-CNAME         | minio         | aligndesigns.com       | 3600
+CNAME         | minio         | your_minio_user.com       | 3600
 ```
 
 **Verificar propagación DNS:**
 
 ```bash
 # En tu máquina local
-dig aligndesigns.com +short
+dig your_minio_user.com +short
 # Output: your-droplet-ip
 
-dig www.aligndesigns.com +short
+dig www.your_minio_user.com +short
 # Output: your-droplet-ip
 
 # Verificar desde el servidor
-nslookup aligndesigns.com
+nslookup your_minio_user.com
 ```
 
 **Tiempo de propagación:** 5 minutos a 48 horas (usualmente < 2 horas)
@@ -75,17 +75,17 @@ nslookup aligndesigns.com
 **Crear configuración para el sitio:**
 
 ```bash
-sudo nano /etc/nginx/sites-available/aligndesigns
+sudo nano /etc/nginx/sites-available/your_minio_user
 ```
 
 ```nginx
-# /etc/nginx/sites-available/aligndesigns
+# /etc/nginx/sites-available/your_minio_user
 
 # Redirect HTTP to HTTPS (se habilitará después de SSL)
 server {
     listen 80;
     listen [::]:80;
-    server_name aligndesigns.com www.aligndesigns.com;
+    server_name your_minio_user.com www.your_minio_user.com;
 
     # Temporalmente servir para validación de Let's Encrypt
     location /.well-known/acme-challenge/ {
@@ -115,7 +115,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
-    server_name api.aligndesigns.com;
+    server_name api.your_minio_user.com;
 
     location /.well-known/acme-challenge/ {
         root /var/www/html;
@@ -130,7 +130,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
 
         # CORS headers (si es necesario)
-        add_header 'Access-Control-Allow-Origin' 'https://aligndesigns.com' always;
+        add_header 'Access-Control-Allow-Origin' 'https://your_minio_user.com' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
 
@@ -163,7 +163,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
-    server_name minio.aligndesigns.com;
+    server_name minio.your_minio_user.com;
 
     location /.well-known/acme-challenge/ {
         root /var/www/html;
@@ -188,7 +188,7 @@ server {
 
 ```bash
 # Crear symlink
-sudo ln -s /etc/nginx/sites-available/aligndesigns /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/your_minio_user /etc/nginx/sites-enabled/
 
 # Remover configuración default
 sudo rm /etc/nginx/sites-enabled/default
@@ -204,10 +204,10 @@ sudo systemctl reload nginx
 **Verificar que funciona:**
 
 ```bash
-curl http://aligndesigns.com
+curl http://your_minio_user.com
 # Debería devolver HTML del frontend
 
-curl http://api.aligndesigns.com/health
+curl http://api.your_minio_user.com/health
 # Output: {"status":"ok","info":{...}}
 ```
 
@@ -220,7 +220,7 @@ curl http://api.aligndesigns.com/health
 sudo apt install -y certbot python3-certbot-nginx
 
 # Obtener certificado para todos los dominios
-sudo certbot --nginx -d aligndesigns.com -d www.aligndesigns.com -d api.aligndesigns.com -d minio.aligndesigns.com
+sudo certbot --nginx -d your_minio_user.com -d www.your_minio_user.com -d api.your_minio_user.com -d minio.your_minio_user.com
 
 # Certbot te preguntará:
 # 1. Email address (para notificaciones): tu-email@example.com
@@ -234,8 +234,8 @@ sudo certbot --nginx -d aligndesigns.com -d www.aligndesigns.com -d api.aligndes
 ```
 Congratulations! You have successfully enabled HTTPS!
 Certificate files:
-  /etc/letsencrypt/live/aligndesigns.com/fullchain.pem
-  /etc/letsencrypt/live/aligndesigns.com/privkey.pem
+  /etc/letsencrypt/live/your_minio_user.com/fullchain.pem
+  /etc/letsencrypt/live/your_minio_user.com/privkey.pem
 ```
 
 **Certbot automáticamente modifica tu configuración de NGINX para:**
@@ -250,13 +250,13 @@ Certificate files:
 Después de Certbot, tu configuración se verá así:
 
 ```nginx
-# /etc/nginx/sites-available/aligndesigns (después de Certbot)
+# /etc/nginx/sites-available/your_minio_user (después de Certbot)
 
 # HTTP → HTTPS Redirect
 server {
     listen 80;
     listen [::]:80;
-    server_name aligndesigns.com www.aligndesigns.com;
+    server_name your_minio_user.com www.your_minio_user.com;
 
     location /.well-known/acme-challenge/ {
         root /var/www/html;
@@ -271,11 +271,11 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name aligndesigns.com www.aligndesigns.com;
+    server_name your_minio_user.com www.your_minio_user.com;
 
     # SSL Configuration (Certbot lo agrega automáticamente)
-    ssl_certificate /etc/letsencrypt/live/aligndesigns.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/aligndesigns.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/your_minio_user.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your_minio_user.com/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
@@ -287,8 +287,8 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     # Logging
-    access_log /var/log/nginx/aligndesigns.access.log;
-    error_log /var/log/nginx/aligndesigns.error.log warn;
+    access_log /var/log/nginx/your_minio_user.access.log;
+    error_log /var/log/nginx/your_minio_user.error.log warn;
 
     # Frontend proxy
     location / {
@@ -330,10 +330,10 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name api.aligndesigns.com;
+    server_name api.your_minio_user.com;
 
-    ssl_certificate /etc/letsencrypt/live/aligndesigns.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/aligndesigns.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/your_minio_user.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your_minio_user.com/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
@@ -357,14 +357,14 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
 
         # CORS
-        add_header 'Access-Control-Allow-Origin' 'https://aligndesigns.com' always;
+        add_header 'Access-Control-Allow-Origin' 'https://your_minio_user.com' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
         add_header 'Access-Control-Allow-Credentials' 'true' always;
 
         # Preflight requests
         if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' 'https://aligndesigns.com' always;
+            add_header 'Access-Control-Allow-Origin' 'https://your_minio_user.com' always;
             add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
             add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
             add_header 'Access-Control-Max-Age' 86400;
@@ -444,16 +444,16 @@ nano .env
 
 ```env
 # Frontend
-NEXT_PUBLIC_API_URL=https://api.aligndesigns.com
+NEXT_PUBLIC_API_URL=https://api.your_minio_user.com
 
 # Backend
-FRONTEND_URL=https://aligndesigns.com
-ALLOWED_ORIGINS=https://aligndesigns.com,https://www.aligndesigns.com
+FRONTEND_URL=https://your_minio_user.com
+ALLOWED_ORIGINS=https://your_minio_user.com,https://www.your_minio_user.com
 
 # MinIO (acceso público para URLs de archivos)
-MINIO_ENDPOINT=minio.aligndesigns.com
+MINIO_ENDPOINT=minio.your_minio_user.com
 MINIO_USE_SSL=true
-MINIO_PUBLIC_URL=https://minio.aligndesigns.com
+MINIO_PUBLIC_URL=https://minio.your_minio_user.com
 ```
 
 **Reiniciar servicios:**
@@ -471,18 +471,18 @@ docker-compose up -d
 
 ```bash
 # En tu máquina local
-curl -I https://aligndesigns.com
+curl -I https://your_minio_user.com
 # HTTP/2 200
 # strict-transport-security: max-age=31536000; includeSubDomains
 
-curl https://api.aligndesigns.com/health
+curl https://api.your_minio_user.com/health
 # {"status":"ok",...}
 ```
 
 **Verificar grado SSL (SSLLabs):**
 
 ```
-https://www.ssllabs.com/ssltest/analyze.html?d=aligndesigns.com
+https://www.ssllabs.com/ssltest/analyze.html?d=your_minio_user.com
 ```
 
 **Objetivo:** Grade A o A+
@@ -490,9 +490,9 @@ https://www.ssllabs.com/ssltest/analyze.html?d=aligndesigns.com
 **Verificar redirect HTTP → HTTPS:**
 
 ```bash
-curl -I http://aligndesigns.com
+curl -I http://your_minio_user.com
 # HTTP/1.1 301 Moved Permanently
-# Location: https://aligndesigns.com/
+# Location: https://your_minio_user.com/
 ```
 
 ---
@@ -519,7 +519,7 @@ http {
 **Aplicar en sitio:**
 
 ```nginx
-# /etc/nginx/sites-available/aligndesigns - en location de API
+# /etc/nginx/sites-available/your_minio_user - en location de API
 
 location /api/ {
     limit_req zone=api_limit burst=20 nodelay;
@@ -585,7 +585,7 @@ sudo tail -f /var/log/nginx/access.log
 sudo tail -f /var/log/nginx/error.log
 
 # Logs específicos del sitio
-sudo tail -f /var/log/nginx/aligndesigns.access.log
+sudo tail -f /var/log/nginx/your_minio_user.access.log
 sudo tail -f /var/log/nginx/api.access.log
 ```
 
@@ -593,7 +593,7 @@ sudo tail -f /var/log/nginx/api.access.log
 
 ```bash
 # Agregar stub_status module
-sudo nano /etc/nginx/sites-available/aligndesigns
+sudo nano /etc/nginx/sites-available/your_minio_user
 ```
 
 ```nginx
@@ -762,7 +762,7 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=https://grafana.aligndesigns.com
+      - GF_SERVER_ROOT_URL=https://grafana.your_minio_user.com
       - GF_INSTALL_PLUGINS=redis-datasource
     ports:
       - "3002:3000"
@@ -1303,13 +1303,13 @@ docker-compose logs -f grafana
 **Agregar Grafana a NGINX:**
 
 ```nginx
-# /etc/nginx/sites-available/aligndesigns
+# /etc/nginx/sites-available/your_minio_user
 
 # Agregar server block para Grafana
 server {
     listen 80;
     listen [::]:80;
-    server_name grafana.aligndesigns.com;
+    server_name grafana.your_minio_user.com;
 
     location /.well-known/acme-challenge/ {
         root /var/www/html;
@@ -1323,10 +1323,10 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name grafana.aligndesigns.com;
+    server_name grafana.your_minio_user.com;
 
-    ssl_certificate /etc/letsencrypt/live/aligndesigns.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/aligndesigns.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/your_minio_user.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your_minio_user.com/privkey.pem;
 
     location / {
         proxy_pass http://localhost:3002;
@@ -1345,14 +1345,14 @@ server {
 **Obtener certificado SSL para Grafana:**
 
 ```bash
-sudo certbot --nginx -d grafana.aligndesigns.com
+sudo certbot --nginx -d grafana.your_minio_user.com
 sudo systemctl reload nginx
 ```
 
 **Acceder:**
 
 ```
-URL: https://grafana.aligndesigns.com
+URL: https://grafana.your_minio_user.com
 User: admin
 Password: (valor de GRAFANA_ADMIN_PASSWORD en .env)
 ```
@@ -1415,12 +1415,12 @@ grafana:
 
 ```
 Monitor Type: HTTPS
-URL: https://aligndesigns.com
+URL: https://your_minio_user.com
 Monitoring Interval: 5 minutes
 Alert Contacts: tu-email@example.com
 
 Monitor Type: HTTPS
-URL: https://api.aligndesigns.com/health
+URL: https://api.your_minio_user.com/health
 Keyword: "ok"
 Monitoring Interval: 5 minutes
 ```
@@ -1508,7 +1508,7 @@ Luego en Grafana, agregar Loki como datasource y crear dashboards de logs.
 - [ ] Alertas de aplicación creadas
 - [ ] Alertas de infraestructura creadas
 - [ ] Alertas de base de datos creadas
-- [ ] Grafana accesible por HTTPS (grafana.aligndesigns.com)
+- [ ] Grafana accesible por HTTPS (grafana.your_minio_user.com)
 - [ ] Notificaciones configuradas (Slack/Email)
 - [ ] Uptime monitoring externo configurado
 - [ ] Logs agregados (opcional - Loki)
@@ -1596,8 +1596,8 @@ gh pr merge --squash
 
 ```bash
 # Desde tu máquina local
-curl https://aligndesigns.com/
-curl https://api.aligndesigns.com/health
+curl https://your_minio_user.com/
+curl https://api.your_minio_user.com/health
 
 # Verificar logs en el servidor
 ssh align@your-droplet-ip
@@ -1740,8 +1740,8 @@ docker-compose up -d backend frontend
 
 ### Checklist de verificación:
 
-- [ ] Frontend accesible (https://aligndesigns.com)
-- [ ] Backend API accesible (https://api.aligndesigns.com/health)
+- [ ] Frontend accesible (https://your_minio_user.com)
+- [ ] Backend API accesible (https://api.your_minio_user.com/health)
 - [ ] Login funciona correctamente
 - [ ] Crear un proyecto de prueba funciona
 - [ ] Subir archivo funciona
@@ -1752,14 +1752,14 @@ docker-compose up -d backend frontend
 
 ```bash
 # Test suite automatizado
-curl -f https://aligndesigns.com/ || echo "Frontend DOWN"
-curl -f https://api.aligndesigns.com/health || echo "Backend DOWN"
+curl -f https://your_minio_user.com/ || echo "Frontend DOWN"
+curl -f https://api.your_minio_user.com/health || echo "Backend DOWN"
 
 # Ver logs en tiempo real
 docker-compose logs -f --tail=50 backend frontend
 
 # Ver métricas en Grafana
-open https://grafana.aligndesigns.com
+open https://grafana.your_minio_user.com
 ```
 
 ---
@@ -1856,7 +1856,7 @@ sudo certbot renew --force-renewal
 sudo systemctl reload nginx
 
 # 3. Verificar
-curl -I https://aligndesigns.com
+curl -I https://your_minio_user.com
 ```
 
 ---
@@ -1891,7 +1891,7 @@ curl -I https://aligndesigns.com
    - Verificar que no hubo downtime nocturno
 
 2. **Revisar Grafana**
-   - Abrir: https://grafana.aligndesigns.com
+   - Abrir: https://grafana.your_minio_user.com
    - Dashboard: Application Overview (últimas 24h)
    - Verificar métricas clave:
      - Error rate < 1%
@@ -1940,7 +1940,7 @@ curl -I https://aligndesigns.com
 
 2. **SSL Certificate check**
    ```bash
-   echo | openssl s_client -servername aligndesigns.com -connect aligndesigns.com:443 2>/dev/null | openssl x509 -noout -dates
+   echo | openssl s_client -servername your_minio_user.com -connect your_minio_user.com:443 2>/dev/null | openssl x509 -noout -dates
    ```
 
 ### Friday (15 min)
@@ -2252,7 +2252,7 @@ sudo unattended-upgrades -d
 
 **Symptoms:**
 - Frontend muestra error "Network Error"
-- `curl https://api.aligndesigns.com/health` falla
+- `curl https://api.your_minio_user.com/health` falla
 
 **Possible Causes:**
 
@@ -2273,7 +2273,7 @@ sudo unattended-upgrades -d
    ```
    **Fix:**
    ```bash
-   sudo nano /etc/nginx/sites-available/aligndesigns
+   sudo nano /etc/nginx/sites-available/your_minio_user
    # Corregir configuración
    sudo systemctl reload nginx
    ```
@@ -2294,7 +2294,7 @@ sudo unattended-upgrades -d
 ### Issue: "Frontend shows blank page"
 
 **Symptoms:**
-- `https://aligndesigns.com` muestra página en blanco
+- `https://your_minio_user.com` muestra página en blanco
 - Console errors en browser
 
 **Possible Causes:**
@@ -2384,7 +2384,7 @@ sudo unattended-upgrades -d
 
 **Symptoms:**
 - NGINX devuelve 502 error
-- `curl https://api.aligndesigns.com` muestra "502 Bad Gateway"
+- `curl https://api.your_minio_user.com` muestra "502 Bad Gateway"
 
 **Possible Causes:**
 
@@ -2425,7 +2425,7 @@ docker-compose logs backend
 
 ```bash
 # Verificar certificado
-echo | openssl s_client -servername aligndesigns.com -connect aligndesigns.com:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername your_minio_user.com -connect your_minio_user.com:443 2>/dev/null | openssl x509 -noout -dates
 
 # Verificar Certbot
 sudo certbot certificates
@@ -2441,7 +2441,7 @@ sudo certbot certificates
 
 2. **Certificado no encontrado:**
    ```bash
-   sudo certbot --nginx -d aligndesigns.com -d www.aligndesigns.com -d api.aligndesigns.com
+   sudo certbot --nginx -d your_minio_user.com -d www.your_minio_user.com -d api.your_minio_user.com
    ```
 
 3. **NGINX no está usando certificado correcto:**
@@ -2743,8 +2743,8 @@ sudo netstat -tuln | grep :22
 
 ```bash
 # All-in-one health check
-curl -f https://aligndesigns.com/ && \
-curl -f https://api.aligndesigns.com/health && \
+curl -f https://your_minio_user.com/ && \
+curl -f https://api.your_minio_user.com/health && \
 docker-compose ps && \
 docker stats --no-stream && \
 df -h
@@ -2756,7 +2756,7 @@ echo "✅ All systems operational"
 
 ```bash
 # Backend response time
-time curl https://api.aligndesigns.com/api/projects
+time curl https://api.your_minio_user.com/api/projects
 
 # Database query time
 docker-compose exec postgres psql -U postgres -d align_designs -c "\timing on" -c "SELECT count(*) FROM \"Project\";"
@@ -2878,9 +2878,9 @@ See `.env.example` for all available environment variables.
 
 ## 📊 Monitoring
 
-- **Grafana:** https://grafana.aligndesigns.com
+- **Grafana:** https://grafana.your_minio_user.com
 - **Prometheus:** http://localhost:9090 (server only)
-- **Metrics Endpoint:** https://api.aligndesigns.com/metrics
+- **Metrics Endpoint:** https://api.your_minio_user.com/metrics
 
 ## 🐛 Troubleshooting
 
@@ -2889,7 +2889,7 @@ See [Troubleshooting Guide](./docs/TROUBLESHOOTING.md)
 ## 📞 Support
 
 - **Issues:** https://github.com/your-org/align-designs-demo/issues
-- **Email:** devops@aligndesigns.com
+- **Email:** devops@your_minio_user.com
 ```
 
 ---

@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
+import { CacheModule } from '../cache/cache.module';
 import { PrismaFileRepository } from './repositories';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { FilePermissionsService } from './services/file-permissions.service';
@@ -12,7 +13,7 @@ import { FileStorageCoordinatorService } from './services/file-storage-coordinat
 import { FileTransformerService } from './services/file-transformer.service';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuditModule, AuthModule],
+  imports: [PrismaModule, StorageModule, AuditModule, AuthModule, CacheModule],
   providers: [
     FilesService,
     FilePermissionsService,

@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Align Designs - Demo",
+  title: "Align Designs Platform",
   description: "Project and file management system",
 };
 

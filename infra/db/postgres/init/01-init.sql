@@ -1,5 +1,5 @@
--- Inicialización de la base AlignDesignsDemo y esquema principal
--- POSTGRES_DB=AlignDesignsDemo será creado por la imagen oficial automáticamente
+-- Inicialización de la base AlignDesignsPlatform y esquema principal
+-- POSTGRES_DB=AlignDesignsPlatform será creado por la imagen oficial automáticamente
 
 CREATE SCHEMA IF NOT EXISTS aligndesigns;
 

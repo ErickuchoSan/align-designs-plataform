@@ -861,7 +861,7 @@ jobs:
     needs: build-and-push
     environment:
       name: production
-      url: https://aligndesigns.com
+      url: https://your_minio_user.com
 
     steps:
       - name: Checkout code
@@ -911,18 +911,18 @@ jobs:
           echo "Waiting for services to start..."
           sleep 30
 
-          curl -f https://api.aligndesigns.com/health || exit 1
+          curl -f https://api.your_minio_user.com/health || exit 1
           echo "✅ Backend is healthy!"
 
-          curl -f https://aligndesigns.com || exit 1
+          curl -f https://your_minio_user.com || exit 1
           echo "✅ Frontend is healthy!"
 
       - name: Notify deployment success
         if: success()
         run: |
           echo "🚀 Deployment successful!"
-          echo "Backend: https://api.aligndesigns.com"
-          echo "Frontend: https://aligndesigns.com"
+          echo "Backend: https://api.your_minio_user.com"
+          echo "Frontend: https://your_minio_user.com"
 
       - name: Rollback on failure
         if: failure()
@@ -965,7 +965,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
-      url: https://staging.aligndesigns.com
+      url: https://staging.your_minio_user.com
 
     steps:
       - name: Checkout code
@@ -1133,7 +1133,7 @@ gh run view --log
 doctl auth init
 
 # Create SSH key
-ssh-keygen -t ed25519 -C "deploy@aligndesigns.com" -f ~/.ssh/align-designs
+ssh-keygen -t ed25519 -C "deploy@your_minio_user.com" -f ~/.ssh/align-designs
 
 # Upload SSH key to DO
 doctl compute ssh-key import align-designs --public-key-file ~/.ssh/align-designs.pub
@@ -1314,7 +1314,7 @@ sudo nano /etc/fail2ban/jail.local
 bantime = 3600
 findtime = 600
 maxretry = 5
-destemail = admin@aligndesigns.com
+destemail = admin@your_minio_user.com
 sendername = Fail2Ban
 
 [sshd]

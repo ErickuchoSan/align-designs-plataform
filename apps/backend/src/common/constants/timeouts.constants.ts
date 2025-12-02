@@ -81,7 +81,7 @@ export const TRANSACTION_TIMEOUT_MS = 30000; // 30 seconds
 // Pagination Configuration
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
-export const MAX_LIMIT = 1000; // Matches frontend PAGE_SIZE_OPTIONS maximum
+export const MAX_LIMIT = 100; // Security: Prevent DoS via excessive pagination requests
 
 // OTP Generation Configuration
 export const OTP_LENGTH = 8;

@@ -44,7 +44,7 @@ MinIO es un servidor de almacenamiento de objetos compatible con Amazon S3, util
           │                         │
           ▼                         ▼
     ┌─────────────────────────────────────────────────────┐
-    │              Hyper-V VM (192.168.0.139)             │
+    │              Hyper-V VM (YOUR_SERVER_IP)             │
     │                                                     │
     │  ┌──────────────────────────────────────────────┐  │
     │  │         Docker Container: MinIO              │  │
@@ -79,7 +79,7 @@ MinIO es un servidor de almacenamiento de objetos compatible con Amazon S3, util
 ```yaml
 storage:
   image: minio/minio:latest
-  container_name: aligndesigns-minio
+  container_name: your_minio_user-minio
   command: server /data --address ":9000" --console-address ":9001"
   environment:
     MINIO_ROOT_USER: ${MINIO_USER}
@@ -96,18 +96,18 @@ storage:
 **Archivo**: `infra/.env` (en la VM)
 
 ```bash
-MINIO_USER=aligndesigns
-MINIO_PASSWORD=NoloseMinIO12345!
+MINIO_USER=your_minio_user
+MINIO_PASSWORD=YOUR_MINIO_PASSWORD
 ```
 
 **Archivo**: `backend/.env` (en Windows)
 
 ```bash
 # MinIO Configuration
-MINIO_ENDPOINT=192.168.0.139
+MINIO_ENDPOINT=YOUR_SERVER_IP
 MINIO_PORT=9000
-MINIO_ACCESS_KEY=aligndesigns
-MINIO_SECRET_KEY=NoloseMinIO12345!
+MINIO_ACCESS_KEY=your_minio_user
+MINIO_SECRET_KEY=YOUR_MINIO_PASSWORD
 MINIO_USE_SSL=false
 MINIO_BUCKET=align-designs
 ```
@@ -138,7 +138,7 @@ Get-VMNetworkAdapter -VMName 'Ebionix-Software-Design' | Connect-VMNetworkAdapte
 ```
 
 **Resultado**:
-- VM obtiene IP del mismo segmento que el host (ejemplo: 192.168.0.139)
+- VM obtiene IP del mismo segmento que el host (ejemplo: YOUR_SERVER_IP)
 - Puertos 9000 y 9001 accesibles directamente desde Windows
 - Ping y conexiones TCP funcionan sin port forwarding
 
@@ -146,10 +146,10 @@ Get-VMNetworkAdapter -VMName 'Ebionix-Software-Design' | Connect-VMNetworkAdapte
 
 ```powershell
 # Test de puerto
-Test-NetConnection -ComputerName 192.168.0.139 -Port 9000
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 9000
 
 # Health check con curl
-curl http://192.168.0.139:9000/minio/health/ready
+curl http://YOUR_SERVER_IP:9000/minio/health/ready
 ```
 
 Respuesta esperada:
@@ -255,7 +255,7 @@ async getDownloadUrl(storagePath: string): Promise<string> {
 
 Las URLs generadas tienen el formato:
 ```
-http://192.168.0.139:9000/align-designs/projects/{projectId}/{uuid}.zip?
+http://YOUR_SERVER_IP:9000/align-designs/projects/{projectId}/{uuid}.zip?
   X-Amz-Algorithm=AWS4-HMAC-SHA256&
   X-Amz-Credential=...&
   X-Amz-Date=...&
@@ -346,7 +346,7 @@ file: [archivo binario]
   "id": "file-uuid",
   "filename": "90e3f534-e774-4d33-9218-a78a44675342.zip",
   "originalName": "proyecto-entregable.zip",
-  "downloadUrl": "http://192.168.0.139:9000/align-designs/projects/...?X-Amz-..."
+  "downloadUrl": "http://YOUR_SERVER_IP:9000/align-designs/projects/...?X-Amz-..."
 }
 ```
 
@@ -373,11 +373,11 @@ El frontend puede usar esta URL para descargar el archivo directamente desde Min
 
 ### Acceso
 
-**URL**: http://192.168.0.139:9001
+**URL**: http://YOUR_SERVER_IP:9001
 
 **Credenciales**:
-- Usuario: `aligndesigns`
-- Contraseña: `NoloseMinIO12345!`
+- Usuario: `your_minio_user`
+- Contraseña: `YOUR_MINIO_PASSWORD`
 
 ### Funciones Disponibles
 
@@ -389,7 +389,7 @@ El frontend puede usar esta URL para descargar el archivo directamente desde Min
 
 ### Explorar Archivos
 
-1. Iniciar sesión en http://192.168.0.139:9001
+1. Iniciar sesión en http://YOUR_SERVER_IP:9001
 2. Click en **Object Browser**
 3. Seleccionar bucket `align-designs`
 4. Navegar a `projects/{projectId}/`
@@ -403,8 +403,8 @@ El frontend puede usar esta URL para descargar el archivo directamente desde Min
 
 **Síntoma**:
 ```bash
-curl http://192.168.0.139:9000
-# curl: (7) Failed to connect to 192.168.0.139 port 9000: Connection refused
+curl http://YOUR_SERVER_IP:9000
+# curl: (7) Failed to connect to YOUR_SERVER_IP port 9000: Connection refused
 ```
 
 **Verificaciones**:
@@ -412,7 +412,7 @@ curl http://192.168.0.139:9000
 1. **Contenedor corriendo**:
 ```bash
 sudo docker ps | grep minio
-# Debe mostrar: aligndesigns-minio ... Up ... 0.0.0.0:9000->9000/tcp
+# Debe mostrar: your_minio_user-minio ... Up ... 0.0.0.0:9000->9000/tcp
 ```
 
 2. **Comando correcto en compose.yml**:
@@ -430,27 +430,27 @@ sudo ss -tlnp | grep 9000
 
 4. **Verificar logs**:
 ```bash
-sudo docker logs aligndesigns-minio --tail 50
+sudo docker logs your_minio_user-minio --tail 50
 ```
 
 ### Error: ECONNREFUSED desde el Backend
 
 **Síntoma**:
 ```
-Error: connect ECONNREFUSED 192.168.0.139:9000
+Error: connect ECONNREFUSED YOUR_SERVER_IP:9000
 ```
 
 **Soluciones**:
 
 1. **Verificar MINIO_ENDPOINT en backend/.env**:
 ```bash
-MINIO_ENDPOINT=192.168.0.139  # IP de la VM
+MINIO_ENDPOINT=YOUR_SERVER_IP  # IP de la VM
 MINIO_PORT=9000
 ```
 
 2. **Test de conectividad desde Windows**:
 ```powershell
-Test-NetConnection -ComputerName 192.168.0.139 -Port 9000
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 9000
 # TcpTestSucceeded debe ser True
 ```
 
@@ -516,11 +516,11 @@ npm run start:dev
 Si falla, crear manualmente:
 
 ```bash
-# Opción 1: Via consola web (http://192.168.0.139:9001)
+# Opción 1: Via consola web (http://YOUR_SERVER_IP:9001)
 # Buckets → Create Bucket → Nombre: align-designs
 
 # Opción 2: Via mc client (MinIO Client)
-mc alias set local http://192.168.0.139:9000 aligndesigns NoloseMinIO12345!
+mc alias set local http://YOUR_SERVER_IP:9000 your_minio_user YOUR_MINIO_PASSWORD
 mc mb local/align-designs
 ```
 
@@ -556,7 +556,7 @@ chmod +x mc
 sudo mv mc /usr/local/bin/
 
 # Configurar alias
-mc alias set vm http://192.168.0.139:9000 aligndesigns NoloseMinIO12345!
+mc alias set vm http://YOUR_SERVER_IP:9000 your_minio_user YOUR_MINIO_PASSWORD
 
 # Backup a disco local
 mc mirror vm/align-designs ~/minio-backup/align-designs
@@ -629,8 +629,8 @@ async cleanOrphanFiles() {
 ❌ Incorrecto:
 ```typescript
 const client = new Minio.Client({
-  accessKey: 'aligndesigns',
-  secretKey: 'NoloseMinIO12345!',
+  accessKey: 'your_minio_user',
+  secretKey: 'YOUR_MINIO_PASSWORD',
 });
 ```
 
@@ -693,7 +693,7 @@ await this.minioClient.presignedGetObject(bucket, path, 24 * 60 * 60);
 ### Métricas
 
 **Via Consola Web**:
-- http://192.168.0.139:9001 → Monitoring → Metrics
+- http://YOUR_SERVER_IP:9001 → Monitoring → Metrics
 
 **Via Prometheus** (configuración avanzada):
 
@@ -709,13 +709,13 @@ storage:
 
 ```bash
 # Ver logs en tiempo real
-sudo docker logs -f aligndesigns-minio
+sudo docker logs -f your_minio_user-minio
 
 # Logs con timestamps
-sudo docker logs -t aligndesigns-minio
+sudo docker logs -t your_minio_user-minio
 
 # Últimas 100 líneas
-sudo docker logs --tail 100 aligndesigns-minio
+sudo docker logs --tail 100 your_minio_user-minio
 ```
 
 **Ejemplo de log exitoso**:
@@ -738,7 +738,7 @@ GET /minio/health/ready
 
 ```bash
 # Backend .env
-MINIO_ENDPOINT=192.168.0.139  # IP de la VM en red local
+MINIO_ENDPOINT=YOUR_SERVER_IP  # IP de la VM en red local
 MINIO_PORT=9000
 MINIO_USE_SSL=false
 ```
@@ -753,7 +753,7 @@ MINIO_USE_SSL=false
 
 ```bash
 # Backend .env
-MINIO_ENDPOINT=storage.aligndesigns.com  # Dominio con DNS
+MINIO_ENDPOINT=storage.your_minio_user.com  # Dominio con DNS
 MINIO_PORT=443
 MINIO_USE_SSL=true
 ```
@@ -791,10 +791,10 @@ sudo docker compose restart storage
 sudo docker compose up -d --build storage
 
 # Ver configuración
-sudo docker inspect aligndesigns-minio
+sudo docker inspect your_minio_user-minio
 
 # Uso de disco
-sudo docker exec aligndesigns-minio df -h /data
+sudo docker exec your_minio_user-minio df -h /data
 
 # Listar objetos
 mc ls vm/align-designs/projects/
@@ -809,9 +809,9 @@ mc ls vm/align-designs/projects/
 | **Imagen Docker** | `minio/minio:latest` |
 | **Puertos** | 9000 (API), 9001 (Console) |
 | **Bucket** | `align-designs` |
-| **IP VM** | `192.168.0.139` |
+| **IP VM** | `YOUR_SERVER_IP` |
 | **Switch Hyper-V** | `External-Switch` |
-| **Credenciales** | `aligndesigns` / `NoloseMinIO12345!` |
+| **Credenciales** | `your_minio_user` / `YOUR_MINIO_PASSWORD` |
 | **SSL** | Deshabilitado (HTTP) |
 | **Expiración URLs** | 15 minutos |
 | **Estructura** | `projects/{projectId}/{uuid}.ext` |

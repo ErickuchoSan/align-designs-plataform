@@ -64,7 +64,7 @@ La VM estaba configurada con **"NAT-Internal"** switch en Hyper-V, que:
 **Ejemplo de IPs**:
 ```
 Host Windows: 192.168.0.92
-VM Ubuntu:    192.168.0.139
+VM Ubuntu:    YOUR_SERVER_IP
 Router:       192.168.0.1
 ```
 
@@ -195,7 +195,7 @@ ip addr show eth0
 
 # Salida esperada:
 # 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
-#     inet 192.168.0.139/24 brd 192.168.0.255 scope global dynamic eth0
+#     inet YOUR_SERVER_IP/24 brd 192.168.0.255 scope global dynamic eth0
 ```
 
 ### Paso 5: Verificar Conectividad
@@ -204,16 +204,16 @@ ip addr show eth0
 
 ```powershell
 # 1. Ping
-ping 192.168.0.139
+ping YOUR_SERVER_IP
 
 # 2. Test de puerto MinIO
-Test-NetConnection -ComputerName 192.168.0.139 -Port 9000
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 9000
 
 # Resultado esperado:
 # TcpTestSucceeded : True  ← ¡Éxito!
 
 # 3. Health check de MinIO
-curl http://192.168.0.139:9000/minio/health/ready
+curl http://YOUR_SERVER_IP:9000/minio/health/ready
 
 # Resultado esperado:
 # HTTP/1.1 200 OK
@@ -239,7 +239,7 @@ ping google.com
 MINIO_ENDPOINT=localhost  # o 172.24.215.214 o 192.168.100.10
 
 # A:
-MINIO_ENDPOINT=192.168.0.139
+MINIO_ENDPOINT=YOUR_SERVER_IP
 
 # Verificar también:
 MINIO_PORT=9000
@@ -254,7 +254,7 @@ npm run start:dev
 
 **Verificar logs**:
 ```
-[StorageService] MinIO client initialized - Endpoint: 192.168.0.139:9000
+[StorageService] MinIO client initialized - Endpoint: YOUR_SERVER_IP:9000
 [StorageService] Bucket "align-designs" created successfully
 ```
 
@@ -297,7 +297,7 @@ Add-NetNatStaticMapping -NatName "NAT-Internal" `
 
 **Intento**:
 ```bash
-ssh -L 9000:localhost:9000 -L 9001:localhost:9001 erick@192.168.100.10
+ssh -L 9000:localhost:9000 -L 9001:localhost:9001 your_username@192.168.100.10
 ```
 
 **Resultado**: SSH rechazaba la contraseña desde Windows (aunque funcionaba en consola de Hyper-V).
@@ -334,7 +334,7 @@ DNS: Automático (del router)
 ```
 Adaptador: eth0
 Switch: External-Switch
-IP: 192.168.0.139 (DHCP)
+IP: YOUR_SERVER_IP (DHCP)
 Máscara: 255.255.255.0
 Gateway: 192.168.0.1
 DNS: 8.8.8.8, 8.8.4.4 (configurado en /etc/netplan/)
@@ -344,10 +344,10 @@ DNS: 8.8.8.8, 8.8.4.4 (configurado en /etc/netplan/)
 
 | Servicio      | Puerto | URL/Comando                              |
 |---------------|--------|------------------------------------------|
-| SSH           | 22     | `ssh erick@192.168.0.139`                |
-| PostgreSQL    | 5432   | `psql -h 192.168.0.139 -U Alfonso`       |
-| MinIO API     | 9000   | `http://192.168.0.139:9000`              |
-| MinIO Console | 9001   | `http://192.168.0.139:9001`              |
+| SSH           | 22     | `ssh your_username@YOUR_SERVER_IP`                |
+| PostgreSQL    | 5432   | `psql -h YOUR_SERVER_IP -U your_app_user`       |
+| MinIO API     | 9000   | `http://YOUR_SERVER_IP:9000`              |
+| MinIO Console | 9001   | `http://YOUR_SERVER_IP:9001`              |
 
 ---
 
@@ -367,7 +367,7 @@ network:
   ethernets:
     eth0:
       addresses:
-        - 192.168.0.139/24
+        - YOUR_SERVER_IP/24
       gateway4: 192.168.0.1
       nameservers:
         addresses:
@@ -384,7 +384,7 @@ sudo netplan apply
 
 1. Acceder a configuración del router (ejemplo: http://192.168.0.1)
 2. Buscar sección "DHCP Reservation" o "Static Lease"
-3. Asignar IP 192.168.0.139 a la MAC de la VM
+3. Asignar IP YOUR_SERVER_IP a la MAC de la VM
 4. Guardar y reiniciar router si es necesario
 
 Para obtener la MAC:
@@ -418,7 +418,7 @@ ip link show eth0
 4. **Firewall de Windows**:
    ```powershell
    # Verificar si el firewall está bloqueando ICMP
-   Test-NetConnection -ComputerName 192.168.0.139 -InformationLevel Detailed
+   Test-NetConnection -ComputerName YOUR_SERVER_IP -InformationLevel Detailed
    ```
 
 ### Problema: Puerto 9000 no responde
@@ -433,7 +433,7 @@ ip link show eth0
 
 2. **Puerto expuesto en Docker**:
    ```bash
-   sudo docker port aligndesigns-minio
+   sudo docker port your_minio_user-minio
    # 9000/tcp -> 0.0.0.0:9000
    # 9001/tcp -> 0.0.0.0:9001
    ```
@@ -446,7 +446,7 @@ ip link show eth0
 
 4. **Logs de MinIO**:
    ```bash
-   sudo docker logs aligndesigns-minio --tail 50
+   sudo docker logs your_minio_user-minio --tail 50
    ```
 
 5. **Comando correcto en compose.yml**:
@@ -459,7 +459,7 @@ ip link show eth0
 
 1. **Verificar MINIO_ENDPOINT en backend/.env**:
    ```bash
-   MINIO_ENDPOINT=192.168.0.139  # IP correcta de la VM
+   MINIO_ENDPOINT=YOUR_SERVER_IP  # IP correcta de la VM
    ```
 
 2. **Reiniciar backend** después de cambiar .env:
@@ -470,7 +470,7 @@ ip link show eth0
 
 3. **Verificar logs del backend**:
    ```
-   [StorageService] MinIO client initialized - Endpoint: 192.168.0.139:9000
+   [StorageService] MinIO client initialized - Endpoint: YOUR_SERVER_IP:9000
    ```
 
 ---
@@ -503,16 +503,16 @@ Remove-VMSwitch -Name "NAT-Internal"
 
 ```powershell
 # Test de ping
-ping 192.168.0.139
+ping YOUR_SERVER_IP
 
 # Test de puerto TCP
-Test-NetConnection -ComputerName 192.168.0.139 -Port 9000
+Test-NetConnection -ComputerName YOUR_SERVER_IP -Port 9000
 
 # Ver ruta a la VM
-tracert 192.168.0.139
+tracert YOUR_SERVER_IP
 
 # Ver tabla ARP (MAC addresses)
-arp -a | findstr "192.168.0.139"
+arp -a | findstr "YOUR_SERVER_IP"
 
 # Limpiar caché DNS
 ipconfig /flushdns
@@ -562,8 +562,8 @@ Configurar reserva DHCP en el router para evitar que la IP cambie.
 
 ```bash
 # Script de verificación
-curl -f http://192.168.0.139:9000/minio/health/ready && echo "✅ MinIO OK" || echo "❌ MinIO Failed"
-psql -h 192.168.0.139 -U Alfonso -d AlignDesignsDemo -c "SELECT 1;" && echo "✅ PostgreSQL OK" || echo "❌ PostgreSQL Failed"
+curl -f http://YOUR_SERVER_IP:9000/minio/health/ready && echo "✅ MinIO OK" || echo "❌ MinIO Failed"
+psql -h YOUR_SERVER_IP -U your_app_user -d AlignDesignsPlatform -c "SELECT 1;" && echo "✅ PostgreSQL OK" || echo "❌ PostgreSQL Failed"
 ```
 
 ### 5. Snapshot Antes de Cambios de Red
@@ -604,7 +604,7 @@ sudo ufw status verbose
 | Fecha | Cambio | Razón |
 |-------|--------|-------|
 | 2025-11-16 | Migración de NAT-Internal a External-Switch | Resolver ECONNREFUSED en conexiones Windows → VM |
-| 2025-11-16 | IP actualizada: 172.24.215.214 → 192.168.0.139 | Nueva asignación DHCP con External Switch |
+| 2025-11-16 | IP actualizada: 172.24.215.214 → YOUR_SERVER_IP | Nueva asignación DHCP con External Switch |
 | 2025-11-16 | Actualizado backend/.env con nueva IP | Conectividad de NestJS a MinIO |
 
 ---

@@ -1,8 +1,8 @@
 {
-  "name": "align-designs-demo",
+  "name": "align-designs-platform",
   "version": "1.0.0",
   "private": true,
-  "description": "Sistema de gestión de proyectos y archivos - Monorepo",
+  "description": "Sistema de gestión de proyectos y archivos - Plataforma",
   "workspaces": [
     "apps/*"
   ],

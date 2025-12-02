@@ -1,4 +1,4 @@
-# Align Designs Demo
+# Align Designs Platform
 
 Sistema de gestión de proyectos y archivos con autenticación diferenciada para administradores y clientes.
 
@@ -110,7 +110,7 @@ align-designs-demo/                 # Monorepo raíz
 ### Base de Datos (PostgreSQL)
 
 ```env
-DATABASE_URL="postgresql://Alfonso:NoloseBaseDeDatos12345@@192.168.0.139:5432/AlignDesignsDemo?schema=aligndesigns"
+DATABASE_URL="postgresql://Alfonso:NoloseBaseDeDatos12345@@192.168.0.139:5432/AlignDesignsPlatform?schema=aligndesigns"
 ```
 
 ### MinIO
@@ -329,4 +329,4 @@ DELETE /files/:id                     # Eliminar archivo o comentario
 
 ## Licencia
 
-Este es un proyecto demo para Align Designs.
+Este es la plataforma oficial para Align Designs.

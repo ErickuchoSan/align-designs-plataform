@@ -767,7 +767,7 @@ upstream backend {
 
 server {
     listen 80;
-    server_name api.aligndesigns.com;
+    server_name api.your_minio_user.com;
 
     location / {
         proxy_pass http://backend;
@@ -816,7 +816,7 @@ resource "digitalocean_loadbalancer" "backend" {
     entry_protocol = "https"
     target_port     = 3000
     target_protocol = "http"
-    certificate_name = "aligndesigns-cert"
+    certificate_name = "your_minio_user-cert"
   }
 
   healthcheck {
@@ -861,9 +861,9 @@ async function handleRequest(request) {
 
   // Geo-steering
   if (country === 'MX' || country === 'US') {
-    return fetch('https://us-backend.aligndesigns.com', request)
+    return fetch('https://us-backend.your_minio_user.com', request)
   } else {
-    return fetch('https://eu-backend.aligndesigns.com', request)
+    return fetch('https://eu-backend.your_minio_user.com', request)
   }
 }
 ```
@@ -972,17 +972,17 @@ NS: amber.ns.cloudflare.com
 NS: chad.ns.cloudflare.com
 
 # DNS Records
-A   aligndesigns.com     → IP_DROPLET    (Proxied ☁️)
-A   api.aligndesigns.com → IP_DROPLET    (Proxied ☁️)
+A   your_minio_user.com     → IP_DROPLET    (Proxied ☁️)
+A   api.your_minio_user.com → IP_DROPLET    (Proxied ☁️)
 ```
 
 **Page Rules (cachear assets):**
 ```
-https://aligndesigns.com/assets/*
+https://your_minio_user.com/assets/*
   - Cache Level: Cache Everything
   - Edge Cache TTL: 1 month
 
-https://api.aligndesigns.com/*
+https://api.your_minio_user.com/*
   - Cache Level: Bypass
 ```
 

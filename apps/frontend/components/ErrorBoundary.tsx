@@ -43,9 +43,6 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
-
-    // In production, you could send this to an error reporting service
-    // Example: logErrorToService(error, errorInfo);
   }
 
   handleReset = () => {
