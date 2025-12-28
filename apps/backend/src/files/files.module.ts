@@ -11,6 +11,7 @@ import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { FilePermissionsService } from './services/file-permissions.service';
 import { FileStorageCoordinatorService } from './services/file-storage-coordinator.service';
 import { FileTransformerService } from './services/file-transformer.service';
+import { FileStageService } from './services/file-stage.service';
 
 @Module({
   imports: [PrismaModule, StorageModule, AuditModule, AuthModule, CacheModule],
@@ -19,12 +20,13 @@ import { FileTransformerService } from './services/file-transformer.service';
     FilePermissionsService,
     FileStorageCoordinatorService,
     FileTransformerService,
+    FileStageService,
     {
       provide: INJECTION_TOKENS.FILE_REPOSITORY,
       useClass: PrismaFileRepository,
     },
   ],
   controllers: [FilesController],
-  exports: [INJECTION_TOKENS.FILE_REPOSITORY],
+  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService],
 })
 export class FilesModule {}

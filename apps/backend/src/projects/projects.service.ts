@@ -29,6 +29,8 @@ import {
   FILE_WITH_UPLOADER_SELECT,
   FILE_MINIMAL_SELECT,
 } from './constants/project-selects';
+import { ProjectEmployeeService } from './services/project-employee.service';
+import { ProjectStatusService } from './services/project-status.service';
 
 /**
  * Projects Service
@@ -62,10 +64,13 @@ export class ProjectsService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly cacheManager: CacheManagerService,
+    private readonly projectEmployeeService: ProjectEmployeeService,
+    private readonly projectStatusService: ProjectStatusService,
   ) { }
 
   /**
    * Create a new project
+   * Phase 1: Added employee assignment and workflow fields
    */
   async create(createProjectDto: CreateProjectDto, createdBy: string) {
     // Verify that the client exists and is not deleted
@@ -75,10 +80,30 @@ export class ProjectsService {
       throw new NotFoundException('Client not found');
     }
 
+    // Extract employee IDs from DTO (Phase 1)
+    const { employeeIds, ...projectData } = createProjectDto;
+
+    // Validate employees before creating project (Phase 1)
+    if (employeeIds && employeeIds.length > 0) {
+      for (const employeeId of employeeIds) {
+        await this.projectEmployeeService.validateEmployeeAvailability(
+          employeeId,
+        );
+      }
+    }
+
     const project = await this.projectRepo.create({
-      ...createProjectDto,
+      ...projectData,
       createdBy,
     });
+
+    // Assign employees if provided (Phase 1)
+    if (employeeIds && employeeIds.length > 0) {
+      await this.projectEmployeeService.assignEmployeesToProject(
+        project.id,
+        employeeIds,
+      );
+    }
 
     // Fetch with relations for response
     const fullProject = await this.prisma.project.findFirst({
@@ -92,6 +117,14 @@ export class ProjectsService {
         },
         files: {
           select: FILE_BASIC_SELECT,
+        },
+        // Phase 1: Include employee assignments
+        employees: {
+          include: {
+            employee: {
+              select: USER_BASIC_INFO_SELECT,
+            },
+          },
         },
       },
     });
