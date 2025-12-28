@@ -4,7 +4,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ProjectStatus } from '@prisma/client';
+import { ProjectStatus, NotificationType } from '@prisma/client';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 /**
  * Service for managing project status transitions
@@ -16,7 +17,10 @@ import { ProjectStatus } from '@prisma/client';
 export class ProjectStatusService {
   private readonly logger = new Logger(ProjectStatusService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
   /**
    * Check if project can be activated
@@ -127,6 +131,30 @@ export class ProjectStatusService {
       },
     });
 
+    // Notify Client
+    if (updatedProject.client) {
+      await this.notificationsService.create({
+        userId: updatedProject.client.id,
+        type: NotificationType.SUCCESS,
+        title: 'Project Activated',
+        message: `Your project "${updatedProject.name}" is now ACTIVE. Work has begun!`,
+        link: `/dashboard/projects/${projectId}`,
+      });
+    }
+
+    // Notify Employees
+    for (const emp of updatedProject.employees) {
+      if (emp.employee) {
+        await this.notificationsService.create({
+          userId: emp.employee.id,
+          type: NotificationType.INFO,
+          title: 'Project Activated',
+          message: `Project "${updatedProject.name}" is now ACTIVE. You can start working.`,
+          link: `/dashboard/projects/${projectId}`,
+        });
+      }
+    }
+
     this.logger.log(
       `Project ${updatedProject.name} activated - assigned to ${updatedProject.employees.length} employee(s)`,
     );
@@ -168,6 +196,30 @@ export class ProjectStatusService {
         },
       },
     });
+
+    // Notify Client
+    if (updatedProject.client) {
+      await this.notificationsService.create({
+        userId: updatedProject.client.id,
+        type: NotificationType.SUCCESS,
+        title: 'Project Completed',
+        message: `Your project "${updatedProject.name}" has been marked as COMPLETED.`,
+        link: `/dashboard/projects/${projectId}`,
+      });
+    }
+
+    // Notify Employees
+    for (const emp of updatedProject.employees) {
+      if (emp.employee) {
+        await this.notificationsService.create({
+          userId: emp.employee.id,
+          type: NotificationType.SUCCESS,
+          title: 'Project Completed',
+          message: `Project "${updatedProject.name}" is now COMPLETED. Great job!`,
+          link: `/dashboard/projects/${projectId}`,
+        });
+      }
+    }
 
     this.logger.log(`Project ${updatedProject.name} marked as COMPLETED`);
 
@@ -310,16 +362,16 @@ export class ProjectStatusService {
 
     const paymentProgress = project.initialAmountRequired
       ? {
-          required: Number(project.initialAmountRequired),
-          paid: Number(project.amountPaid),
-          remaining:
-            Number(project.initialAmountRequired) -
-            Number(project.amountPaid),
-          percentage:
-            (Number(project.amountPaid) /
-              Number(project.initialAmountRequired)) *
-            100,
-        }
+        required: Number(project.initialAmountRequired),
+        paid: Number(project.amountPaid),
+        remaining:
+          Number(project.initialAmountRequired) -
+          Number(project.amountPaid),
+        percentage:
+          (Number(project.amountPaid) /
+            Number(project.initialAmountRequired)) *
+          100,
+      }
       : null;
 
     return {

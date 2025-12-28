@@ -2,6 +2,8 @@ import FileUploadModal from './FileUploadModal';
 import CommentModal from './CommentModal';
 import FileEditModal from './FileEditModal';
 import FileDeleteModal from './FileDeleteModal';
+import FileVersionHistoryModal from '@/components/dashboard/FileVersionHistoryModal';
+import UploadNewVersionModal from '@/components/dashboard/UploadNewVersionModal';
 import type { FileData } from '../hooks/useProjectFiles';
 
 interface FileModalsGroupProps {
@@ -31,6 +33,15 @@ interface FileModalsGroupProps {
   onDelete: (file: FileData) => Promise<boolean>;
   fileToDelete: FileData | null;
   deleting: boolean;
+  // History Modal
+  showHistoryModal: boolean;
+  onCloseHistoryModal: () => void;
+  fileToViewHistory: FileData | null;
+  // Upload Version Modal
+  showUploadVersionModal: boolean;
+  onCloseUploadVersionModal: () => void;
+  onUploadVersion: () => void; // Trigger refresh
+  fileToVersion: FileData | null;
 }
 
 /**
@@ -57,6 +68,13 @@ export default function FileModalsGroup({
   onDelete,
   fileToDelete,
   deleting,
+  showHistoryModal,
+  onCloseHistoryModal,
+  fileToViewHistory,
+  showUploadVersionModal,
+  onCloseUploadVersionModal,
+  onUploadVersion,
+  fileToVersion,
 }: FileModalsGroupProps) {
   return (
     <>
@@ -94,6 +112,25 @@ export default function FileModalsGroup({
         file={fileToDelete}
         deleting={deleting}
       />
+
+      {fileToViewHistory && (
+        <FileVersionHistoryModal
+          isOpen={showHistoryModal}
+          onClose={onCloseHistoryModal}
+          file={fileToViewHistory}
+          onDownload={() => { }} // Placeholder or pass handler
+        />
+      )}
+
+      {fileToVersion && (
+        <UploadNewVersionModal
+          isOpen={showUploadVersionModal}
+          onClose={onCloseUploadVersionModal}
+          parentFileId={fileToVersion.id}
+          projectId={fileToVersion.id} // Not really needed if parentFileId is enough
+          onSuccess={onUploadVersion}
+        />
+      )}
     </>
   );
 }

@@ -16,6 +16,11 @@ import { HealthModule } from './health/health.module';
 import { TasksModule } from './tasks/tasks.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { PaymentsModule } from './payments/payments.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { TrackingModule } from './tracking/tracking.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
@@ -44,6 +49,11 @@ import { GLOBAL_RATE_LIMIT } from './common/constants/timeouts.constants';
     HealthModule,
     TasksModule,
     FeedbackModule,
+    NotificationsModule,
+    PaymentsModule,
+    TrackingModule,
+    InvoicesModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [],

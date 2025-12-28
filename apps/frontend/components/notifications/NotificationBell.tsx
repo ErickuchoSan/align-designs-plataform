@@ -1,0 +1,151 @@
+'use client';
+
+import { useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
+
+export default function NotificationBell() {
+    const {
+        notifications,
+        unreadCount,
+        isOpen,
+        setIsOpen,
+        markAsRead,
+        markAllAsRead,
+    } = useNotifications();
+
+    const router = useRouter();
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Close on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [setIsOpen]);
+
+    const handleNotificationClick = async (notification: Notification) => {
+        if (!notification.isRead) {
+            await markAsRead(notification.id);
+        }
+        setIsOpen(false);
+        if (notification.link) {
+            router.push(notification.link);
+        }
+    };
+
+    const getIcon = (type: string) => {
+        switch (type) {
+            case 'SUCCESS':
+                return (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                );
+            case 'WARNING':
+                return (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                );
+            case 'ERROR':
+                return (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                );
+            default: // INFO
+                return (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="relative mr-4" ref={menuRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="relative p-2 text-gold-400 hover:text-white transition-colors focus:outline-none"
+            >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                )}
+            </button>
+
+            {isOpen && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white shadow-xl border border-stone-200 z-50 animate-slideDown overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100 bg-stone-50">
+                        <h3 className="font-semibold text-navy-900">Notifications</h3>
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={markAllAsRead}
+                                className="text-xs text-gold-600 hover:text-gold-700 font-medium"
+                            >
+                                Mark all as read
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                            <div className="px-4 py-8 text-center text-stone-500 text-sm">
+                                No notifications yet.
+                            </div>
+                        ) : (
+                            <ul className="divide-y divide-stone-100">
+                                {notifications.map((notification) => (
+                                    <li
+                                        key={notification.id}
+                                        onClick={() => handleNotificationClick(notification)}
+                                        className={`px-4 py-3 hover:bg-stone-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50/50' : ''
+                                            }`}
+                                    >
+                                        <div className="flex gap-3">
+                                            {getIcon(notification.type)}
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-medium ${!notification.isRead ? 'text-navy-900' : 'text-stone-600'}`}>
+                                                    {notification.title}
+                                                </p>
+                                                <p className="text-xs text-stone-500 mt-1 truncate">
+                                                    {notification.message}
+                                                </p>
+                                                <p className="text-[10px] text-stone-400 mt-1">
+                                                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                                                </p>
+                                            </div>
+                                            {!notification.isRead && (
+                                                <div className="flex-shrink-0 self-center">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

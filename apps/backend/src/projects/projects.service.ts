@@ -13,7 +13,8 @@ import type { IProjectRepository } from './repositories/project.repository.inter
 import type { IUserRepository } from '../users/repositories/user.repository.interface';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Role } from '@prisma/client';
+import { Role, Stage, ProjectStatus } from '@prisma/client';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
 import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
@@ -148,6 +149,7 @@ export class ProjectsService {
     userId: string,
     userRole: Role,
     paginationDto: PaginationDto,
+    filterClientId?: string,
   ): Promise<PaginatedResult<ProjectResponse>> {
     const { page, limit, skip } =
       PaginationHelper.extractPaginationParams(paginationDto);
@@ -156,7 +158,7 @@ export class ProjectsService {
     const cacheKey = CACHE_KEYS.PROJECTS.LIST(
       page,
       limit,
-      userRole === Role.CLIENT ? userId : undefined,
+      userRole === Role.CLIENT ? userId : filterClientId,
     );
 
     // Try to get from cache first
@@ -170,7 +172,7 @@ export class ProjectsService {
 
     const where = {
       deletedAt: null, // Only include non-deleted projects
-      ...(userRole === Role.CLIENT ? { clientId: userId } : {}),
+      ...(userRole === Role.CLIENT ? { clientId: userId } : filterClientId ? { clientId: filterClientId } : {}),
     };
 
     // Optimized: Only 2 queries - projects with files included, and total count
@@ -463,6 +465,100 @@ export class ProjectsService {
       throw new ForbiddenException(
         'Cannot change client: current client has uploaded files or comments to this project',
       );
+    }
+  }
+
+  /**
+   * Get completion status checklist
+   * Checks if project is ready to be archived
+   */
+  async getCompletionStatus(id: string) {
+    const project = await this.prisma.project.findUnique({
+      where: { id },
+      include: {
+        files: true,
+        employees: true,
+      },
+    });
+
+    if (!project) throw new NotFoundException('Project not found');
+
+    // 1. Check Pending Payments from Client (Invoices)
+    const pendingInvoices = await this.prisma.invoice.count({
+      where: {
+        projectId: id,
+        status: { not: 'PAID' },
+      },
+    });
+
+    // 2. Check Pending Payments to Employees
+    const pendingEmployeePayments = await this.prisma.file.count({
+      where: {
+        projectId: id,
+        pendingPayment: true,
+        deletedAt: null,
+      },
+    });
+
+    // 3. Check Open Feedback Cycles
+    const openFeedback = await this.prisma.file.count({
+      where: {
+        projectId: id,
+        stage: { in: [Stage.FEEDBACK_CLIENT, Stage.FEEDBACK_EMPLOYEE] },
+        deletedAt: null,
+      },
+    });
+
+    // 4. Check Delivery
+    const deliveredFiles = await this.prisma.file.count({
+      where: {
+        projectId: id,
+        stage: { in: [Stage.ADMIN_APPROVED, Stage.CLIENT_APPROVED, Stage.PAYMENTS] },
+        deletedAt: null
+      }
+    });
+
+    const isReady =
+      pendingInvoices === 0 &&
+      pendingEmployeePayments === 0 &&
+      openFeedback === 0 &&
+      deliveredFiles > 0;
+
+    return {
+      isReady,
+      checklist: {
+        allClientPaymentsReceived: pendingInvoices === 0,
+        allEmployeesPaid: pendingEmployeePayments === 0,
+        noOpenFeedback: openFeedback === 0,
+        finalFilesDelivered: deliveredFiles > 0,
+      },
+      counts: {
+        pendingInvoices,
+        pendingEmployeePayments,
+        openFeedback,
+      }
+    };
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async checkArchivedProjects() {
+    this.logger.log('Checking for old archived projects...');
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const oldProjects = await this.prisma.project.findMany({
+      where: {
+        status: ProjectStatus.ARCHIVED,
+        archivedAt: {
+          lt: ninetyDaysAgo,
+        },
+      },
+      select: { id: true, name: true },
+    });
+
+    if (oldProjects.length > 0) {
+      this.logger.warn(`Found ${oldProjects.length} projects archived > 90 days ago: ${oldProjects.map(p => p.name).join(', ')}`);
+      // Future: Implement auto-deletion or email notification to admin
     }
   }
 }

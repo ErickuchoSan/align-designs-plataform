@@ -50,7 +50,7 @@ export class ProjectsController {
     private readonly auditService: AuditService,
     private readonly projectEmployeeService: ProjectEmployeeService,
     private readonly projectStatusService: ProjectStatusService,
-  ) {}
+  ) { }
 
   @Post()
   @Roles(Role.ADMIN)
@@ -131,8 +131,9 @@ export class ProjectsController {
   findAll(
     @CurrentUser() user: UserPayload,
     @Query() paginationDto: PaginationDto,
+    @Query('clientId') clientId?: string,
   ) {
-    return this.projectsService.findAll(user.userId, user.role, paginationDto);
+    return this.projectsService.findAll(user.userId, user.role, paginationDto, clientId);
   }
 
   @Get(':id')
@@ -584,5 +585,18 @@ export class ProjectsController {
   @ApiResponse({ status: 200, description: 'Status summary retrieved successfully' })
   async getProjectStatus(@Param('id') projectId: string) {
     return this.projectStatusService.getProjectStatusSummary(projectId);
+  }
+
+  /**
+   * Get completion checklist
+   */
+  @Get(':id/completion-status')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get completion checklist',
+    description: 'Returns the checklist for project completion/archiving',
+  })
+  async getCompletionStatus(@Param('id') projectId: string) {
+    return this.projectsService.getCompletionStatus(projectId);
   }
 }

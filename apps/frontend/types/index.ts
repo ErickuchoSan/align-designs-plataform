@@ -137,7 +137,12 @@ export interface UpdateUserDto {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  isActive?: boolean;
+  isDeleted: boolean;
+  versionNumber?: number;
+  versionLabel?: string;
+  isCurrentVersion?: boolean;
+  parentFileId?: string;
+  rejectionCount?: number;
 }
 
 export interface CreateProjectDto {

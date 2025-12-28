@@ -337,6 +337,44 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Send a generic notification email
+   */
+  async sendNotificationEmail(
+    to: string,
+    subject: string,
+    title: string,
+    message: string,
+    actionLink?: string,
+    actionText?: string,
+  ): Promise<void> {
+    try {
+      const emailFrom = this.configService.get<string>('EMAIL_FROM');
+
+      const html = getBaseEmailTemplate({
+        title,
+        userName: 'User', // Generic greeting or we could pass it
+        preMessage: message,
+        bodyContent: actionLink ? `<div style="text-align: center; margin: 30px 0;"><a href="${actionLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">${actionText || 'View Details'}</a></div>` : '',
+        postMessage: '',
+        warningMessage: '',
+      });
+
+      const mailOptions = {
+        from: emailFrom,
+        to,
+        subject: `${subject} - Align Designs`,
+        html,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Notification email sent successfully to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send notification email to ${to}:`, error);
+      // Don't throw error to avoid breaking the main flow if email fails
+    }
+  }
+
+  /**
    * Check if email service is healthy
    */
   async checkHealth(): Promise<boolean> {

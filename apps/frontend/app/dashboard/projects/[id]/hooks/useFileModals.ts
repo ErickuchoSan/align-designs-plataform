@@ -7,8 +7,12 @@ export interface FileModalsState {
   showCommentModal: boolean;
   showEditModal: boolean;
   showDeleteModal: boolean;
+  showHistoryModal: boolean;
+  showUploadVersionModal: boolean;
   fileToEdit: FileData | null;
   fileToDelete: FileData | null;
+  fileToViewHistory: FileData | null;
+  fileToVersion: FileData | null;
 }
 
 export interface FileModalsActions {
@@ -20,10 +24,14 @@ export interface FileModalsActions {
   closeEditModal: () => void;
   openDeleteModal: (file: FileData) => void;
   closeDeleteModal: () => void;
+  openHistoryModal: (file: FileData) => void;
+  closeHistoryModal: () => void;
+  openUploadVersionModal: (file: FileData) => void;
+  closeUploadVersionModal: () => void;
   closeAllModals: () => void;
 }
 
-export interface UseFileModalsReturn extends FileModalsState, FileModalsActions {}
+export interface UseFileModalsReturn extends FileModalsState, FileModalsActions { }
 
 /**
  * Hook to manage file-related modals state and actions
@@ -58,6 +66,8 @@ export function useFileModals(): UseFileModalsReturn {
   const commentModal = useModal();
   const editModal = useModalWithData<FileData>();
   const deleteModal = useModalWithData<FileData>();
+  const historyModal = useModalWithData<FileData>();
+  const uploadVersionModal = useModalWithData<FileData>();
 
   // Close all modals utility
   const closeAllModals = useCallback(() => {
@@ -73,8 +83,12 @@ export function useFileModals(): UseFileModalsReturn {
     showCommentModal: commentModal.isOpen,
     showEditModal: editModal.isOpen,
     showDeleteModal: deleteModal.isOpen,
+    showHistoryModal: historyModal.isOpen,
+    showUploadVersionModal: uploadVersionModal.isOpen,
     fileToEdit: editModal.data,
     fileToDelete: deleteModal.data,
+    fileToViewHistory: historyModal.data,
+    fileToVersion: uploadVersionModal.data,
     // Actions
     openUploadModal: uploadModal.open,
     closeUploadModal: uploadModal.close,
@@ -84,6 +98,10 @@ export function useFileModals(): UseFileModalsReturn {
     closeEditModal: editModal.close,
     openDeleteModal: deleteModal.open,
     closeDeleteModal: deleteModal.close,
+    openHistoryModal: historyModal.open,
+    closeHistoryModal: historyModal.close,
+    openUploadVersionModal: uploadVersionModal.open,
+    closeUploadVersionModal: uploadVersionModal.close,
     closeAllModals,
   };
 }

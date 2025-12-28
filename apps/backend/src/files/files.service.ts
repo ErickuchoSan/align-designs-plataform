@@ -464,4 +464,27 @@ export class FilesService {
 
     return result;
   }
+  async findPendingPaymentFiles(projectId: string, employeeId?: string) {
+    return this.prisma.file.findMany({
+      where: {
+        projectId,
+        pendingPayment: true,
+        ...(employeeId ? { uploadedBy: employeeId } : {}),
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        filename: true,
+        uploadedAt: true,
+        approvedClientAt: true,
+        uploader: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  }
 }

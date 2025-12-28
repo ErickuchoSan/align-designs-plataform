@@ -20,11 +20,17 @@ import { PrismaService } from '../prisma/prisma.service';
  * - If feedback sent before 12PM → Start counting from that day at 12PM
  * - If feedback sent after 12PM → Start counting from next day at 12PM
  */
+import { NotificationType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class FeedbackService {
   private readonly logger = new Logger(FeedbackService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
   /**
    * Create a new feedback cycle for an employee
@@ -73,6 +79,7 @@ export class FeedbackService {
           select: {
             id: true,
             name: true,
+            clientId: true,
           },
         },
       },
@@ -81,6 +88,14 @@ export class FeedbackService {
     this.logger.log(
       `Feedback cycle created for employee ${employeeId} in project ${projectId}. Start date: ${startDate}`,
     );
+
+    await this.notificationsService.create({
+      userId: employeeId,
+      type: NotificationType.INFO,
+      title: 'New Feedback Cycle',
+      message: `A new feedback cycle has started in project ${cycle.project.name}.`,
+      link: `/dashboard/projects/${projectId}/feedback`,
+    });
 
     return cycle;
   }
@@ -127,6 +142,7 @@ export class FeedbackService {
       },
       include: {
         feedback: true,
+        project: true,
       },
     });
 
@@ -136,7 +152,7 @@ export class FeedbackService {
       // Refetch with feedback relation
       cycle = await this.prisma.feedbackCycle.findUnique({
         where: { id: newCycle.id },
-        include: { feedback: true },
+        include: { feedback: true, project: true },
       });
     }
 
@@ -181,6 +197,25 @@ export class FeedbackService {
     this.logger.log(
       `Feedback #${sequenceInCycle} added to cycle ${cycle.id} for ${targetAudience}`,
     );
+
+    // Notify target audience
+    if (targetAudience === 'employee_space') {
+      await this.notificationsService.create({
+        userId: employeeId,
+        type: NotificationType.WARNING,
+        title: 'New Feedback Received',
+        message: `New feedback received in ${cycle.project.name}`,
+        link: `/dashboard/projects/${projectId}/feedback`,
+      });
+    } else if (targetAudience === 'client_space' && cycle.project.clientId) {
+      await this.notificationsService.create({
+        userId: cycle.project.clientId,
+        type: NotificationType.INFO,
+        title: 'New Update on Project',
+        message: `New update available in ${cycle.project.name}`,
+        link: `/dashboard/projects/${projectId}/feedback`,
+      });
+    }
 
     return feedback;
   }
@@ -235,6 +270,17 @@ export class FeedbackService {
       `Feedback cycle ${cycleId} submitted by employee ${updatedCycle.employeeId}`,
     );
 
+    // Notify Client
+    if (updatedCycle.project.clientId) {
+      await this.notificationsService.create({
+        userId: updatedCycle.project.clientId,
+        type: NotificationType.SUCCESS,
+        title: 'Deliverable Submitted',
+        message: `A deliverable has been submitted for review in ${updatedCycle.project.name}`,
+        link: `/dashboard/projects/${updatedCycle.projectId}/feedback`,
+      });
+    }
+
     return updatedCycle;
   }
 
@@ -277,6 +323,15 @@ export class FeedbackService {
 
     this.logger.log(`Feedback cycle ${cycleId} approved`);
 
+    // Notify Employee
+    await this.notificationsService.create({
+      userId: updatedCycle.employeeId,
+      type: NotificationType.SUCCESS,
+      title: 'Deliverable Approved',
+      message: `Your deliverable in ${updatedCycle.project.name} has been APPROVED!`,
+      link: `/dashboard/projects/${updatedCycle.projectId}/feedback`,
+    });
+
     return updatedCycle;
   }
 
@@ -314,6 +369,15 @@ export class FeedbackService {
     this.logger.log(
       `Feedback cycle ${cycleId} rejected - returned to open status`,
     );
+
+    // Notify Employee
+    await this.notificationsService.create({
+      userId: updatedCycle.employeeId,
+      type: NotificationType.WARNING,
+      title: 'Deliverable Rejected',
+      message: `Your deliverable in ${updatedCycle.project.name} requires changes.`,
+      link: `/dashboard/projects/${updatedCycle.projectId}/feedback`,
+    });
 
     return updatedCycle;
   }

@@ -21,6 +21,7 @@ import FileActionsBar from './components/FileActionsBar';
 import AlertMessages from './components/AlertMessages';
 import FileList from './components/FileList';
 import FileModalsGroup from './components/FileModalsGroup';
+import TimeTrackingCharts from '@/components/dashboard/TimeTrackingCharts';
 
 /**
  * Project Details Page - Refactored for better maintainability
@@ -197,6 +198,11 @@ export default function ProjectDetailsPage() {
 
           <ProjectInfo project={project} />
 
+          {/* Analytics Section (Admin/Employee Only) */}
+          {(isAdmin || (user && project.employees?.some(pe => pe.employeeId === user.id))) && (
+            <TimeTrackingCharts projectId={projectId} />
+          )}
+
           <ProjectWorkflowSection
             project={project}
             isAdmin={isAdmin}
@@ -222,6 +228,8 @@ export default function ProjectDetailsPage() {
             onEdit={modals.openEditModal}
             onDelete={modals.openDeleteModal}
             canDelete={canDeleteFile}
+            onViewHistory={modals.openHistoryModal}
+            onUploadVersion={modals.openUploadVersionModal}
           />
 
           {totalPages > 0 && (
@@ -257,6 +265,16 @@ export default function ProjectDetailsPage() {
         onDelete={handleDeleteConfirm}
         fileToDelete={modals.fileToDelete}
         deleting={deleting}
+        showHistoryModal={modals.showHistoryModal}
+        onCloseHistoryModal={modals.closeHistoryModal}
+        fileToViewHistory={modals.fileToViewHistory}
+        showUploadVersionModal={modals.showUploadVersionModal}
+        onCloseUploadVersionModal={modals.closeUploadVersionModal}
+        onUploadVersion={async () => {
+          await fetchFiles();
+          modals.closeUploadVersionModal();
+        }}
+        fileToVersion={modals.fileToVersion}
       />
     </>
   );

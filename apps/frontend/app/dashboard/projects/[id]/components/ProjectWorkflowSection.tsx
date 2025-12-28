@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { ManageEmployeesModal } from '@/components/dashboard/ManageEmployeesModal';
 import { Project, ProjectStatus } from '@/types';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
+import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
+import { CompletionChecklistModal } from '@/components/projects/CompletionChecklistModal';
 import { ProjectsService } from '@/services/projects.service';
 import { logger } from '@/lib/logger';
 
@@ -29,10 +33,9 @@ export default function ProjectWorkflowSection({
   isAdmin,
   onUpdate,
 }: ProjectWorkflowSectionProps) {
+  const router = useRouter();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentNotes, setPaymentNotes] = useState('');
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,32 +43,6 @@ export default function ProjectWorkflowSection({
   if (!isAdmin) {
     return null;
   }
-
-  const handleRecordPayment = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      setError('Please enter a valid payment amount');
-      return;
-    }
-
-    setProcessing(true);
-    setError('');
-
-    try {
-      await ProjectsService.recordPayment(project.id, amount, paymentNotes);
-      setShowPaymentModal(false);
-      setPaymentAmount('');
-      setPaymentNotes('');
-      onUpdate();
-    } catch (err: any) {
-      logger.error('Error recording payment:', err);
-      setError(err.response?.data?.message || 'Failed to record payment');
-    } finally {
-      setProcessing(false);
-    }
-  }, [project.id, paymentAmount, paymentNotes, onUpdate]);
 
   const handleActivateProject = useCallback(async () => {
     if (!confirm('Are you sure you want to activate this project?')) {
@@ -105,16 +82,35 @@ export default function ProjectWorkflowSection({
     }
   }, [project.id, onUpdate]);
 
-  const handleArchiveProject = useCallback(async () => {
-    if (!confirm('Are you sure you want to archive this project? This action can be reversed.')) {
-      return;
-    }
+  const [showChecklistModal, setShowChecklistModal] = useState(false);
+  const [checklistData, setChecklistData] = useState<any>(null);
+  const [checklistLoading, setChecklistLoading] = useState(false);
 
+  // ... (Activate/Complete handlers remain same)
+
+  const handleArchiveClick = useCallback(async () => {
+    setChecklistLoading(true);
+    setError('');
+
+    try {
+      const status = await ProjectsService.getCompletionStatus(project.id);
+      setChecklistData(status);
+      setShowChecklistModal(true);
+    } catch (err: any) {
+      logger.error('Error fetching completion status:', err);
+      setError(err.response?.data?.message || 'Failed to fetch project status');
+    } finally {
+      setChecklistLoading(false);
+    }
+  }, [project.id]);
+
+  const handleConfirmArchive = useCallback(async () => {
     setProcessing(true);
     setError('');
 
     try {
       await ProjectsService.archive(project.id);
+      setShowChecklistModal(false);
       onUpdate();
     } catch (err: any) {
       logger.error('Error archiving project:', err);
@@ -123,13 +119,6 @@ export default function ProjectWorkflowSection({
       setProcessing(false);
     }
   }, [project.id, onUpdate]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
@@ -154,7 +143,9 @@ export default function ProjectWorkflowSection({
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-navy-900">Project Workflow</h2>
-        <ProjectStatusBadge status={project.status} />
+        <div className="flex gap-2">
+          <ProjectStatusBadge status={project.status} />
+        </div>
       </div>
 
       {/* Status Actions */}
@@ -179,7 +170,7 @@ export default function ProjectWorkflowSection({
         )}
         {canArchive && (
           <button
-            onClick={handleArchiveProject}
+            onClick={handleArchiveClick}
             disabled={processing}
             className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -193,12 +184,20 @@ export default function ProjectWorkflowSection({
         <div className="border border-stone-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-navy-900">Payment Status</h3>
-            <button
-              onClick={() => setShowPaymentModal(true)}
-              className="text-sm px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Record Payment
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
+                className="text-sm px-3 py-1.5 border border-navy-200 text-navy-800 hover:bg-navy-50 rounded-lg font-medium transition-colors"
+              >
+                History
+              </button>
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="text-sm px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Record Payment
+              </button>
+            </div>
           </div>
 
           {project.initialAmountRequired !== null && project.initialAmountRequired !== undefined ? (
@@ -262,87 +261,40 @@ export default function ProjectWorkflowSection({
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-navy-900 mb-4">Record Payment</h3>
+      <RecordPaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        projectId={project.id}
+        onSuccess={onUpdate}
+        initialAmount={
+          project.initialAmountRequired && project.amountPaid
+            ? Math.max(0, Number(project.initialAmountRequired) - Number(project.amountPaid))
+            : 0
+        }
+      />
 
-            <form onSubmit={handleRecordPayment}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-navy-900 mb-2">
-                  Payment Amount *
-                </label>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
-                  placeholder="0.00"
-                  required
-                  disabled={processing}
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-navy-900 mb-2">
-                  Notes (optional)
-                </label>
-                <textarea
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
-                  placeholder="Add any notes about this payment..."
-                  disabled={processing}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    setPaymentAmount('');
-                    setPaymentNotes('');
-                    setError('');
-                  }}
-                  className="flex-1 px-4 py-2 border border-stone-300 text-navy-900 rounded-lg font-medium hover:bg-stone-50 transition-colors"
-                  disabled={processing}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={processing}
-                >
-                  {processing ? 'Recording...' : 'Record Payment'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Employee Modal */}
+      {showEmployeeModal && (
+        <ManageEmployeesModal
+          isOpen={showEmployeeModal}
+          onClose={() => setShowEmployeeModal(false)}
+          projectId={project.id}
+          currentEmployees={project.employees || []}
+          onSuccess={onUpdate}
+        />
       )}
 
-      {/* Employee Modal Placeholder */}
-      {showEmployeeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-navy-900 mb-4">Manage Employees</h3>
-            <p className="text-sm text-stone-600 mb-4">
-              Employee management will be available in Phase 2
-            </p>
-            <button
-              onClick={() => setShowEmployeeModal(false)}
-              className="w-full px-4 py-2 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+      {/* Completion Checklist Modal */}
+      {showChecklistModal && checklistData && (
+        <CompletionChecklistModal
+          isOpen={showChecklistModal}
+          onClose={() => setShowChecklistModal(false)}
+          isLoading={processing}
+          isReady={checklistData.isReady}
+          checklist={checklistData.checklist}
+          counts={checklistData.counts}
+          onArchive={handleConfirmArchive}
+        />
       )}
     </div>
   );

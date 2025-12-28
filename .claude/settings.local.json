@@ -45,7 +45,9 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []

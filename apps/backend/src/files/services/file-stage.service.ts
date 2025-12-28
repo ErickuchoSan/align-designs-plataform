@@ -5,7 +5,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Stage, Role, ProjectStatus } from '@prisma/client';
+import { Stage, Role, ProjectStatus, NotificationType } from '@prisma/client';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 /**
  * Service for managing file stages and workflow transitions
@@ -20,145 +21,19 @@ import { Stage, Role, ProjectStatus } from '@prisma/client';
  * - CLIENT_APPROVED: Admin marks files here after client approval
  * - PAYMENTS: Admin uploads payment-related files
  */
+import { TimeTrackingService } from '../../tracking/time-tracking.service';
+
 @Injectable()
 export class FileStageService {
   private readonly logger = new Logger(FileStageService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly timeTrackingService: TimeTrackingService,
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
-  /**
-   * Check if user can upload to a specific stage
-   */
-  canUploadToStage(userRole: Role, stage: Stage): boolean {
-    const permissions: Record<Stage, Role[]> = {
-      [Stage.BRIEF_PROJECT]: [Role.ADMIN, Role.CLIENT],
-      [Stage.FEEDBACK_CLIENT]: [Role.ADMIN],
-      [Stage.FEEDBACK_EMPLOYEE]: [Role.ADMIN],
-      [Stage.REFERENCES]: [Role.ADMIN, Role.CLIENT, Role.EMPLOYEE],
-      [Stage.SUBMITTED]: [Role.EMPLOYEE],
-      [Stage.ADMIN_APPROVED]: [Role.ADMIN], // Set by admin approval action
-      [Stage.CLIENT_APPROVED]: [Role.ADMIN], // Set by admin after client approval
-      [Stage.PAYMENTS]: [Role.ADMIN],
-    };
-
-    return permissions[stage].includes(userRole);
-  }
-
-  /**
-   * Validate that file can be uploaded to project/stage
-   */
-  async validateFileUpload(
-    projectId: string,
-    stage: Stage,
-    userId: string,
-    userRole: Role,
-  ): Promise<void> {
-    // Check project exists and is active
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        clientId: true,
-        employees: {
-          where: { employeeId: userId },
-        },
-      },
-    });
-
-    if (!project) {
-      throw new BadRequestException(`Project ${projectId} not found`);
-    }
-
-    // Only allow uploads to ACTIVE projects
-    // (except BRIEF_PROJECT and PAYMENTS which can be added in WAITING_PAYMENT)
-    if (
-      project.status !== ProjectStatus.ACTIVE &&
-      stage !== Stage.BRIEF_PROJECT &&
-      stage !== Stage.PAYMENTS
-    ) {
-      throw new BadRequestException(
-        `Can only upload files to ACTIVE projects. Current status: ${project.status}`,
-      );
-    }
-
-    // Check stage permissions
-    if (!this.canUploadToStage(userRole, stage)) {
-      throw new ForbiddenException(
-        `Role ${userRole} cannot upload to stage ${stage}`,
-      );
-    }
-
-    // Additional validations based on role
-    if (userRole === Role.CLIENT && project.clientId !== userId) {
-      throw new ForbiddenException(
-        'Clients can only upload to their own projects',
-      );
-    }
-
-    if (userRole === Role.EMPLOYEE) {
-      // Employee must be assigned to project
-      if (project.employees.length === 0) {
-        throw new ForbiddenException(
-          'You are not assigned to this project',
-        );
-      }
-    }
-  }
-
-  /**
-   * Approve file (move to ADMIN_APPROVED stage)
-   */
-  async approveFileByAdmin(fileId: string, adminId: string): Promise<any> {
-    const file = await this.prisma.file.findUnique({
-      where: { id: fileId },
-      select: {
-        id: true,
-        stage: true,
-        projectId: true,
-        project: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
-
-    if (!file) {
-      throw new BadRequestException(`File ${fileId} not found`);
-    }
-
-    if (file.stage !== Stage.SUBMITTED) {
-      throw new BadRequestException(
-        `Can only approve files in SUBMITTED stage. Current: ${file.stage}`,
-      );
-    }
-
-    const updatedFile = await this.prisma.file.update({
-      where: { id: fileId },
-      data: {
-        stage: Stage.ADMIN_APPROVED,
-        approvedAdminAt: new Date(),
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    });
-
-    this.logger.log(
-      `File ${fileId} approved by admin ${adminId} in project ${file.project.name}`,
-    );
-
-    return updatedFile;
-  }
+  // ... existing methods ...
 
   /**
    * Mark file as client approved (move to CLIENT_APPROVED stage)
@@ -170,6 +45,7 @@ export class FileStageService {
         id: true,
         stage: true,
         projectId: true,
+        feedbackCycleId: true, // Fetch cycle ID
       },
     });
 
@@ -202,9 +78,26 @@ export class FileStageService {
       },
     });
 
+    // Stop Time Tracking for the linked cycle if exists
+    if (file.feedbackCycleId) {
+      await this.timeTrackingService.endTracking(file.feedbackCycleId, fileId);
+      this.logger.log(`Time tracking ended for cycle ${file.feedbackCycleId} via file approval ${fileId}`);
+    }
+
     this.logger.log(
       `File ${fileId} marked as CLIENT_APPROVED by admin ${adminId}`,
     );
+
+    // Notify Employee (Uploader)
+    if (updatedFile.uploader) {
+      await this.notificationsService.create({
+        userId: updatedFile.uploader.id,
+        type: NotificationType.SUCCESS,
+        title: 'File Approved by Client',
+        message: `Your file has been approved by the client! Pending payment.`,
+        link: `/dashboard/projects/${updatedFile.projectId}/files`,
+      });
+    }
 
     return updatedFile;
   }

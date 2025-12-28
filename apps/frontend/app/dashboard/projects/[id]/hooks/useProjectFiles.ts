@@ -17,6 +17,12 @@ export interface FileData {
     email: string;
   };
   uploadedAt: string;
+  // Versioning & Tracking
+  versionNumber?: number;
+  versionLabel?: string;
+  isCurrentVersion?: boolean;
+  parentFileId?: string;
+  rejectionCount?: number;
 }
 
 // Use Project type from types index

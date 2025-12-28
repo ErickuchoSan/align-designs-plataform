@@ -13,11 +13,21 @@ export class ProjectsService {
    * Fetch all projects with pagination
    */
   static async getAll(
-    page: number = 1,
-    limit: number = 10
+    filtersOrPage: { page?: number; limit?: number; clientId?: string } | number = 1,
+    limitParam: number = 10
   ): Promise<PaginatedProjects> {
+    let params: any = {};
+
+    if (typeof filtersOrPage === 'number') {
+      params = { page: filtersOrPage, limit: limitParam };
+    } else {
+      params = { ...filtersOrPage };
+      if (!params.limit) params.limit = 10;
+      if (!params.page) params.page = 1;
+    }
+
     const response = await api.get<PaginatedProjects>(this.BASE_URL, {
-      params: { page, limit },
+      params,
     });
     return response.data;
   }
@@ -27,6 +37,28 @@ export class ProjectsService {
    */
   static async getById(id: string): Promise<Project> {
     const response = await api.get<Project>(`${this.BASE_URL}/${id}`);
+    return response.data;
+  }
+
+  /**
+   * Fetch a single project by ID
+   */
+  static async uploadFileVersion(parentFileId: string, file: File, notes?: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (notes) {
+      formData.append('comment', notes); // Reusing comment field in DTO
+    }
+    const response = await api.post(`/files/${parentFileId}/version`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  static async getFileUrl(fileId: string): Promise<{ url: string }> {
+    const response = await api.get<{ url: string }>(`${this.BASE_URL}/${fileId}/download`);
     return response.data;
   }
 
@@ -175,6 +207,27 @@ export class ProjectsService {
     canActivate: boolean;
   }> {
     const response = await api.get(`${this.BASE_URL}/${projectId}/status`);
+    return response.data;
+  }
+
+  /**
+   * Get project completion status checklist
+   */
+  static async getCompletionStatus(projectId: string): Promise<{
+    isReady: boolean;
+    checklist: {
+      allClientPaymentsReceived: boolean;
+      allEmployeesPaid: boolean;
+      noOpenFeedback: boolean;
+      finalFilesDelivered: boolean;
+    };
+    counts: {
+      pendingInvoices: number;
+      pendingEmployeePayments: number;
+      openFeedback: number;
+    }
+  }> {
+    const response = await api.get(`${this.BASE_URL}/${projectId}/completion-status`);
     return response.data;
   }
 }

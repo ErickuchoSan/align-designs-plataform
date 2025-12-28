@@ -67,6 +67,7 @@ export class UsersService {
    */
   async findAll(
     paginationDto: PaginationDto,
+    role?: Role,
   ): Promise<PaginatedResult<UserResponse>> {
     const { page, limit, skip } =
       PaginationHelper.extractPaginationParams(paginationDto);
@@ -80,7 +81,7 @@ export class UsersService {
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
-        where: getActiveRecordsWhere(),
+        where: getActiveRecordsWhereWith(role ? { role } : {}),
         select: USER_FULL_SELECT,
         orderBy: {
           createdAt: 'desc',
@@ -89,7 +90,7 @@ export class UsersService {
         take: limit,
       }),
       this.prisma.user.count({
-        where: getActiveRecordsWhere(),
+        where: getActiveRecordsWhereWith(role ? { role } : {}),
       }),
     ]);
 

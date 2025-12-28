@@ -10,6 +10,8 @@ interface FileListProps {
   onEdit: (file: FileData) => void;
   onDelete: (file: FileData) => void;
   canDelete: (file: FileData) => boolean;
+  onViewHistory: (file: FileData) => void;
+  onUploadVersion: (file: FileData) => void;
 }
 
 function FileList({
@@ -18,6 +20,8 @@ function FileList({
   onEdit,
   onDelete,
   canDelete,
+  onViewHistory,
+  onUploadVersion,
 }: FileListProps) {
   if (files.length === 0) {
     return (
@@ -97,6 +101,11 @@ function FileList({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
                   {file.sizeBytes ? formatFileSize(file.sizeBytes) : '-'}
+                  {file.rejectionCount && file.rejectionCount > 0 && (
+                    <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800" title={`${file.rejectionCount} rejections`}>
+                      {file.rejectionCount} Rejected
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 max-w-xs">
                   {file.comment ? (
@@ -127,6 +136,32 @@ function FileList({
                         </svg>
                       </button>
                     )}
+
+                    {/* Version History Button */}
+                    <button
+                      onClick={() => onViewHistory(file)}
+                      className="p-2 text-stone-500 hover:bg-stone-50 rounded-lg transition-colors"
+                      title="View Versions"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+
+                    {/* Upload New Version Button (Only if canDelete/Edit permissions roughly apply, or logic?) */}
+                    {/* Let's assume if they can edit/delete, they can version. Or anyone can version? */}
+                    {canDelete(file) && (
+                      <button
+                        onClick={() => onUploadVersion(file)}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Upload New Version"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </button>
+                    )}
+
                     {canDelete(file) && (
                       <>
                         <button

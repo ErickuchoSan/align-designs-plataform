@@ -5,7 +5,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ProjectStatus } from '@prisma/client';
+import { ProjectStatus, NotificationType } from '@prisma/client';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 /**
  * Service for managing employee assignments to projects
@@ -19,7 +20,10 @@ import { ProjectStatus } from '@prisma/client';
 export class ProjectEmployeeService {
   private readonly logger = new Logger(ProjectEmployeeService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
   /**
    * Assign employees to a project
@@ -55,6 +59,17 @@ export class ProjectEmployeeService {
         }),
       ),
     );
+
+    // Notify employees
+    for (const employeeId of employeeIds) {
+      await this.notificationsService.create({
+        userId: employeeId,
+        type: NotificationType.INFO,
+        title: 'New Project Assignment',
+        message: `You have been assigned to project: ${project.name}`,
+        link: `/dashboard/projects/${projectId}`,
+      });
+    }
 
     this.logger.log(
       `Assigned ${employeeIds.length} employee(s) to project ${project.name}`,

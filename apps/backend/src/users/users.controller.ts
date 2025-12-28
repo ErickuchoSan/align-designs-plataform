@@ -103,8 +103,8 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.usersService.findAll(paginationDto);
+  findAll(@Query() paginationDto: PaginationDto, @Query('role') role?: Role) {
+    return this.usersService.findAll(paginationDto, role);
   }
 
   @Get('profile')

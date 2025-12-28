@@ -12,21 +12,25 @@ import { FilePermissionsService } from './services/file-permissions.service';
 import { FileStorageCoordinatorService } from './services/file-storage-coordinator.service';
 import { FileTransformerService } from './services/file-transformer.service';
 import { FileStageService } from './services/file-stage.service';
+import { FileVersionService } from './file-version.service';
+
+import { TrackingModule } from '../tracking/tracking.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuditModule, AuthModule, CacheModule],
+  imports: [PrismaModule, StorageModule, AuditModule, AuthModule, CacheModule, TrackingModule],
   providers: [
     FilesService,
     FilePermissionsService,
     FileStorageCoordinatorService,
     FileTransformerService,
     FileStageService,
+    FileVersionService,
     {
       provide: INJECTION_TOKENS.FILE_REPOSITORY,
       useClass: PrismaFileRepository,
     },
   ],
   controllers: [FilesController],
-  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService],
+  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService, FileVersionService],
 })
-export class FilesModule {}
+export class FilesModule { }
