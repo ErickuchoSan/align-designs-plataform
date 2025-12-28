@@ -11,25 +11,25 @@ export class NotificationsController {
 
     @Get()
     @ApiOperation({ summary: 'Get my notifications' })
-    findAll(@Request() req) {
+    findAll(@Request() req: any) {
         return this.notificationsService.findAllByUser(req.user.id);
     }
 
     @Get('unread-count')
     @ApiOperation({ summary: 'Get unread count' })
-    getUnreadCount(@Request() req) {
+    getUnreadCount(@Request() req: any) {
         return this.notificationsService.getUnreadCount(req.user.id);
     }
 
     @Put(':id/read')
     @ApiOperation({ summary: 'Mark notification as read' })
-    markAsRead(@Request() req, @Param('id') id: string) {
+    markAsRead(@Request() req: any, @Param('id') id: string) {
         return this.notificationsService.markAsRead(id, req.user.id);
     }
 
     @Put('read-all')
     @ApiOperation({ summary: 'Mark all as read' })
-    markAllAsRead(@Request() req) {
+    markAllAsRead(@Request() req: any) {
         return this.notificationsService.markAllAsRead(req.user.id);
     }
 }

@@ -53,6 +53,7 @@ export class NotificationsService {
         } catch (error) {
             this.logger.error('Error creating notification', error);
             // Don't throw, just log
+            return null;
         }
     }
 
