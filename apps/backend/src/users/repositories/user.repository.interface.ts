@@ -44,4 +44,14 @@ export interface IUserRepository
    * Toggle user active status
    */
   toggleStatus(userId: string): Promise<User>;
+
+  /**
+   * Soft delete user
+   */
+  softDelete(id: string): Promise<User>;
+
+  /**
+   * Hard delete user (permanent)
+   */
+  hardDelete(id: string): Promise<User>;
 }

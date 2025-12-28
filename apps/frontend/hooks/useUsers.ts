@@ -110,6 +110,41 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     setUserToToggle(null);
   }, []);
 
+  // Delete user state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const openDeleteConfirm = useCallback((user: User) => {
+    setUserToDelete(user);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const closeDeleteConfirm = useCallback(() => {
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
+  }, []);
+
+  const handleDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
+
+    setDeletingUserId(userToDelete.id);
+    try {
+      // Pass hard=true to permanent delete
+      await api.delete(`/users/${userToDelete.id}`, {
+        params: { hard: true },
+      });
+      setSuccess('User permanently deleted');
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (err) {
+      setError(getErrorMessage(err, 'Error deleting user'));
+    } finally {
+      setDeletingUserId(null);
+    }
+  }, [userToDelete, fetchUsers]);
+
   return {
     // State
     users,
@@ -132,5 +167,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     openToggleConfirm,
     handleToggleStatus,
     closeToggleConfirm,
+    // Delete
+    showDeleteConfirm,
+    userToDelete,
+    deletingUserId,
+    openDeleteConfirm,
+    closeDeleteConfirm,
+    handleDeleteUser,
   };
 }

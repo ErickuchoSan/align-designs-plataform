@@ -137,7 +137,7 @@ JWT_ISSUER=align-designs-api
 
 ### Administrador
 - **Email**: alf.guzman@outlook.com
-- **Password**: NoloseAlfonso12345
+- **Password**: NoloseAlfonso136!
 - **Rol**: ADMIN
 
 ### Cliente

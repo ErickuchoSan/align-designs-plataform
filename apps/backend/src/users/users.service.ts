@@ -37,7 +37,7 @@ export class UsersService {
     private readonly userRepo: IUserRepository,
     private readonly prisma: PrismaService,
     private readonly cacheManager: CacheManagerService,
-  ) {}
+  ) { }
 
   /**
    * Create a new client (Admin only)
@@ -72,10 +72,11 @@ export class UsersService {
       PaginationHelper.extractPaginationParams(paginationDto);
 
     // Try cache first
-    const cacheKey = CACHE_KEYS.USERS.LIST(page, limit);
-    const cached =
-      await this.cacheManager.get<PaginatedResult<UserResponse>>(cacheKey);
-    if (cached) return cached;
+    // DISABLE CACHE TEMPORARILY: Cache invalidation logic is missing for lists
+    // const cacheKey = CACHE_KEYS.USERS.LIST(page, limit);
+    // const cached =
+    //   await this.cacheManager.get<PaginatedResult<UserResponse>>(cacheKey);
+    // if (cached) return cached;
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -97,7 +98,7 @@ export class UsersService {
       total,
       paginationDto,
     );
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    // await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
     return result;
   }
 
@@ -215,9 +216,9 @@ export class UsersService {
   /**
    * Soft delete a user (Admin only)
    */
-  async remove(id: string, deletedBy?: string) {
+  async remove(id: string, deletedBy?: string, hardDelete = false) {
     const user = await this.prisma.user.findFirst({
-      where: getActiveRecordsWhereWith({ id }),
+      where: hardDelete ? { id } : getActiveRecordsWhereWith({ id }),
     });
 
     if (!user) {
@@ -229,19 +230,18 @@ export class UsersService {
       throw new ForbiddenException('Cannot delete an administrator user');
     }
 
-    // Soft delete: Set deletedAt and deletedBy instead of deleting
-    await this.prisma.user.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedBy: deletedBy || null,
-      },
-    });
+    if (hardDelete) {
+      // Hard delete: Permanently remove record
+      await this.userRepo.hardDelete(id);
+      this.logger.log(`User ${id} HARD deleted by ${deletedBy || 'system'}`);
+    } else {
+      // Soft delete: Set deletedAt and deletedBy instead of deleting
+      await this.userRepo.softDelete(id);
+      this.logger.log(`User ${id} soft deleted by ${deletedBy || 'system'}`);
+    }
 
     // Invalidate caches
     await this.cacheManager.invalidateUserCaches(id);
-
-    this.logger.log(`User ${id} soft deleted by ${deletedBy || 'system'}`);
 
     return { message: 'User deleted successfully' };
   }

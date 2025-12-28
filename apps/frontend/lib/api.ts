@@ -36,8 +36,13 @@ async function fetchCsrfToken(): Promise<void> {
       timeout: LOADING_DELAY.TIMEOUT,
     });
     csrfToken = response.headers['x-csrf-token'];
+    if (csrfToken) {
+      logger.debug('✅ CSRF token fetched:', csrfToken.substring(0, 20) + '...');
+    } else {
+      logger.warn('⚠️ CSRF token header not found in response');
+    }
   } catch (error) {
-    logger.error('Failed to fetch CSRF token:', error);
+    logger.error('❌ Failed to fetch CSRF token:', error);
   }
 }
 
@@ -88,10 +93,14 @@ api.interceptors.request.use(
       if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
         // If CSRF token is not available, fetch it
         if (!csrfToken) {
+          logger.debug('⚠️ No CSRF token available, fetching...');
           await fetchCsrfToken();
         }
         if (csrfToken) {
           config.headers['X-CSRF-Token'] = csrfToken;
+          logger.debug(`📤 Sending ${method} request with CSRF token to ${config.url}`);
+        } else {
+          logger.warn(`⚠️ ${method} request to ${config.url} - no CSRF token available!`);
         }
       }
     }
@@ -107,7 +116,8 @@ api.interceptors.response.use(
   (response) => {
     // Update CSRF token if present in response headers
     const newCsrfToken = response.headers['x-csrf-token'];
-    if (newCsrfToken) {
+    if (newCsrfToken && newCsrfToken !== csrfToken) {
+      logger.debug('🔄 CSRF token updated from response:', newCsrfToken.substring(0, 20) + '...');
       csrfToken = newCsrfToken;
     }
     return response;

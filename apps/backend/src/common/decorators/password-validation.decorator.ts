@@ -56,6 +56,37 @@ export function ValidatePassword(options?: { fieldName?: string }) {
 }
 
 /**
+ * Simple validator for current password fields
+ *
+ * Used for currentPassword fields that only need to verify the password
+ * is provided (no complexity validation, as it's already set).
+ *
+ * @param options - Optional configuration
+ * @param options.fieldName - Custom field name for error messages (default: 'Current password')
+ *
+ * @example
+ * ```typescript
+ * export class ChangePasswordDto {
+ *   @ValidateCurrentPassword()
+ *   currentPassword: string;
+ *
+ *   @ValidatePassword()
+ *   newPassword: string;
+ * }
+ * ```
+ */
+export function ValidateCurrentPassword(options?: { fieldName?: string }) {
+  const fieldName = options?.fieldName || 'Current password';
+
+  return applyDecorators(
+    IsString({ message: `${fieldName} must be a string` }),
+    MinLength(1, {
+      message: `${fieldName} is required`,
+    }),
+  );
+}
+
+/**
  * Simplified validator for password confirmation fields
  *
  * Used for confirmPassword fields that only need basic validation

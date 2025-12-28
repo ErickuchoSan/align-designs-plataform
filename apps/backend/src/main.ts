@@ -59,10 +59,10 @@ async function bootstrap() {
       // HSTS - Force HTTPS in production
       strictTransportSecurity: isProduction
         ? {
-            maxAge: 31536000, // 1 year in seconds
-            includeSubDomains: true,
-            preload: true,
-          }
+          maxAge: 31536000, // 1 year in seconds
+          includeSubDomains: true,
+          preload: true,
+        }
         : false, // Disable in development (http://localhost)
       // Referrer Policy - Control referrer information leakage
       referrerPolicy: {

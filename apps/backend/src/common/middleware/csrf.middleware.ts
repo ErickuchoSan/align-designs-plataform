@@ -33,6 +33,12 @@ export class CsrfMiddleware implements NestMiddleware {
   ];
 
   use(req: Request, res: Response, next: NextFunction) {
+    // Special case: /auth/csrf-token should generate token but not validate
+    if (req.originalUrl.includes('/auth/csrf-token')) {
+      this.generateAndSetToken(req, res);
+      return next();
+    }
+
     // Skip CSRF validation for public endpoints
     // Use exact match or proper prefix check to prevent bypass
     // Use originalUrl to ensure we check the full path including global prefix
@@ -101,11 +107,11 @@ export class CsrfMiddleware implements NestMiddleware {
     const secret = crypto.randomBytes(32).toString('hex');
     const token = this.generateToken(secret);
 
-    // Get sameSite setting from config (default: 'strict')
-    const sameSite = this.configService.get<string>('CSRF_SAME_SITE', 'strict');
+    // Get sameSite setting from config (default: 'lax' for better compatibility)
+    const sameSite = this.configService.get<string>('CSRF_SAME_SITE', 'lax');
     const validSameSite = ['strict', 'lax', 'none'].includes(sameSite)
       ? (sameSite as 'strict' | 'lax' | 'none')
-      : 'strict';
+      : 'lax';
 
     res.cookie(this.csrfTokenCookie, secret, {
       httpOnly: true,

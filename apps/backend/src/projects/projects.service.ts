@@ -62,7 +62,7 @@ export class ProjectsService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly cacheManager: CacheManagerService,
-  ) {}
+  ) { }
 
   /**
    * Create a new project
@@ -127,12 +127,13 @@ export class ProjectsService {
     );
 
     // Try to get from cache first
-    const cached =
-      await this.cacheManager.get<PaginatedResult<ProjectResponse>>(cacheKey);
-    if (cached) {
-      this.logger.debug(`Cache hit for projects list: ${cacheKey}`);
-      return cached;
-    }
+    // DISABLE CACHE TEMPORARILY: Cache invalidation logic is missing for lists
+    // const cached =
+    //   await this.cacheManager.get<PaginatedResult<ProjectResponse>>(cacheKey);
+    // if (cached) {
+    //   this.logger.debug(`Cache hit for projects list: ${cacheKey}`);
+    //   return cached;
+    // }
 
     const where = {
       deletedAt: null, // Only include non-deleted projects
@@ -188,8 +189,8 @@ export class ProjectsService {
     );
 
     // Cache the result for 5 minutes
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
-    this.logger.debug(`Cached projects list: ${cacheKey}`);
+    // await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    this.logger.debug(`Fetched projects list (Cache Disabled)`);
 
     return result;
   }
@@ -199,17 +200,18 @@ export class ProjectsService {
    */
   async findOne(id: string, userId: string, userRole: Role) {
     // Try cache first
-    const cacheKey = CACHE_KEYS.PROJECTS.DETAIL(id);
-    const cached = await this.cacheManager.get(cacheKey);
-    if (cached) {
-      const permissionContext = new PermissionContext(userRole);
-      permissionContext.verifyProjectAccess(
-        userId,
-        (cached as any).clientId,
-        'You do not have permission to view this project',
-      );
-      return cached;
-    }
+    // DISABLE CACHE TEMPORARILY: Cache invalidation logic is missing for lists
+    // const cacheKey = CACHE_KEYS.PROJECTS.DETAIL(id);
+    // const cached = await this.cacheManager.get(cacheKey);
+    // if (cached) {
+    //   const permissionContext = new PermissionContext(userRole);
+    //   permissionContext.verifyProjectAccess(
+    //     userId,
+    //     (cached as any).clientId,
+    //     'You do not have permission to view this project',
+    //     );
+    //   return cached;
+    // }
 
     const project = await this.prisma.project.findFirst({
       where: {
@@ -263,7 +265,7 @@ export class ProjectsService {
     };
 
     // Cache for 5 minutes
-    await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
+    // await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
     return result;
   }
 

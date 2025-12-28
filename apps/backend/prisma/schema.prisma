@@ -18,6 +18,25 @@ datasource db {
 enum Role {
   ADMIN
   CLIENT
+  EMPLOYEE // Phase 1: Added employee role
+}
+
+enum ProjectStatus {
+  WAITING_PAYMENT // Esperando pago inicial
+  ACTIVE          // Proyecto activo
+  COMPLETED       // Completado
+  ARCHIVED        // Archivado
+}
+
+enum Stage {
+  BRIEF_PROJECT      // Brief del Proyecto
+  FEEDBACK_CLIENT    // Feedback (Espacio del Cliente)
+  FEEDBACK_EMPLOYEE  // Feedback (Espacio del Empleado)
+  REFERENCES         // Referencias
+  SUBMITTED          // Entregado
+  ADMIN_APPROVED     // Aprobado por Admin
+  CLIENT_APPROVED    // Aprobado por Cliente
+  PAYMENTS           // Pagos
 }
 
 // Models
@@ -40,10 +59,13 @@ model User {
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  projectsAsClient  Project[]  @relation("ClientProjects")
-  projectsCreated   Project[]  @relation("CreatedProjects")
-  filesUploaded     File[]     @relation("UploadedFiles")
-  otpTokens         OtpToken[]
+  projectsAsClient      Project[]           @relation("ClientProjects")
+  projectsCreated       Project[]           @relation("CreatedProjects")
+  filesUploaded         File[]              @relation("UploadedFiles")
+  otpTokens             OtpToken[]
+  assignedProjects      ProjectEmployee[]   @relation("AssignedEmployees")  // Phase 1: Employee assignments
+  feedbackCycles        FeedbackCycle[]     @relation("EmployeeCycles")      // Phase 1: Feedback cycles
+  createdFeedback       Feedback[]          @relation("CreatedFeedback")     // Phase 1: Created feedback
 
   @@index([email])
   @@index([role])
@@ -56,55 +78,80 @@ model User {
 }
 
 model Project {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String    @db.VarChar(255)
-  description String?   @db.Text
-  clientId    String    @map("client_id") @db.Uuid
-  createdBy   String    @map("created_by") @db.Uuid
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
-  deletedBy   String?   @map("deleted_by") @db.Uuid
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String           @db.VarChar(255)
+  description           String?          @db.Text
+  clientId              String           @map("client_id") @db.Uuid
+  createdBy             String           @map("created_by") @db.Uuid
+  deletedAt             DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  deletedBy             String?          @map("deleted_by") @db.Uuid
+  createdAt             DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Phase 1: Workflow fields
+  status                ProjectStatus    @default(WAITING_PAYMENT)
+  initialAmountRequired Decimal?         @map("initial_amount_required") @db.Decimal(10, 2)
+  amountPaid            Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  startDate             DateTime?        @map("start_date") @db.Date
+  deadlineDate          DateTime?        @map("deadline_date") @db.Date
+  archivedAt            DateTime?        @map("archived_at") @db.Timestamptz(6)
 
   // Relations
-  client  User   @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
-  creator User   @relation("CreatedProjects", fields: [createdBy], references: [id], onDelete: Restrict)
-  files   File[]
+  client         User              @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
+  creator        User              @relation("CreatedProjects", fields: [createdBy], references: [id], onDelete: Restrict)
+  files          File[]
+  employees      ProjectEmployee[] // Phase 1: Employee assignments
+  feedbackCycles FeedbackCycle[]   // Phase 1: Feedback cycles
+  feedback       Feedback[]        // Phase 1: Feedback entries
 
   @@index([clientId])
   @@index([createdBy])
   @@index([deletedAt])
-  @@index([clientId, deletedAt]) // Compound index for efficient client project queries
-  @@index([createdBy, deletedAt]) // Compound index for efficient creator project queries
-  @@index([createdAt]) // Index for sorting by creation date
+  @@index([status])                        // Phase 1: Index for filtering by status
+  @@index([clientId, deletedAt])           // Compound index for efficient client project queries
+  @@index([createdBy, deletedAt])          // Compound index for efficient creator project queries
+  @@index([createdAt])                     // Index for sorting by creation date
+  @@index([status, deletedAt])             // Phase 1: Compound index for active projects
   @@map("projects")
 }
 
 model File {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  projectId    String    @map("project_id") @db.Uuid
-  uploadedBy   String    @map("uploaded_by") @db.Uuid
-  filename     String?   @db.VarChar(255)
-  originalName String?   @map("original_name") @db.VarChar(255)
-  mimeType     String?   @map("mime_type") @db.VarChar(100)
-  sizeBytes    BigInt?   @map("size_bytes")
-  storagePath  String?   @map("storage_path") @db.Text
-  comment      String?   @db.Text
-  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
-  deletedBy    String?   @map("deleted_by") @db.Uuid
-  uploadedAt   DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId         String         @map("project_id") @db.Uuid
+  uploadedBy        String         @map("uploaded_by") @db.Uuid
+  filename          String?        @db.VarChar(255)
+  originalName      String?        @map("original_name") @db.VarChar(255)
+  mimeType          String?        @map("mime_type") @db.VarChar(100)
+  sizeBytes         BigInt?        @map("size_bytes")
+  storagePath       String?        @map("storage_path") @db.Text
+  comment           String?        @db.Text
+  deletedAt         DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  deletedBy         String?        @map("deleted_by") @db.Uuid
+  uploadedAt        DateTime       @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Phase 1: Workflow fields
+  stage             Stage?                           // Etapa del archivo
+  feedbackCycleId   String?        @map("feedback_cycle_id") @db.Uuid
+  approvedAdminAt   DateTime?      @map("approved_admin_at") @db.Timestamptz(6)
+  approvedClientAt  DateTime?      @map("approved_client_at") @db.Timestamptz(6)
+  pendingPayment    Boolean        @default(false) @map("pending_payment")
 
   // Relations
-  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  uploader User    @relation("UploadedFiles", fields: [uploadedBy], references: [id], onDelete: Restrict)
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploader      User           @relation("UploadedFiles", fields: [uploadedBy], references: [id], onDelete: Restrict)
+  feedbackCycle FeedbackCycle? @relation(fields: [feedbackCycleId], references: [id])
 
   @@index([projectId])
   @@index([uploadedBy])
   @@index([deletedAt])
-  @@index([projectId, deletedAt]) // Compound index for efficient project file queries
-  @@index([uploadedBy, deletedAt]) // Compound index for efficient uploader file queries
-  @@index([uploadedAt]) // Index for sorting by upload date
+  @@index([stage])                       // Phase 1: Index for filtering by stage
+  @@index([feedbackCycleId])             // Phase 1: Index for feedback cycle queries
+  @@index([pendingPayment])              // Phase 1: Index for pending payment queries
+  @@index([projectId, deletedAt])        // Compound index for efficient project file queries
+  @@index([uploadedBy, deletedAt])       // Compound index for efficient uploader file queries
+  @@index([uploadedAt])                  // Index for sorting by upload date
+  @@index([projectId, stage, deletedAt]) // Phase 1: Compound index for stage filtering
   @@map("files")
 }
 
@@ -156,4 +203,69 @@ model PasswordHistory {
   @@index([userId])
   @@index([userId, createdAt]) // Compound index for efficient history queries
   @@map("password_history")
+}
+
+// ============================================================================
+// PHASE 1: WORKFLOW SYSTEM MODELS
+// ============================================================================
+
+// Tabla intermedia para empleados asignados a proyectos
+model ProjectEmployee {
+  projectId  String   @map("project_id") @db.Uuid
+  employeeId String   @map("employee_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee User    @relation("AssignedEmployees", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, employeeId])
+  @@index([employeeId])
+  @@index([projectId])
+  @@map("project_employees")
+}
+
+// Ciclos de feedback para rastrear tiempo de trabajo
+model FeedbackCycle {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId  String    @map("project_id") @db.Uuid
+  employeeId String    @map("employee_id") @db.Uuid
+  startDate  DateTime  @map("start_date") @db.Timestamptz(6)
+  endDate    DateTime? @map("end_date") @db.Timestamptz(6)
+  status     String    @default("open") @db.VarChar(20) // open, submitted, approved, rejected
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project  Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee User       @relation("EmployeeCycles", fields: [employeeId], references: [id], onDelete: Restrict)
+  files    File[]
+  feedback Feedback[]
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([projectId, employeeId, status]) // Compound index for finding active cycles
+  @@map("feedback_cycles")
+}
+
+// Feedback creado por admin o cliente
+model Feedback {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  feedbackCycleId String   @map("feedback_cycle_id") @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  createdBy       String   @map("created_by") @db.Uuid
+  targetAudience  String   @map("target_audience") @db.VarChar(20) // client_space, employee_space
+  fileDocumentId  String?  @map("file_document_id") @db.Uuid // El contenido del feedback (opcional)
+  content         String?  @db.Text // Texto del feedback (alternativa a archivo)
+  sequenceInCycle Int      @map("sequence_in_cycle") // 1er, 2do, 3er feedback
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cycle   FeedbackCycle @relation(fields: [feedbackCycleId], references: [id], onDelete: Cascade)
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator User          @relation("CreatedFeedback", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([feedbackCycleId])
+  @@index([projectId])
+  @@index([targetAudience])
+  @@index([createdBy])
+  @@index([projectId, targetAudience]) // Compound index for filtering feedback
+  @@map("feedback")
 }

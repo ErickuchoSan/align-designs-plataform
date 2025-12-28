@@ -54,7 +54,7 @@ export class FilesController {
   constructor(
     private readonly filesService: FilesService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   /**
    * Upload file with optional comment
@@ -210,6 +210,17 @@ export class FilesController {
     });
   }
 
+  @Get('project/:projectId/types')
+  @ApiOperation({
+    summary: 'Get available file types',
+    description: 'Get list of unique file extensions in the project',
+  })
+  @ApiParam({ name: 'projectId', description: 'Project UUID' })
+  @ApiResponse({ status: 200, description: 'Types retrieved successfully' })
+  async getProjectFileTypes(@Param('projectId') projectId: string) {
+    return this.filesService.getProjectFileTypes(projectId);
+  }
+
   @Get(':id/download')
   @ApiOperation({
     summary: 'Get file download URL',
@@ -246,6 +257,93 @@ export class FilesController {
         userAgent,
       },
       'file download',
+    );
+
+    return result;
+  }
+
+  @Get('admin/verify-integrity')
+  @ApiOperation({
+    summary: 'Verify file storage integrity (Admin only)',
+    description: 'Check for orphaned database records (files that exist in DB but not in MinIO)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Integrity check completed',
+    schema: {
+      properties: {
+        totalFiles: { type: 'number' },
+        orphanedFiles: { type: 'number' },
+        orphans: {
+          type: 'array',
+          items: {
+            properties: {
+              id: { type: 'string' },
+              filename: { type: 'string' },
+              storagePath: { type: 'string' },
+              projectId: { type: 'string' },
+              uploadedAt: { type: 'string' },
+            }
+          }
+        }
+      }
+    }
+  })
+  async verifyIntegrity(@CurrentUser() user: UserPayload) {
+    return this.filesService.verifyStorageIntegrity(user.userId, user.role);
+  }
+
+  @Delete('admin/cleanup-orphans')
+  @ApiOperation({
+    summary: 'Clean up orphaned file records (Admin only)',
+    description: 'Soft delete database records for files that no longer exist in MinIO storage',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cleanup completed',
+    schema: {
+      properties: {
+        totalChecked: { type: 'number' },
+        orphansFound: { type: 'number' },
+        orphansDeleted: { type: 'number' },
+        failures: { type: 'number' },
+        deletedFiles: {
+          type: 'array',
+          items: {
+            properties: {
+              id: { type: 'string' },
+              filename: { type: 'string' },
+              storagePath: { type: 'string' },
+            }
+          }
+        }
+      }
+    }
+  })
+  @HttpCode(HttpStatus.OK)
+  async cleanupOrphans(
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.filesService.cleanupOrphanedFiles(user.userId, user.role);
+
+    // Audit log for cleanup operation
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.FILE_DELETE,
+        resourceType: 'file',
+        resourceId: 'bulk-orphan-cleanup',
+        ipAddress,
+        userAgent,
+        details: {
+          orphansDeleted: result.orphansDeleted,
+          failures: result.failures,
+        },
+      },
+      'orphan cleanup',
     );
 
     return result;

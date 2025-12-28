@@ -1,10 +1,11 @@
 import {
+  ValidateCurrentPassword,
   ValidatePassword,
   ValidatePasswordConfirmation,
 } from '../../common/decorators/password-validation.decorator';
 
 export class ChangePasswordDto {
-  @ValidatePassword({ fieldName: 'Current password' })
+  @ValidateCurrentPassword({ fieldName: 'Current password' })
   currentPassword: string;
 
   @ValidatePassword({ fieldName: 'New password' })

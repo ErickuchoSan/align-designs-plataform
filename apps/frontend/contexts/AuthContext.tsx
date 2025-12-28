@@ -13,6 +13,7 @@ interface AuthContextType {
   requestOTP: (data: OTPRequest) => Promise<void>;
   verifyOTP: (data: OTPVerify) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -106,6 +107,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (!user) {
+      logger.warn('Attempted to update user when no user is logged in');
+      return;
+    }
+
+    const updatedUser = { ...user, ...userData };
+    AuthStorage.saveAuthData('', updatedUser);
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -115,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requestOTP,
         verifyOTP,
         logout,
+        updateUser,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'ADMIN',
       }}

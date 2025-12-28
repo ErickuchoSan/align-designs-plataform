@@ -44,11 +44,19 @@ export class AuthController {
    * Centralizes cookie configuration to follow DRY principle
    */
   private setAuthCookie(res: Response, token: string): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.cookie('access_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: false,
+      // Use 'lax' in development - same-site requests through Nginx proxy
+      // Use 'strict' in production for maximum security
+      sameSite: isProduction ? 'strict' : 'lax',
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
+      // REMOVED: domain: 'aligndesigns-platform.local'
+      // Letting the browser treat it as a Host-Only cookie is safer for local dev
+      // and avoids issues with public suffix lists or specific browser behaviors
+      path: '/',
     });
   }
 
@@ -350,10 +358,13 @@ export class AuthController {
     );
 
     // Clear the access_token cookie
+    const isProduction = process.env.NODE_ENV === 'production';
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: false,
+      sameSite: isProduction ? 'strict' : 'lax',
+      // REMOVED: domain: isProduction ? undefined : 'aligndesigns-platform.local',
+      path: '/',
     });
 
     return { message: 'Logged out successfully' };

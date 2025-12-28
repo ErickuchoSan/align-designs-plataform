@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://aligndesigns-platform.local/api/v1',
+  },
   async headers() {
     return [
       {
@@ -15,7 +18,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
-              "connect-src 'self' http://localhost:4000 http://YOUR_SERVER_IP:4000", // API endpoints
+              "connect-src 'self' http://localhost:4000 http://aligndesigns-platform.local", // API endpoints
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

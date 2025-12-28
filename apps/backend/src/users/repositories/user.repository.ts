@@ -12,7 +12,7 @@ import { FindAllOptions } from '../../common/repositories/base.repository';
  */
 @Injectable()
 export class UserRepository implements IUserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findFirst({
@@ -104,6 +104,12 @@ export class UserRepository implements IUserRepository {
     return this.prisma.user.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+  }
+
+  async hardDelete(id: string): Promise<User> {
+    return this.prisma.user.delete({
+      where: { id },
     });
   }
 

@@ -45,7 +45,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({
@@ -206,11 +206,14 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async remove(
     @Param('id') id: string,
+    @Query('hard') hard: boolean,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.usersService.remove(id, user.userId);
+    // Convert string 'true' to boolean if necessary (NestJS ParseBoolPipe is better but this works for now)
+    const isHardDelete = hard === true || String(hard) === 'true';
+    const result = await this.usersService.remove(id, user.userId, isHardDelete);
 
     // Audit log for user deletion (non-blocking)
     await safeAuditLog(

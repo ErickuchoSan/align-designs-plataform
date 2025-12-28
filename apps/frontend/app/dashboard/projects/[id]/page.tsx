@@ -51,11 +51,11 @@ export default function ProjectDetailsPage() {
   const {
     project,
     files,
-    filteredFiles,
+    // filteredFiles, // Deprecated: we use files directly now as they are server-filtered
     loading: filesLoading,
     error,
     success,
-    setFilteredFiles,
+    // setFilteredFiles,
     setError,
     setSuccess,
     fetchProjectDetails,
@@ -66,11 +66,18 @@ export default function ProjectDetailsPage() {
     setItemsPerPage,
     totalItems,
     totalPages,
+    // Filters (Server-Side)
+    nameFilter,
+    setNameFilter,
+    typeFilter,
+    setTypeFilter,
+    availableTypes,
+    refreshTypes,
   } = useProjectFiles(projectId);
 
-  // UI state (modals and filters)
+  // UI state (modals)
   const modals = useFileModals();
-  const filters = useFileFilters(files);
+  // const filters = useFileFilters(files); // Removed client-side filters
 
   // File operations handlers
   const {
@@ -82,7 +89,10 @@ export default function ProjectDetailsPage() {
     handleEditEntry,
     handleDownload,
     handleDelete,
-  } = useFileOperations(projectId, setSuccess, setError, fetchFiles);
+  } = useFileOperations(projectId, setSuccess, setError, async () => {
+    await fetchFiles();
+    await refreshTypes();
+  });
 
   /**
    * Effect 2: Fetch data when authenticated
@@ -96,36 +106,10 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
-  // Local pagination for client-side filtered results (future: move to server)
-  const [localCurrentPage, setLocalCurrentPage] = useState(1);
-  const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
-
-  // Check if client-side filters are active
-  const hasActiveFilters = useMemo(
-    () => filters.nameFilter || filters.typeFilter !== 'all',
-    [filters.nameFilter, filters.typeFilter]
-  );
-
-  /**
-   * Effect 3: Apply client-side filters
-   * Note: This is temporary. Filters should move to backend for better performance.
-   * See HIGH #3 implementation in backend for server-side filtering.
-   */
+  // Handle page resets when filters change
   useEffect(() => {
-    if (!Array.isArray(files)) {
-      setFilteredFiles([]);
-      return;
-    }
-    setFilteredFiles(filters.applyFilters(files));
-  }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters, setFilteredFiles]);
-
-  /**
-   * Effect 4: Reset pagination when filters change
-   * Ensures user starts at page 1 when applying new filters
-   */
-  useEffect(() => {
-    setLocalCurrentPage(1);
-  }, [filters.nameFilter, filters.typeFilter]);
+    setCurrentPage(1);
+  }, [nameFilter, typeFilter, setCurrentPage]);
 
   // File operation handlers
   const handleUpload = useCallback(
@@ -173,55 +157,6 @@ export default function ProjectDetailsPage() {
     [isAdmin, user]
   );
 
-  // Calculate pagination values based on whether filters are active - memoized
-  const paginationValues = useMemo(
-    () => ({
-      currentPage: hasActiveFilters ? localCurrentPage : currentPage,
-      itemsPerPage: hasActiveFilters ? localItemsPerPage : itemsPerPage,
-      totalItems: hasActiveFilters ? filteredFiles.length : totalItems,
-      totalPages: hasActiveFilters
-        ? Math.ceil(filteredFiles.length / localItemsPerPage)
-        : totalPages,
-    }),
-    [
-      hasActiveFilters,
-      localCurrentPage,
-      currentPage,
-      localItemsPerPage,
-      itemsPerPage,
-      filteredFiles.length,
-      totalItems,
-      totalPages,
-    ]
-  );
-
-  // Apply local pagination to filtered files if filters are active - memoized
-  const displayedFiles = useMemo(() => {
-    if (!hasActiveFilters) return filteredFiles;
-
-    return filteredFiles.slice(
-      (localCurrentPage - 1) * localItemsPerPage,
-      localCurrentPage * localItemsPerPage
-    );
-  }, [hasActiveFilters, filteredFiles, localCurrentPage, localItemsPerPage]);
-
-  const handlePageChange = (page: number) => {
-    if (hasActiveFilters) {
-      setLocalCurrentPage(page);
-    } else {
-      setCurrentPage(page);
-    }
-  };
-
-  const handleItemsPerPageChange = (limit: number) => {
-    if (hasActiveFilters) {
-      setLocalItemsPerPage(limit);
-      setLocalCurrentPage(1);
-    } else {
-      setItemsPerPage(limit);
-    }
-  };
-
   // Early returns for loading and error states
   if (!projectId) {
     return <PageLoader text="Invalid project..." />;
@@ -262,31 +197,31 @@ export default function ProjectDetailsPage() {
           <ProjectInfo project={project} />
 
           <FileActionsBar
-            nameFilter={filters.nameFilter}
-            setNameFilter={filters.setNameFilter}
-            typeFilter={filters.typeFilter}
-            setTypeFilter={filters.setTypeFilter}
-            availableTypes={filters.availableTypes}
+            nameFilter={nameFilter}
+            setNameFilter={setNameFilter}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            availableTypes={availableTypes}
             onOpenCommentModal={modals.openCommentModal}
             onOpenUploadModal={modals.openUploadModal}
           />
 
           <FileList
-            files={displayedFiles}
+            files={files}
             onDownload={handleDownload}
             onEdit={modals.openEditModal}
             onDelete={modals.openDeleteModal}
             canDelete={canDeleteFile}
           />
 
-          {paginationValues.totalPages > 0 && (
+          {totalPages > 0 && (
             <Pagination
-              currentPage={paginationValues.currentPage}
-              totalPages={paginationValues.totalPages}
-              totalItems={paginationValues.totalItems}
-              itemsPerPage={paginationValues.itemsPerPage}
-              onPageChange={handlePageChange}
-              onItemsPerPageChange={handleItemsPerPageChange}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
             />
           )}
         </main>

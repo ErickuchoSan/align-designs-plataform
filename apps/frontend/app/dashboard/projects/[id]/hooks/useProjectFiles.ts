@@ -43,6 +43,11 @@ export function useProjectFiles(projectId: string) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Filter state
+  const [nameFilter, setNameFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -53,6 +58,10 @@ export function useProjectFiles(projectId: string) {
     try {
       const { data } = await api.get(`/projects/${projectId}`);
       setProject(data);
+
+      // Fetch available types
+      const typesRes = await api.get(`/files/project/${projectId}/types`);
+      setAvailableTypes(typesRes.data || []);
     } catch (error) {
       setError(getErrorMessage(error, 'Error loading project'));
     }
@@ -61,11 +70,17 @@ export function useProjectFiles(projectId: string) {
   const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage,
+      };
+
+      // Add filters if active
+      if (nameFilter) params.name = nameFilter;
+      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
+
       const { data } = await api.get(`/files/project/${projectId}`, {
-        params: {
-          page: currentPage,
-          limit: itemsPerPage,
-        },
+        params,
       });
       // Backend returns paginated response: { data: [...], meta: {...} }
       setFiles(data.data || []);
@@ -77,12 +92,20 @@ export function useProjectFiles(projectId: string) {
     } finally {
       setLoading(false);
     }
-  }, [projectId, currentPage, itemsPerPage]);
+  }, [projectId, currentPage, itemsPerPage, nameFilter, typeFilter]);
+
+  // Helper to refresh types (call after upload/delete)
+  const refreshTypes = useCallback(async () => {
+    try {
+      const { data } = await api.get(`/files/project/${projectId}/types`);
+      setAvailableTypes(data || []);
+    } catch (e) { console.error(e); }
+  }, [projectId]);
 
   return {
     project,
     files,
-    filteredFiles,
+    filteredFiles, // For backward compatibility, map to files or remove usage
     loading,
     error,
     success,
@@ -98,5 +121,12 @@ export function useProjectFiles(projectId: string) {
     setItemsPerPage,
     totalItems,
     totalPages,
+    // Filters
+    nameFilter,
+    setNameFilter,
+    typeFilter,
+    setTypeFilter,
+    availableTypes,
+    refreshTypes,
   };
 }

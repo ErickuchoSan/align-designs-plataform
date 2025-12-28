@@ -1,6 +1,29 @@
+// ============================================================================
+// PHASE 1: WORKFLOW SYSTEM TYPES
+// ============================================================================
+
 export enum Role {
   ADMIN = 'ADMIN',
   CLIENT = 'CLIENT',
+  EMPLOYEE = 'EMPLOYEE', // Phase 1: Added employee role
+}
+
+export enum ProjectStatus {
+  WAITING_PAYMENT = 'WAITING_PAYMENT',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum Stage {
+  BRIEF_PROJECT = 'BRIEF_PROJECT',
+  FEEDBACK_CLIENT = 'FEEDBACK_CLIENT',
+  FEEDBACK_EMPLOYEE = 'FEEDBACK_EMPLOYEE',
+  REFERENCES = 'REFERENCES',
+  SUBMITTED = 'SUBMITTED',
+  ADMIN_APPROVED = 'ADMIN_APPROVED',
+  CLIENT_APPROVED = 'CLIENT_APPROVED',
+  PAYMENTS = 'PAYMENTS',
 }
 
 export interface User {
@@ -24,6 +47,16 @@ export interface Project {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+
+  // Phase 1: Workflow fields
+  status: ProjectStatus;
+  initialAmountRequired?: number;
+  amountPaid: number;
+  startDate?: string;
+  deadlineDate?: string;
+  archivedAt?: string;
+
+  // Relations
   client?: {
     id: string;
     email: string;
@@ -36,9 +69,11 @@ export interface Project {
     firstName: string;
     lastName: string;
   };
+  employees?: ProjectEmployee[];
   _count?: {
     files: number;
     comments: number;
+    employees: number;
   };
 }
 
@@ -52,6 +87,15 @@ export interface File {
   projectId: string;
   uploadedBy: string;
   uploadedAt: string;
+
+  // Phase 1: Workflow fields
+  stage?: Stage;
+  feedbackCycleId?: string;
+  approvedAdminAt?: string;
+  approvedClientAt?: string;
+  pendingPayment: boolean;
+
+  // Relations
   uploader?: {
     id: string;
     email: string;
@@ -59,6 +103,7 @@ export interface File {
     lastName: string;
     role: Role;
   };
+  feedbackCycle?: FeedbackCycle;
   downloadUrl?: string;
 }
 
@@ -99,11 +144,21 @@ export interface CreateProjectDto {
   name: string;
   description?: string;
   clientId: string;
+  // Phase 1: Workflow fields
+  initialAmountRequired?: number;
+  startDate?: string;
+  deadlineDate?: string;
+  employeeIds?: string[]; // IDs de empleados a asignar
 }
 
 export interface UpdateProjectDto {
   name?: string;
   description?: string;
+  // Phase 1: Workflow fields
+  status?: ProjectStatus;
+  initialAmountRequired?: number;
+  startDate?: string;
+  deadlineDate?: string;
 }
 
 export interface PaginatedProjects {
@@ -113,3 +168,81 @@ export interface PaginatedProjects {
   limit: number;
   totalPages: number;
 }
+
+// ============================================================================
+// PHASE 1: NEW INTERFACES
+// ============================================================================
+
+export interface ProjectEmployee {
+  projectId: string;
+  employeeId: string;
+  assignedAt: string;
+  employee?: User;
+  project?: Project;
+}
+
+export interface FeedbackCycle {
+  id: string;
+  projectId: string;
+  employeeId: string;
+  startDate: string;
+  endDate?: string;
+  status: 'open' | 'submitted' | 'approved' | 'rejected';
+  createdAt: string;
+  project?: Project;
+  employee?: User;
+  files?: File[];
+  feedback?: Feedback[];
+}
+
+export interface Feedback {
+  id: string;
+  feedbackCycleId: string;
+  projectId: string;
+  createdBy: string;
+  targetAudience: 'client_space' | 'employee_space';
+  fileDocumentId?: string;
+  content?: string;
+  sequenceInCycle: number;
+  createdAt: string;
+  cycle?: FeedbackCycle;
+  project?: Project;
+  creator?: User;
+}
+
+// Phase 1: Helper types for stage labels and colors
+export const STAGE_LABELS: Record<Stage, string> = {
+  [Stage.BRIEF_PROJECT]: 'Brief del Proyecto',
+  [Stage.FEEDBACK_CLIENT]: 'Feedback (Cliente)',
+  [Stage.FEEDBACK_EMPLOYEE]: 'Feedback (Empleado)',
+  [Stage.REFERENCES]: 'Referencias',
+  [Stage.SUBMITTED]: 'Entregado',
+  [Stage.ADMIN_APPROVED]: 'Aprobado por Admin',
+  [Stage.CLIENT_APPROVED]: 'Aprobado por Cliente',
+  [Stage.PAYMENTS]: 'Pagos',
+};
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  [ProjectStatus.WAITING_PAYMENT]: 'Esperando Pago',
+  [ProjectStatus.ACTIVE]: 'Activo',
+  [ProjectStatus.COMPLETED]: 'Completado',
+  [ProjectStatus.ARCHIVED]: 'Archivado',
+};
+
+export const STAGE_COLORS: Record<Stage, string> = {
+  [Stage.BRIEF_PROJECT]: 'blue',
+  [Stage.FEEDBACK_CLIENT]: 'purple',
+  [Stage.FEEDBACK_EMPLOYEE]: 'orange',
+  [Stage.REFERENCES]: 'cyan',
+  [Stage.SUBMITTED]: 'yellow',
+  [Stage.ADMIN_APPROVED]: 'green',
+  [Stage.CLIENT_APPROVED]: 'emerald',
+  [Stage.PAYMENTS]: 'pink',
+};
+
+export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
+  [ProjectStatus.WAITING_PAYMENT]: 'yellow',
+  [ProjectStatus.ACTIVE]: 'green',
+  [ProjectStatus.COMPLETED]: 'blue',
+  [ProjectStatus.ARCHIVED]: 'gray',
+};
