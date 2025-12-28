@@ -162,7 +162,7 @@ export default function UsersPage() {
         isOpen={usersHook.showCreateForm}
         onClose={() => {
           usersHook.setShowCreateForm(false);
-          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '' });
+          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
         }}
         title="Create New Client"
         size="md"
@@ -229,7 +229,7 @@ export default function UsersPage() {
               type="button"
               onClick={() => {
                 usersHook.setShowCreateForm(false);
-                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '' });
+                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
               }}
               disabled={usersHook.creating}
               className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors"

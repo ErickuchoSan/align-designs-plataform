@@ -220,6 +220,7 @@ export default function ProjectDetailsPage() {
             availableTypes={availableTypes}
             onOpenCommentModal={modals.openCommentModal}
             onOpenUploadModal={modals.openUploadModal}
+            project={project}
           />
 
           <FileList
