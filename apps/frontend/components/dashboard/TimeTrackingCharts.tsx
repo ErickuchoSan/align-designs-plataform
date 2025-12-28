@@ -50,7 +50,7 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
                     <div>
                         <p className="text-sm font-medium text-stone-500">Total Duration</p>
                         <p className="text-2xl font-semibold text-navy-900">
-                            {stats.totalDurationDays.toFixed(1)} <span className="text-sm font-normal text-stone-500">days</span>
+                            {(stats.totalDurationDays || 0).toFixed(1)} <span className="text-sm font-normal text-stone-500">days</span>
                         </p>
                     </div>
                 </div>
@@ -67,9 +67,9 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
                     <div>
                         <p className="text-sm font-medium text-stone-500">Avg. Cycle Duration</p>
                         <p className="text-2xl font-semibold text-navy-900">
-                            {stats.averageCycleDuration.toFixed(1)} <span className="text-sm font-normal text-stone-500">days</span>
+                            {(stats.averageCycleDuration || 0).toFixed(1)} <span className="text-sm font-normal text-stone-500">days</span>
                         </p>
-                        <p className="text-xs text-stone-400 mt-1">{stats.totalCycles} total feedback cycles</p>
+                        <p className="text-xs text-stone-400 mt-1">{stats.totalCycles || 0} total feedback cycles</p>
                     </div>
                 </div>
             </div>
@@ -85,9 +85,9 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
                     <div>
                         <p className="text-sm font-medium text-stone-500">Rejection Rate</p>
                         <p className="text-2xl font-semibold text-navy-900">
-                            {(stats.rejectionRate * 100).toFixed(0)}%
+                            {((stats.rejectionRate || 0) * 100).toFixed(0)}%
                         </p>
-                        <p className="text-xs text-stone-400 mt-1">{stats.totalRejections} rejected files</p>
+                        <p className="text-xs text-stone-400 mt-1">{stats.totalRejections || 0} rejected files</p>
                     </div>
                 </div>
             </div>
