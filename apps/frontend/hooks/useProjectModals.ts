@@ -5,6 +5,10 @@ interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  // Phase 1: Workflow fields
+  employeeIds?: string[];
+  initialAmountRequired?: number;
+  deadlineDate?: string;
 }
 
 /**
@@ -17,6 +21,9 @@ export function useProjectModals() {
     name: '',
     description: '',
     clientId: '',
+    employeeIds: [],
+    initialAmountRequired: undefined,
+    deadlineDate: undefined,
   });
 
   // Edit modal state
@@ -36,12 +43,26 @@ export function useProjectModals() {
 
   const openCreateModal = useCallback(() => {
     setShowCreateModal(true);
-    setCreateFormData({ name: '', description: '', clientId: '' });
+    setCreateFormData({
+      name: '',
+      description: '',
+      clientId: '',
+      employeeIds: [],
+      initialAmountRequired: undefined,
+      deadlineDate: undefined,
+    });
   }, []);
 
   const closeCreateModal = useCallback(() => {
     setShowCreateModal(false);
-    setCreateFormData({ name: '', description: '', clientId: '' });
+    setCreateFormData({
+      name: '',
+      description: '',
+      clientId: '',
+      employeeIds: [],
+      initialAmountRequired: undefined,
+      deadlineDate: undefined,
+    });
   }, []);
 
   const openEditModal = useCallback((project: Project) => {

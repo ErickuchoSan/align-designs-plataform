@@ -23,6 +23,7 @@ type Client = NonNullable<Project['client']>;
  */
 export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const [clients, setClients] = useState<Client[]>([]);
+  const [employees, setEmployees] = useState<Client[]>([]); // Phase 1: Employee list
   const [success, setSuccess] = useState('');
 
   // Auto-reset success messages
@@ -47,6 +48,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   useEffect(() => {
     if (isAuthenticated && userRole === 'ADMIN') {
       fetchClients();
+      fetchEmployees(); // Phase 1: Load employees
     }
   }, [isAuthenticated, userRole]);
 
@@ -57,6 +59,17 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       setClients(clientUsers);
     } catch (err) {
       logger.error('Error loading clients:', err);
+    }
+  };
+
+  // Phase 1: Fetch employees for assignment
+  const fetchEmployees = async () => {
+    try {
+      const { data } = await api.get('/users');
+      const employeeUsers = data.data.filter((u: { role: string }) => u.role === 'EMPLOYEE');
+      setEmployees(employeeUsers);
+    } catch (err) {
+      logger.error('Error loading employees:', err);
     }
   };
 
@@ -90,6 +103,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     // State
     projects: projectsList.projects,
     clients,
+    employees, // Phase 1: Export employees
     loading: projectsList.loading,
     error: projectsList.error,
     success,
