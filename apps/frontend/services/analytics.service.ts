@@ -50,7 +50,7 @@ export interface OverviewMetrics {
 }
 
 export class AnalyticsService {
-  private static readonly BASE_URL = '/api/v1/analytics';
+  private static readonly BASE_URL = '/analytics';
 
   /**
    * Get overview dashboard metrics

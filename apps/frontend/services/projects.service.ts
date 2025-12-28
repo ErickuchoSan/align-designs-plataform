@@ -7,7 +7,7 @@ import { Project, PaginatedProjects } from '@/types';
  * Reduces coupling between UI components and API endpoints
  */
 export class ProjectsService {
-  private static readonly BASE_URL = '/api/v1/projects';
+  private static readonly BASE_URL = '/projects';
 
   /**
    * Fetch all projects with pagination
