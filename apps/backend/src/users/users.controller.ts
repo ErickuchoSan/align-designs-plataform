@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateClientDto } from './dto/create-client.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ToggleStatusDto } from './dto/toggle-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -49,10 +50,10 @@ export class UsersController {
 
   @Post()
   @ApiOperation({
-    summary: 'Create new client',
-    description: 'Admin-only: Create a new client user',
+    summary: 'Create new user',
+    description: 'Admin-only: Create a new user (client or employee)',
   })
-  @ApiResponse({ status: 201, description: 'Client created successfully' })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({
     status: 400,
     description: 'Invalid input or email already exists',
@@ -61,12 +62,12 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() createClientDto: CreateClientDto,
+    @Body() createUserDto: CreateUserDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const newUser = await this.usersService.createClient(createClientDto);
+    const newUser = await this.usersService.createUser(createUserDto);
 
     if (!newUser) {
       throw new Error('Failed to create user');
@@ -83,10 +84,10 @@ export class UsersController {
         ipAddress,
         userAgent,
         details: {
-          email: createClientDto.email,
-          firstName: createClientDto.firstName,
-          lastName: createClientDto.lastName,
-          role: 'CLIENT',
+          email: createUserDto.email,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          role: createUserDto.role,
         },
       },
       'user creation',

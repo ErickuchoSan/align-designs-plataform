@@ -63,6 +63,31 @@ export class UsersService {
   }
 
   /**
+   * Create a new user with role (Admin only)
+   */
+  async createUser(
+    createUserDto: CreateClientDto & { role: 'CLIENT' | 'EMPLOYEE' },
+  ) {
+    // Check if email already exists (only check active users, not soft-deleted)
+    const existingUser = await this.userRepo.findByEmail(createUserDto.email);
+
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const user = await this.userRepo.createWithRole(createUserDto);
+
+    // Invalidate user list cache
+    await this.cacheManager.invalidateUserCaches();
+
+    // Return with selected fields for response
+    return this.prisma.user.findFirst({
+      where: { id: user.id },
+      select: USER_BASIC_SELECT,
+    });
+  }
+
+  /**
    * Get all users (Admin only)
    */
   async findAll(

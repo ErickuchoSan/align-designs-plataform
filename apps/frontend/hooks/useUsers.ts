@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { User, CreateClientDto } from '@/types';
+import { User, CreateClientDto, CreateUserDto } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
 import { useAutoResetMessage } from './useAutoResetMessage';
 import { usePagination } from './usePagination';
@@ -19,11 +19,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
   // Create form state
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState<CreateClientDto>({
+  const [formData, setFormData] = useState<CreateUserDto>({
     email: '',
     firstName: '',
     lastName: '',
     phone: '',
+    role: 'CLIENT',
   });
   const [creating, setCreating] = useState(false);
 
@@ -67,11 +68,11 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       try {
         await api.post('/users', formData);
         setShowCreateForm(false);
-        setFormData({ email: '', firstName: '', lastName: '', phone: '' });
-        setSuccess('Client created successfully');
+        setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
+        setSuccess(`${formData.role === 'CLIENT' ? 'Client' : 'Employee'} created successfully`);
         fetchUsers();
       } catch (err) {
-        setError(getErrorMessage(err, 'Error creating client'));
+        setError(getErrorMessage(err, `Error creating ${formData.role === 'CLIENT' ? 'client' : 'employee'}`));
       } finally {
         setCreating(false);
       }

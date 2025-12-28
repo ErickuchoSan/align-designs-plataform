@@ -133,6 +133,10 @@ export interface CreateClientDto {
   phone?: string;
 }
 
+export interface CreateUserDto extends CreateClientDto {
+  role: 'CLIENT' | 'EMPLOYEE';
+}
+
 export interface UpdateUserDto {
   firstName?: string;
   lastName?: string;

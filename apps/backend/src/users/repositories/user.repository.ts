@@ -74,6 +74,21 @@ export class UserRepository implements IUserRepository {
     });
   }
 
+  async createWithRole(
+    data: CreateClientDto & { role: 'CLIENT' | 'EMPLOYEE' },
+  ): Promise<User> {
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        role: data.role,
+        isActive: true,
+      },
+    });
+  }
+
   async update(id: string, data: UpdateUserDto): Promise<User> {
     return this.prisma.user.update({
       where: { id },
