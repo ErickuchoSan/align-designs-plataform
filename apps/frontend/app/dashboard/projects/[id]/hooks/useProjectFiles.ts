@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
+import { Project } from '@/types';
 
 export interface FileData {
   id: string;
@@ -18,22 +19,8 @@ export interface FileData {
   uploadedAt: string;
 }
 
-export interface ProjectData {
-  id: string;
-  name: string;
-  description: string | null;
-  clientId: string;
-  client: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  createdAt: string;
-  _count: {
-    files: number;
-    comments: number;
-  };
-}
+// Use Project type from types index
+export type ProjectData = Project;
 
 export function useProjectFiles(projectId: string) {
   const [project, setProject] = useState<ProjectData | null>(null);

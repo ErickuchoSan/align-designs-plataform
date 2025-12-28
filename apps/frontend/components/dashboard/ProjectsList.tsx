@@ -179,6 +179,7 @@ export default function ProjectsList({
           onSubmit: projectsHook.handleCreateProject,
           isSubmitting: projectsHook.creating,
           clients: projectsHook.clients,
+          employees: projectsHook.employees, // Phase 1: Pass employees
         }}
         editModal={{
           isConfirmOpen: projectsHook.showEditConfirm,

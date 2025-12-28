@@ -16,6 +16,7 @@ import type { FileData } from './hooks/useProjectFiles';
 
 // Components
 import ProjectInfo from './components/ProjectInfo';
+import ProjectWorkflowSection from './components/ProjectWorkflowSection';
 import FileActionsBar from './components/FileActionsBar';
 import AlertMessages from './components/AlertMessages';
 import FileList from './components/FileList';
@@ -195,6 +196,15 @@ export default function ProjectDetailsPage() {
           <AlertMessages success={success} error={error} />
 
           <ProjectInfo project={project} />
+
+          <ProjectWorkflowSection
+            project={project}
+            isAdmin={isAdmin}
+            onUpdate={() => {
+              fetchProjectDetails();
+              fetchFiles();
+            }}
+          />
 
           <FileActionsBar
             nameFilter={nameFilter}

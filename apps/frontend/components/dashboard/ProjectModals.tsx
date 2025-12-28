@@ -2,6 +2,7 @@ import { Project } from '@/types';
 import Modal from '@/app/components/Modal';
 import ConfirmModal from '@/app/components/ConfirmModal';
 import { ButtonLoader } from '@/app/components/Loader';
+import { EmployeeSelect } from '../projects/EmployeeSelect';
 
 interface Client {
   id: string;
@@ -14,6 +15,10 @@ interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  // Phase 1: Workflow fields
+  employeeIds?: string[];
+  initialAmountRequired?: number;
+  deadlineDate?: string;
 }
 
 /**
@@ -24,6 +29,7 @@ interface CreateModalState {
   formData: ProjectFormData;
   isSubmitting: boolean;
   clients: Client[];
+  employees: Client[]; // Phase 1: Employee list
   onClose: () => void;
   onFormChange: (data: ProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -151,6 +157,50 @@ export default function ProjectModals({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Phase 1: Workflow fields */}
+          <div>
+            <EmployeeSelect
+              employees={createModal.employees}
+              selectedIds={createModal.formData.employeeIds || []}
+              onChange={(employeeIds) => createModal.onFormChange({ ...createModal.formData, employeeIds })}
+              disabled={createModal.isSubmitting}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="create-amount" className={`block text-sm font-medium ${styles.label} mb-2`}>
+                Initial Amount Required
+              </label>
+              <input
+                id="create-amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={createModal.formData.initialAmountRequired || ''}
+                onChange={(e) => createModal.onFormChange({
+                  ...createModal.formData,
+                  initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
+                })}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="create-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
+                Deadline Date
+              </label>
+              <input
+                id="create-deadline"
+                type="date"
+                value={createModal.formData.deadlineDate || ''}
+                onChange={(e) => createModal.onFormChange({ ...createModal.formData, deadlineDate: e.target.value })}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
