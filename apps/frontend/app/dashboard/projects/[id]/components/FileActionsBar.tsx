@@ -9,7 +9,7 @@ interface FileActionsBarProps {
   availableTypes: string[];
   onOpenCommentModal: () => void;
   onOpenUploadModal: () => void;
-  project: Project;
+  project: Project | null;
 }
 
 /**
@@ -26,8 +26,8 @@ export default function FileActionsBar({
   onOpenUploadModal,
   project,
 }: FileActionsBarProps) {
-  const isProjectActive = project.status === ProjectStatus.ACTIVE;
-  const isWaitingPayment = project.status === ProjectStatus.WAITING_PAYMENT;
+  const isProjectActive = project?.status === ProjectStatus.ACTIVE;
+  const isWaitingPayment = project?.status === ProjectStatus.WAITING_PAYMENT;
 
   return (
     <div className="mb-6">
