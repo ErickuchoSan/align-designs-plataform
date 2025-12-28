@@ -7,6 +7,8 @@ interface ProjectStatusBadgeProps {
   className?: string;
 }
 
+type ColorKey = 'yellow' | 'green' | 'blue' | 'gray';
+
 /**
  * ProjectStatusBadge Component
  *
@@ -15,9 +17,9 @@ interface ProjectStatusBadgeProps {
  */
 export function ProjectStatusBadge({ status, className = '' }: ProjectStatusBadgeProps) {
   const label = PROJECT_STATUS_LABELS[status];
-  const color = PROJECT_STATUS_COLORS[status];
+  const color = PROJECT_STATUS_COLORS[status] as ColorKey;
 
-  const colorClasses = {
+  const colorClasses: Record<ColorKey, string> = {
     yellow: 'bg-yellow-100 text-yellow-800 border-yellow-300',
     green: 'bg-green-100 text-green-800 border-green-300',
     blue: 'bg-blue-100 text-blue-800 border-blue-300',
