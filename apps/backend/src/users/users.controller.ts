@@ -25,6 +25,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ToggleStatusDto } from './dto/toggle-status.dto';
+import { QueryUsersDto } from './dto/query-users.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -104,8 +105,8 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
-  findAll(@Query() paginationDto: PaginationDto, @Query('role') role?: Role) {
-    return this.usersService.findAll(paginationDto, role);
+  findAll(@Query() queryDto: QueryUsersDto) {
+    return this.usersService.findAll(queryDto, queryDto.role);
   }
 
   @Get('profile')
