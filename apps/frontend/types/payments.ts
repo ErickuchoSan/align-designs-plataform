@@ -43,19 +43,19 @@ export interface Payment {
 }
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-    [PaymentMethod.TRANSFER]: 'Transferencia Bancaria',
-    [PaymentMethod.CHECK]: 'Cheque',
+    [PaymentMethod.TRANSFER]: 'Bank Transfer',
+    [PaymentMethod.CHECK]: 'Check',
 };
 
 export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
-    [PaymentType.INITIAL_PAYMENT]: 'Pago Inicial',
-    [PaymentType.INVOICE]: 'Factura',
-    [PaymentType.EMPLOYEE_PAYMENT]: 'Pago a Empleado',
+    [PaymentType.INITIAL_PAYMENT]: 'Initial Payment',
+    [PaymentType.INVOICE]: 'Invoice',
+    [PaymentType.EMPLOYEE_PAYMENT]: 'Employee Payment',
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-    [PaymentStatus.PENDING_APPROVAL]: 'Pendiente de Aprobación',
-    [PaymentStatus.CONFIRMED]: 'Confirmado',
-    [PaymentStatus.REJECTED]: 'Rechazado',
-    [PaymentStatus.PENDING_CONFIRMATION]: 'Pendiente', // Legacy
+    [PaymentStatus.PENDING_APPROVAL]: 'Pending Approval',
+    [PaymentStatus.CONFIRMED]: 'Confirmed',
+    [PaymentStatus.REJECTED]: 'Rejected',
+    [PaymentStatus.PENDING_CONFIRMATION]: 'Pending', // Legacy
 };

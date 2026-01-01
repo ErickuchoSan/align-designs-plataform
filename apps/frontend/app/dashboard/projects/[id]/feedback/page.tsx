@@ -30,7 +30,7 @@ export default function ProjectFeedbackPage() {
             }
         } catch (error) {
             console.error('Error loading feedback:', error);
-            toast.error('Error al cargar feedback');
+            toast.error('Error loading feedback');
         } finally {
             setIsLoading(false);
         }
@@ -62,17 +62,17 @@ export default function ProjectFeedbackPage() {
                         onClick={() => router.back()}
                         className="text-gray-500 hover:text-gray-700 mb-2 flex items-center gap-1 text-sm"
                     >
-                        ← Volver al Proyecto
+                        ← Back to Project
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900">
-                        Ciclos de Feedback
+                        Feedback Cycles
                     </h1>
                 </div>
             </div>
 
             <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
                 <div className="col-span-4 overflow-y-auto pr-2">
-                    <h2 className="font-semibold text-gray-700 mb-4">Historial</h2>
+                    <h2 className="font-semibold text-gray-700 mb-4">History</h2>
                     <FeedbackTimeline
                         cycles={cycles}
                         isLoading={isLoading}
@@ -89,7 +89,7 @@ export default function ProjectFeedbackPage() {
                         />
                     ) : (
                         <div className="h-full flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200 text-gray-400">
-                            Selecciona un ciclo para ver los detalles
+                            Select a cycle to view details
                         </div>
                     )}
                 </div>

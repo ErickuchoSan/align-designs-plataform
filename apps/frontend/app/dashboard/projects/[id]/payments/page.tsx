@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PaymentHistoryTable } from '@/components/payments/PaymentHistoryTable';
+import PaymentHistoryTable from '@/components/payments/PaymentHistoryTable';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
-import { ClientPaymentUploadModal } from '@/components/payments/ClientPaymentUploadModal';
-import { AdminPaymentReviewModal } from '@/components/payments/AdminPaymentReviewModal';
+import ClientPaymentUploadModal from '@/components/payments/ClientPaymentUploadModal';
+import AdminPaymentReviewModal from '@/components/payments/AdminPaymentReviewModal';
 import { PaymentsService } from '@/services/payments.service';
 import { Payment, PaymentType } from '@/types/payments';
 import { toast } from 'react-hot-toast';
@@ -41,7 +41,7 @@ export default function ProjectPaymentsPage() {
             setProject(projectData);
         } catch (error) {
             console.error('Error loading payments data:', error);
-            toast.error('Error al cargar la información de pagos');
+            toast.error('Error loading payment information');
         } finally {
             setIsLoading(false);
         }
@@ -82,7 +82,7 @@ export default function ProjectPaymentsPage() {
     return (
         <div className="min-h-screen bg-stone-50">
             <DashboardHeader
-                title={`${isClient ? 'Mis Pagos' : 'Historial de Pagos'} - ${project?.name || 'Proyecto'}`}
+                title={`${isClient ? 'My Payments' : 'Payment History'} - ${project?.name || 'Project'}`}
                 showBackButton
                 backUrl={`/dashboard/projects/${projectId}`}
             />
@@ -92,22 +92,22 @@ export default function ProjectPaymentsPage() {
                     <>
                         {/* Payment Progress Card */}
                         <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 mb-6">
-                            <h2 className="text-lg font-semibold text-navy-900 mb-4">Estado de Pago Inicial</h2>
+                            <h2 className="text-lg font-semibold text-navy-900 mb-4">Initial Payment Status</h2>
                             <div className="flex justify-between items-center mb-4">
                                 <div>
-                                    <div className="text-sm text-gray-600">Monto Pagado</div>
+                                    <div className="text-sm text-gray-600">Amount Paid</div>
                                     <div className="text-2xl font-bold text-green-600">
                                         ${Number(project?.amountPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-600">Monto Requerido</div>
+                                    <div className="text-sm text-gray-600">Amount Required</div>
                                     <div className="text-2xl font-bold text-navy-900">
                                         ${Number(project?.initialAmountRequired || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-600">Restante</div>
+                                    <div className="text-sm text-gray-600">Remaining</div>
                                     <div className="text-2xl font-bold text-amber-600">
                                         ${remainingAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </div>
@@ -129,14 +129,14 @@ export default function ProjectPaymentsPage() {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
-                                Subir Comprobante de Pago
+                                Upload Payment Proof
                             </button>
                         </div>
 
                         {/* Client Payment History */}
                         <div className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
                             <div className="p-4 border-b border-stone-200">
-                                <h3 className="text-lg font-semibold text-navy-900">Historial de Comprobantes</h3>
+                                <h3 className="text-lg font-semibold text-navy-900">Receipt History</h3>
                             </div>
                             <PaymentHistoryTable
                                 payments={payments}
@@ -160,13 +160,13 @@ export default function ProjectPaymentsPage() {
                     <>
                         <div className="flex justify-between items-center mb-6">
                             <div className="text-right mr-4">
-                                <div className="text-sm text-gray-500">Monto Pagado</div>
+                                <div className="text-sm text-gray-500">Amount Paid</div>
                                 <div className="text-xl font-bold text-green-600">
                                     ${Number(project?.amountPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </div>
                                 {project?.initialAmountRequired && (
                                     <div className="text-xs text-gray-400">
-                                        de ${Number(project.initialAmountRequired).toLocaleString()} requeridos
+                                        of ${Number(project.initialAmountRequired).toLocaleString()} required
                                     </div>
                                 )}
                             </div>
@@ -174,13 +174,13 @@ export default function ProjectPaymentsPage() {
                                 onClick={() => openModal(PaymentType.INITIAL_PAYMENT)}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm flex items-center"
                             >
-                                + Registrar Ingreso
+                                + Record Income
                             </button>
                             <button
                                 onClick={() => openModal(PaymentType.EMPLOYEE_PAYMENT)}
                                 className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium shadow-sm flex items-center"
                             >
-                                - Pago a Empleado
+                                - Pay Employee
                             </button>
                         </div>
 

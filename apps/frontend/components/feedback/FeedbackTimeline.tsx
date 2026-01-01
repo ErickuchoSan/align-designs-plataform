@@ -15,7 +15,7 @@ export function FeedbackTimeline({ cycles, isLoading, onCycleSelect, selectedCyc
     }
 
     if (cycles.length === 0) {
-        return <div className="text-center py-8 text-gray-500">No hay ciclos de feedback.</div>;
+        return <div className="text-center py-8 text-gray-500">No feedback cycles found.</div>;
     }
 
     return (
@@ -25,21 +25,21 @@ export function FeedbackTimeline({ cycles, isLoading, onCycleSelect, selectedCyc
                     key={cycle.id}
                     onClick={() => onCycleSelect(cycle.id)}
                     className={`cursor-pointer p-4 rounded-lg border transition-all ${selectedCycleId === cycle.id
-                            ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                         }`}
                 >
                     <div className="flex justify-between items-start mb-2">
                         <div>
-                            <h4 className="font-semibold text-gray-900">Ciclo {cycles.length - index}</h4>
+                            <h4 className="font-semibold text-gray-900">Cycle {cycles.length - index}</h4>
                             <p className="text-sm text-gray-500">
-                                Iniciado por: {cycle.employee.firstName} {cycle.employee.lastName}
+                                Started by: {cycle.employee.firstName} {cycle.employee.lastName}
                             </p>
                         </div>
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${cycle.status === 'open' ? 'bg-green-100 text-green-800' :
-                                cycle.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
-                                    cycle.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                                        'bg-red-100 text-red-800'
+                            cycle.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
+                                cycle.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-red-100 text-red-800'
                             }`}>
                             {cycle.status.toUpperCase()}
                         </span>

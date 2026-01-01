@@ -93,36 +93,20 @@ When admin creates project with `initialAmountRequired = $8000`:
 2. Client clicks **"Upload Payment"** on the invoice
 3. **⚠️ CRITICAL WARNING shown to client:**
 
-```
-╔═══════════════════════════════════════════════════════╗
-║  ⚠️  IMPORTANTE - ANTES DE SUBIR EL COMPROBANTE      ║
-╠═══════════════════════════════════════════════════════╣
-║                                                        ║
-║  Por favor, sube el comprobante OFICIAL que te da     ║
-║  tu aplicación bancaria usando la opción de           ║
-║  "COMPARTIR" después de hacer la transferencia.       ║
-║                                                        ║
-║  ✅ Correcto: Captura desde "Compartir" del banco    ║
-║  ❌ Incorrecto: Foto de la pantalla                   ║
-║                                                        ║
-║  Esto asegura que el comprobante sea legible y        ║
-║  contenga toda la información necesaria.              ║
-║                                                        ║
-╚═══════════════════════════════════════════════════════╝
-```
+> **Note:** Ideally, clients should upload the official receipt shared from their banking app to ensure readability.
 
 4. Client fills form:
    - **Payment Method:** Bank Transfer or Check
    - **Amount Paid:** Client enters amount (can be partial)
    - **Payment Date:** Select date
-   - **Receipt File:** Upload official bank receipt
+   - **Receipt File:** Upload official bank receipt (Optional in current version)
 
 5. Upon submission:
    - Payment created with status: `PENDING_APPROVAL`
    - **NOTIFICATION sent to Admin:** "New payment pending review"
    - Client sees: "Your payment is under review"
 
-#### 3.2 Admin Reviews and Approves/Rejects Payment
+#### 3.2 Admin Reviews and Approves/Rejects Payment (Backend Ready / UI Under Development)
 
 Admin receives notification and reviews payment with **3 options:**
 
@@ -451,7 +435,7 @@ The **Payments** stage contains **3 separate subsections**, each with **strict p
   - **Note:** Time tracking only counts **days**, not hours/minutes (to be fair to employees)
 - Tooltip shown: *"⏱️ Time tracking starts: [Tomorrow 9:00 AM / Today at current time]"*
 
-3. **🆕 NEW: If rejecting a submitted file:**
+3. **🆕 NEW: If rejecting a submitted file (Backend Supported / UI Pending):**
    - Admin can link this feedback to the specific file being rejected
    - System increments rejection counter on that file
    - Employee sees: "❌ Rejected - See Feedback #123"
@@ -471,12 +455,10 @@ The **Payments** stage contains **3 separate subsections**, each with **strict p
 1. Employee works on requested changes
 2. Employee uploads work to **"Submitted"** stage (file/link/comment)
 
-**🆕 NEW: Version Management:**
-- If employee submits multiple versions:
-  - v1, v2, v3 automatically tracked
-  - Employee can add notes: "Fixed colors and spacing as requested"
-  - System shows version history with notes
-  - Only current version shows "Approve" button
+**🆕 NEW: Version Management (Schema Ready / Logic Pending):**
+- System supports v1, v2, v3 schema
+- **Current Behavior:** New uploads replace previous files
+- **Future:** UI will group history and allow restoring old versions
 
 **CRITICAL DATE - Timer ends:**
 - System saves date/time when employee uploads to Submitted

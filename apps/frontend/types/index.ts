@@ -225,22 +225,22 @@ export interface Feedback {
 
 // Phase 1: Helper types for stage labels and colors
 export const STAGE_LABELS: Record<Stage, string> = {
-  [Stage.BRIEF_PROJECT]: 'Brief del Proyecto',
-  [Stage.FEEDBACK_CLIENT]: 'Feedback (Cliente)',
-  [Stage.FEEDBACK_EMPLOYEE]: 'Feedback (Empleado)',
-  [Stage.REFERENCES]: 'Referencias',
-  [Stage.SUBMITTED]: 'Entregado',
-  [Stage.ADMIN_APPROVED]: 'Aprobado por Admin',
-  [Stage.CLIENT_APPROVED]: 'Aprobado por Cliente',
-  [Stage.PAYMENTS]: 'Pagos',
+  [Stage.BRIEF_PROJECT]: 'Project Brief',
+  [Stage.FEEDBACK_CLIENT]: 'Feedback (Client)',
+  [Stage.FEEDBACK_EMPLOYEE]: 'Feedback (Employee)',
+  [Stage.REFERENCES]: 'References',
+  [Stage.SUBMITTED]: 'Submitted',
+  [Stage.ADMIN_APPROVED]: 'Approved by Admin',
+  [Stage.CLIENT_APPROVED]: 'Approved by Client',
+  [Stage.PAYMENTS]: 'Payments',
 };
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  [ProjectStatus.WAITING_PAYMENT]: 'Esperando Pago',
-  [ProjectStatus.ACTIVE]: 'Activo',
-  [ProjectStatus.PAUSED]: 'Pausado',
-  [ProjectStatus.COMPLETED]: 'Completado',
-  [ProjectStatus.ARCHIVED]: 'Archivado',
+  [ProjectStatus.WAITING_PAYMENT]: 'Waiting for Payment',
+  [ProjectStatus.ACTIVE]: 'Active',
+  [ProjectStatus.PAUSED]: 'Paused',
+  [ProjectStatus.COMPLETED]: 'Completed',
+  [ProjectStatus.ARCHIVED]: 'Archived',
 };
 
 export const STAGE_COLORS: Record<Stage, string> = {

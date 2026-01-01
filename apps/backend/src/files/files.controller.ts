@@ -215,7 +215,7 @@ export class FilesController {
     // Log comment creation for debugging
     this.logger.debug('Creating comment for project', {
       projectId,
-      userId: user.sub,
+      userId: user.userId,
       hasComment: !!createCommentDto.comment,
       stage: createCommentDto.stage,
     });

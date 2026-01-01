@@ -68,6 +68,21 @@ This document summarizes all security and quality improvements made to achieve p
 - Prevents CSRF bypass attacks
 - **File**: apps/backend/src/common/middleware/csrf.middleware.ts
 
+### 8.1 Cookie Security (HTTP/HTTPS Coexistence)
+- **Before**: `ALLOW_NGROK=true` forced `Secure: true` on all cookies, breaking HTTP access
+- **After**: Dynamic detection using Origin/Referer/Host headers
+- **Logic**:
+  1. Check `Origin` header (POST/DELETE requests)
+  2. Check `Referer` header (navigation requests)
+  3. Check `Host` header (ngrok domains always HTTPS)
+  4. Fallback to `req.secure`
+- **Result**: 
+  - nginx (`http://`) → `Secure: false`, `sameSite: lax`
+  - ngrok (`https://`) → `Secure: true`, `sameSite: none`
+- **Files**:
+  - apps/backend/src/common/middleware/csrf.middleware.ts (CSRF cookies)
+  - apps/backend/src/auth/auth.controller.ts (JWT cookies)
+
 ### 9. Database Transactions
 - **Before**: No retry logic (failed on deadlocks)
 - **After**: 
@@ -238,5 +253,5 @@ For security concerns or to report vulnerabilities:
 - Review security headers in production
 - Test rate limiting and CSRF protection
 
-**Last Updated**: 2025-11-23
+**Last Updated**: 2026-01-01
 **Reviewed By**: Claude (Security Audit)

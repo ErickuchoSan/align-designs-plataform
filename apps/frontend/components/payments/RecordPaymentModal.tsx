@@ -66,7 +66,7 @@ export function RecordPaymentModal({
             setEmployees(data);
         } catch (error) {
             console.error('Error loading employees:', error);
-            toast.error('Error al cargar empleados');
+            toast.error('Error loading employees');
         } finally {
             setIsLoadingEmployees(false);
         }
@@ -79,7 +79,7 @@ export function RecordPaymentModal({
             setPendingFiles(data);
         } catch (error) {
             console.error('Error loading pending files:', error);
-            toast.error('Error al cargar archivos pendientes');
+            toast.error('Error loading pending files');
         } finally {
             setIsLoadingFiles(false);
         }
@@ -96,12 +96,12 @@ export function RecordPaymentModal({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!amount || Number(amount) <= 0) {
-            toast.error('Por favor ingresa un monto válido');
+            toast.error('Please enter a valid amount');
             return;
         }
 
         if (type === PaymentType.EMPLOYEE_PAYMENT && !selectedEmployeeId) {
-            toast.error('Selecciona un empleado');
+            toast.error('Select an employee');
             return;
         }
 
@@ -118,31 +118,19 @@ export function RecordPaymentModal({
 
             if (type === PaymentType.EMPLOYEE_PAYMENT) {
                 formData.append('toUserId', selectedEmployeeId);
-                selectedFileIds.forEach(id => formData.append('relatedFileIds[]', id)); // Arrays in FormData can be tricky, backend must handle
-                // Actually Backend DTO expects JSON array if handled as strict, but Nestjs FileInterceptor + Body might handle array fields
-                // Simpler: Send relatedFileIds as comma separated string? Or multiple fields. 
-                // NestJS with 'files' interceptor usually parses body. 
-                // Let's rely on standard FormData behavior.
-                // If this fails, we might need to JSON.stringify the array.
-                // Wait, RecordPaymentDto uses `relatedFileIds?: string[]`.
+                selectedFileIds.forEach(id => formData.append('relatedFileIds[]', id));
             }
 
             // Since FormData handling of arrays varies, let's try appending each.
-            // Backend Controller uses `@Body` which usually parses FormData fields.
-            // If relatedFileIds is coming as array of strings, `relatedFileIds[]` naming conventions might apply depending on parsing middleware. 
-            // In NestJS + Multer, `relatedFileIds` (multiple times) works if DTO expects it.
-
-            // HOWEVER, creating `formData` manually:
-            // `formData.append('relatedFileIds', id)` multiple times is the standard way.
             selectedFileIds.forEach(id => formData.append('relatedFileIds', id));
 
             await PaymentsService.create(formData);
-            toast.success('Pago registrado exitosamente');
+            toast.success('Payment recorded successfully');
             onSuccess();
             onClose();
         } catch (error) {
             console.error('Error recording payment:', error);
-            toast.error('Error al registrar el pago');
+            toast.error('Error recording payment');
         } finally {
             setIsSubmitting(false);
         }
@@ -151,13 +139,13 @@ export function RecordPaymentModal({
     const isEmployeePayment = type === PaymentType.EMPLOYEE_PAYMENT;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={isEmployeePayment ? "Registrar Pago a Empleado" : "Registrar Pago"}>
+        <Modal isOpen={isOpen} onClose={onClose} title={isEmployeePayment ? "Record Employee Payment" : "Record Payment"}>
             <form onSubmit={handleSubmit} className="space-y-6">
 
                 {/* Employee Selection */}
                 {isEmployeePayment && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Empleado</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Employee</label>
                         <select
                             required
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 border px-3"
@@ -165,7 +153,7 @@ export function RecordPaymentModal({
                             onChange={(e) => setSelectedEmployeeId(e.target.value)}
                             disabled={isLoadingEmployees}
                         >
-                            <option value="">Seleccionar Empleado...</option>
+                            <option value="">Select Employee...</option>
                             {employees.map(emp => (
                                 <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
                             ))}
@@ -176,11 +164,11 @@ export function RecordPaymentModal({
                 {/* Pending Files Selection */}
                 {isEmployeePayment && selectedEmployeeId && (
                     <div className="border rounded-md p-4 bg-gray-50">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Trabajos Pendientes de Pago</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Pending Jobs</label>
                         {isLoadingFiles ? (
-                            <div className="text-sm text-gray-500">Cargando...</div>
+                            <div className="text-sm text-gray-500">Loading...</div>
                         ) : pendingFiles.length === 0 ? (
-                            <div className="text-sm text-gray-400 italic">No hay trabajos pendientes aprobados</div>
+                            <div className="text-sm text-gray-400 italic">No approved pending jobs</div>
                         ) : (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
                                 {pendingFiles.map(f => (
@@ -200,13 +188,13 @@ export function RecordPaymentModal({
                             </div>
                         )}
                         <p className="text-xs text-gray-500 mt-2">
-                            Seleccione los trabajos que está pagando para calcular eficiencia.
+                            Select the jobs you are paying for to calculate efficiency.
                         </p>
                     </div>
                 )}
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Monto</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
                     <div className="relative rounded-md shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                             <span className="text-gray-500 sm:text-sm">$</span>
@@ -225,12 +213,12 @@ export function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
                     <PaymentMethodSelect value={method} onChange={setMethod} />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fecha del Pago</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date</label>
                     <input
                         type="date"
                         required
@@ -241,7 +229,7 @@ export function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Comprobante (Opcional)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Receipt (Optional)</label>
                     <input
                         type="file"
                         accept="image/*,.pdf"
@@ -251,13 +239,13 @@ export function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Notas</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
                     <textarea
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 border px-3"
-                        placeholder="Detalles adicionales..."
+                        placeholder="Additional details..."
                     />
                 </div>
 
@@ -268,14 +256,14 @@ export function RecordPaymentModal({
                         disabled={isSubmitting}
                         className="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                        Cancelar
+                        Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
                         className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-w-[120px]"
                     >
-                        {isSubmitting ? <ButtonLoader /> : 'Registrar Pago'}
+                        {isSubmitting ? <ButtonLoader /> : 'Record Payment'}
                     </button>
                 </div>
             </form>

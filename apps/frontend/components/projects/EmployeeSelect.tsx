@@ -67,7 +67,7 @@ function EmployeeSelect({
     <div className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between mb-2">
         <label className="block text-sm font-medium text-gray-700">
-          Empleados Asignados
+          Assigned Employees
         </label>
         <div className="flex gap-2">
           <button
@@ -76,7 +76,7 @@ function EmployeeSelect({
             disabled={disabled}
             className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
           >
-            Seleccionar todos
+            Select All
           </button>
           <button
             type="button"
@@ -84,7 +84,7 @@ function EmployeeSelect({
             disabled={disabled}
             className="text-xs text-gray-600 hover:text-gray-800 disabled:text-gray-400"
           >
-            Limpiar
+            Clear
           </button>
         </div>
       </div>
@@ -92,7 +92,7 @@ function EmployeeSelect({
       {/* Search input */}
       <input
         type="text"
-        placeholder="Buscar empleado..."
+        placeholder="Search employee..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         disabled={disabled}
@@ -103,7 +103,7 @@ function EmployeeSelect({
       <div className="border border-gray-300 rounded-md max-h-60 overflow-y-auto">
         {filteredEmployees.length === 0 ? (
           <div className="p-4 text-center text-gray-500 text-sm">
-            No se encontraron empleados
+            No employees found
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
@@ -112,9 +112,8 @@ function EmployeeSelect({
               return (
                 <label
                   key={employee.id}
-                  className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${
-                    disabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
                   <input
                     type="checkbox"
@@ -139,7 +138,7 @@ function EmployeeSelect({
       {/* Selected count */}
       {selectedIds.length > 0 && (
         <div className="text-sm text-gray-600">
-          {selectedIds.length} empleado{selectedIds.length !== 1 ? 's' : ''} seleccionado{selectedIds.length !== 1 ? 's' : ''}
+          {selectedIds.length} employee{selectedIds.length !== 1 ? 's' : ''} selected
         </div>
       )}
     </div>

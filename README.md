@@ -381,6 +381,37 @@ DELETE /files/:id                     # Eliminar archivo o comentario
    - CI/CD con GitHub Actions
    - Deploy en producción
 
+## 📚 Documentación
+
+Para documentación completa y detallada del proyecto, consulta el **[Índice de Documentación](./docs/README.md)**.
+
+### Documentación Destacada
+
+- **[Guía de Configuración](./docs/setup/PNPM_MIGRATION.md)** - Instalación y configuración del proyecto
+- **[Arquitectura del Sistema](./docs/architecture/system_workflow_v2.md)** - Flujo completo del sistema
+- **[Guía de Contribución](./docs/development/CONTRIBUTING.md)** - Cómo contribuir al proyecto
+- **[Estado de Implementación](./docs/implementation/IMPLEMENTATION_STATUS.md)** - Progreso del proyecto
+- **[Mejoras de Seguridad](./docs/improvements/SECURITY_IMPROVEMENTS.md)** - Auditoría de seguridad
+- **[Optimizaciones de Rendimiento](./docs/improvements/PERFORMANCE_OPTIMIZATIONS.md)** - Mejoras de performance
+
+### Estructura de Documentación
+
+```
+docs/
+├── setup/              # Instalación y configuración
+├── development/        # Guías de desarrollo
+├── architecture/       # Diseño del sistema
+├── implementation/     # Estado de implementación
+├── audits/            # Reportes de auditoría
+├── improvements/      # Mejoras y optimizaciones
+├── references/        # Documentación de referencia
+└── changelog/         # Historial de cambios
+```
+
+Para más detalles, consulta el **[README completo de documentación](./docs/README.md)**.
+
+---
+
 ## Licencia
 
 Este es la plataforma oficial para Align Designs.

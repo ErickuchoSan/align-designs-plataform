@@ -30,7 +30,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
             onUpdate();
         } catch (error) {
             console.error('Error sending feedback:', error);
-            toast.error('Error al enviar mensaje');
+            toast.error('Error sending message');
         } finally {
             setIsSending(false);
         }
@@ -39,7 +39,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
     return (
         <div className="flex flex-col h-[600px] border border-gray-200 rounded-lg bg-white">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
-                <h3 className="font-semibold text-gray-800">Detalles del Ciclo</h3>
+                <h3 className="font-semibold text-gray-800">Cycle Details</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -65,7 +65,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Escribe un comentario..."
+                        placeholder="Write a comment..."
                         className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         disabled={cycle.status !== 'open' || isSending}
                     />
@@ -74,7 +74,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
                         disabled={!newMessage.trim() || isSending || cycle.status !== 'open'}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isSending ? '...' : 'Enviar'}
+                        {isSending ? '...' : 'Send'}
                     </button>
                 </form>
             </div>

@@ -1,188 +1,211 @@
-# Documentación - Align Designs Platform
+# 📚 Align Designs Platform - Documentation Index
 
-Esta carpeta contiene toda la documentación del proyecto.
+Complete documentation for the Align Designs Platform monorepo project.
 
-## 📁 Estructura
+---
+
+## 🗂️ Documentation Structure
 
 ```
 docs/
-├── README.md                       # Este archivo
-├── CLEANUP_PLAN.md                 # Plan de limpieza ejecutado
-├── dev/                            # Documentación de desarrollo (privada, gitignored)
-├── prod/                           # Documentación sanitizada para producción
-└── *.md                            # Documentos principales del proyecto
+├── setup/              # Initial setup and configuration
+├── development/        # Development guides and contributing
+├── architecture/       # System architecture and design
+├── implementation/     # Implementation status and plans
+├── audits/            # Code audits and analysis reports
+├── improvements/      # Performance, security, and code improvements
+├── references/        # Reference materials and matrices
+├── changelog/         # Version history
+├── dev/              # Private development docs (gitignored)
+└── prod/             # Public sanitized docs (safe for Git)
 ```
 
 ---
 
-## 📄 Documentos Principales
+## 🚀 Setup & Configuration
 
-### Migración y Actualizaciones Recientes (Enero 2026)
+**Getting Started Guides:**
 
-- **[PNPM_MIGRATION.md](../PNPM_MIGRATION.md)** ⭐ **NUEVO**
-  - Migración de npm a pnpm completada
-  - Guía de uso de pnpm para el equipo
-  - Comparación de rendimiento y comandos
-
-- **[DEPENDENCIES_UPDATE.md](../DEPENDENCIES_UPDATE.md)** ⭐ **NUEVO**
-  - Actualización de dependencias (Next.js, TypeScript, etc.)
-  - Correcciones de seguridad (Next.js CVE, Axios, qs)
-  - Estado de builds y compatibilidad
-
-- **[PERFORMANCE_OPTIMIZATIONS.md](../PERFORMANCE_OPTIMIZATIONS.md)** ⭐ **ACTUALIZADO v5.0.0**
-  - 31 optimizaciones implementadas (Sprints 1-3)
-  - Mejora de rendimiento: 40-50% más rápido
-  - Reducción de re-renders: 80-95%
-
-### Flujo y Arquitectura del Sistema
-
-- **[system_workflow_v2.md](./system_workflow_v2.md)** ⭐ **PRINCIPAL**
-  - Flujo completo del sistema versión 2.0
-  - Incluye todas las mejoras y características implementadas
-  - **Usar este como referencia principal**
-
-- **[flujo_sistema_v2.md](./flujo_sistema_v2.md)**
-  - Versión en español del workflow
-  - Mismo contenido que `system_workflow_v2.md`
-
-### Planes y Reportes
-
-- **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** ⭐ **NUEVO**
-  - Estado actual de implementación (91% completo)
-  - Qué está listo para producción
-  - Features opcionales pendientes
-
-- **[MASTER_IMPLEMENTATION_PLAN.md](./MASTER_IMPLEMENTATION_PLAN.md)**
-  - Plan maestro de implementación
-  - Roadmap de fases futuras
-
-- **[COMPLETE_AUDIT_REPORT.md](./COMPLETE_AUDIT_REPORT.md)**
-  - Reporte de auditoría completa del sistema
-  - Análisis de seguridad y mejoras
-
-### Especificaciones Técnicas
-
-- **[payments-privacy-matrix.md](./payments-privacy-matrix.md)**
-  - Matriz de privacidad de pagos
-  - Reglas de visibilidad por rol
-
-- **[final_requirements.md](./final_requirements.md)**
-  - Requisitos finales del proyecto
-  - Especificaciones detalladas
-
-- **[priority_features.md](./priority_features.md)**
-  - Features priorizadas
-  - Análisis de impacto
-
-- **[system_analysis_opportunities.md](./system_analysis_opportunities.md)**
-  - Oportunidades de mejora del sistema
-  - Análisis de optimizaciones
-
-### Histórico
-
-- **[PHASE1_ARCHIVE.md](./PHASE1_ARCHIVE.md)**
-  - Archivo consolidado de la Fase 1 completada
-  - Resumen de logros y métricas
+- [AUTO-START-GUIDE.md](./setup/AUTO-START-GUIDE.md) - Windows auto-start service setup
+- [PNPM_MIGRATION.md](./setup/PNPM_MIGRATION.md) - Complete npm to pnpm migration guide
+- [PNPM_VERIFICATION.md](./setup/PNPM_VERIFICATION.md) - Migration verification checklist
 
 ---
 
-## 📂 Carpetas
+## 💻 Development
 
-### `/dev/` - Documentación de Desarrollo (Privada)
+**Contributing & Development Workflow:**
 
-⚠️ **GITIGNORED** - No se sube al repositorio
-
-Contiene documentación con datos sensibles:
-- Credenciales de infraestructura
-- IPs y passwords reales
-- Configuraciones específicas del entorno
-- Guías de setup con datos reales
-
-**Archivos principales**:
-- `ACCESS.md` - Credenciales y accesos
-- `DATABASE.md` - Connection strings
-- `NGINX.md` - Configuración de Nginx
-- `NGROK.md` - Setup de acceso remoto
-- `SETUP.md` - Guía de instalación
-
-Ver [dev/README.md](./dev/README.md) para más información.
-
-### `/prod/` - Documentación Pública
-
-Versión sanitizada de la documentación sin datos sensibles.
-Segura para compartir con el equipo y subir a Git.
+- [CONTRIBUTING.md](./development/CONTRIBUTING.md) - How to contribute to the project
+- [dev/](./dev/) - Private development environment docs (credentials, local setup)
 
 ---
 
-## 🎯 Guía de Uso
+## 🏗️ Architecture & Design
 
-### Para Desarrollo Diario
-1. Consulta `dev/NGROK.md` para acceso remoto
-2. Consulta `dev/NGINX.md` para configuración de proxy
-3. Consulta `dev/ACCESS.md` para credenciales
+**System Design Documentation:**
 
-### Para Entender el Sistema
-1. Lee `system_workflow_v2.md` primero
-2. Revisa `payments-privacy-matrix.md` para lógica de pagos
-3. Consulta `COMPLETE_AUDIT_REPORT.md` para seguridad
-
-### Para Planificación
-1. **Lee `IMPLEMENTATION_STATUS.md` primero** - Estado actual y qué falta
-2. Revisa `MASTER_IMPLEMENTATION_PLAN.md` para roadmap detallado
-3. Consulta `priority_features.md` para features priorizadas
-4. Analiza `system_analysis_opportunities.md` para optimizaciones
+- [system_workflow_v2.md](./architecture/system_workflow_v2.md) - Complete system workflow (English) ⭐ **PRINCIPAL**
+- [flujo_sistema_v2.md](./architecture/flujo_sistema_v2.md) - Flujo del sistema (Spanish)
+- [MASTER_IMPLEMENTATION_PLAN.md](./architecture/MASTER_IMPLEMENTATION_PLAN.md) - Strategic roadmap
+- [final_requirements.md](./architecture/final_requirements.md) - Final project requirements
+- [priority_features.md](./architecture/priority_features.md) - Feature prioritization
 
 ---
 
-## 🗂️ Archivos Eliminados (Limpieza dic 31, 2024)
+## 📊 Implementation Status
 
-Los siguientes archivos fueron eliminados por obsoletos o duplicados:
+**Project Progress & Plans:**
 
-### Obsoletos:
-- `flujo_sistema.md` - Reemplazado por v2
-- `system_workflow.md` - Versión antigua
-- `implementation_plan.md` - Reemplazado por MASTER_IMPLEMENTATION_PLAN
-
-### Consolidados:
-- `PHASE1_PROGRESS.md` → `PHASE1_ARCHIVE.md`
-- `PHASE1_COMPLETED.md` → `PHASE1_ARCHIVE.md`
-- `PHASE1_COMPLETION.md` → `PHASE1_ARCHIVE.md`
-- `PHASE1_SUMMARY.md` → `PHASE1_ARCHIVE.md`
-
-Ver [CLEANUP_PLAN.md](./CLEANUP_PLAN.md) para detalles completos.
+- [IMPLEMENTATION_STATUS.md](./implementation/IMPLEMENTATION_STATUS.md) - Current status (91% Phase 1) ⭐
+- [PHASE1_ARCHIVE.md](./implementation/PHASE1_ARCHIVE.md) - Phase 1 consolidated archive
+- [PHASE_2_DEVOPS_PLAN.md](./implementation/PHASE_2_DEVOPS_PLAN.md) - Phase 2 DevOps planning
 
 ---
 
-## 📝 Mantenimiento
+## 🔍 Audits & Analysis
 
-### Al Crear Nueva Documentación:
-- Docs con datos sensibles → `dev/`
-- Docs sanitizados → `prod/`
-- Docs de proyecto general → raíz de `docs/`
+**Code Quality & Security Audits:**
 
-### Al Actualizar Workflow:
-- Actualizar `system_workflow_v2.md` y `flujo_sistema_v2.md` juntos
-- Mantener ambos idiomas sincronizados
+- [COMPLETE_AUDIT_REPORT.md](./audits/COMPLETE_AUDIT_REPORT.md) - Full security & system audit
+- [N+1_QUERY_AUDIT.md](./audits/N+1_QUERY_AUDIT.md) - Database query optimization audit
+- [CLEANUP_PLAN.md](./audits/CLEANUP_PLAN.md) - Code cleanup plan
+- [CLEANUP_COMPLETED.md](./audits/CLEANUP_COMPLETED.md) - Cleanup completion report
+- [ORPHANED_CODE_ANALYSIS.md](./audits/ORPHANED_CODE_ANALYSIS.md) - Orphaned code audit
+- [ORPHANED_CODE_REPORT.md](./audits/ORPHANED_CODE_REPORT.md) - Detailed orphaned code findings
+- [system_analysis_opportunities.md](./audits/system_analysis_opportunities.md) - Optimization opportunities
 
 ---
 
-**Última actualización**: Enero 1, 2026
+## ⚡ Improvements & Optimizations
 
-## 🆕 Cambios Recientes (Enero 2026)
+**Performance, Security & Code Quality:**
+
+- [PERFORMANCE_OPTIMIZATIONS.md](./improvements/PERFORMANCE_OPTIMIZATIONS.md) - 31 optimizations (v5.0.0) ⭐
+- [SECURITY_IMPROVEMENTS.md](./improvements/SECURITY_IMPROVEMENTS.md) - Security enhancements
+- [ERROR_HANDLING_IMPROVEMENTS.md](./improvements/ERROR_HANDLING_IMPROVEMENTS.md) - Error handling upgrades
+- [DEPENDENCIES_UPDATE.md](./improvements/DEPENDENCIES_UPDATE.md) - Dependency updates (Jan 2026) ⭐
+- [PHASE_1_PERFORMANCE_SUMMARY.md](./improvements/PHASE_1_PERFORMANCE_SUMMARY.md) - Phase 1 performance results
+- [PHASE_1_INTEGRATION_REVIEW.md](./improvements/PHASE_1_INTEGRATION_REVIEW.md) - Integration review
+
+---
+
+## 📖 References
+
+**Reference Materials:**
+
+- [payments-privacy-matrix.md](./references/payments-privacy-matrix.md) - Payment data privacy rules matrix
+
+---
+
+## 📝 Changelog
+
+**Version History:**
+
+- [CHANGELOG.md](./changelog/CHANGELOG.md) - Complete project changelog
+
+---
+
+## 🔒 Private vs Public Documentation
+
+### dev/ - Private Development Docs
+
+**⚠️ GITIGNORED - Contains sensitive data**
+
+Located in `docs/dev/`, these files contain:
+- Real IPs, passwords, and credentials
+- Server access information
+- Database connection strings
+- Personal configuration
+
+**Purpose:** Your private reference for local development
+
+### prod/ - Public Documentation
+
+**✅ Safe for Git - Sanitized templates**
+
+Located in `docs/prod/`, these files contain:
+- Placeholder credentials (YOUR_PASSWORD, YOUR_SERVER_IP)
+- Safe-to-share configuration templates
+- Production deployment guides
+
+**Purpose:** Share with team or use as templates for new setups
+
+See [prod/README.md](./prod/README.md) for more details on the private/public split.
+
+---
+
+## 🗺️ Quick Navigation
+
+### I want to...
+
+**Set up the project:**
+→ Start with [setup/PNPM_MIGRATION.md](./setup/PNPM_MIGRATION.md)
+
+**Understand the system:**
+→ Read [architecture/system_workflow_v2.md](./architecture/system_workflow_v2.md)
+
+**Contribute code:**
+→ Follow [development/CONTRIBUTING.md](./development/CONTRIBUTING.md)
+
+**Check project status:**
+→ See [implementation/IMPLEMENTATION_STATUS.md](./implementation/IMPLEMENTATION_STATUS.md)
+
+**Review optimizations:**
+→ Check [improvements/PERFORMANCE_OPTIMIZATIONS.md](./improvements/PERFORMANCE_OPTIMIZATIONS.md)
+
+**Deploy to production:**
+→ Use templates from [prod/](./prod/)
+
+---
+
+## 📊 Documentation Status
+
+| Category | Files | Status |
+|----------|-------|--------|
+| Setup & Configuration | 3 | ✅ Complete |
+| Development Guides | 1 + private | ✅ Current |
+| Architecture | 5 | ✅ Updated |
+| Implementation | 3 | ✅ Current (91% Phase 1) |
+| Audits | 7 | ✅ Recent |
+| Improvements | 6 | ✅ Jan 2026 |
+| References | 1 | ✅ Current |
+| Changelog | 1 | ✅ Maintained |
+
+**Last Updated:** January 1, 2026
+
+---
+
+## 🆘 Need Help?
+
+1. **Setup Issues:** Check [setup/](./setup/) guides
+2. **Development Questions:** See [development/CONTRIBUTING.md](./development/CONTRIBUTING.md)
+3. **Architecture Clarification:** Read [architecture/system_workflow_v2.md](./architecture/system_workflow_v2.md)
+4. **Performance Concerns:** Review [improvements/PERFORMANCE_OPTIMIZATIONS.md](./improvements/PERFORMANCE_OPTIMIZATIONS.md)
+
+---
+
+## 🆕 Recent Changes (January 2026)
 
 ### Package Manager
-- ✅ **Migración a pnpm** - 3x más rápido, 60% menos espacio
-- ✅ Todos los scripts actualizados
-- ✅ Documentación completa en PNPM_MIGRATION.md
+- ✅ **Migrated to pnpm** - 3x faster, 60% less disk space
+- ✅ All scripts and documentation updated
+- ✅ See [setup/PNPM_MIGRATION.md](./setup/PNPM_MIGRATION.md)
 
-### Dependencias
+### Dependencies
 - ✅ **Next.js** 16.1.1 → 15.1.3 (stable LTS, security fix)
 - ✅ **Axios** 1.13.2 → 1.7.9 (security patches)
 - ✅ **TypeScript** 5.x → 5.7.3
 - ✅ **Tailwind CSS** 4.x → 4.1.0
 
 ### Performance
-- ✅ **31 optimizaciones** implementadas
-- ✅ **40-50% más rápido** en carga inicial
-- ✅ **80-95% menos re-renders**
-- ✅ Ver PERFORMANCE_OPTIMIZATIONS.md v5.0.0
+- ✅ **31 optimizations** implemented
+- ✅ **40-50% faster** initial load
+- ✅ **80-95% fewer** re-renders
+- ✅ See [improvements/PERFORMANCE_OPTIMIZATIONS.md](./improvements/PERFORMANCE_OPTIMIZATIONS.md)
+
+---
+
+**Project:** Align Designs Platform
+**Tech Stack:** Next.js 15 + NestJS + PostgreSQL + Prisma + pnpm
+**Status:** Phase 1 Complete (91%), Phase 2 Planning

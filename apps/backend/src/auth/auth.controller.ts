@@ -45,26 +45,49 @@ export class AuthController {
   /**
    * Set authentication cookie with secure settings
    * Centralizes cookie configuration to follow DRY principle
+   * Uses Origin/Referer/Host detection to determine secure flag (same as CSRF middleware)
    */
   private setAuthCookie(res: Response, token: string, req?: Request): void {
     const isProduction = process.env.NODE_ENV === 'production';
-    // Allow cookies to work with ngrok by using 'none' sameSite when needed
-    const allowNgrok = process.env.ALLOW_NGROK === 'true';
+
+    // Determine if request is actually over HTTPS
+    // Priority: Origin header > Referer header > Host check for ngrok
+    // This matches the CSRF middleware logic
+    let isHttps = false;
+    if (req) {
+      const origin = req.headers.origin as string | undefined;
+      const referer = req.headers.referer as string | undefined;
+      const host = req.headers.host as string | undefined;
+
+      if (origin) {
+        isHttps = origin.startsWith('https://');
+      } else if (referer) {
+        isHttps = referer.startsWith('https://');
+      } else if (host) {
+        // ngrok domains always use HTTPS, local domains use HTTP
+        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+      }
+    }
+
+    const useSecureCookie = isHttps || isProduction;
+
+    // When secure is true (HTTPS), we can use sameSite: 'none' for cross-origin
+    // When secure is false (HTTP), we must use 'lax' or 'strict'
+    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
 
     const cookieOptions = {
       httpOnly: true,
-      secure: allowNgrok ? true : false, // Must be true when sameSite is 'none'
-      // Use 'none' when ngrok is enabled to allow cross-site cookies
-      // Use 'lax' in development - same-site requests through Nginx proxy
-      // Use 'strict' in production for maximum security
-      sameSite: allowNgrok ? 'none' : (isProduction ? 'strict' : 'lax'),
+      secure: useSecureCookie,
+      sameSite: sameSite as 'strict' | 'lax' | 'none',
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
-      // DON'T set domain attribute - host-only cookies work better with ngrok and sameSite=none
       path: '/',
     };
 
+    this.logger.debug(`Auth Cookie Settings: secure=${useSecureCookie}, sameSite=${sameSite}, isHttps=${isHttps}, host=${req?.headers.host || 'unknown'}`);
+
     res.cookie('access_token', token, cookieOptions as any);
   }
+
 
   @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
@@ -381,14 +404,29 @@ export class AuthController {
       'logout',
     );
 
-    // Clear the access_token cookie
+    // Clear the access_token cookie with matching settings
+    // Use the same Origin/Referer/Host detection logic as setAuthCookie
     const isProduction = process.env.NODE_ENV === 'production';
-    const allowNgrok = process.env.ALLOW_NGROK === 'true';
+    let isHttps = false;
+    const origin = req.headers.origin as string | undefined;
+    const referer = req.headers.referer as string | undefined;
+    const host = req.headers.host as string | undefined;
+
+    if (origin) {
+      isHttps = origin.startsWith('https://');
+    } else if (referer) {
+      isHttps = referer.startsWith('https://');
+    } else if (host) {
+      isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+    }
+
+    const useSecureCookie = isHttps || isProduction;
+    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: allowNgrok ? true : false,
-      sameSite: allowNgrok ? 'none' : (isProduction ? 'strict' : 'lax'),
-      // REMOVED: domain: isProduction ? undefined : 'aligndesigns-platform.local',
+      secure: useSecureCookie,
+      sameSite: sameSite as 'strict' | 'lax' | 'none',
       path: '/',
     });
 

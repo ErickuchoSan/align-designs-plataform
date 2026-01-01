@@ -82,7 +82,7 @@ export class ProjectsController {
       name: createProjectDto.name,
       clientId: createProjectDto.clientId,
       hasEmployees: !!createProjectDto.employeeIds?.length,
-      userId: user.sub
+      userId: user.userId
     });
 
     const project = await this.projectsService.create(

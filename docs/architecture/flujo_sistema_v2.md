@@ -53,6 +53,13 @@ El administrador crea clientes en el sistema, empleados, y luego crea un proyect
 
 **Estado del Proyecto:** `ESPERANDO PAGO`
 
+**🆕 GENERACIÓN AUTOMÁTICA DE FACTURAS:**
+Cuando el admin crea el proyecto con `initialAmountRequired = $8000`:
+- ✅ El sistema **crea automáticamente** la Factura #INV-YYYY-MM-DD-001
+- ✅ La factura se guarda en la etapa de Pagos
+- ✅ El cliente puede ver esta factura inmediatamente en su sección de Pagos
+- ✅ Estado de factura: `PENDING` (Pendiente)
+
 **Indicadores visuales:**
 - Badge visible: 🔒 **ESPERANDO PAGO**
 - Mensaje: *"Este proyecto se activará una vez que el cliente pague el monto inicial de $X"*
@@ -80,8 +87,10 @@ El administrador crea clientes en el sistema, empleados, y luego crea un proyect
 3. El cliente hace clic en **"Realizar Pago"**
 4. Se abre modal con opciones de pago:
 
+> **Nota:** Idealmente, el cliente debe subir el comprobante oficial compartido desde su app bancaria para asegurar legibilidad.
+
 #### Opción A - Transferencia Bancaria:
-- Subir comprobante (captura de pantalla/PDF)
+- Subir comprobante (captura de pantalla/PDF) (Opcional en versión actual)
 - Ingresar monto
 - Seleccionar fecha de pago (calendario)
 - Al guardar, el pago cuenta inmediatamente
@@ -97,6 +106,25 @@ El administrador crea clientes en el sistema, empleados, y luego crea un proyect
   - Sube comprobante del cheque (foto/escaneo)
   - Confirma/selecciona fecha real de pago
 - El sistema ahora registra el pago como confirmado
+
+#### 3.1 Revisión y Aprobación de Pago por Admin (Backend Listo / UI En Desarrollo)
+
+El Admin recibe notificación y revisa el pago con **3 opciones**:
+
+**Opción A - Aprobar con monto reclamado:**
+- ✅ Comprobante correcto, monto correcto
+- ✅ Estado de pago → `CONFIRMED`
+- ✅ Monto agregado a `amountPaid` del proyecto
+
+**Opción B - Aprobar con corrección de monto:**
+- ✅ Comprobante correcto, pero cliente ingresó monto erróneo
+- ✅ Admin corrige el monto
+- ✅ Estado de pago → `CONFIRMED` con monto corregido
+
+**Opción C - Rechazar pago:**
+- ❌ Comprobante ilegible / formato incorrecto
+- ❌ Estado de pago → `REJECTED`
+- ✅ Notificación al cliente para volver a subir
 
 **Progreso de Pago:**
 - Muestra: *"Progreso de pago: $2,000 / $5,000 (40%)"*
@@ -224,7 +252,7 @@ El administrador crea clientes en el sistema, empleados, y luego crea un proyect
   - **Nota:** El seguimiento de tiempo solo cuenta **días**, no horas/minutos (para ser justo con empleados)
 - Tooltip mostrado: *"⏱️ Seguimiento de tiempo inicia: [Mañana 9:00 AM / Hoy a la hora actual]"*
 
-3. **🆕 NUEVO: Si rechaza un archivo entregado:**
+3. **🆕 NUEVO: Si rechaza un archivo entregado (Backend Soportado / UI Pendiente):**
    - Admin puede enlazar este feedback al archivo específico que está rechazando
    - El sistema incrementa el contador de rechazos en ese archivo
    - Empleado ve: "❌ Rechazado - Ver Feedback #123"
@@ -244,12 +272,10 @@ El administrador crea clientes en el sistema, empleados, y luego crea un proyect
 1. Empleado trabaja en los cambios solicitados
 2. Empleado sube trabajo a la etapa **"Entregado"** (archivo/enlace/comentario)
 
-**🆕 NUEVO: Gestión de Versiones:**
-- Si empleado envía múltiples versiones:
-  - v1, v2, v3 rastreadas automáticamente
-  - Empleado puede agregar notas: "Corregí colores y espaciado como solicitado"
-  - Sistema muestra historial de versiones con notas
-  - Solo versión actual muestra botón "Aprobar"
+**🆕 NUEVO: Gestión de Versiones (Esquema Listo / Lógica Pendiente):**
+- Sistema soporta esquema v1, v2, v3
+- **Comportamiento Actual:** Nuevas subidas reemplazan archivos anteriores
+- **Futuro:** UI permitirá agrupar historial y restaurar versiones
 
 **FECHA CRÍTICA - Temporizador termina:**
 - El sistema guarda fecha/hora cuando empleado sube a Entregado

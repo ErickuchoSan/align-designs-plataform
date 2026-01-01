@@ -149,7 +149,7 @@ function ProjectModals({
       <Modal
         isOpen={createModal.isOpen}
         onClose={createModal.onClose}
-        title={theme === 'navy' ? 'Crear Nuevo Proyecto' : 'Create New Project'}
+        title={theme === 'navy' ? 'Create New Project' : 'Create New Project'}
       >
         <form onSubmit={createModal.onSubmit} className="space-y-5">
           <div>
@@ -177,7 +177,7 @@ function ProjectModals({
               value={createModal.formData.description}
               onChange={(e) => createModal.onFormChange({ ...createModal.formData, description: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Describe el proyecto...' : 'Describe the project...'}
+              placeholder={theme === 'navy' ? 'Describe the project...' : 'Describe the project...'}
             />
           </div>
 
@@ -268,7 +268,7 @@ function ProjectModals({
               disabled={createModal.isSubmitting}
               className={`px-5 py-2.5 text-sm font-medium text-white ${styles.createButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
             >
-              {createModal.isSubmitting ? <ButtonLoader /> : (theme === 'navy' ? 'Crear Proyecto' : 'Create Project')}
+              {createModal.isSubmitting ? <ButtonLoader /> : (theme === 'navy' ? 'Create Project' : 'Create Project')}
             </button>
           </div>
         </form>
@@ -284,7 +284,7 @@ function ProjectModals({
         onConfirm={editModal.onConfirm}
         title="Confirm Edit"
         message={`Are you sure you want to edit the project "${editModal.project?.name}"?`}
-        confirmText={theme === 'navy' ? 'Editar' : 'Edit'}
+        confirmText={theme === 'navy' ? 'Edit' : 'Edit'}
         variant="warning"
       />
 
@@ -292,7 +292,7 @@ function ProjectModals({
       <Modal
         isOpen={editModal.isEditOpen}
         onClose={editModal.onEditClose}
-        title={theme === 'navy' ? 'Editar Proyecto' : 'Edit Project'}
+        title={theme === 'navy' ? 'Edit Project' : 'Edit Project'}
       >
         <form onSubmit={editModal.onSubmit} className="space-y-5">
           <div>
@@ -306,7 +306,7 @@ function ProjectModals({
               value={editModal.formData.name}
               onChange={(e) => editModal.onFormChange({ ...editModal.formData, name: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Ej: Diseño de Logo' : 'e.g., Logo Design'}
+              placeholder={theme === 'navy' ? 'e.g., Logo Design' : 'e.g., Logo Design'}
             />
           </div>
 
@@ -320,7 +320,7 @@ function ProjectModals({
               value={editModal.formData.description}
               onChange={(e) => editModal.onFormChange({ ...editModal.formData, description: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Describe el proyecto...' : 'Describe the project...'}
+              placeholder={theme === 'navy' ? 'Describe the project...' : 'Describe the project...'}
             />
           </div>
 

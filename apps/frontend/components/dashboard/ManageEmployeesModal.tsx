@@ -25,16 +25,11 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
     const loadEmployees = useCallback(async () => {
         try {
             setIsLoading(true);
-            // We need to fetch candidates (employees). 
-            // Assuming UsersService has a method for this, otherwise we might need to verify or use a different endpoint.
-            // In Phase 1 we likely used getEmployees() or similar.
-            // Let's assume UsersService.getEmployees() returns users with role EMPLOYEE
-            // Checking ProjectsModals might show how we did it there.
             const users = await UsersService.getEmployees();
             setAvailableEmployees(users);
         } catch (error) {
             console.error('Error loading employees:', error);
-            toast.error('Error al cargar empleados disponibles');
+            toast.error('Error loading available employees');
         } finally {
             setIsLoading(false);
         }
@@ -54,50 +49,29 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
         e.preventDefault();
         setIsSaving(true);
         try {
-            // Logic:
-            // The backend has `assignEmployees` which might be additive or confirmative.
-            // If it's additive/mass-assign, we just send the list.
-            // However, if we removed someone, we might need `removeEmployee`.
-            // Let's check ProjectsService again mentally...
-            // `assignEmployees` takes a list. Phase 1 backend `ProjectEmployeeService.assignEmployees` usually handles re-assignment or bulk add.
-            // If the backend implementation replaces the list, we are good.
-            // If it only adds, we need to handle removals separately.
-
-            // Checking ProjectEmployeeService (memory/context): "Assignment validation" 
-            // In many implementations, we send the new full list.
-            // Let's assume for now we call assignEmployees with the *new* list.
-            // If the backend is smart, it syncs. If not, we might need to be careful.
-            // Given I wrote the service, I recall it validates 1:1 active project.
-
-            // Let's try sending the list.
             await ProjectsService.assignEmployees(projectId, selectedIds);
-
-            // If we need to explicitly remove, we'd compare lists. 
-            // But for "Assign", typically providing the IDs implies "these are the assignees".
-            // Let's trust assignEmployees handles it or check backend if fails.
-
-            toast.success('Empleados actualizados correctamente');
+            toast.success('Employees updated successfully');
             onSuccess();
             onClose();
         } catch (error: any) {
             console.error('Error saving employees:', error);
-            toast.error(error.response?.data?.message || 'Error al actualizar empleados');
+            toast.error(error.response?.data?.message || 'Error updating employees');
         } finally {
             setIsSaving(false);
         }
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Gestionar Empleados">
+        <Modal isOpen={isOpen} onClose={onClose} title="Manage Employees">
             <form onSubmit={handleSave} className="space-y-6">
                 <div>
                     <p className="text-sm text-gray-500 mb-4">
-                        Selecciona los empleados que trabajarán en este proyecto.
-                        Recuerda que un empleado solo puede estar activo en un proyecto a la vez.
+                        Select the employees who will work on this project.
+                        Remember that an employee can only be active on one project at a time.
                     </p>
 
                     {isLoading ? (
-                        <div className="py-4 text-center text-gray-400">Cargando empleados...</div>
+                        <div className="py-4 text-center text-gray-400">Loading employees...</div>
                     ) : (
                         <EmployeeSelect
                             employees={availableEmployees}
@@ -114,14 +88,14 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
                         disabled={isSaving}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                     >
-                        Cancelar
+                        Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSaving || isLoading}
                         className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 min-w-[100px]"
                     >
-                        {isSaving ? <ButtonLoader /> : 'Guardar'}
+                        {isSaving ? <ButtonLoader /> : 'Save'}
                     </button>
                 </div>
             </form>
