@@ -18,9 +18,10 @@ const ENV_CONFIG: EnvConfig = {
   NEXT_PUBLIC_API_URL: {
     required: true,
     description: 'Backend API URL',
-    // Only use default in development, not in production
+    // Use relative URL by default - works with both local and ngrok
+    // The browser will resolve /api/v1 to the current domain
     ...(process.env.NODE_ENV === 'development' && {
-      defaultValue: 'http://aligndesigns-platform.local/api/v1',
+      defaultValue: '/api/v1',
     }),
   },
 };

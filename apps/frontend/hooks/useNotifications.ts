@@ -20,10 +20,12 @@ export function useNotifications() {
     const fetchNotifications = useCallback(async () => {
         try {
             const response = await api.get('/notifications');
-            setNotifications(response.data);
+            const loadedNotifications = response.data;
+            setNotifications(loadedNotifications);
 
-            const countResponse = await api.get('/notifications/unread-count');
-            setUnreadCount(countResponse.data.count);
+            // Calculate unread count directly from the list to ensure sync
+            const count = loadedNotifications.filter((n: Notification) => !n.isRead).length;
+            setUnreadCount(count);
         } catch (error) {
             console.error('Failed to fetch notifications', error);
         } finally {
@@ -53,11 +55,19 @@ export function useNotifications() {
         }
     };
 
+    // Initial fetch on mount
     useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-        return () => clearInterval(interval);
     }, [fetchNotifications]);
+
+    // Polling effect - only poll when drawer is open
+    useEffect(() => {
+        if (!isOpen) return; // Don't poll when drawer is closed
+
+        // Poll every 30 seconds when drawer is open
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [isOpen, fetchNotifications]);
 
     return {
         notifications,

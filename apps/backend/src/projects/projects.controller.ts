@@ -74,6 +74,9 @@ export class ProjectsController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
+    // Temporary log to debug
+    console.log('📝 Received createProjectDto:', JSON.stringify(createProjectDto, null, 2));
+
     const project = await this.projectsService.create(
       createProjectDto,
       user.userId,
@@ -598,5 +601,23 @@ export class ProjectsController {
   })
   async getCompletionStatus(@Param('id') projectId: string) {
     return this.projectsService.getCompletionStatus(projectId);
+  }
+
+  /**
+   * Get accessible stages for current user
+   */
+  @Get(':id/stages')
+  @ApiOperation({
+    summary: 'Get accessible project stages',
+    description:
+      'Returns stages that the current user can access based on their role and permissions',
+  })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiResponse({ status: 200, description: 'Stages retrieved successfully' })
+  async getProjectStages(
+    @Param('id') projectId: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.projectsService.getAccessibleStages(projectId, user.role);
   }
 }

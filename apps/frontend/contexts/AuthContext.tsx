@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { User, LoginCredentials, OTPRequest, OTPVerify, AuthResponse } from '@/types';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
@@ -33,7 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  // Memoize functions to prevent recreation on every render
+  const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       const { data } = await api.post<AuthResponse>('/auth/login', credentials);
 
@@ -50,18 +51,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.error('Error during login:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const requestOTP = async (otpData: OTPRequest) => {
+  const requestOTP = useCallback(async (otpData: OTPRequest) => {
     try {
       await api.post('/auth/otp/request', otpData);
     } catch (error) {
       logger.error('Error requesting OTP:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const verifyOTP = async (otpData: OTPVerify) => {
+  const verifyOTP = useCallback(async (otpData: OTPVerify) => {
     try {
       const { data } = await api.post<AuthResponse>('/auth/otp/verify', otpData);
 
@@ -78,9 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.error('Error verifying OTP:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Call backend logout endpoint to clear httpOnly cookie
       await api.post('/auth/logout');
@@ -105,9 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       AuthStorage.clearAuthData();
       setUser(null);
     }
-  };
+  }, []);
 
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = useCallback((userData: Partial<User>) => {
     if (!user) {
       logger.warn('Attempted to update user when no user is logged in');
       return;
@@ -116,22 +117,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const updatedUser = { ...user, ...userData };
     AuthStorage.saveAuthData('', updatedUser);
     setUser(updatedUser);
-  };
+  }, [user]);
+
+  // Memoize context value to prevent unnecessary re-renders
+  // Only recalculates when dependencies change
+  const contextValue = useMemo(() => ({
+    user,
+    loading,
+    login,
+    requestOTP,
+    verifyOTP,
+    logout,
+    updateUser,
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'ADMIN',
+  }), [user, loading, login, requestOTP, verifyOTP, logout, updateUser]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        requestOTP,
-        verifyOTP,
-        logout,
-        updateUser,
-        isAuthenticated: !!user,
-        isAdmin: user?.role === 'ADMIN',
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

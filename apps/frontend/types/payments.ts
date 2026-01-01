@@ -10,8 +10,10 @@ export enum PaymentMethod {
 }
 
 export enum PaymentStatus {
-    PENDING_CONFIRMATION = 'PENDING_CONFIRMATION',
+    PENDING_APPROVAL = 'PENDING_APPROVAL',
     CONFIRMED = 'CONFIRMED',
+    REJECTED = 'REJECTED',
+    PENDING_CONFIRMATION = 'PENDING_CONFIRMATION', // Legacy
 }
 
 export interface Payment {
@@ -25,6 +27,9 @@ export interface Payment {
     status: PaymentStatus;
     notes?: string;
     createdAt: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    rejectionReason?: string;
     fromUser?: {
         id: string;
         firstName: string;
@@ -49,6 +54,8 @@ export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-    [PaymentStatus.PENDING_CONFIRMATION]: 'Pendiente',
+    [PaymentStatus.PENDING_APPROVAL]: 'Pendiente de Aprobación',
     [PaymentStatus.CONFIRMED]: 'Confirmado',
+    [PaymentStatus.REJECTED]: 'Rechazado',
+    [PaymentStatus.PENDING_CONFIRMATION]: 'Pendiente', // Legacy
 };

@@ -13,6 +13,7 @@ import { FileStorageCoordinatorService } from './services/file-storage-coordinat
 import { FileTransformerService } from './services/file-transformer.service';
 import { FileStageService } from './services/file-stage.service';
 import { FileVersionService } from './file-version.service';
+import { FileCleanupService } from './services/file-cleanup.service';
 
 import { TrackingModule } from '../tracking/tracking.module';
 
@@ -25,12 +26,13 @@ import { TrackingModule } from '../tracking/tracking.module';
     FileTransformerService,
     FileStageService,
     FileVersionService,
+    FileCleanupService,
     {
       provide: INJECTION_TOKENS.FILE_REPOSITORY,
       useClass: PrismaFileRepository,
     },
   ],
   controllers: [FilesController],
-  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService, FileVersionService],
+  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService, FileVersionService, FileCleanupService],
 })
 export class FilesModule { }

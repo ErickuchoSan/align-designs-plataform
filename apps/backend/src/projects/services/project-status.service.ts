@@ -59,19 +59,26 @@ export class ProjectStatusService {
       };
     }
 
-    // If no initial amount is required, can activate immediately
-    if (!project.initialAmountRequired) {
-      return { canActivate: true };
+    // If no initial amount is set (null), prevent activation to ensure payment terms are defined
+    if (project.initialAmountRequired === null) {
+      return {
+        canActivate: false,
+        reason: 'Payment amount not configured. Please edit project to set an Initial Amount (use 0 for free projects).',
+      };
     }
 
     const required = Number(project.initialAmountRequired);
-    const paid = Number(project.amountPaid);
+    const paid = Number(project.amountPaid || 0);
     const remaining = required - paid;
+
+    this.logger.log(
+      `Payment validation for project ${project.name}: Required=$${required}, Paid=$${paid}, Remaining=$${remaining}`,
+    );
 
     if (paid < required) {
       return {
         canActivate: false,
-        reason: `Initial payment not complete. Received $${paid} of $${required} required.`,
+        reason: `Initial payment not complete. Received $${paid.toFixed(2)} of $${required.toFixed(2)} required.`,
         paymentProgress: {
           required,
           paid,
@@ -131,28 +138,32 @@ export class ProjectStatusService {
       },
     });
 
-    // Notify Client
-    if (updatedProject.client) {
-      await this.notificationsService.create({
-        userId: updatedProject.client.id,
-        type: NotificationType.SUCCESS,
-        title: 'Project Activated',
-        message: `Your project "${updatedProject.name}" is now ACTIVE. Work has begun!`,
-        link: `/dashboard/projects/${projectId}`,
-      });
-    }
-
-    // Notify Employees
-    for (const emp of updatedProject.employees) {
-      if (emp.employee) {
+    // Notify Client and Employees (Non-blocking)
+    try {
+      if (updatedProject.client) {
         await this.notificationsService.create({
-          userId: emp.employee.id,
-          type: NotificationType.INFO,
+          userId: updatedProject.client.id,
+          type: NotificationType.SUCCESS,
           title: 'Project Activated',
-          message: `Project "${updatedProject.name}" is now ACTIVE. You can start working.`,
+          message: `Your project "${updatedProject.name}" is now ACTIVE. Work has begun!`,
           link: `/dashboard/projects/${projectId}`,
         });
       }
+
+      for (const emp of updatedProject.employees) {
+        if (emp.employee) {
+          await this.notificationsService.create({
+            userId: emp.employee.id,
+            type: NotificationType.INFO,
+            title: 'Project Activated',
+            message: `Project "${updatedProject.name}" is now ACTIVE. You can start working.`,
+            link: `/dashboard/projects/${projectId}`,
+          });
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Failed to send activation notifications for project ${projectId}`, error);
+      // Suppress error so activation successful response is returned
     }
 
     this.logger.log(

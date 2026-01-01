@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Logger,
   Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -32,6 +33,16 @@ import {
 } from './constants/project-selects';
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
+import { InvoicesService } from '../invoices/invoices.service';
+import {
+  getAccessibleStages as getAccessibleStagesHelper,
+  getStagePermissions,
+  getStageName,
+  getStageIcon,
+  canViewStage,
+  canWriteToStage,
+  canDeleteFromStage,
+} from '../common/helpers/stage-permissions.helper';
 
 /**
  * Projects Service
@@ -67,6 +78,8 @@ export class ProjectsService {
     private readonly cacheManager: CacheManagerService,
     private readonly projectEmployeeService: ProjectEmployeeService,
     private readonly projectStatusService: ProjectStatusService,
+    @Inject(forwardRef(() => InvoicesService))
+    private readonly invoicesService: InvoicesService,
   ) { }
 
   /**
@@ -104,6 +117,28 @@ export class ProjectsService {
         project.id,
         employeeIds,
       );
+    }
+
+    // Phase 2: Auto-generate invoice if initialAmountRequired is set
+    if (project.initialAmountRequired && Number(project.initialAmountRequired) > 0) {
+      try {
+        await this.invoicesService.createInvoiceForProject(
+          project.id,
+          project.clientId,
+          Number(project.initialAmountRequired),
+          15, // Default payment terms: 15 days
+        );
+        this.logger.log(
+          `Auto-generated invoice for project ${project.id} with amount ${project.initialAmountRequired}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to auto-generate invoice for project ${project.id}:`,
+          error,
+        );
+        // Don't fail project creation if invoice generation fails
+        // Admin can create invoice manually
+      }
     }
 
     // Fetch with relations for response
@@ -170,10 +205,25 @@ export class ProjectsService {
     //   return cached;
     // }
 
-    const where = {
+    // Build where clause based on user role
+    let where: any = {
       deletedAt: null, // Only include non-deleted projects
-      ...(userRole === Role.CLIENT ? { clientId: userId } : filterClientId ? { clientId: filterClientId } : {}),
     };
+
+    // Role-based filtering
+    if (userRole === Role.CLIENT) {
+      where.clientId = userId;
+    } else if (userRole === Role.EMPLOYEE) {
+      // For employees, filter by assigned projects
+      where.employees = {
+        some: {
+          employeeId: userId,
+        },
+      };
+    } else if (filterClientId) {
+      // For admin with client filter
+      where.clientId = filterClientId;
+    }
 
     // Optimized: Only 2 queries - projects with files included, and total count
     const [projects, total] = await Promise.all([
@@ -188,6 +238,13 @@ export class ProjectsService {
               deletedAt: null,
             },
             select: FILE_MINIMAL_SELECT,
+          },
+          employees: {
+            include: {
+              employee: {
+                select: USER_BASIC_INFO_SELECT,
+              },
+            },
           },
         },
         orderBy: {
@@ -248,6 +305,8 @@ export class ProjectsService {
     //   return cached;
     // }
 
+    this.logger.debug(`findOne called - projectId: ${id}, userId: ${userId}, userRole: ${userRole}`);
+
     const project = await this.prisma.project.findFirst({
       where: {
         id,
@@ -269,27 +328,54 @@ export class ProjectsService {
             uploadedAt: 'desc',
           },
         },
+        employees: {
+          include: {
+            employee: {
+              select: USER_BASIC_INFO_SELECT,
+            },
+          },
+        },
       },
     });
 
     if (!project) {
+      this.logger.warn(`Project ${id} not found or deleted`);
       throw new NotFoundException('Project not found');
     }
 
-    // Client can only view their own projects
+    this.logger.debug(`Project found - clientId: ${project.clientId}, employeeIds: ${project.employees.map(e => e.employeeId).join(', ')}`);
+
+    // Verify access based on role
     const permissionContext = new PermissionContext(userRole);
-    permissionContext.verifyProjectAccess(
-      userId,
-      project.clientId,
-      'You do not have permission to view this project',
-    );
+
+    if (userRole === Role.EMPLOYEE) {
+      // For employees, check if they are assigned to this project
+      const isAssigned = project.employees.some(
+        (emp) => emp.employeeId === userId,
+      );
+      this.logger.debug(`Employee ${userId} assignment check: ${isAssigned}`);
+      if (!isAssigned) {
+        this.logger.warn(`Employee ${userId} not assigned to project ${id}`);
+        throw new ForbiddenException(
+          'You do not have permission to view this project',
+        );
+      }
+    } else {
+      // For client and admin, use standard permission check
+      this.logger.debug(`Checking access for ${userRole} - userId: ${userId}, clientId: ${project.clientId}`);
+      permissionContext.verifyProjectAccess(
+        userId,
+        project.clientId,
+        'You do not have permission to view this project',
+      );
+    }
 
     // Separate files and comments count
     const { filesCount, commentsCount } = getFilesAndCommentsCounts(
       project.files,
     );
 
-    // Convert BigInt to number for JSON serialization and remove files array
+    // Convert BigInt to number for JSON serialization and remove files array but keep employees
     const { files, ...projectWithoutFiles } = project;
     const result = {
       ...projectWithoutFiles,
@@ -328,6 +414,7 @@ export class ProjectsService {
             uploadedBy: true,
           },
         },
+        employees: true,
       },
     });
 
@@ -355,15 +442,44 @@ export class ProjectsService {
       );
     }
 
+    // Phase 1: Update Employee Assignments
+    const { employeeIds, ...projectData } = updateProjectDto;
+
+    if (employeeIds) {
+      // Get current assignments
+      const currentEmployeeIds = project.employees.map((e) => e.employeeId);
+
+      // Determine additions and removals
+      const toAdd = employeeIds.filter((id) => !currentEmployeeIds.includes(id));
+      const toRemove = currentEmployeeIds.filter((id) => !employeeIds.includes(id));
+
+      // Remove employees
+      for (const employeeId of toRemove) {
+        await this.projectEmployeeService.removeEmployeeFromProject(id, employeeId);
+      }
+
+      // Add new employees (validates availability internally)
+      if (toAdd.length > 0) {
+        await this.projectEmployeeService.assignEmployeesToProject(id, toAdd);
+      }
+    }
+
     const updatedProject = await this.prisma.project.update({
       where: { id },
-      data: updateProjectDto,
+      data: projectData,
       include: {
         client: {
           select: USER_BASIC_INFO_SELECT,
         },
         files: {
           select: FILE_BASIC_SELECT,
+        },
+        employees: {
+          include: {
+            employee: {
+              select: USER_BASIC_INFO_SELECT,
+            },
+          },
         },
       },
     });
@@ -560,5 +676,63 @@ export class ProjectsService {
       this.logger.warn(`Found ${oldProjects.length} projects archived > 90 days ago: ${oldProjects.map(p => p.name).join(', ')}`);
       // Future: Implement auto-deletion or email notification to admin
     }
+  }
+
+  /**
+   * Get accessible stages for a project based on user role
+   * Returns stage information with permissions and file counts
+   */
+  async getAccessibleStages(projectId: string, userRole: Role) {
+    // Verify project exists
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    // Get file counts per stage
+    const fileCounts = await this.prisma.file.groupBy({
+      by: ['stage'],
+      where: {
+        projectId,
+        deletedAt: null,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    // Map counts to stages
+    const countsMap = new Map(
+      fileCounts.map((fc) => [fc.stage, fc._count.id]),
+    );
+
+    // Get accessible stages for this user role
+    const accessibleStages = getAccessibleStagesHelper(userRole);
+
+    // Build response with permissions and counts
+    const stages = accessibleStages.map((stage) => ({
+      stage,
+      name: getStageName(stage),
+      icon: getStageIcon(stage),
+      fileCount: countsMap.get(stage) || 0,
+      permissions: {
+        canView: canViewStage(userRole, stage),
+        canWrite: canWriteToStage(userRole, stage),
+        canDelete: canDeleteFromStage(userRole, stage),
+      },
+      description: getStagePermissions(stage).description,
+    }));
+
+    this.logger.log(
+      `User with role ${userRole} can access ${stages.length} stages in project ${project.name}`,
+    );
+
+    return {
+      projectId: project.id,
+      projectName: project.name,
+      projectStatus: project.status,
+      userRole,
+      stages,
+    };
   }
 }

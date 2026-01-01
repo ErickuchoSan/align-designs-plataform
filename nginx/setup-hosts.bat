@@ -1,61 +1,29 @@
 @echo off
-REM Script para agregar el dominio local al archivo hosts
-REM Requiere ejecutarse como Administrador
+setlocal
 
-echo ============================================================
-echo   Setup Local Domain - Align Designs Platform
-echo ============================================================
-echo.
+:: Script to configure hosts file for Align Designs Platform (VM Version)
+:: Must be run as Administrator
 
-REM Verificar permisos de administrador
+:: IP of the VM hosting Nginx
+set "TARGET_IP=192.168.0.139"
+set "DOMAIN=aligndesigns-platform.local"
+set "HOSTS_FILE=%SystemRoot%\System32\drivers\etc\hosts"
+
+:: Check for admin privileges
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    echo ERROR: Este script requiere permisos de administrador
-    echo.
-    echo Por favor:
-    echo 1. Cierra esta ventana
-    echo 2. Haz clic derecho en este archivo
-    echo 3. Selecciona "Ejecutar como administrador"
-    echo.
-    pause
-    exit /b 1
+    echo Requesting Administrator privileges...
+    powershell -Command "Start-Process '%~dpnx0' -Verb RunAs"
+    exit /b
 )
 
-set HOSTS_FILE=C:\Windows\System32\drivers\etc\hosts
-set DOMAIN=aligndesigns-platform.local
+echo Adding entry to hosts file...
+echo. >> "%HOSTS_FILE%"
+echo # Align Designs Platform (Remote VM) >> "%HOSTS_FILE%"
+echo %TARGET_IP%       %DOMAIN% >> "%HOSTS_FILE%"
 
-echo Verificando archivo hosts...
-echo.
-
-REM Verificar si el dominio ya existe
-findstr /C:"%DOMAIN%" "%HOSTS_FILE%" >nul 2>&1
-if %errorLevel% equ 0 (
-    echo El dominio %DOMAIN% ya existe en el archivo hosts
-    echo No se requiere accion.
-) else (
-    echo Agregando %DOMAIN% al archivo hosts...
-    echo.
-    echo 127.0.0.1       %DOMAIN% >> "%HOSTS_FILE%"
-    echo ::1             %DOMAIN% >> "%HOSTS_FILE%"
-    echo.
-    echo Dominio agregado exitosamente!
-)
-
-echo.
-echo ============================================================
-echo   Configuracion completada
-echo ============================================================
-echo.
-echo Dominio configurado: %DOMAIN%
-echo.
-echo Proximos pasos:
-echo   1. Copia el archivo nginx\aligndesigns-platform.conf
-echo      a tu carpeta conf de Nginx
-echo   2. Reinicia Nginx
-echo   3. Inicia los servicios: scripts\start-dev.bat
-echo   4. Abre: http://aligndesigns-platform.local
-echo.
-echo ============================================================
-echo.
+echo Done! The domain %DOMAIN% now points to %TARGET_IP%.
+echo Flushing DNS cache...
+ipconfig /flushdns
 
 pause

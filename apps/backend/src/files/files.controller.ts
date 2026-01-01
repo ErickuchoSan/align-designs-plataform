@@ -103,6 +103,7 @@ export class FilesController {
       uploadFileDto.comment,
       user.userId,
       user.role,
+      uploadFileDto.stage,
     );
 
     // Audit log for file upload (non-blocking)
@@ -208,11 +209,19 @@ export class FilesController {
     @Body() createCommentDto: CreateCommentDto,
     @CurrentUser() user: UserPayload,
   ) {
+    // DEBUG: Log DTO values
+    console.log('CreateCommentDto:', {
+      comment: createCommentDto.comment,
+      stage: createCommentDto.stage,
+      stageType: typeof createCommentDto.stage,
+    });
+
     return this.filesService.createComment(
       projectId,
       createCommentDto.comment,
       user.userId,
       user.role,
+      createCommentDto.stage,
     );
   }
 

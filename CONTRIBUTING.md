@@ -45,7 +45,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ### Prerequisites
 
 - **Node.js**: v20.x or higher
-- **npm**: v10.x or higher
+- **pnpm**: v10.x or higher (install with `npm install -g pnpm`)
 - **PostgreSQL**: v14.x or higher
 - **MinIO**: Latest version (for file storage)
 - **Git**: Latest version
@@ -64,14 +64,12 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ### 1. Install Dependencies
 
 ```bash
-# Install all dependencies
-npm install
+# Install all dependencies (from root)
+pnpm install
 
-# Install backend dependencies
-cd apps/backend && npm install
-
-# Install frontend dependencies
-cd apps/frontend && npm install
+# Or install for specific workspace
+pnpm --filter backend install
+pnpm --filter frontend install
 ```
 
 ### 2. Environment Configuration
@@ -110,24 +108,23 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 ### 3. Database Setup
 
 ```bash
-# Navigate to backend
-cd apps/backend
-
+# From root directory
 # Run Prisma migrations
-npx prisma migrate dev
+pnpm --filter backend prisma:migrate
 
 # Seed database with sample data
-npm run seed
+pnpm --filter backend seed
 ```
 
 ### 4. Start Development Servers
 
 ```bash
-# Backend (from apps/backend)
-npm run start:dev
+# From root - start both (recommended)
+pnpm dev
 
-# Frontend (from apps/frontend)
-npm run dev
+# Or start individually
+pnpm dev:backend  # Backend only
+pnpm dev:frontend # Frontend only
 ```
 
 Access the application:
@@ -346,9 +343,9 @@ Add comprehensive API documentation with examples for all endpoints.
 ### 1. Before Creating PR
 
 - [ ] Code follows project coding standards
-- [ ] All tests pass (`npm run test`)
-- [ ] No linting errors (`npm run lint`)
-- [ ] Type checking passes (`npm run type-check`)
+- [ ] All tests pass (`pnpm test`)
+- [ ] No linting errors (`pnpm lint`)
+- [ ] Type checking passes (`pnpm type-check`)
 - [ ] Documentation updated (if needed)
 - [ ] CHANGELOG updated (if needed)
 
@@ -405,27 +402,19 @@ How has this been tested?
 ### Backend Tests
 
 ```bash
-# Unit tests
-npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Test coverage
-npm run test:cov
+# From root
+pnpm --filter backend test         # Unit tests
+pnpm --filter backend test:e2e     # E2E tests
+pnpm --filter backend test:cov     # Test coverage
 ```
 
 ### Frontend Tests
 
 ```bash
-# Run tests
-npm run test
-
-# Watch mode
-npm run test:watch
-
-# Coverage
-npm run test:coverage
+# From root
+pnpm --filter frontend test        # Run tests
+pnpm --filter frontend test:watch  # Watch mode
+pnpm --filter frontend test:coverage # Coverage
 ```
 
 ### Writing Tests

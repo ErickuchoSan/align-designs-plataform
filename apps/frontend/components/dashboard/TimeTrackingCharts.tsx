@@ -1,14 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useMemo } from 'react';
 import { TrackingService, ProjectTrackingStats } from '@/services/tracking.service';
 
 interface TimeTrackingChartsProps {
     projectId: string;
 }
 
-export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProps) {
+function TimeTrackingCharts({ projectId }: TimeTrackingChartsProps) {
     const [stats, setStats] = useState<ProjectTrackingStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Memoize expensive calculations
+    const rejectionPercentage = useMemo(() => {
+        return ((stats?.rejectionRate || 0) * 100).toFixed(0);
+    }, [stats?.rejectionRate]);
+
+    const averageCycleDuration = useMemo(() => {
+        return (stats?.averageCycleDuration || 0).toFixed(1);
+    }, [stats?.averageCycleDuration]);
 
     useEffect(() => {
         async function loadStats() {
@@ -50,7 +59,7 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
                     <div>
                         <p className="text-sm font-medium text-stone-500">Total Duration</p>
                         <p className="text-2xl font-semibold text-navy-900">
-                            {(stats.totalDurationDays || 0).toFixed(1)} <span className="text-sm font-normal text-stone-500">days</span>
+                            {stats.durationDays || 0}d {stats.durationHours || 0}h {stats.durationMinutes || 0}m
                         </p>
                     </div>
                 </div>
@@ -67,7 +76,7 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
                     <div>
                         <p className="text-sm font-medium text-stone-500">Avg. Cycle Duration</p>
                         <p className="text-2xl font-semibold text-navy-900">
-                            {(stats.averageCycleDuration || 0).toFixed(1)} <span className="text-sm font-normal text-stone-500">days</span>
+                            {averageCycleDuration} <span className="text-sm font-normal text-stone-500">days</span>
                         </p>
                         <p className="text-xs text-stone-400 mt-1">{stats.totalCycles || 0} total feedback cycles</p>
                     </div>
@@ -85,7 +94,7 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
                     <div>
                         <p className="text-sm font-medium text-stone-500">Rejection Rate</p>
                         <p className="text-2xl font-semibold text-navy-900">
-                            {((stats.rejectionRate || 0) * 100).toFixed(0)}%
+                            {rejectionPercentage}%
                         </p>
                         <p className="text-xs text-stone-400 mt-1">{stats.totalRejections || 0} rejected files</p>
                     </div>
@@ -94,3 +103,7 @@ export default function TimeTrackingCharts({ projectId }: TimeTrackingChartsProp
         </div>
     );
 }
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render when projectId changes
+export default memo(TimeTrackingCharts);

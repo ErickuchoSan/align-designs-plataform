@@ -25,6 +25,8 @@ export const FILE_BASIC_SELECT = {
   mimeType: true,
   sizeBytes: true,
   uploadedAt: true,
+  stage: true,
+  comment: true,
 } as const;
 
 /**

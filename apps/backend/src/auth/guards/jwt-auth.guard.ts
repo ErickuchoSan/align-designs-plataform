@@ -13,6 +13,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+
     // First, run the default JWT validation
     const isValid = await super.canActivate(context);
 
@@ -21,7 +23,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     // Extract the token from the request
-    const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromRequest(request);
 
     if (!token) {

@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Role, Stage } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { FileFiltersDto } from './dto/file-filters.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
@@ -39,6 +39,7 @@ export class FilesService {
     comment: string | undefined,
     uploadedBy: string,
     userRole: Role,
+    stage?: Stage,
   ) {
     if (!file) {
       throw new BadRequestException('No file was provided');
@@ -58,6 +59,7 @@ export class FilesService {
       file,
       uploadedBy,
       comment,
+      stage,
     );
 
     // Invalidate caches
@@ -75,6 +77,7 @@ export class FilesService {
     comment: string,
     uploadedBy: string,
     userRole: Role,
+    stage?: Stage,
   ) {
     // Verify project access and permissions
     await this.permissions.verifyProjectAccess(
@@ -90,6 +93,7 @@ export class FilesService {
         comment,
         projectId,
         uploadedBy,
+        stage,
       },
       include: {
         uploader: {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Modal from '@/app/components/Modal';
 import { EmployeeSelect } from '@/components/projects/EmployeeSelect';
 import { ButtonLoader } from '@/app/components/Loader';
@@ -21,16 +21,8 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Initialize selected IDs from current employees when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            const currentIds = currentEmployees.map(e => e.employee.id);
-            setSelectedIds(currentIds);
-            loadEmployees();
-        }
-    }, [isOpen, currentEmployees]);
-
-    const loadEmployees = async () => {
+    // Memoize loadEmployees to prevent recreation on every render
+    const loadEmployees = useCallback(async () => {
         try {
             setIsLoading(true);
             // We need to fetch candidates (employees). 
@@ -46,7 +38,17 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
+
+    // Initialize selected IDs from current employees when modal opens
+    // Fix: Extract employee IDs only when isOpen changes to avoid dependency on currentEmployees array
+    useEffect(() => {
+        if (isOpen) {
+            const currentIds = currentEmployees.map(e => e.employee.id);
+            setSelectedIds(currentIds);
+            loadEmployees();
+        }
+    }, [isOpen, loadEmployees]); // Removed currentEmployees from deps to prevent unnecessary effects
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();

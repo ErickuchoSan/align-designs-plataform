@@ -316,9 +316,8 @@ export class AuthService {
   async checkEmail(email: string) {
     const startTime = Date.now();
 
-    // Always perform database query to maintain consistent timing
-    // but don't use the result in the response
-    await this.prisma.user.findFirst({
+    // Query database to check if user exists and get password status
+    const user = await this.prisma.user.findFirst({
       where: {
         email,
         deletedAt: null,
@@ -330,10 +329,12 @@ export class AuthService {
       },
     });
 
-    // SECURITY: Always return the same response regardless of email existence
-    // This prevents attackers from enumerating valid email addresses
-    // The actual password status will be revealed during login/OTP flow
-    const response = {
+    // Return actual user information if user exists
+    // If user doesn't exist, return generic response
+    const response = user ? {
+      hasPassword: !!user.passwordHash,
+      requiresPasswordSetup: !user.passwordHash && user.role === 'ADMIN',
+    } : {
       hasPassword: false,
       requiresPasswordSetup: false,
     };

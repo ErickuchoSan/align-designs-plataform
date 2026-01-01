@@ -4,7 +4,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { PageLoader } from '@/app/components/Loader';
 import DashboardHeader from '@/app/components/DashboardHeader';
-import Pagination from '@/app/components/Pagination';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 // Hooks
@@ -17,11 +16,10 @@ import type { FileData } from './hooks/useProjectFiles';
 // Components
 import ProjectInfo from './components/ProjectInfo';
 import ProjectWorkflowSection from './components/ProjectWorkflowSection';
-import FileActionsBar from './components/FileActionsBar';
 import AlertMessages from './components/AlertMessages';
-import FileList from './components/FileList';
 import FileModalsGroup from './components/FileModalsGroup';
 import TimeTrackingCharts from '@/components/dashboard/TimeTrackingCharts';
+import ProjectStagesView from '@/components/projects/ProjectStagesView';
 
 /**
  * Project Details Page - Refactored for better maintainability
@@ -81,6 +79,9 @@ export default function ProjectDetailsPage() {
   const modals = useFileModals();
   // const filters = useFileFilters(files); // Removed client-side filters
 
+  // Stage selection state for upload/comment modals
+  const [selectedStageForModal, setSelectedStageForModal] = useState<string | null>(null);
+
   // File operations handlers
   const {
     uploading,
@@ -116,20 +117,26 @@ export default function ProjectDetailsPage() {
   // File operation handlers
   const handleUpload = useCallback(
     async (file: File, comment: string) => {
-      const success = await handleFileUpload(file, comment);
-      if (success) modals.closeUploadModal();
+      const success = await handleFileUpload(file, comment, selectedStageForModal || undefined);
+      if (success) {
+        modals.closeUploadModal();
+        setSelectedStageForModal(null);
+      }
       return success;
     },
-    [handleFileUpload, modals]
+    [handleFileUpload, modals, selectedStageForModal]
   );
 
   const handleComment = useCallback(
     async (comment: string) => {
-      const success = await handleCreateComment(comment);
-      if (success) modals.closeCommentModal();
+      const success = await handleCreateComment(comment, selectedStageForModal || undefined);
+      if (success) {
+        modals.closeCommentModal();
+        setSelectedStageForModal(null);
+      }
       return success;
     },
-    [handleCreateComment, modals]
+    [handleCreateComment, modals, selectedStageForModal]
   );
 
   const handleEdit = useCallback(
@@ -140,6 +147,12 @@ export default function ProjectDetailsPage() {
     },
     [handleEditEntry, modals]
   );
+
+  // Memoized callback for project updates (used by ProjectWorkflowSection)
+  const handleProjectUpdate = useCallback(async () => {
+    await fetchProjectDetails();
+    await fetchFiles();
+  }, [fetchProjectDetails, fetchFiles]);
 
   const handleDeleteConfirm = useCallback(
     async (file: FileData) => {
@@ -206,42 +219,35 @@ export default function ProjectDetailsPage() {
           <ProjectWorkflowSection
             project={project}
             isAdmin={isAdmin}
-            onUpdate={() => {
-              fetchProjectDetails();
-              fetchFiles();
-            }}
+            userRole={user?.role}
+            onUpdate={handleProjectUpdate}
           />
 
-          <FileActionsBar
-            nameFilter={nameFilter}
-            setNameFilter={setNameFilter}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            availableTypes={availableTypes}
-            onOpenCommentModal={modals.openCommentModal}
-            onOpenUploadModal={modals.openUploadModal}
-            project={project}
-          />
-
-          <FileList
-            files={files}
-            onDownload={handleDownload}
-            onEdit={modals.openEditModal}
-            onDelete={modals.openDeleteModal}
-            canDelete={canDeleteFile}
-            onViewHistory={modals.openHistoryModal}
-            onUploadVersion={modals.openUploadVersionModal}
-          />
-
-          {totalPages > 0 && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onItemsPerPageChange={setItemsPerPage}
-            />
+          {/* Stages View - Replaces old file section with stage-based organization */}
+          {!(user?.role === 'CLIENT' && project.status === 'WAITING_PAYMENT') && (
+            <div className="mt-8">
+              <ProjectStagesView
+                projectId={projectId}
+                projectName={project.name}
+                project={project}
+                files={files}
+                onOpenUploadModal={(stage) => {
+                  setSelectedStageForModal(stage);
+                  modals.openUploadModal();
+                }}
+                onOpenCommentModal={(stage) => {
+                  setSelectedStageForModal(stage);
+                  modals.openCommentModal();
+                }}
+                onDownload={handleDownload}
+                onEdit={modals.openEditModal}
+                onDelete={modals.openDeleteModal}
+                onViewHistory={modals.openHistoryModal}
+                onUploadVersion={modals.openUploadVersionModal}
+                canDeleteFile={canDeleteFile}
+                filesLoading={filesLoading}
+              />
+            </div>
           )}
         </main>
       </div>

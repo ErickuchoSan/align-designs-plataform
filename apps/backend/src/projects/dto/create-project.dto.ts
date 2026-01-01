@@ -64,4 +64,8 @@ export class CreateProjectDto {
   @IsOptional()
   @IsDateString({}, { message: 'Deadline must be a valid ISO 8601 date string' })
   deadlineDate?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Initial payment deadline must be a valid ISO 8601 date string' })
+  initialPaymentDeadline?: string;
 }

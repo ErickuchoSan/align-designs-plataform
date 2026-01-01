@@ -43,21 +43,24 @@ export class AuthController {
    * Set authentication cookie with secure settings
    * Centralizes cookie configuration to follow DRY principle
    */
-  private setAuthCookie(res: Response, token: string): void {
+  private setAuthCookie(res: Response, token: string, req?: Request): void {
     const isProduction = process.env.NODE_ENV === 'production';
+    // Allow cookies to work with ngrok by using 'none' sameSite when needed
+    const allowNgrok = process.env.ALLOW_NGROK === 'true';
 
-    res.cookie('access_token', token, {
+    const cookieOptions = {
       httpOnly: true,
-      secure: false,
+      secure: allowNgrok ? true : false, // Must be true when sameSite is 'none'
+      // Use 'none' when ngrok is enabled to allow cross-site cookies
       // Use 'lax' in development - same-site requests through Nginx proxy
       // Use 'strict' in production for maximum security
-      sameSite: isProduction ? 'strict' : 'lax',
+      sameSite: allowNgrok ? 'none' : (isProduction ? 'strict' : 'lax'),
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
-      // REMOVED: domain: 'aligndesigns-platform.local'
-      // Letting the browser treat it as a Host-Only cookie is safer for local dev
-      // and avoids issues with public suffix lists or specific browser behaviors
+      // DON'T set domain attribute - host-only cookies work better with ngrok and sameSite=none
       path: '/',
-    });
+    };
+
+    res.cookie('access_token', token, cookieOptions as any);
   }
 
   @Get('csrf-token')
@@ -75,10 +78,18 @@ export class AuthController {
     },
   })
   async getCsrfToken(@Res({ passthrough: true }) res: Response) {
+    // Disable caching for this endpoint to always get fresh CSRF token
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // The CSRF middleware will generate and set the token automatically
-    // We just need to return a success message
+    // We just need to return a success message with timestamp to prevent 304
     // The token will be available in the X-CSRF-Token response header
-    return { message: 'CSRF token generated' };
+    return {
+      message: 'CSRF token generated',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   @Post('check-email')
@@ -135,10 +146,19 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    console.log('AuthController.login called for:', loginDto.email);
+    // 🔍 DEBUG: Log request headers to see what host we're receiving
+    console.log('🔐 [LOGIN DEBUG]');
+    console.log('  Email:', loginDto.email);
+    console.log('  Host header:', req.headers.host);
+    console.log('  Origin header:', req.headers.origin);
+    console.log('  X-Forwarded-Host:', req.headers['x-forwarded-host']);
+    console.log('  X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
+    console.log('  All headers:', JSON.stringify(req.headers, null, 2));
+
     const result = await this.authService.loginAdmin(
       loginDto.email,
       loginDto.password,
@@ -164,7 +184,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    this.setAuthCookie(res, result.access_token);
+    this.setAuthCookie(res, result.access_token, req);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
@@ -206,6 +226,7 @@ export class AuthController {
   async verifyOtp(
     @Body() verifyOtpDto: VerifyOtpDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
@@ -234,7 +255,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    this.setAuthCookie(res, result.access_token);
+    this.setAuthCookie(res, result.access_token, req);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
@@ -359,10 +380,11 @@ export class AuthController {
 
     // Clear the access_token cookie
     const isProduction = process.env.NODE_ENV === 'production';
+    const allowNgrok = process.env.ALLOW_NGROK === 'true';
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: false,
-      sameSite: isProduction ? 'strict' : 'lax',
+      secure: allowNgrok ? true : false,
+      sameSite: allowNgrok ? 'none' : (isProduction ? 'strict' : 'lax'),
       // REMOVED: domain: isProduction ? undefined : 'aligndesigns-platform.local',
       path: '/',
     });

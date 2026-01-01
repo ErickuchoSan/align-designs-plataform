@@ -2,6 +2,9 @@ import { api } from '@/lib/api';
 
 export interface ProjectTrackingStats {
     totalDurationDays: number;
+    durationDays: number;
+    durationHours: number;
+    durationMinutes: number;
     totalCycles: number;
     averageCycleDuration: number;
     rejectionRate: number;

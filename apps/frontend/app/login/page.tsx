@@ -50,13 +50,37 @@ export default function LoginPage() {
     }
 
     try {
-      // SECURITY: checkEmail endpoint now always returns the same response
-      // to prevent user enumeration. We proceed to password step for all users.
-      // The actual user existence and password status will be verified during login.
-      await api.post('/auth/check-email', { email });
+      // Check if user exists and their password status
+      const response = await api.post<{ hasPassword: boolean; requiresPasswordSetup: boolean }>(
+        '/auth/check-email',
+        { email }
+      );
 
-      // Always proceed to password step
-      // Users without password can use "Login with OTP" button
+      const { hasPassword, requiresPasswordSetup } = response.data;
+
+      // If user doesn't have password and doesn't require setup, user doesn't exist
+      if (!hasPassword && !requiresPasswordSetup) {
+        setError('Email not found. Please check your email address.');
+        setLoading(false);
+        return;
+      }
+
+      // If user requires password setup (new admin without password)
+      if (requiresPasswordSetup) {
+        setRequiresPasswordSetup(true);
+        // Request OTP to set password
+        await api.post('/auth/otp/request', { email });
+        setStep('otp');
+        return;
+      }
+
+      // If user has password, proceed to password step
+      if (hasPassword) {
+        setStep('password');
+        return;
+      }
+
+      // Fallback: proceed to password step
       setStep('password');
     } catch (error) {
       setError(getErrorMessage(error, 'An error occurred. Please try again.'));

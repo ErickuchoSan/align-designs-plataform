@@ -1,10 +1,37 @@
-import FileUploadModal from './FileUploadModal';
-import CommentModal from './CommentModal';
-import FileEditModal from './FileEditModal';
-import FileDeleteModal from './FileDeleteModal';
-import FileVersionHistoryModal from '@/components/dashboard/FileVersionHistoryModal';
-import UploadNewVersionModal from '@/components/dashboard/UploadNewVersionModal';
+import dynamic from 'next/dynamic';
 import type { FileData } from '../hooks/useProjectFiles';
+
+// Lazy load modals with dynamic imports for better code splitting
+// These modals are only loaded when they are actually shown to the user
+const FileUploadModal = dynamic(() => import('./FileUploadModal'), {
+  loading: () => null, // Don't show loader for modals
+  ssr: false, // Modals don't need SSR
+});
+
+const CommentModal = dynamic(() => import('./CommentModal'), {
+  loading: () => null,
+  ssr: false,
+});
+
+const FileEditModal = dynamic(() => import('./FileEditModal'), {
+  loading: () => null,
+  ssr: false,
+});
+
+const FileDeleteModal = dynamic(() => import('./FileDeleteModal'), {
+  loading: () => null,
+  ssr: false,
+});
+
+const FileVersionHistoryModal = dynamic(() => import('@/components/dashboard/FileVersionHistoryModal'), {
+  loading: () => null,
+  ssr: false,
+});
+
+const UploadNewVersionModal = dynamic(() => import('@/components/dashboard/UploadNewVersionModal'), {
+  loading: () => null,
+  ssr: false,
+});
 
 interface FileModalsGroupProps {
   // Upload Modal

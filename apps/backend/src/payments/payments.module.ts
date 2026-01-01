@@ -4,9 +4,10 @@ import { PaymentsController } from './payments.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ProjectsModule } from '../projects/projects.module'; // Import to use ProjectStatusService
 import { AuthModule } from '../auth/auth.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-    imports: [PrismaModule, ProjectsModule, AuthModule],
+    imports: [PrismaModule, ProjectsModule, AuthModule, StorageModule],
     controllers: [PaymentsController],
     providers: [PaymentsService],
     exports: [PaymentsService],

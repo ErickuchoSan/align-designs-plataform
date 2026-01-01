@@ -62,6 +62,58 @@ export class InvoicesService {
         });
     }
 
+    /**
+     * Auto-generate invoice when project is created with initialAmountRequired
+     * Called from ProjectsService.create()
+     */
+    async createInvoiceForProject(
+        projectId: string,
+        clientId: string,
+        amount: number,
+        paymentTermsDays: number = 15,
+    ): Promise<Invoice> {
+        const invoiceNumber = await this.generateInvoiceNumber();
+        const issueDate = new Date();
+        const dueDate = new Date(issueDate);
+        dueDate.setDate(dueDate.getDate() + paymentTermsDays);
+
+        const invoice = await this.prisma.invoice.create({
+            data: {
+                invoiceNumber,
+                projectId,
+                clientId,
+                issueDate,
+                dueDate,
+                paymentTermsDays,
+                subtotal: amount,
+                taxAmount: 0, // Sin impuestos por ahora
+                totalAmount: amount,
+                amountPaid: 0,
+                status: InvoiceStatus.DRAFT, // Inicia como borrador
+            },
+            include: {
+                project: {
+                    select: {
+                        name: true,
+                    },
+                },
+                client: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                    },
+                },
+            },
+        });
+
+        this.logger.log(
+            `Auto-generated invoice ${invoiceNumber} for project ${projectId}, amount: $${amount}`,
+        );
+
+        return invoice;
+    }
+
     async generateInvoiceNumber(): Promise<string> {
         const date = new Date();
         const year = date.getFullYear();

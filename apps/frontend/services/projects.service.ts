@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { Project, PaginatedProjects } from '@/types';
+import { ProjectStagesResponse } from '@/types/stage';
 
 /**
  * Projects Service
@@ -73,6 +74,7 @@ export class ProjectsService {
     employeeIds?: string[];
     initialAmountRequired?: number;
     deadlineDate?: string;
+    initialPaymentDeadline?: string;
   }): Promise<Project> {
     const response = await api.post<Project>(this.BASE_URL, data);
     return response.data;
@@ -80,6 +82,7 @@ export class ProjectsService {
 
   /**
    * Update an existing project
+   * Phase 1: Added workflow fields
    */
   static async update(
     id: string,
@@ -87,6 +90,10 @@ export class ProjectsService {
       name?: string;
       description?: string;
       clientId?: string;
+      employeeIds?: string[];
+      initialAmountRequired?: number;
+      deadlineDate?: string;
+      initialPaymentDeadline?: string;
     }
   ): Promise<Project> {
     const response = await api.patch<Project>(`${this.BASE_URL}/${id}`, data);
@@ -228,6 +235,15 @@ export class ProjectsService {
     }
   }> {
     const response = await api.get(`${this.BASE_URL}/${projectId}/completion-status`);
+    return response.data;
+  }
+
+  /**
+   * Get accessible stages for the current user in a project
+   * Returns stages filtered by role-based permissions with file counts
+   */
+  static async getStages(projectId: string): Promise<ProjectStagesResponse> {
+    const response = await api.get<ProjectStagesResponse>(`${this.BASE_URL}/${projectId}/stages`);
     return response.data;
   }
 }

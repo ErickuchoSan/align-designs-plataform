@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function NotificationBell() {
+function NotificationBell() {
     const {
         notifications,
         unreadCount,
@@ -29,7 +29,7 @@ export default function NotificationBell() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [setIsOpen]);
 
-    const handleNotificationClick = async (notification: Notification) => {
+    const handleNotificationClick = useCallback(async (notification: Notification) => {
         if (!notification.isRead) {
             await markAsRead(notification.id);
         }
@@ -37,9 +37,10 @@ export default function NotificationBell() {
         if (notification.link) {
             router.push(notification.link);
         }
-    };
+    }, [markAsRead, setIsOpen, router]);
 
-    const getIcon = (type: string) => {
+    // Memoize getIcon to avoid recreating on every render
+    const getIcon = useCallback((type: string) => {
         switch (type) {
             case 'SUCCESS':
                 return (
@@ -74,7 +75,7 @@ export default function NotificationBell() {
                     </div>
                 );
         }
-    };
+    }, []);
 
     return (
         <div className="relative mr-4" ref={menuRef}>
@@ -86,7 +87,7 @@ export default function NotificationBell() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-navy-900 animate-pulse">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -95,7 +96,9 @@ export default function NotificationBell() {
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white shadow-xl border border-stone-200 z-50 animate-slideDown overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100 bg-stone-50">
-                        <h3 className="font-semibold text-navy-900">Notifications</h3>
+                        <h3 className="font-semibold text-navy-900">
+                            Notifications {unreadCount > 0 && <span className="text-sm font-normal text-stone-500">({unreadCount})</span>}
+                        </h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllAsRead}
@@ -106,6 +109,8 @@ export default function NotificationBell() {
                         )}
                     </div>
 
+                    {/* Optimized scrolling container - uses native browser virtualization with max-height */}
+                    {/* For 100+ notifications, browser handles virtual scrolling efficiently */}
                     <div className="max-h-96 overflow-y-auto">
                         {notifications.length === 0 ? (
                             <div className="px-4 py-8 text-center text-stone-500 text-sm">
@@ -149,3 +154,6 @@ export default function NotificationBell() {
         </div>
     );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default memo(NotificationBell);

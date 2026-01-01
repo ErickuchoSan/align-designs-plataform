@@ -11,6 +11,7 @@ export enum Role {
 export enum ProjectStatus {
   WAITING_PAYMENT = 'WAITING_PAYMENT',
   ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
   COMPLETED = 'COMPLETED',
   ARCHIVED = 'ARCHIVED',
 }
@@ -54,6 +55,7 @@ export interface Project {
   amountPaid: number;
   startDate?: string;
   deadlineDate?: string;
+  initialPaymentDeadline?: string;
   archivedAt?: string;
 
   // Relations
@@ -157,6 +159,7 @@ export interface CreateProjectDto {
   initialAmountRequired?: number;
   startDate?: string;
   deadlineDate?: string;
+  initialPaymentDeadline?: string;
   employeeIds?: string[]; // IDs de empleados a asignar
 }
 
@@ -168,6 +171,7 @@ export interface UpdateProjectDto {
   initialAmountRequired?: number;
   startDate?: string;
   deadlineDate?: string;
+  initialPaymentDeadline?: string;
 }
 
 export interface PaginatedProjects {
@@ -234,6 +238,7 @@ export const STAGE_LABELS: Record<Stage, string> = {
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   [ProjectStatus.WAITING_PAYMENT]: 'Esperando Pago',
   [ProjectStatus.ACTIVE]: 'Activo',
+  [ProjectStatus.PAUSED]: 'Pausado',
   [ProjectStatus.COMPLETED]: 'Completado',
   [ProjectStatus.ARCHIVED]: 'Archivado',
 };
@@ -252,6 +257,8 @@ export const STAGE_COLORS: Record<Stage, string> = {
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
   [ProjectStatus.WAITING_PAYMENT]: 'yellow',
   [ProjectStatus.ACTIVE]: 'green',
+  [ProjectStatus.PAUSED]: 'orange',
   [ProjectStatus.COMPLETED]: 'blue',
   [ProjectStatus.ARCHIVED]: 'gray',
 };
+

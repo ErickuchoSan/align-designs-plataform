@@ -21,6 +21,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
+import { UserAnalyticsService } from './services/user-analytics.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -46,6 +47,7 @@ import { safeAuditLog } from '../audit/audit.helper';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly userAnalyticsService: UserAnalyticsService,
     private readonly auditService: AuditService,
   ) { }
 
@@ -109,6 +111,21 @@ export class UsersController {
     return this.usersService.findAll(queryDto, queryDto.role);
   }
 
+  @Get('available-employees')
+  @ApiOperation({
+    summary: 'Get available employees',
+    description: 'Admin-only: Get employees not assigned to any active project',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Available employees retrieved successfully',
+  })
+  @Roles(Role.ADMIN)
+  @Throttle({ default: RATE_LIMIT_USERS.LIST })
+  getAvailableEmployees(@Query() paginationDto: PaginationDto) {
+    return this.usersService.findAvailableEmployees(paginationDto);
+  }
+
   @Get('profile')
   @ApiOperation({
     summary: 'Get current user profile',
@@ -146,6 +163,46 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.usersService.findOne(id, user.userId, user.role);
+  }
+
+  @Get(':id/analytics')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get client analytics',
+    description: 'Get comprehensive analytics for a specific client (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'Client UUID' })
+  @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Client not found' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
+  getClientAnalytics(@Param('id') id: string) {
+    return this.userAnalyticsService.getClientAnalytics(id);
+  }
+
+  @Get(':id/analytics/distribution')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get project distribution for client',
+    description: 'Get project distribution by status for chart visualization (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'Client UUID' })
+  @ApiResponse({ status: 200, description: 'Distribution data retrieved successfully' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
+  getProjectDistribution(@Param('id') id: string) {
+    return this.userAnalyticsService.getProjectDistribution(id);
+  }
+
+  @Get(':id/analytics/monthly')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get monthly activity for client',
+    description: 'Get monthly project activity for the last 12 months (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'Client UUID' })
+  @ApiResponse({ status: 200, description: 'Monthly activity data retrieved successfully' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
+  getMonthlyActivity(@Param('id') id: string) {
+    return this.userAnalyticsService.getMonthlyActivity(id);
   }
 
   @Patch(':id')

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
 import { FILE_WITH_UPLOADER_INCLUDE } from '../constants/file-selects';
+import { Stage } from '@prisma/client';
 
 /**
  * Service responsible for coordinating file storage operations between database and MinIO
@@ -26,6 +27,7 @@ export class FileStorageCoordinatorService {
     file: Express.Multer.File,
     uploadedBy: string,
     comment?: string,
+    stage?: Stage,
   ) {
     // Step 1: Create database record with pending status (storagePath as null)
     const fileRecord = await this.prisma.file.create({
@@ -38,6 +40,7 @@ export class FileStorageCoordinatorService {
         comment: comment || null,
         projectId,
         uploadedBy,
+        stage,
       },
       include: FILE_WITH_UPLOADER_INCLUDE,
     });

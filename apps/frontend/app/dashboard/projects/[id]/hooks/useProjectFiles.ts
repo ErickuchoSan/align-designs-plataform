@@ -49,11 +49,13 @@ export function useProjectFiles(projectId: string) {
 
   const fetchProjectDetails = useCallback(async () => {
     try {
-      const { data } = await api.get(`/projects/${projectId}`);
-      setProject(data);
+      // Parallelize API calls for better performance
+      const [projectRes, typesRes] = await Promise.all([
+        api.get(`/projects/${projectId}`),
+        api.get(`/files/project/${projectId}/types`),
+      ]);
 
-      // Fetch available types
-      const typesRes = await api.get(`/files/project/${projectId}/types`);
+      setProject(projectRes.data);
       setAvailableTypes(typesRes.data || []);
     } catch (error) {
       setError(getErrorMessage(error, 'Error loading project'));

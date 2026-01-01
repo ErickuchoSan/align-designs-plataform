@@ -108,14 +108,15 @@ export class CsrfMiddleware implements NestMiddleware {
     const token = this.generateToken(secret);
 
     // Get sameSite setting from config (default: 'lax' for better compatibility)
-    const sameSite = this.configService.get<string>('CSRF_SAME_SITE', 'lax');
+    const allowNgrok = process.env.ALLOW_NGROK === 'true';
+    const sameSite = this.configService.get<string>('CSRF_SAME_SITE', allowNgrok ? 'none' : 'lax');
     const validSameSite = ['strict', 'lax', 'none'].includes(sameSite)
       ? (sameSite as 'strict' | 'lax' | 'none')
       : 'lax';
 
     res.cookie(this.csrfTokenCookie, secret, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: allowNgrok ? true : (process.env.NODE_ENV === 'production'),
       sameSite: validSameSite,
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
     });

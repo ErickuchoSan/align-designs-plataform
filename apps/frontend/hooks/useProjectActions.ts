@@ -8,6 +8,11 @@ interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  // Phase 1: Workflow fields
+  employeeIds?: string[];
+  initialAmountRequired?: number;
+  deadlineDate?: string;
+  initialPaymentDeadline?: string;
 }
 
 interface UseProjectActionsParams {
@@ -28,6 +33,8 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (formData: ProjectFormData) => {
       try {
         setCreating(true);
+        // Temporary log to debug
+        console.log('🚀 Frontend sending formData:', JSON.stringify(formData, null, 2));
         await api.post('/projects', formData);
         onSuccess?.('Project created successfully');
         refetchProjects?.();

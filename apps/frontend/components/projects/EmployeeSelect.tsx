@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 
 export interface Employee {
   id: string;
@@ -23,7 +23,7 @@ interface EmployeeSelectProps {
  * Multi-select component for assigning employees to a project
  * CRITICAL: Validates that employees are not already assigned to another active project
  */
-export function EmployeeSelect({
+function EmployeeSelect({
   employees,
   selectedIds,
   onChange,
@@ -32,28 +32,36 @@ export function EmployeeSelect({
 }: EmployeeSelectProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Memoize expensive filtering operation
+  // Only recalculates when searchTerm or employees array changes
+  const filteredEmployees = useMemo(() => {
+    if (!searchTerm) return employees;
 
-  const handleToggle = (employeeId: string) => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return employees.filter(
+      (emp) =>
+        emp.firstName.toLowerCase().includes(lowerSearchTerm) ||
+        emp.lastName.toLowerCase().includes(lowerSearchTerm) ||
+        emp.email.toLowerCase().includes(lowerSearchTerm)
+    );
+  }, [searchTerm, employees]);
+
+  // Memoize handlers to prevent recreation on every render
+  const handleToggle = useCallback((employeeId: string) => {
     if (selectedIds.includes(employeeId)) {
       onChange(selectedIds.filter((id) => id !== employeeId));
     } else {
       onChange([...selectedIds, employeeId]);
     }
-  };
+  }, [selectedIds, onChange]);
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     onChange(filteredEmployees.map((emp) => emp.id));
-  };
+  }, [filteredEmployees, onChange]);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     onChange([]);
-  };
+  }, [onChange]);
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -137,3 +145,10 @@ export function EmployeeSelect({
     </div>
   );
 }
+
+// Memoize component to prevent re-renders when props haven't changed
+// Prevents unnecessary filtering recalculations
+export const MemoizedEmployeeSelect = memo(EmployeeSelect);
+
+// Keep named export for backward compatibility
+export { MemoizedEmployeeSelect as EmployeeSelect };

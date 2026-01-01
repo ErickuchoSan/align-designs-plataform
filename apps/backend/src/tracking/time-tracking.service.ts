@@ -112,19 +112,79 @@ export class TimeTrackingService {
     }
 
     /**
+     * Calculate duration breakdown (days, hours, minutes)
+     */
+    private calculateDurationBreakdown(start: Date, end: Date): { days: number; hours: number; minutes: number; totalDays: number } {
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+
+        const totalDays = diffTime / (1000 * 60 * 60 * 24);
+        const days = Math.floor(totalDays);
+        const remainingHours = (totalDays - days) * 24;
+        const hours = Math.floor(remainingHours);
+        const minutes = Math.floor((remainingHours - hours) * 60);
+
+        return {
+            days,
+            hours,
+            minutes,
+            totalDays: parseFloat(totalDays.toFixed(2))
+        };
+    }
+
+    /**
      * Get stats by project
      */
     async getProjectStats(projectId: string) {
-        const trackings = await this.prisma.timeTracking.findMany({
-            where: { projectId },
-            include: {
-                employee: {
-                    select: { firstName: true, lastName: true, email: true }
-                },
-                cycle: true
+        // Get project to calculate total duration
+        const project = await this.prisma.project.findUnique({
+            where: { id: projectId },
+            select: {
+                createdAt: true,
+                status: true,
+                updatedAt: true,
             }
         });
 
-        return trackings;
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
+
+        // Calculate total duration from project creation to now (or completion)
+        const startDate = project.createdAt;
+        const endDate = project.status === 'COMPLETED' ? project.updatedAt : new Date();
+        const durationBreakdown = this.calculateDurationBreakdown(startDate, endDate);
+
+        // Get all time tracking records for feedback cycle stats
+        const trackings = await this.prisma.timeTracking.findMany({
+            where: {
+                projectId,
+                endTime: { not: null } // Only completed cycles
+            },
+            select: {
+                durationDays: true,
+                approvedFileId: true,
+            }
+        });
+
+        // Calculate cycles and rejections
+        const totalCycles = trackings.length;
+        const totalRejections = trackings.filter(t => !t.approvedFileId).length;
+        const rejectionRate = totalCycles > 0 ? totalRejections / totalCycles : 0;
+
+        // Calculate average cycle duration
+        const averageCycleDuration = totalCycles > 0
+            ? trackings.reduce((sum, t) => sum + (t.durationDays || 0), 0) / totalCycles
+            : 0;
+
+        return {
+            totalDurationDays: durationBreakdown.totalDays,
+            durationDays: durationBreakdown.days,
+            durationHours: durationBreakdown.hours,
+            durationMinutes: durationBreakdown.minutes,
+            totalCycles,
+            averageCycleDuration: parseFloat(averageCycleDuration.toFixed(1)),
+            rejectionRate: parseFloat(rejectionRate.toFixed(2)),
+            totalRejections,
+        };
     }
 }

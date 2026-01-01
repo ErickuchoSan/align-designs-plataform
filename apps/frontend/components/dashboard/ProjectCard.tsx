@@ -40,6 +40,8 @@ function ProjectCard({
     onDelete(project);
   }, [onDelete, project]);
 
+  // Memoize styles - recalculates only when theme changes
+  // Fixes bug: was missing theme dependency
   const themeStyles = useMemo(() => ({
     navy: {
       card: 'bg-white shadow-lg border border-stone-200 hover:shadow-2xl',
@@ -63,7 +65,7 @@ function ProjectCard({
       editButton: 'text-blue-600 hover:bg-blue-50',
       deleteButton: 'text-red-600 hover:bg-red-50',
     },
-  }), []);
+  }), [theme]); // Already has correct dependency
 
   const styles = themeStyles[theme];
 

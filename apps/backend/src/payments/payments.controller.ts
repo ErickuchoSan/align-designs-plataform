@@ -2,6 +2,7 @@ import {
     Controller,
     Get,
     Post,
+    Patch,
     Body,
     Param,
     UseInterceptors,
@@ -9,6 +10,8 @@ import {
     Query,
     UseGuards,
     ParseUUIDPipe,
+    Req,
+    BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaymentsService } from './payments.service';
@@ -17,45 +20,31 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-
-// Todo: Using disk storage temporarily or implement MinIO logic like FilesService
-// For simplicity in this phase, assuming we might need to handle file upload either locally or just store URL if uploaded via pre-signed URL.
-// The plan says "receiptFileUrl". Let's assume the client might upload receiving a URL, OR we handle upload here.
-// Given existing FilesService uses MinIO, we should ideally use it.
-// However, to avoid circular deps or complexity, let's keep it simple: 
-// The client uploads file to /files/upload (generic) and gets a URL/ID, then passes it?
-// OR we handle it here.
-// Let's assume for now the DTO *could* take a file upload here. 
-// I'll implement basic file handling saving to 'uploads/receipts' for now, or mock logic if MinIO is strictly required.
-// Actually, I'll allow the file to be uploaded properly.
+import { StorageService } from '../storage/storage.service';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PaymentsController {
-    constructor(private readonly paymentsService: PaymentsService) { }
+    constructor(
+        private readonly paymentsService: PaymentsService,
+        private readonly storageService: StorageService,
+    ) { }
 
     @Post()
     @Roles(Role.ADMIN, Role.CLIENT) // Client can pay, Admin can record
-    @UseInterceptors(FileInterceptor('receiptFile', {
-        storage: diskStorage({
-            destination: './uploads/receipts',
-            filename: (req, file, cb) => {
-                const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-                return cb(null, `${randomName}${extname(file.originalname)}`);
-            }
-        })
-    }))
+    @UseInterceptors(FileInterceptor('receiptFile'))
     async create(
         @Body() createPaymentDto: RecordPaymentDto,
         @UploadedFile() file: Express.Multer.File,
     ) {
-        // In a real app with MinIO, we'd upload there. 
-        // For now, we store the local path or null.
-        // We should probably check if the directory exists or rely on a robust FileService.
-        const receiptUrl = file ? `/uploads/receipts/${file.filename}` : null;
-        return this.paymentsService.create(createPaymentDto, receiptUrl || undefined);
+        let receiptStoragePath: string | undefined;
+
+        if (file) {
+            const uploadResult = await this.storageService.uploadFile(file, createPaymentDto.projectId);
+            receiptStoragePath = uploadResult.storagePath;
+        }
+
+        return this.paymentsService.create(createPaymentDto, receiptStoragePath);
     }
 
     @Get('project/:projectId')
@@ -68,5 +57,82 @@ export class PaymentsController {
     @Roles(Role.ADMIN)
     findOne(@Param('id', ParseUUIDPipe) id: string) {
         return this.paymentsService.findOne(id);
+    }
+
+    /**
+     * Client uploads payment receipt
+     * Creates payment with PENDING_APPROVAL status
+     * Notifies admin for review
+     */
+    @Post('client-upload')
+    @Roles(Role.CLIENT)
+    @UseInterceptors(FileInterceptor('receiptFile'))
+    async uploadClientPayment(
+        @Body() createPaymentDto: RecordPaymentDto,
+        @UploadedFile() file: Express.Multer.File,
+        @Req() req: any,
+    ) {
+        if (!file) {
+            throw new BadRequestException('Receipt file is required');
+        }
+
+        // Upload receipt to MinIO
+        const uploadResult = await this.storageService.uploadFile(file, createPaymentDto.projectId);
+        const userId = req.user.userId;
+
+        return this.paymentsService.createClientPayment(
+            createPaymentDto,
+            uploadResult.storagePath,
+            userId,
+        );
+    }
+
+    /**
+     * Admin approves payment
+     * Can optionally correct the amount
+     */
+    @Patch(':id/approve')
+    @Roles(Role.ADMIN)
+    async approvePayment(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() body: { correctedAmount?: number },
+        @Req() req: any,
+    ) {
+        const adminId = req.user.userId;
+        return this.paymentsService.approvePayment(id, adminId, body.correctedAmount);
+    }
+
+    /**
+     * Admin rejects payment
+     * Requires rejection reason
+     */
+    @Patch(':id/reject')
+    @Roles(Role.ADMIN)
+    async rejectPayment(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() body: { rejectionReason: string },
+        @Req() req: any,
+    ) {
+        if (!body.rejectionReason || body.rejectionReason.trim().length === 0) {
+            throw new BadRequestException('Rejection reason is required');
+        }
+
+        const adminId = req.user.userId;
+        return this.paymentsService.rejectPayment(id, adminId, body.rejectionReason);
+    }
+
+    /**
+     * Get presigned URL for viewing payment receipt
+     * Returns a temporary MinIO URL to access the receipt file
+     */
+    @Get(':id/receipt-url')
+    @Roles(Role.ADMIN, Role.CLIENT)
+    async getReceiptUrl(
+        @Param('id', ParseUUIDPipe) id: string,
+    ) {
+        const presignedUrl = await this.paymentsService.getReceiptDownloadUrl(id);
+        return {
+            url: presignedUrl
+        };
     }
 }

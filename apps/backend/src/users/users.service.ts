@@ -271,4 +271,66 @@ export class UsersService {
 
     return { message: 'User deleted successfully' };
   }
+
+  /**
+   * Find available employees (not assigned to any ACTIVE project)
+   * Used when creating/editing projects to show only employees who can be assigned
+   */
+  async findAvailableEmployees(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<UserResponse>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    // Get all employees with their active project assignments
+    const where = {
+      ...getActiveRecordsWhere(),
+      role: Role.EMPLOYEE,
+    };
+
+    // Get employees who are NOT assigned to any ACTIVE projects
+    const [employees, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where: {
+          ...where,
+          // Exclude employees who have assignments to active projects
+          assignedProjects: {
+            none: {
+              project: {
+                status: {
+                  in: ['ACTIVE', 'WAITING_PAYMENT'],
+                },
+                deletedAt: null,
+              },
+            },
+          },
+        },
+        select: USER_BASIC_SELECT,
+        skip,
+        take: limit,
+        orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+      }),
+      this.prisma.user.count({
+        where: {
+          ...where,
+          assignedProjects: {
+            none: {
+              project: {
+                status: {
+                  in: ['ACTIVE', 'WAITING_PAYMENT'],
+                },
+                deletedAt: null,
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    this.logger.log(
+      `Found ${total} available employees (not assigned to active projects)`,
+    );
+
+    return PaginationHelper.buildPaginatedResult(employees, total, paginationDto);
+  }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Project } from '@/types';
+import { UsersService } from '@/services/users.service';
 import { useProjectsList } from './useProjectsList';
 import { useProjectModals } from './useProjectModals';
 import { useProjectActions } from './useProjectActions';
@@ -62,14 +63,17 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     }
   };
 
-  // Phase 1: Fetch employees for assignment
+  // Phase 1: Fetch AVAILABLE employees for assignment (not assigned to ACTIVE projects)
   const fetchEmployees = async () => {
     try {
-      const { data } = await api.get('/users');
-      const employeeUsers = data.data.filter((u: { role: string }) => u.role === 'EMPLOYEE');
-      setEmployees(employeeUsers);
+      const availableEmployees = await UsersService.getAvailableEmployees();
+      setEmployees(availableEmployees);
+
+      if (availableEmployees.length === 0) {
+        logger.warn('No available employees found - all employees are assigned to active projects');
+      }
     } catch (err) {
-      logger.error('Error loading employees:', err);
+      logger.error('Error loading available employees:', err);
     }
   };
 
@@ -99,6 +103,15 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     }
   };
 
+  // Exposed handler to open modal AND refresh data
+  // Only refresh if employees list is empty (optimization to avoid unnecessary API calls)
+  const openCreateModal = () => {
+    if (employees.length === 0) {
+      fetchEmployees(); // Only fetch if not already loaded
+    }
+    modals.setShowCreateModal(true);
+  };
+
   return {
     // State
     projects: projectsList.projects,
@@ -119,6 +132,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     // Create modal
     showCreateModal: modals.showCreateModal,
     setShowCreateModal: modals.setShowCreateModal,
+    openCreateModal, // New handler
     createFormData: modals.createFormData,
     setCreateFormData: modals.setCreateFormData,
     creating: actions.creating,

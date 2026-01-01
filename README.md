@@ -2,23 +2,46 @@
 
 Sistema de gestión de proyectos y archivos con autenticación diferenciada para administradores y clientes.
 
+## 📦 Package Manager
+
+Este proyecto usa **pnpm** para gestión de dependencias.
+
+### Instalación de pnpm
+
+```bash
+npm install -g pnpm
+```
+
+### Por qué pnpm?
+
+- ⚡ **3x más rápido** que npm
+- 💾 **60% menos espacio en disco** (content-addressable storage)
+- 🔒 **Más estricto** - detecta mejor dependencias faltantes
+- 🏗️ **Optimizado para monorepos**
+
+Ver [PNPM_MIGRATION.md](./PNPM_MIGRATION.md) para más detalles.
+
 ## Tecnologías Utilizadas
 
 ### Backend
-- **NestJS 10** - Framework de Node.js
+- **NestJS 11** - Framework de Node.js
 - **PostgreSQL** - Base de datos relacional
 - **Prisma ORM** - ORM para acceso a base de datos
 - **JWT** - Autenticación para administradores
 - **OTP** - Autenticación basada en código de un solo uso para clientes
 - **MinIO** - Almacenamiento de objetos compatible con S3
-- **TypeScript** - Lenguaje de programación
+- **TypeScript 5.7** - Lenguaje de programación
 
 ### Frontend
-- **Next.js 15** - Framework de React con App Router
+- **Next.js 15.1** - Framework de React con App Router
 - **React 19** - Biblioteca de UI
-- **Tailwind CSS** - Framework de utilidades CSS
+- **Tailwind CSS 4** - Framework de utilidades CSS
 - **Axios** - Cliente HTTP
-- **TypeScript** - Lenguaje de programación
+- **TypeScript 5.7** - Lenguaje de programación
+
+### Monorepo
+- **pnpm** - Package manager optimizado
+- **pnpm workspaces** - Gestión de monorepo
 
 ## Estructura del Proyecto (Monorepo)
 
@@ -136,7 +159,7 @@ JWT_ISSUER=align-designs-api
 ## Usuarios de Prueba
 
 ### Administrador
-- **Email**: alf.guzman@outlook.com
+- **Email**: e.bores.i@outlook.com
 - **Password**: NoloseAlfonso136!
 - **Rol**: ADMIN
 
@@ -152,12 +175,15 @@ JWT_ISSUER=align-designs-api
 ```bash
 # 1. Clonar el repositorio
 git clone <repository-url>
-cd align-designs-demo
+cd align-designs-plataform
 
-# 2. Instalar todas las dependencias (raíz + backend + frontend)
-npm install
+# 2. Instalar pnpm (si no lo tienes)
+npm install -g pnpm
 
-# 3. Configurar variables de entorno
+# 3. Instalar todas las dependencias (raíz + backend + frontend)
+pnpm install
+
+# 4. Configurar variables de entorno
 # Backend
 cp apps/backend/.env.example apps/backend/.env
 # Editar apps/backend/.env con tus credenciales
@@ -166,21 +192,21 @@ cp apps/backend/.env.example apps/backend/.env
 cp apps/frontend/.env.local.example apps/frontend/.env.local
 # Editar apps/frontend/.env.local
 
-# 4. Configurar base de datos
-npm run prisma:generate   # Generar Prisma Client
-npm run prisma:migrate    # Ejecutar migraciones
-npx prisma db seed --workspace=apps/backend  # Seeds iniciales
+# 5. Configurar base de datos
+pnpm prisma:generate   # Generar Prisma Client
+pnpm prisma:migrate    # Ejecutar migraciones
+pnpm --filter backend exec prisma db seed  # Seeds iniciales
 ```
 
 ### Desarrollo
 
 ```bash
 # Iniciar backend y frontend simultáneamente
-npm run dev
+pnpm dev
 
 # O iniciar cada uno por separado:
-npm run dev:backend    # Backend en http://localhost:4000
-npm run dev:frontend   # Frontend en http://localhost:3000
+pnpm dev:backend    # Backend en http://localhost:4000
+pnpm dev:frontend   # Frontend en http://localhost:3000
 ```
 
 ### Producción
@@ -216,6 +242,34 @@ npm run lint:frontend
 # Limpiar todo
 npm run clean
 ```
+
+### Scripts de Gestión (Windows)
+
+El proyecto incluye scripts de PowerShell/Batch para facilitar el desarrollo:
+
+```batch
+# Desarrollo Manual
+.\scripts\manual\start.ps1     # Inicia Nginx + Backend + Frontend
+.\scripts\manual\stop.ps1      # Detiene todos los servicios
+
+# Servicios de Windows (Auto-start)
+.\scripts\services\install-all-services.ps1      # Instala servicios auto-start
+.\scripts\services\uninstall-all-services.ps1    # Desinstala servicios
+
+# Utilidades
+.\scripts\utils\restart-services.bat      # Reinicia servicios rápidamente
+.\scripts\utils\view-logs.bat             # Ver logs en tiempo real
+.\scripts\utils\configure-nginx.bat       # Configurar Nginx en PC nueva
+
+# Acceso Remoto con Ngrok
+.\scripts\utils\share-with-ngrok.bat      # Compartir app remotamente
+.\scripts\utils\stop-ngrok.bat            # Detener túnel ngrok
+.\scripts\utils\get-ngrok-url.ps1         # Obtener URL pública activa
+```
+
+**Documentación completa**:
+- [Scripts README](./scripts/README.md) - Guía completa de scripts
+- [Ngrok Setup](./docs/dev/NGROK.md) - Configuración de acceso remoto
 
 ## Endpoints del API
 

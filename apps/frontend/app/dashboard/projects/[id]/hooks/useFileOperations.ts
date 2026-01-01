@@ -50,7 +50,7 @@ export function useFileOperations(
   }, []);
 
   const handleFileUpload = useCallback(
-    async (file: File, comment: string) => {
+    async (file: File, comment: string, stage?: string) => {
       // Validate file size before upload
       if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
         const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
@@ -67,6 +67,9 @@ export function useFileOperations(
         formData.append('file', file);
         if (comment) {
           formData.append('comment', comment);
+        }
+        if (stage) {
+          formData.append('stage', stage);
         }
 
         await api.post(`/files/${projectId}/upload`, formData, {
@@ -98,7 +101,7 @@ export function useFileOperations(
   );
 
   const handleCreateComment = useCallback(
-    async (comment: string) => {
+    async (comment: string, stage?: string) => {
       if (!comment.trim()) return false;
 
       setUploading(true);
@@ -106,6 +109,7 @@ export function useFileOperations(
       try {
         await api.post(`/files/${projectId}/comment`, {
           comment: comment,
+          stage: stage,
         });
 
         onSuccessRef.current('Comment created successfully');

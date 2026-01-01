@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Modal from '@/app/components/Modal';
 import ConfirmModal from '@/app/components/ConfirmModal';
 import Pagination from '@/app/components/Pagination';
@@ -20,13 +20,30 @@ export default function UsersManagementPage() {
   const [activeTab, setActiveTab] = useState<TabType>('clients');
   const [userRole, setUserRole] = useState<'CLIENT' | 'EMPLOYEE'>('CLIENT');
 
+  // Memoize filtered users to avoid recalculating on every render
+  // IMPORTANT: useMemo must be called before any early returns
+  const filteredUsers = useMemo(
+    () => usersHook.users.filter((usr) =>
+      activeTab === 'clients' ? usr.role === 'CLIENT' : usr.role === 'EMPLOYEE'
+    ),
+    [usersHook.users, activeTab]
+  );
+
+  // Memoize user counts for tab labels to avoid filtering twice
+  const clientCount = useMemo(
+    () => usersHook.users.filter(u => u.role === 'CLIENT').length,
+    [usersHook.users]
+  );
+
+  const employeeCount = useMemo(
+    () => usersHook.users.filter(u => u.role === 'EMPLOYEE').length,
+    [usersHook.users]
+  );
+
+  // Early return AFTER all hooks have been called
   if (loading || (usersHook.loading && usersHook.users.length === 0)) {
     return <PageLoader text="Loading users..." />;
   }
-
-  const filteredUsers = usersHook.users.filter((usr) =>
-    activeTab === 'clients' ? usr.role === 'CLIENT' : usr.role === 'EMPLOYEE'
-  );
 
   const handleOpenCreateModal = (role: 'CLIENT' | 'EMPLOYEE') => {
     setUserRole(role);
@@ -78,7 +95,7 @@ export default function UsersManagementPage() {
                     }
                   `}
                 >
-                  Clients ({usersHook.users.filter(u => u.role === 'CLIENT').length})
+                  Clients ({clientCount})
                 </button>
                 <button
                   onClick={() => setActiveTab('employees')}
@@ -90,7 +107,7 @@ export default function UsersManagementPage() {
                     }
                   `}
                 >
-                  Employees ({usersHook.users.filter(u => u.role === 'EMPLOYEE').length})
+                  Employees ({employeeCount})
                 </button>
               </nav>
             </div>

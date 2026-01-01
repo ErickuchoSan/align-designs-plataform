@@ -3,6 +3,11 @@ node_modules/
 .pnp
 .pnp.js
 
+# Package managers
+package-lock.json
+yarn.lock
+# Keep pnpm-lock.yaml for reproducible builds
+
 # Testing
 coverage/
 .nyc_output

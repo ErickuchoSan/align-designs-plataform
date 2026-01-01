@@ -28,6 +28,11 @@ async function bootstrap() {
   // Enable cookie parser (required for CSRF)
   app.use(cookieParser());
 
+  // Serve static files from uploads directory
+  app.useStaticAssets('uploads', {
+    prefix: '/uploads/',
+  });
+
   // Add request body size limits to prevent DoS attacks
   // Note: File uploads use multipart/form-data which bypasses these limits
   // These limits only apply to JSON and URL-encoded payloads
@@ -40,6 +45,13 @@ async function bootstrap() {
   // Enable Helmet security headers
   const isProduction = process.env.NODE_ENV === 'production';
 
+  // Get MinIO endpoint for CSP configuration
+  const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
+  const minioPort = process.env.MINIO_PORT ?? '9000';
+  const minioUseSSL = process.env.MINIO_USE_SSL === 'true';
+  const minioProtocol = minioUseSSL ? 'https' : 'http';
+  const minioUrl = `${minioProtocol}://${minioEndpoint}:${minioPort}`;
+
   app.use(
     helmet({
       // Content Security Policy - Prevents XSS attacks
@@ -48,12 +60,12 @@ async function bootstrap() {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
+          imgSrc: ["'self'", 'data:', 'https:', 'http:', minioUrl],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
           objectSrc: ["'none'"],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'none'"],
+          mediaSrc: ["'self'", minioUrl],
+          frameSrc: ["'self'", minioUrl], // Allow MinIO iframes for PDF preview
         },
       },
       // HSTS - Force HTTPS in production
@@ -117,7 +129,10 @@ async function bootstrap() {
         return;
       }
 
-      if (allowedOrigins.includes(origin)) {
+      // Allow ngrok domains (*.ngrok-free.app or *.ngrok.io)
+      const isNgrokDomain = origin.includes('.ngrok-free.app') || origin.includes('.ngrok.io') || origin.includes('.ngrok-free.dev');
+
+      if (allowedOrigins.includes(origin) || isNgrokDomain) {
         callback(null, true);
       } else {
         logger.warn(`CORS blocked origin: ${origin}`);

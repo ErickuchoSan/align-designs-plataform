@@ -53,6 +53,13 @@ Admin creates clients in the system, employees, and then creates a project with:
 
 **Project Status:** `WAITING FOR PAYMENT`
 
+**🆕 AUTOMATIC INVOICE GENERATION:**
+When admin creates project with `initialAmountRequired = $8000`:
+- ✅ System **automatically creates** Invoice #INV-YYYY-MM-DD-001
+- ✅ Invoice is saved in Payments stage
+- ✅ Client can immediately see this invoice in their Payments section
+- ✅ Invoice status: `PENDING`
+
 **Visual indicators:**
 - Badge visible: 🔒 **WAITING FOR PAYMENT**
 - Message: *"This project will be activated once the client pays the initial amount of $X"*
@@ -61,6 +68,7 @@ Admin creates clients in the system, employees, and then creates a project with:
 - ✅ Edit project information (name, dates, client, employees, initial amount)
 - ✅ View project details
 - ✅ Delete project if needed
+- ✅ View automatically generated invoice
 
 **Admin CANNOT:**
 - ❌ Upload files/links/comments (visually disabled/grayed out)
@@ -69,97 +77,316 @@ Admin creates clients in the system, employees, and then creates a project with:
 **Client CAN:**
 - ✅ View assigned project
 - ✅ See payment requirement
+- ✅ **View invoice in Payments section**
+- ✅ **Upload payment receipts**
 
 **Client CANNOT:**
-- ❌ Upload anything (project is locked)
+- ❌ Upload files to other stages (project is locked until activated)
 
 ### STEP 3: Client makes initial payment
 
-1. Client enters the project
-2. System shows modal: *"Initial payment of $X required to activate this project"*
-3. Client clicks **"Make Payment"**
-4. Modal opens with payment options:
+**🆕 NEW PAYMENT APPROVAL WORKFLOW:**
 
-#### Option A - Bank Transfer:
-- Upload receipt (screenshot/PDF)
-- Enter amount
-- Select payment date (calendar)
-- Upon saving, payment counts immediately
-- System accumulates payments
+#### 3.1 Client Uploads Payment Receipt
 
-#### Option B - Check:
-- Enter check amount
-- Select estimated check date
-- Client does **NOT** upload file
-- Record stays as *"Pending check confirmation"*
-- Admin later:
-  - Enters that check record
-  - Uploads check receipt (photo/scan)
-  - Confirms/selects actual payment date
-- System now registers payment as confirmed
+1. Client enters Payments section and sees their invoice
+2. Client clicks **"Upload Payment"** on the invoice
+3. **⚠️ CRITICAL WARNING shown to client:**
 
-**Payment Progress:**
-- Shows: *"Payment progress: $2,000 / $5,000 (40%)"*
-- Allows partial payments
-- Accumulates all payments (transfers + confirmed checks)
+```
+╔═══════════════════════════════════════════════════════╗
+║  ⚠️  IMPORTANTE - ANTES DE SUBIR EL COMPROBANTE      ║
+╠═══════════════════════════════════════════════════════╣
+║                                                        ║
+║  Por favor, sube el comprobante OFICIAL que te da     ║
+║  tu aplicación bancaria usando la opción de           ║
+║  "COMPARTIR" después de hacer la transferencia.       ║
+║                                                        ║
+║  ✅ Correcto: Captura desde "Compartir" del banco    ║
+║  ❌ Incorrecto: Foto de la pantalla                   ║
+║                                                        ║
+║  Esto asegura que el comprobante sea legible y        ║
+║  contenga toda la información necesaria.              ║
+║                                                        ║
+╚═══════════════════════════════════════════════════════╝
+```
 
-**Once initial amount is 100% covered → Project ACTIVATES automatically**
-- Status changes to: ✅ **ACTIVE**
+4. Client fills form:
+   - **Payment Method:** Bank Transfer or Check
+   - **Amount Paid:** Client enters amount (can be partial)
+   - **Payment Date:** Select date
+   - **Receipt File:** Upload official bank receipt
+
+5. Upon submission:
+   - Payment created with status: `PENDING_APPROVAL`
+   - **NOTIFICATION sent to Admin:** "New payment pending review"
+   - Client sees: "Your payment is under review"
+
+#### 3.2 Admin Reviews and Approves/Rejects Payment
+
+Admin receives notification and reviews payment with **3 options:**
+
+**Option A - Approve with claimed amount:**
+- ✅ Receipt is correct, amount is correct
+- ✅ Payment status → `CONFIRMED`
+- ✅ Amount added to project's `amountPaid`
+- ✅ Invoice updated with payment progress
+- ✅ **NOTIFICATION to Client:** "Your payment of $X has been approved"
+
+**Option B - Approve but correct amount:**
+- ✅ Receipt is correct, but client entered wrong amount
+- ✅ Admin corrects the amount (e.g., client said $3,000 but receipt shows $2,800)
+- ✅ Payment status → `CONFIRMED` with corrected amount
+- ✅ Corrected amount added to `amountPaid`
+- ✅ **NOTIFICATION to Client:** "Your payment has been approved for $2,800 (amount corrected)"
+
+**Option C - Reject payment:**
+- ❌ Receipt is not readable / incorrect format
+- ❌ Payment status → `REJECTED`
+- ❌ Not added to `amountPaid`
+- ✅ **NOTIFICATION to Client:** "Your receipt was rejected. Reason: [admin's reason]. Please upload the official receipt using your banking app's SHARE option"
+- ✅ Client can re-upload
+
+#### 3.3 Partial Payments Allowed
+
+**Example progression:**
+```
+Payment 1: $3,000 (Approved) ✅
+Payment 2: $2,500 (Approved) ✅
+Payment 3: $2,500 (Pending Review) ⏳
+------------------------
+Total Paid: $5,500 / $8,000 (68.75%)
+Remaining: $2,500
+```
+
+**Payment Progress Display:**
+- Shows: *"Payment progress: $5,500 / $8,000 (68.75%)"*
+- Real-time updates as admin approves payments
+- Client can make multiple partial payments until complete
+
+#### 3.4 Initial Payment Complete → Project Can Be Activated
+
+**When `amountPaid >= initialAmountRequired`:**
+```
+Payment 1: $3,000 ✅
+Payment 2: $2,500 ✅
+Payment 3: $2,500 ✅ (just approved)
+------------------------
+Total Paid: $8,000 / $8,000 (100%) ✅
+
+🎉 INITIAL PAYMENT COMPLETE!
+```
+
+**Automatic actions:**
+- ✅ Invoice status → `PAID`
+- ✅ **"Activate Project" button enabled** for Admin
+- ✅ **NOTIFICATION to Client:** "Initial payment complete! Your project will be activated soon"
+- ✅ **NOTIFICATION to Admin:** "Project ready to activate - initial payment complete"
+
+#### 3.5 Admin Activates Project
+
+Admin clicks **"Activate Project"**:
+- Status changes: `WAITING_PAYMENT` → `ACTIVE`
 - Badge changes to: ● **ACTIVE**
+- **NOTIFICATION to Client:** "Your project has been activated! Work has begun"
+- **NOTIFICATION to Employees:** "New active project assigned to you"
 - Now files/links/comments can be uploaded (according to stage permissions)
 
-> **Note:** Admin can still edit/reduce the initial amount required if they negotiate with client.
+> **Note:** Admin can still edit/reduce the initial amount required if they negotiate with client. If reduced below already paid amount, project becomes immediately activatable.
 
 ---
 
 ## 3. System Stages (Workflow Stages)
 
+**🆕 VISUAL DESIGN: Card/Folder System (Option C)**
+
+Stages are displayed as **clickable cards** with:
+- Icon and name
+- File count
+- Permission badge (Read+Write / Read Only)
+- Active indicator
+
+Users **only see stages they have permission to access**. Clicking a stage opens that "folder" to view/manage files.
+
 ### 8 Fixed Stages:
 
-1. **Project Brief**
-2. **Feedback (Client space)**
-3. **Feedback (Employee space)**
-4. **References**
-5. **Submitted**
-6. **Admin Approved**
-7. **Client Approved**
-8. **Payments**
+1. 📋 **Project Brief**
+2. 💬 **Feedback (Client space)**
+3. 📝 **Feedback (Employee space)**
+4. 🔗 **References**
+5. 📤 **Submitted**
+6. ✅ **Admin Approved**
+7. ⭐ **Client Approved**
+8. 💰 **Payments** *(Special: 3 subsections with privacy)*
 
-### Stage Permissions:
+### Stage Permissions & Visibility:
 
-| Stage | Admin | Client | Employee | Notes |
-|-------|-------|--------|----------|-------|
-| **Project Brief** | Read + Write | NO access | Read only | Admin uploads initial specs. Required before employees can work. |
-| **Feedback (Client)** | Read + Write | Read + Write | NO access | Client creates feedback. Admin responds. Separate space from employee feedback. |
-| **Feedback (Employee)** | Read + Write | NO access | Read only | Admin creates feedback for employees. Employees can only read. Separate space from client feedback. **🆕 Can be linked to rejected files** |
-| **References** | Read + Write | Read + Write | NO access | Client can upload links (Google, visual references). |
-| **Submitted** | Read + Write | NO access | Read + Write | Employees submit work here. **🆕 Supports versioning with notes** |
-| **Admin Approved** | Read + Write | NO access | NO access | Admin only. Files approved by admin. |
-| **Client Approved** | Read + Write | NO access | NO access | Admin only (can write). Client does NOT see this stage. |
-| **Payments** | Read + Write | Read + Write (invoices/payments only) | Read (only their payments) | Separated by payment type. **🆕 Invoice system with auto-numbering** |
+| Stage | Icon | Admin | Client | Employee | Notes |
+|-------|------|-------|--------|----------|-------|
+| **Project Brief** | 📋 | R+W ✅ | NO ❌ | R 👁️ | Admin uploads initial specs. Required before employees can work. |
+| **Feedback (Client)** | 💬 | R+W ✅ | R+W ✅ | NO ❌ | Client creates feedback. Admin responds. **Client DOES see this stage.** |
+| **Feedback (Employee)** | 📝 | R+W ✅ | NO ❌ | R 👁️ | Admin creates feedback for employees. Employees read only. **Client does NOT see this stage.** |
+| **References** | 🔗 | R+W ✅ | R+W ✅ | NO ❌ | Client uploads links (Pinterest, Google Drive, etc.). |
+| **Submitted** | 📤 | R+W ✅ | NO ❌ | R+W ✅ | Employees submit work. Supports versioning with notes. |
+| **Admin Approved** | ✅ | R+W ✅ | NO ❌ | NO ❌ | Admin only. Files approved by admin awaiting client review. |
+| **Client Approved** | ⭐ | R+W ✅ | NO ❌ | NO ❌ | Admin only. **Client does NOT see this stage.** Files approved by client. |
+| **Payments** | 💰 | R+W ✅ | R* 👁️ | R** 👁️ | *Client: Only THEIR invoices & payments. **Employee: Only THEIR payments. |
 
-### Payment Sub-stages:
+**Legend:**
+- ✅ Read + Write (full access)
+- 👁️ Read Only
+- ❌ No Access (stage not even displayed to user)
 
-#### 🆕 Invoices (Admin → Client) - NEW SYSTEM:
-- Admin creates invoice with auto-generated number: `INV-2024-12-20-001`
-- Admin sets payment terms (Net 15, 30, 60, or custom days)
-- System calculates due date automatically
-- Tracks invoice status: Draft, Sent, Paid, Overdue
-- Client uploads payment receipts (transfer with file + amount + date, or check with amount + date)
-- If check, admin uploads receipt later + confirms date
-- System automatically marks overdue invoices
-- **Visible to:** Admin and Client only
+### 🆕 UI Example - What Each User Sees:
 
-#### Employee Payments (Admin → Employee):
+**Admin sees ALL 8 stages:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ Project Sections                                         │
+├─────────────────────────────────────────────────────────┤
+│ 📋 Project Brief  💬 Client Feedback 📝 Employee Feedback│
+│ 3 files           5 files            2 files             │
+│ Read + Write      Read + Write       Read + Write        │
+│                                                          │
+│ 🔗 References     📤 Submitted       ✅ Admin Approved   │
+│ 8 files           4 files            12 files            │
+│ Read + Write      Read + Write       Read + Write        │
+│                                                          │
+│ ⭐ Client Approved 💰 Payments                           │
+│ 8 files            15 files                              │
+│ Read + Write       Read + Write                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Client sees ONLY 3 stages:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ Project Sections                                         │
+├─────────────────────────────────────────────────────────┤
+│ 💬 Client Feedback 🔗 References    💰 Payments         │
+│ 5 files            8 files          3 invoices (theirs) │
+│ Read + Write       Read + Write     Read Only           │
+│                                                          │
+│ (Other stages not shown - no access)                    │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Employee sees ONLY 4 stages:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ Project Sections                                         │
+├─────────────────────────────────────────────────────────┤
+│ 📋 Project Brief  📝 Employee Feedback 📤 Submitted     │
+│ 3 files           2 files              4 files          │
+│ Read Only         Read Only            Read + Write     │
+│                                                          │
+│ 💰 Payments                                             │
+│ 2 payments (theirs only)                                │
+│ Read Only                                               │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Payment Sub-stages (3 Types with Privacy):
+
+The **Payments** stage contains **3 separate subsections**, each with **strict privacy filtering**:
+
+#### 1️⃣ Invoices (Admin → Client)
+
+**Purpose:** Admin creates and tracks invoices sent to clients
+
+**Features:**
+- **Auto-generation:** Creating project with `initialAmountRequired` auto-creates invoice
+- **Invoice Number:** Auto-generated `INV-2024-12-20-001` format
+- **Payment Terms:** Net 15, 30, 60, or custom days
+- **Due Date:** Automatically calculated
+- **Status Tracking:** Pending, Partially Paid, Paid, Overdue
+- **Overdue Detection:** System automatically flags overdue invoices
+
+**Who Sees What:**
+- **Admin:** ALL invoices to ALL clients across ALL projects
+- **Client:** ONLY their own invoices
+- **Employee:** NO access (doesn't see this subsection)
+
+**Client Payment Process:**
+1. Client sees invoice in Payments → Invoices tab
+2. Client uploads payment receipt with warning about using bank's SHARE feature
+3. Payment goes to `PENDING_APPROVAL` status
+4. Admin reviews and approves/corrects/rejects
+5. Upon approval, invoice shows payment progress
+6. When fully paid, invoice status → `PAID`
+
+#### 2️⃣ Client Payments (Client → Admin)
+
+**Purpose:** Track all payments from clients (initial payments, invoice payments, etc.)
+
+**Payment States:**
+- `PENDING_APPROVAL` - Client uploaded, awaiting admin review
+- `CONFIRMED` - Admin approved payment
+- `REJECTED` - Admin rejected, client can re-upload
+
+**Admin Review Options:**
+- ✅ Approve with claimed amount
+- ✏️ Approve but correct amount
+- ❌ Reject (request new receipt)
+
+**Who Sees What:**
+- **Admin:** ALL payments from ALL clients
+- **Client:** ONLY their own payments
+- **Employee:** NO access
+
+**Visible Information:**
+- Payment amount (claimed vs. approved)
+- Receipt file
+- Payment date
+- Status
+- Admin notes/corrections
+
+#### 3️⃣ Employee Payments (Admin → Employee)
+
+**Purpose:** Track payments from admin to employees for completed work
+
+**Features:**
 - Admin uploads transfer receipt + amount + date
-- Admin selects which file(s) "Pending payment" they're paying
-- **🆕 Tracks payment history per employee**
-- **Visible to:** Admin and specific employee receiving payment
+- Admin links payment to specific approved file(s)
+- Tracks which deliverables are "Pending payment" vs "Paid"
+- Shows payment history per employee
+- Shows rejection count and approval dates for each file
 
-#### Pending Payments (Employee view):
-- Employee sees list of files approved by client that don't have associated payment yet
-- **🆕 Shows rejection count and approval dates**
-- Gives transparency to employee about what's pending
+**Who Sees What:**
+- **Admin:** ALL payments to ALL employees
+- **Client:** NO access (doesn't see this subsection)
+- **Employee:** ONLY their own payments received
+
+**Employee View - Pending Payments:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ MY PENDING PAYMENTS                                      │
+├─────────────────────────────────────────────────────────┤
+│ ✓ Kitchen Design Final                                  │
+│   Approved: Dec 22, 2024                                │
+│   Versions: 3 (rejected 2 times)                        │
+│   Status: PENDING PAYMENT                               │
+│                                                          │
+│ ✓ Living Room Layout                                    │
+│   Approved: Dec 25, 2024                                │
+│   Versions: 1 (approved first try)                      │
+│   Status: PENDING PAYMENT                               │
+│                                                          │
+│ Total Pending: 2 files | Estimated: $5,500             │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Employee View - Payment History:**
+```
+┌─────────────────────────────────────────────────────────┐
+│ MY PAYMENT HISTORY                                       │
+├─────────────────────────────────────────────────────────┤
+│ ✅ Bedroom Design | $3,000 | Paid Dec 28, 2024         │
+│ ✅ Bathroom Layout | $2,000 | Paid Dec 20, 2024        │
+│                                                          │
+│ Total Received: $5,000                                  │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 

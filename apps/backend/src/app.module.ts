@@ -21,6 +21,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { TrackingModule } from './tracking/tracking.module';
+import { EmployeePaymentsModule } from './employee-payments/employee-payments.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
@@ -54,6 +55,7 @@ import { GLOBAL_RATE_LIMIT } from './common/constants/timeouts.constants';
     TrackingModule,
     InvoicesModule,
     AnalyticsModule,
+    EmployeePaymentsModule,
   ],
   controllers: [],
   providers: [],

@@ -1,132 +1,225 @@
 # 🚀 Scripts de Gestión del Monorepo
 
-Scripts para gestionar el inicio, detención y reinicio del monorepo Align Designs.
+Scripts organizados para gestionar el inicio, detención y servicios del monorepo Align Designs.
 
-## 📋 Scripts Disponibles
+## 📁 Estructura de Carpetas
 
-### PowerShell (Recomendado para Windows)
+```
+scripts/
+├── README.md                    # Este archivo
+├── manual/                      # Desarrollo manual (start/stop)
+│   ├── start.ps1
+│   └── stop.ps1
+├── services/                    # Instalación de servicios de Windows
+│   ├── install-all-services.ps1
+│   ├── install-nginx-service.ps1
+│   ├── install-monorepo-service.ps1
+│   └── uninstall-all-services.ps1
+├── utils/                       # Utilidades rápidas
+│   ├── configure-nginx.bat      # Configurar Nginx en PC nueva
+│   ├── restart-services.bat     # Reinicio rápido
+│   └── view-logs.bat            # Ver logs en tiempo real
+└── legacy/                      # Scripts antiguos (no usar)
+    └── (scripts obsoletos)
+```
+
+---
+
+## 🎯 Inicio Rápido
+
+### Opción 1: Desarrollo Manual (Recomendado para desarrollo diario)
+```powershell
+.\scripts\manual\start.ps1    # Inicia sistema (logs en consola)
+.\scripts\manual\stop.ps1     # Detiene sistema
+```
+
+### Opción 2: Auto-Start en Windows Boot (Recomendado para demo/testing)
+```powershell
+# Ejecutar PowerShell como Administrador
+.\scripts\services\install-all-services.ps1      # Instala servicios de Windows
+.\scripts\services\uninstall-all-services.ps1    # Desinstala servicios
+```
+
+### Opción 3: Utilidades Rápidas
+```batch
+.\scripts\utils\restart-services.bat   # Reinicia servicios (doble click)
+.\scripts\utils\view-logs.bat          # Ver logs en tiempo real
+```
+
+---
+
+## 📋 Scripts por Categoría
+
+### 📂 manual/ - Desarrollo Manual
 
 | Script | Descripción | Uso |
 |--------|-------------|-----|
-| `start-dev.ps1` | Inicia el monorepo completo | `.\scripts\start-dev.ps1` |
-| `stop-dev.ps1` | Detiene todos los servicios al 100% | `.\scripts\stop-dev.ps1` |
-| `restart-dev.ps1` | Reinicia el monorepo limpiamente | `.\scripts\restart-dev.ps1` |
+| `start.ps1` | Inicia Nginx + Monorepo manualmente | `.\scripts\manual\start.ps1` |
+| `stop.ps1` | Detiene Nginx + Monorepo | `.\scripts\manual\stop.ps1` |
 
-### CMD/Batch (Alternativa)
+**Características**:
+- ✅ Limpia puertos 3000 y 4000 automáticamente
+- ✅ Inicia Nginx en background
+- ✅ Inicia Frontend (Next.js) y Backend (NestJS) en foreground
+- ✅ Health check automático
+- ✅ Logs visibles en consola
+- ✅ Hot-reload de Next.js y NestJS funciona perfectamente
+
+---
+
+### 📂 services/ - Servicios de Windows
+
+| Script | Descripción | Admin | Uso |
+|--------|-------------|-------|-----|
+| `install-all-services.ps1` | Instala TODO como servicios de Windows | ✅ | `.\scripts\services\install-all-services.ps1` |
+| `install-nginx-service.ps1` | Instala solo Nginx como servicio | ✅ | `.\scripts\services\install-nginx-service.ps1` |
+| `install-monorepo-service.ps1` | Instala solo Monorepo como servicio | ✅ | `.\scripts\services\install-monorepo-service.ps1` |
+| `uninstall-all-services.ps1` | Desinstala todos los servicios | ✅ | `.\scripts\services\uninstall-all-services.ps1` |
+
+**Características**:
+- ✅ Auto-start al encender Windows
+- ✅ Nginx y Monorepo como servicios de Windows
+- ✅ Logs en archivos (.\logs\monorepo-service.log)
+- ✅ Gestión con comandos de Windows (Get-Service, Start-Service, etc.)
+- ✅ Hot-reload sigue funcionando
+- ✅ Dependencias configuradas (Monorepo espera a Nginx)
+
+---
+
+### 📂 utils/ - Utilidades
 
 | Script | Descripción | Uso |
 |--------|-------------|-----|
-| `start-dev.bat` | Inicia el monorepo completo | `scripts\start-dev.bat` |
-| `stop-dev.bat` | Detiene todos los servicios | `scripts\stop-dev.bat` |
-| `restart-dev.bat` | Reinicia el monorepo | `scripts\restart-dev.bat` |
+| `configure-nginx.bat` | Configura Nginx en PC nueva | Doble click o `.\scripts\utils\configure-nginx.bat` |
+| `restart-services.bat` | Reinicia servicios rápidamente | Doble click o `.\scripts\utils\restart-services.bat` |
+| `view-logs.bat` | Ver logs en tiempo real | Doble click o `.\scripts\utils\view-logs.bat` |
+| `share-with-ngrok.bat` | Comparte tu app via tunnel público | Doble click o `.\scripts\utils\share-with-ngrok.bat` |
+| `stop-ngrok.bat` | Detiene el tunnel de ngrok | Doble click o `.\scripts\utils\stop-ngrok.bat` |
+| `get-ngrok-url.ps1` | Obtiene URL de ngrok si ya está corriendo | `.\scripts\utils\get-ngrok-url.ps1` |
 
-## 🎯 Uso Rápido
+**Cuándo usar**:
+- `configure-nginx.bat` → Cuando te cambias de PC o reinstalaciones
+- `restart-services.bat` → Cambios en .env o configuración
+- `view-logs.bat` → Ver qué está pasando en el sistema
+- `share-with-ngrok.bat` → Compartir app con cliente/admin remotamente
+- `stop-ngrok.bat` → Cerrar acceso remoto
+- `get-ngrok-url.ps1` → Recuperar URL de ngrok activo
 
-### Con PowerShell:
+**Ngrok - Acceso Remoto**: Ver [documentación completa](../docs/dev/NGROK.md) para setup y troubleshooting
 
-```powershell
-# Desde la raíz del proyecto:
+---
 
-# Iniciar
-.\scripts\start-dev.ps1
+## 🌐 Acceso Remoto con Ngrok
 
-# Detener
-.\scripts\stop-dev.ps1
+### Configuración Inicial (una sola vez)
 
-# Reiniciar
-.\scripts\restart-dev.ps1
+1. **Obtener cuenta de ngrok**
+   - Registrarse en https://ngrok.com
+   - Copiar tu authtoken desde https://dashboard.ngrok.com/get-started/your-authtoken
+
+2. **Configurar authtoken**
+   ```powershell
+   ngrok config add-authtoken TU_AUTHTOKEN_AQUI
+   ```
+
+3. **Configurar variables de entorno**
+   - Backend: En `apps/backend/.env` agregar:
+     ```env
+     ALLOW_NGROK=true
+     ```
+   - Frontend: En `apps/frontend/.env.local` verificar:
+     ```env
+     NEXT_PUBLIC_API_URL=/api/v1
+     ```
+
+4. **Reiniciar servicios**
+   ```powershell
+   .\scripts\utils\restart-services.bat
+   ```
+
+### Uso
+
+```batch
+# Compartir app remotamente
+.\scripts\utils\share-with-ngrok.bat
+
+# Obtener URL (si ya está corriendo)
+.\scripts\utils\get-ngrok-url.ps1
+
+# Detener acceso remoto
+.\scripts\utils\stop-ngrok.bat
 ```
 
-### Con CMD:
+### Cómo Funciona
 
-```cmd
-# Desde la raíz del proyecto:
+1. El script crea un túnel HTTPS desde tu localhost al dominio público de ngrok
+2. Nginx está configurado para manejar las cabeceras de proxy correctamente
+3. Las cookies de autenticación funcionan con `SameSite=None; Secure`
+4. Frontend usa URLs relativas para funcionar tanto local como remotamente
 
-# Iniciar
-scripts\start-dev.bat
+**Documentación completa**: [docs/dev/NGROK.md](../docs/dev/NGROK.md)
 
-# Detener
-scripts\stop-dev.bat
+---
 
-# Reiniciar
-scripts\restart-dev.bat
-```
+## 🎯 Casos de Uso
 
-## 📝 Características
+### PC Nueva o Reinstalación
 
-### ✨ start-dev
+**Pasos para configurar en PC nueva:**
 
-- ✅ Verifica instalación de dependencias
-- ✅ Limpia lockfiles de Next.js
-- ✅ Verifica disponibilidad de puertos
-- ✅ Inicia backend (puerto 4000) y frontend (puerto 3000)
-- ✅ Usa puerto alternativo si 3000 está ocupado
+1. **Instalar Nginx**
+   - Descarga desde http://nginx.org/en/download.html
+   - Extrae en `C:\nginx`
 
-### 🛑 stop-dev
+2. **Configurar Nginx**
+   ```batch
+   .\scripts\utils\configure-nginx.bat
+   ```
 
-- ✅ Detiene procesos en puertos 3000, 3001, 4000
-- ✅ Busca y detiene procesos Node relacionados
-- ✅ Limpia archivos temporales de Next.js
-- ✅ Verifica que todos los procesos se detengan
+3. **Configurar hosts file** (como Administrador)
+   - Abre: `C:\Windows\System32\drivers\etc\hosts`
+   - Agrega: `127.0.0.1       aligndesigns-platform.local`
 
-### 🔄 restart-dev
+4. **Instalar servicios** (opcional)
+   ```powershell
+   .\scripts\services\install-all-services.ps1
+   ```
 
-- ✅ Ejecuta stop-dev completo
-- ✅ Espera 3 segundos para limpieza
-- ✅ Ejecuta start-dev fresco
+5. **O iniciar manualmente**
+   ```powershell
+   .\scripts\manual\start.ps1
+   ```
 
-## 🔧 Resolución de Problemas
+---
 
-### Error: "Execution Policy"
+## 📍 URLs de Acceso
 
-Si PowerShell no permite ejecutar scripts:
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| Frontend | http://localhost:3000 | Acceso directo Next.js |
+| Backend | http://localhost:4000 | Acceso directo NestJS |
+| Backend Health | http://localhost:4000/api/v1/health | Health check endpoint |
+| **Domain (Nginx)** | **http://aligndesigns-platform.local** | **Acceso unificado** ⭐ |
 
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+---
 
-### Puerto en uso
+## 💡 Notas Importantes
 
-Los scripts detectan automáticamente puertos ocupados:
-- **Backend (4000):** Se detiene el proceso anterior
-- **Frontend (3000):** Se usa puerto 3001 automáticamente
+1. **Hot Reload**: Funciona en AMBOS (Frontend + Backend) tanto en modo manual como servicios.
 
-### Proceso bloqueado
+2. **Logs**:
+   - Con servicios → logs van a archivos (`.\logs\monorepo-service.log`)
+   - Con manual → logs van a consola
 
-Si un proceso no se detiene:
+3. **Orden de Inicio**: El servicio Monorepo espera a que Nginx inicie primero.
 
-```powershell
-# Ver procesos en puerto específico
-Get-NetTCPConnection -LocalPort 3000
+4. **Scripts Legacy**: La carpeta `legacy/` contiene scripts antiguos. No los uses.
 
-# Detener manualmente
-Stop-Process -Id [PID] -Force
-```
+---
 
-## 📍 URLs de Servicio
+## 🤝 Soporte
 
-Después de iniciar:
-
-- **Backend API:** http://localhost:4000
-- **Frontend:** http://localhost:3000 (o 3001 si está ocupado)
-- **Swagger Docs:** http://localhost:4000/api
-
-## 🎨 Output Visual
-
-Los scripts usan colores para mejor visibilidad:
-- 🔵 **Cyan:** Información general
-- 🟢 **Verde:** Éxito
-- 🟡 **Amarillo:** Advertencias
-- 🔴 **Rojo:** Errores/Detención
-
-## 💡 Recomendaciones
-
-1. **Usar PowerShell:** Más robusto y con mejor manejo de errores
-2. **Verificar puertos:** Antes de iniciar, asegúrate de que no hay servicios conflictivos
-3. **Reinicio limpio:** Siempre usa `restart-dev.ps1` en lugar de Ctrl+C + start
-
-## 🔗 Enlaces Útiles
-
-- [Documentación del Proyecto](../docs/README.md)
-- [Setup Guide](../docs/SETUP.md)
-- [Troubleshooting](../docs/INFRASTRUCTURE.md)
+Si tienes problemas:
+1. Verifica los requisitos están instalados
+2. Usa `.\scripts\utils\view-logs.bat` para ver logs
+3. Asegúrate de ejecutar como Administrador cuando sea necesario

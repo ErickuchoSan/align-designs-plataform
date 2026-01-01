@@ -3,6 +3,7 @@ import { Sanitize } from '../../common/decorators/sanitize.decorator';
 import { Transform } from 'class-transformer';
 import { COMMENT_CONSTRAINTS } from '../../common/constants/validation.constants';
 import { Stage } from '@prisma/client';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * DTO for uploading a file to a project
@@ -21,10 +22,20 @@ export class UploadFileDto {
   comment?: string;
 
   // Phase 1: Workflow stage
+  @ApiPropertyOptional({ enum: Stage, description: 'Stage where the file belongs' })
   @IsOptional()
   @IsEnum(Stage, {
     message:
       'Stage must be one of: BRIEF_PROJECT, FEEDBACK_CLIENT, FEEDBACK_EMPLOYEE, REFERENCES, SUBMITTED, ADMIN_APPROVED, CLIENT_APPROVED, PAYMENTS',
+  })
+  @Transform(({ value }) => {
+    // If value is a string and matches a Stage enum, return it
+    // If value is undefined or null, return undefined
+    if (!value) return undefined;
+    if (typeof value === 'string' && Object.values(Stage).includes(value as Stage)) {
+      return value as Stage;
+    }
+    return value;
   })
   stage?: Stage;
 }

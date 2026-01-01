@@ -9,6 +9,7 @@ interface ProjectFormData {
   employeeIds?: string[];
   initialAmountRequired?: number;
   deadlineDate?: string;
+  initialPaymentDeadline?: string;
 }
 
 /**
@@ -24,6 +25,7 @@ export function useProjectModals() {
     employeeIds: [],
     initialAmountRequired: undefined,
     deadlineDate: undefined,
+    initialPaymentDeadline: undefined,
   });
 
   // Edit modal state
@@ -34,6 +36,7 @@ export function useProjectModals() {
     name: '',
     description: '',
     clientId: '',
+    employeeIds: [],
   });
   const [canChangeClient, setCanChangeClient] = useState(true);
 
@@ -50,6 +53,7 @@ export function useProjectModals() {
       employeeIds: [],
       initialAmountRequired: undefined,
       deadlineDate: undefined,
+      initialPaymentDeadline: undefined,
     });
   }, []);
 
@@ -62,6 +66,7 @@ export function useProjectModals() {
       employeeIds: [],
       initialAmountRequired: undefined,
       deadlineDate: undefined,
+      initialPaymentDeadline: undefined,
     });
   }, []);
 
@@ -71,6 +76,10 @@ export function useProjectModals() {
       name: project.name,
       description: project.description || '',
       clientId: project.client?.id || '',
+      employeeIds: project.employees?.map((e: any) => e.employee.id) || [],
+      initialAmountRequired: project.initialAmountRequired ? Number(project.initialAmountRequired) : undefined,
+      deadlineDate: project.deadlineDate || undefined,
+      initialPaymentDeadline: project.initialPaymentDeadline || undefined,
     });
     setShowEditModal(true);
 
@@ -82,7 +91,15 @@ export function useProjectModals() {
   const closeEditModal = useCallback(() => {
     setShowEditModal(false);
     setEditingProject(null);
-    setEditFormData({ name: '', description: '', clientId: '' });
+    setEditFormData({
+      name: '',
+      description: '',
+      clientId: '',
+      employeeIds: [],
+      initialAmountRequired: undefined,
+      deadlineDate: undefined,
+      initialPaymentDeadline: undefined,
+    });
     setShowEditConfirm(false);
     setCanChangeClient(true);
   }, []);

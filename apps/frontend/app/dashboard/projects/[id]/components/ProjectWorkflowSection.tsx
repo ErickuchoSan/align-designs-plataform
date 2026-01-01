@@ -1,54 +1,199 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ManageEmployeesModal } from '@/components/dashboard/ManageEmployeesModal';
+import dynamic from 'next/dynamic';
 import { Project, ProjectStatus } from '@/types';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
-import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
-import { CompletionChecklistModal } from '@/components/projects/CompletionChecklistModal';
+
+// Lazy load heavy modal components for better code splitting
+// These modals are only loaded when they are actually opened
+const ManageEmployeesModal = dynamic(() => import('@/components/dashboard/ManageEmployeesModal').then(mod => ({ default: mod.ManageEmployeesModal })), {
+  loading: () => null,
+  ssr: false,
+});
+
+const RecordPaymentModal = dynamic(() => import('@/components/payments/RecordPaymentModal').then(mod => ({ default: mod.RecordPaymentModal })), {
+  loading: () => null,
+  ssr: false,
+});
+
+const CompletionChecklistModal = dynamic(() => import('@/components/projects/CompletionChecklistModal').then(mod => ({ default: mod.CompletionChecklistModal })), {
+  loading: () => null,
+  ssr: false,
+});
+
+const ConfirmDialog = dynamic(() => import('@/components/common/ConfirmDialog'), {
+  loading: () => null,
+  ssr: false,
+});
 import { ProjectsService } from '@/services/projects.service';
+import { InvoicesService } from '@/services/invoices.service';
 import { logger } from '@/lib/logger';
+import { toast } from 'react-hot-toast';
 
 interface ProjectWorkflowSectionProps {
   project: Project;
   isAdmin: boolean;
   onUpdate: () => void;
+  userRole?: string;
 }
 
 /**
  * ProjectWorkflowSection Component
  *
  * Displays and manages project workflow:
- * - Status overview with action buttons
- * - Employee assignments
- * - Payment tracking
- * - Deadline information
+ * - Status overview with action buttons (Admin)
+ * - Employee assignments (Admin)
+ * - Payment tracking (Admin & Client)
+ * - Deadline information (Admin)
  *
- * Only visible to admins
+ * Admins see full workflow controls, clients see payment status only
  */
-export default function ProjectWorkflowSection({
+function ProjectWorkflowSection({
   project,
   isAdmin,
   onUpdate,
+  userRole,
 }: ProjectWorkflowSectionProps) {
   const router = useRouter();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [showActivateConfirm, setShowActivateConfirm] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
-  // Don't show workflow section to non-admins
+  // Invoice-based payment tracking
+  const [invoiceDeadlines, setInvoiceDeadlines] = useState<Array<{ date: Date; label: string; invoiceId: string; amount: number }>>([]);
+  const [paymentProgress, setPaymentProgress] = useState<{ paid: number; total: number; percentage: number; pendingInvoiceCount: number }>({ paid: 0, total: 0, percentage: 0, pendingInvoiceCount: 0 });
+  const [loadingInvoices, setLoadingInvoices] = useState(true);
+
+  const isClient = userRole === 'CLIENT';
+
+  // Load invoices and calculate payment progress
+  useEffect(() => {
+    const loadInvoiceData = async () => {
+      try {
+        setLoadingInvoices(true);
+        const [deadlines, progress] = await Promise.all([
+          InvoicesService.getDeadlinesByProject(project.id),
+          InvoicesService.getPaymentProgress(project.id),
+        ]);
+        setInvoiceDeadlines(deadlines);
+        setPaymentProgress(progress);
+      } catch (err) {
+        logger.error('Error loading invoice data:', err);
+      } finally {
+        setLoadingInvoices(false);
+      }
+    };
+
+    loadInvoiceData();
+  }, [project.id]);
+
+  // For clients, show simplified payment section
+  if (isClient) {
+    // If project is waiting for payment, show prominent payment prompt
+    if (project.status === ProjectStatus.WAITING_PAYMENT) {
+      return (
+        <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 mb-6">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+
+            <h2 className="text-2xl font-bold text-navy-900 mb-3">
+              Initial Payment Required
+            </h2>
+
+            <p className="text-base text-stone-600 mb-2">
+              This project requires an initial payment to start. Please upload your payment proof to continue.
+            </p>
+
+            {project.initialAmountRequired && (
+              <div className="bg-navy-50 border border-navy-200 rounded-lg p-4 mb-6 inline-block">
+                <p className="text-sm text-navy-700 mb-1">Amount Required</p>
+                <p className="text-3xl font-bold text-navy-900">
+                  ${Number(project.initialAmountRequired).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+            )}
+
+            {project.initialPaymentDeadline && (
+              <p className="text-sm text-stone-600 mb-6">
+                <span className="font-medium">Payment Deadline:</span>{' '}
+                {new Date(project.initialPaymentDeadline).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+                {new Date(project.initialPaymentDeadline) < new Date() && (
+                  <span className="ml-2 text-red-600 font-semibold">⚠️ Overdue</span>
+                )}
+              </p>
+            )}
+
+            <button
+              onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
+              className="px-8 py-3 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+              Upload Payment Proof
+            </button>
+
+            <p className="text-xs text-stone-500 mt-6">
+              💡 The project will be activated once the admin approves your payment
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // For active projects, show payment progress
+    return (
+      <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-navy-900">Project Status</h2>
+          <ProjectStatusBadge status={project.status} />
+        </div>
+
+        <div className="border border-stone-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-navy-900">Payment Progress</h3>
+            <button
+              onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
+              className="text-sm px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
+            >
+              View Payments
+            </button>
+          </div>
+
+          {project.initialAmountRequired !== null && project.initialAmountRequired !== undefined ? (
+            <PaymentProgressBar
+              paid={Number(project.amountPaid)}
+              required={Number(project.initialAmountRequired)}
+            />
+          ) : (
+            <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-stone-700">
+                No payment required yet
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // For employees, don't show workflow section
   if (!isAdmin) {
     return null;
   }
 
   const handleActivateProject = useCallback(async () => {
-    if (!confirm('Are you sure you want to activate this project?')) {
-      return;
-    }
-
     setProcessing(true);
     setError('');
 
@@ -57,17 +202,13 @@ export default function ProjectWorkflowSection({
       onUpdate();
     } catch (err: any) {
       logger.error('Error activating project:', err);
-      setError(err.response?.data?.message || 'Failed to activate project');
+      toast.error(err.response?.data?.message || 'Failed to activate project');
     } finally {
       setProcessing(false);
     }
   }, [project.id, onUpdate]);
 
   const handleCompleteProject = useCallback(async () => {
-    if (!confirm('Are you sure you want to mark this project as completed?')) {
-      return;
-    }
-
     setProcessing(true);
     setError('');
 
@@ -152,7 +293,7 @@ export default function ProjectWorkflowSection({
       <div className="mb-6 flex flex-wrap gap-3">
         {canActivate && (
           <button
-            onClick={handleActivateProject}
+            onClick={() => setShowActivateConfirm(true)}
             disabled={processing}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -161,7 +302,7 @@ export default function ProjectWorkflowSection({
         )}
         {canComplete && (
           <button
-            onClick={handleCompleteProject}
+            onClick={() => setShowCompleteConfirm(true)}
             disabled={processing}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -180,7 +321,7 @@ export default function ProjectWorkflowSection({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Payment Section */}
+        {/* Payment Section - Now using Invoice data */}
         <div className="border border-stone-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-navy-900">Payment Status</h3>
@@ -200,30 +341,93 @@ export default function ProjectWorkflowSection({
             </div>
           </div>
 
-          {project.initialAmountRequired !== null && project.initialAmountRequired !== undefined ? (
-            <PaymentProgressBar
-              paid={Number(project.amountPaid)}
-              required={Number(project.initialAmountRequired)}
-            />
+          {loadingInvoices ? (
+            <div className="flex justify-center items-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800"></div>
+            </div>
+          ) : paymentProgress.total > 0 ? (
+            <>
+              <PaymentProgressBar
+                paid={paymentProgress.paid}
+                required={paymentProgress.total}
+              />
+              <div className="mt-2 text-xs text-stone-600">
+                Tracking {paymentProgress.pendingInvoiceCount || 0} pending invoice{paymentProgress.pendingInvoiceCount !== 1 ? 's' : ''}
+              </div>
+            </>
           ) : (
-            <p className="text-sm text-stone-600">No payment amount set</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-amber-800">
+                No Invoices Generated
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                No invoices have been created for this project yet.
+              </p>
+            </div>
           )}
         </div>
 
-        {/* Deadline Section */}
+        {/* Deadlines Section - Now showing all invoice deadlines */}
         <div className="border border-stone-200 rounded-lg p-4">
-          <h3 className="font-semibold text-navy-900 mb-3">Deadline</h3>
-          {project.deadlineDate ? (
-            <div>
-              <p className="text-lg font-medium text-navy-900">
+          <h3 className="font-semibold text-navy-900 mb-3">Payment Deadlines</h3>
+
+          {loadingInvoices ? (
+            <div className="flex justify-center items-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-800"></div>
+            </div>
+          ) : invoiceDeadlines.length > 0 ? (
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {invoiceDeadlines.map((deadline, index) => {
+                const isOverdue = deadline.date < new Date();
+                return (
+                  <div key={deadline.invoiceId} className={`pb-3 ${index < invoiceDeadlines.length - 1 ? 'border-b border-stone-200' : ''}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-stone-500 mb-1">{deadline.label}</p>
+                        <p className="text-sm font-medium text-navy-900">
+                          {deadline.date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p>
+                        {isOverdue && (
+                          <p className="text-xs text-red-600 mt-0.5 font-semibold">⚠️ Overdue</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-medium text-stone-500 mb-1">Amount Due</p>
+                        <p className="text-sm font-bold text-navy-900">
+                          ${deadline.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-stone-700">
+                No Pending Deadlines
+              </p>
+              <p className="text-xs text-stone-600 mt-1">
+                All invoices have been paid or no invoices exist.
+              </p>
+            </div>
+          )}
+
+          {/* Project Completion Deadline (kept for reference) */}
+          {project.deadlineDate && (
+            <div className="mt-4 pt-4 border-t border-stone-200">
+              <p className="text-xs font-medium text-stone-500 mb-1">Project Completion Deadline</p>
+              <p className="text-sm font-medium text-navy-900">
                 {formatDate(project.deadlineDate)}
               </p>
               {new Date(project.deadlineDate) < new Date() && (
-                <p className="text-sm text-red-600 mt-1">Overdue</p>
+                <p className="text-xs text-red-600 mt-0.5">Overdue</p>
               )}
             </div>
-          ) : (
-            <p className="text-sm text-stone-600">No deadline set</p>
           )}
         </div>
 
@@ -296,6 +500,43 @@ export default function ProjectWorkflowSection({
           onArchive={handleConfirmArchive}
         />
       )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        isOpen={showActivateConfirm}
+        onClose={() => setShowActivateConfirm(false)}
+        onConfirm={handleActivateProject}
+        title="Activate Project"
+        message="Are you sure you want to activate this project? This will move it from waiting payment to active status."
+        confirmText="Activate"
+        confirmButtonClass="bg-green-600 hover:bg-green-700"
+        isLoading={processing}
+      />
+
+      <ConfirmDialog
+        isOpen={showCompleteConfirm}
+        onClose={() => setShowCompleteConfirm(false)}
+        onConfirm={handleCompleteProject}
+        title="Complete Project"
+        message="Are you sure you want to mark this project as completed? This indicates all work has been finished."
+        confirmText="Mark as Completed"
+        confirmButtonClass="bg-blue-600 hover:bg-blue-700"
+        isLoading={processing}
+      />
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-renders when project data or critical props change
+export default memo(ProjectWorkflowSection, (prevProps, nextProps) => {
+  return (
+    prevProps.project.id === nextProps.project.id &&
+    prevProps.project.status === nextProps.project.status &&
+    prevProps.project.initialAmountRequired === nextProps.project.initialAmountRequired &&
+    prevProps.project.amountPaid === nextProps.project.amountPaid &&
+    prevProps.project.employees === nextProps.project.employees &&
+    prevProps.isAdmin === nextProps.isAdmin &&
+    prevProps.userRole === nextProps.userRole
+  );
+});
