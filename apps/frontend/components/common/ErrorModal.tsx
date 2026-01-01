@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthSafe } from '@/contexts/AuthContext';
 
 interface ErrorModalProps {
   isOpen: boolean;
@@ -26,7 +26,9 @@ export default function ErrorModal({
   onClose,
   willRedirect = false,
 }: ErrorModalProps) {
-  const { user } = useAuth();
+  // Use safe version to avoid errors when modal is rendered outside AuthProvider
+  const authContext = useAuthSafe();
+  const user = authContext?.user ?? null;
   const isAdmin = user?.role === 'ADMIN';
   const isDevelopment = process.env.NODE_ENV === 'development';
 

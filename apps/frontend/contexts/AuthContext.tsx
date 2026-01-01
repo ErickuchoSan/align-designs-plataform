@@ -147,3 +147,13 @@ export function useAuth() {
   }
   return context;
 }
+
+/**
+ * Safe version of useAuth that can be used in components that may render outside AuthProvider
+ * Returns null if used outside AuthProvider instead of throwing an error
+ * Use this in error modals or other components that need to work in any context
+ */
+export function useAuthSafe() {
+  const context = useContext(AuthContext);
+  return context ?? null;
+}
