@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
 import { Project } from '@/types';
+import { logger } from '@/lib/logger';
 
 export interface FileData {
   id: string;
@@ -94,7 +95,9 @@ export function useProjectFiles(projectId: string) {
     try {
       const { data } = await api.get(`/files/project/${projectId}/types`);
       setAvailableTypes(data || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      logger.error('Failed to refresh file types', e, { projectId });
+    }
   }, [projectId]);
 
   return {

@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -45,6 +46,8 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 @Controller('projects')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProjectsController {
+  private readonly logger = new Logger(ProjectsController.name);
+
   constructor(
     private readonly projectsService: ProjectsService,
     private readonly auditService: AuditService,
@@ -74,8 +77,13 @@ export class ProjectsController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    // Temporary log to debug
-    console.log('📝 Received createProjectDto:', JSON.stringify(createProjectDto, null, 2));
+    // Log project creation for debugging
+    this.logger.debug('Creating new project', {
+      name: createProjectDto.name,
+      clientId: createProjectDto.clientId,
+      hasEmployees: !!createProjectDto.employeeIds?.length,
+      userId: user.sub
+    });
 
     const project = await this.projectsService.create(
       createProjectDto,

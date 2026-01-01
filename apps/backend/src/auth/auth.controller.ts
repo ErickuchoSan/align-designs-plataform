@@ -8,6 +8,7 @@ import {
   UseGuards,
   Res,
   Req,
+  Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
@@ -34,6 +35,8 @@ import { COOKIE_MAX_AGE_ONE_DAY } from '../common/constants/time.constants';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private auditService: AuditService,
@@ -150,14 +153,14 @@ export class AuthController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    // 🔍 DEBUG: Log request headers to see what host we're receiving
-    console.log('🔐 [LOGIN DEBUG]');
-    console.log('  Email:', loginDto.email);
-    console.log('  Host header:', req.headers.host);
-    console.log('  Origin header:', req.headers.origin);
-    console.log('  X-Forwarded-Host:', req.headers['x-forwarded-host']);
-    console.log('  X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
-    console.log('  All headers:', JSON.stringify(req.headers, null, 2));
+    // Log login attempt for debugging (only in development/debug mode)
+    this.logger.debug(`Login attempt for email: ${loginDto.email}`, {
+      email: loginDto.email,
+      host: req.headers.host,
+      origin: req.headers.origin,
+      forwardedHost: req.headers['x-forwarded-host'],
+      forwardedProto: req.headers['x-forwarded-proto'],
+    });
 
     const result = await this.authService.loginAdmin(
       loginDto.email,

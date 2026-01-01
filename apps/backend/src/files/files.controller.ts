@@ -14,6 +14,7 @@ import {
   Body,
   ParseFilePipe,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
@@ -54,6 +55,8 @@ import { safeAuditLog } from '../audit/audit.helper';
 @Controller('files')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class FilesController {
+  private readonly logger = new Logger(FilesController.name);
+
   constructor(
     private readonly filesService: FilesService,
     private readonly fileVersionService: FileVersionService,
@@ -209,11 +212,12 @@ export class FilesController {
     @Body() createCommentDto: CreateCommentDto,
     @CurrentUser() user: UserPayload,
   ) {
-    // DEBUG: Log DTO values
-    console.log('CreateCommentDto:', {
-      comment: createCommentDto.comment,
+    // Log comment creation for debugging
+    this.logger.debug('Creating comment for project', {
+      projectId,
+      userId: user.sub,
+      hasComment: !!createCommentDto.comment,
       stage: createCommentDto.stage,
-      stageType: typeof createCommentDto.stage,
     });
 
     return this.filesService.createComment(

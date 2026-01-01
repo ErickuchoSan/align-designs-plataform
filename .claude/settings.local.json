@@ -103,7 +103,8 @@
       "Bash(powershell -Command \"& ''C:\\\\ProgramData\\\\chocolatey\\\\bin\\\\nssm.exe'' get AlignDesignsMonorepo Application\")",
       "Bash(powershell -Command \"& ''C:\\\\ProgramData\\\\chocolatey\\\\bin\\\\nssm.exe'' get AlignDesignsMonorepo AppParameters\")",
       "Bash(powershell -Command \"Stop-Service AlignDesignsMonorepo -Force; Get-Service AlignDesignsMonorepo\")",
-      "Bash(where.exe:*)"
+      "Bash(where.exe:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

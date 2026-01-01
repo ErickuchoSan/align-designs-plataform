@@ -39,7 +39,7 @@ function createDedupedRequest(config: InternalAxiosRequestConfig): Promise<any> 
   // Check if there's a recent pending request
   const pending = pendingRequests.get(requestKey);
   if (pending && (now - pending.timestamp) < REQUEST_DEDUP_TTL) {
-    console.info('🔄 Deduplicating request:', config.url);
+    logger.debug('Deduplicating request', { url: config.url });
     return pending.promise;
   }
 
@@ -86,14 +86,14 @@ export const api = axios.create({
 async function fetchCsrfToken(): Promise<void> {
   // If already fetching, wait for that promise
   if (csrfTokenPromise) {
-    console.info('⏳ CSRF token fetch already in progress, waiting...');
+    logger.debug('CSRF token fetch already in progress, waiting...');
     return csrfTokenPromise;
   }
 
   // Start new fetch
   csrfTokenPromise = (async () => {
     try {
-      console.info('🔄 Fetching new CSRF token from server...');
+      logger.debug('Fetching new CSRF token from server...');
       const response = await axios.get(`${API_URL}/auth/csrf-token`, {
         withCredentials: true,
         timeout: LOADING_DELAY.TIMEOUT,
@@ -101,13 +101,12 @@ async function fetchCsrfToken(): Promise<void> {
       const newToken = response.headers['x-csrf-token'];
       if (newToken) {
         csrfToken = newToken;
-        console.info('✅ New CSRF token received:', csrfToken.substring(0, 20) + '...');
+        logger.debug('New CSRF token received', { tokenPreview: csrfToken.substring(0, 20) + '...' });
       } else {
-        console.error('❌ No CSRF token in response headers!', response.headers);
+        logger.error('No CSRF token in response headers', undefined, { headers: response.headers });
       }
     } catch (error) {
-      console.error('❌ Failed to fetch CSRF token:', error);
-      logger.error('Failed to fetch CSRF token:', error);
+      logger.error('Failed to fetch CSRF token', error);
     } finally {
       // Clear promise so next call can fetch again
       csrfTokenPromise = null;
@@ -165,7 +164,7 @@ api.interceptors.request.use(
       const pendingRequest = pendingRequests.get(requestKey);
 
       if (pendingRequest) {
-        console.info('🔄 Deduplicating request:', config.url);
+        logger.debug('Deduplicating request', { url: config.url });
         return pendingRequest;
       }
     }
@@ -175,14 +174,18 @@ api.interceptors.request.use(
       if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
         // If CSRF token is not available, fetch it
         if (!csrfToken) {
-          console.info('🔍 No CSRF token available, fetching...');
+          logger.debug('No CSRF token available, fetching...');
           await fetchCsrfToken();
         }
         if (csrfToken) {
           config.headers['X-CSRF-Token'] = csrfToken;
-          console.info(`📤 Sending ${method} ${config.url} with CSRF token:`, csrfToken.substring(0, 20) + '...');
+          logger.debug('Sending request with CSRF token', {
+            method,
+            url: config.url,
+            tokenPreview: csrfToken.substring(0, 20) + '...'
+          });
         } else {
-          console.warn('⚠️ No CSRF token available for request!');
+          logger.warn('No CSRF token available for request', { method, url: config.url });
         }
       }
     }
@@ -213,13 +216,10 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
     details.push(JSON.stringify(errorData.details));
   }
 
-  // Log to console
-  console.error('❌ API Error:', {
-    status: statusCode,
-    url,
+  // Log for developers
+  logger.apiError(url, statusCode as number, errorData, {
     method,
-    message: errorMessage,
-    fullError: errorData,
+    message: errorMessage
   });
 
   // Show error modal using the global manager
@@ -253,7 +253,7 @@ api.interceptors.response.use(
     const newCsrfToken = response.headers['x-csrf-token'];
     if (newCsrfToken && !csrfToken) {
       csrfToken = newCsrfToken;
-      console.info('📥 CSRF token auto-updated from response:', csrfToken.substring(0, 20) + '...');
+      logger.debug('CSRF token auto-updated from response', { tokenPreview: csrfToken.substring(0, 20) + '...' });
     }
     return response;
   },
@@ -264,29 +264,28 @@ api.interceptors.response.use(
     if (typeof window !== 'undefined' && error.response?.status === 401) {
       const errorMessage = (error.response?.data as { message?: string })?.message || '';
 
-      // ALWAYS log 401 errors to console for debugging (not just in dev mode)
-      console.warn('🔒 401 Unauthorized:', {
+      // Log 401 errors for debugging
+      logger.warn('401 Unauthorized', {
         url: config?.url,
         message: errorMessage,
-        method: config?.method,
-        data: error.response?.data,
+        method: config?.method
       });
 
       // If CSRF token is invalid or missing, fetch a new one and retry once
       const isCsrfError = errorMessage.toLowerCase().includes('csrf');
       if (isCsrfError && !config?.csrfRetry) {
-        console.info('🔄 CSRF token invalid, fetching new token and retrying...');
+        logger.debug('CSRF token invalid, fetching new token and retrying...');
         await fetchCsrfToken();
         if (config && csrfToken) {
           config.csrfRetry = true;
           config.headers['X-CSRF-Token'] = csrfToken;
-          console.info('✅ Retrying request with new CSRF token:', csrfToken.substring(0, 20) + '...');
+          logger.debug('Retrying request with new CSRF token', { tokenPreview: csrfToken.substring(0, 20) + '...' });
           return api(config);
         } else {
-          console.error('❌ Failed to fetch new CSRF token');
+          logger.error('Failed to fetch new CSRF token');
         }
       } else if (isCsrfError && config?.csrfRetry) {
-        console.error('❌ CSRF retry already attempted, giving up');
+        logger.error('CSRF retry already attempted, giving up');
       }
 
       // Don't redirect on endpoints that handle their own validation errors
@@ -297,11 +296,10 @@ api.interceptors.response.use(
         window.location.pathname.includes('/login');
 
       if (!shouldNotRedirect) {
-        // Log to console
-        console.error('❌ Authentication Error', {
+        // Log authentication error
+        logger.error('Authentication Error - Session expired', undefined, {
           url,
-          message: errorMessage,
-          fullError: error.response?.data,
+          message: errorMessage
         });
 
         // Show error modal before redirecting
@@ -346,7 +344,11 @@ api.interceptors.response.use(
       const willRetry = config && (config.retryCount || 0) < MAX_RETRIES;
       const serverMessage = (error.response.data as any)?.message || 'The server encountered an error.';
 
-      console.error('❌ Server Error:', error.response.data);
+      logger.error('Server Error (5xx)', undefined, {
+        status: error.response.status,
+        url: config?.url,
+        data: error.response.data
+      });
 
       // Only show modal on final retry failure
       if (!willRetry) {
@@ -367,7 +369,10 @@ api.interceptors.response.use(
 
     // Handle network errors - show modal
     if (typeof window !== 'undefined' && !error.response && !config?._errorShown) {
-      console.error('❌ Network Error:', error);
+      logger.error('Network Error - Cannot connect to server', error, {
+        url: config?.url,
+        code: error.code
+      });
 
       errorModalManager.show({
         title: 'Network Error',

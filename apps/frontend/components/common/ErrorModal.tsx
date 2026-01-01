@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ErrorModalProps {
   isOpen: boolean;
@@ -25,6 +26,13 @@ export default function ErrorModal({
   onClose,
   willRedirect = false,
 }: ErrorModalProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Show technical details only to admins in production, or everyone in development
+  const showTechnicalDetails = isDevelopment || isAdmin;
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -113,11 +121,11 @@ export default function ErrorModal({
             </p>
           </div>
 
-          {/* Endpoint info */}
-          {(endpoint || method) && (
+          {/* Endpoint info - Only for admins/developers */}
+          {showTechnicalDetails && (endpoint || method) && (
             <div className="mb-4 p-3 bg-stone-50 rounded-lg border border-stone-200">
               <p className="text-xs font-semibold text-stone-500 uppercase mb-1">
-                Request Details
+                Request Details {!isDevelopment && '(Admin Only)'}
               </p>
               {method && endpoint && (
                 <p className="text-sm font-mono text-navy-900">
@@ -145,6 +153,15 @@ export default function ErrorModal({
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* Non-admin message in production */}
+          {!showTechnicalDetails && !isDevelopment && (endpoint || method) && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                ℹ️ Contact support if you need technical assistance. Error details are available to administrators.
+              </p>
             </div>
           )}
 

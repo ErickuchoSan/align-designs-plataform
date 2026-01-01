@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
+import { logger } from '@/lib/logger';
 
 export interface Notification {
     id: string;
@@ -27,7 +28,7 @@ export function useNotifications() {
             const count = loadedNotifications.filter((n: Notification) => !n.isRead).length;
             setUnreadCount(count);
         } catch (error) {
-            console.error('Failed to fetch notifications', error);
+            logger.error('Failed to fetch notifications', error);
         } finally {
             setLoading(false);
         }
@@ -41,7 +42,7 @@ export function useNotifications() {
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (error) {
-            console.error('Failed to mark as read', error);
+            logger.error('Failed to mark notification as read', error, { notificationId: id });
         }
     };
 
@@ -51,7 +52,7 @@ export function useNotifications() {
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (error) {
-            console.error('Failed to mark all as read', error);
+            logger.error('Failed to mark all notifications as read', error);
         }
     };
 

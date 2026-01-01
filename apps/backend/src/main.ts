@@ -9,6 +9,7 @@ import express from 'express';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { validateEnvironmentVariables } from './common/config/env-validator';
 
 async function bootstrap() {
@@ -155,9 +156,11 @@ async function bootstrap() {
   );
 
   // Global exception filters
+  // Order matters: More specific filters first, then general ones
   app.useGlobalFilters(
-    new HttpExceptionFilter(),
-    new ThrottlerExceptionFilter(),
+    new PrismaExceptionFilter(), // Handle Prisma errors first
+    new HttpExceptionFilter(),   // Then HTTP exceptions
+    new ThrottlerExceptionFilter(), // Then throttling errors
   );
 
   // Swagger documentation
