@@ -58,6 +58,13 @@ Thumbs.db
 *.temp
 .cache/
 
+# Debugging files (curl, testing, etc.)
+csrf_response.txt
+cookies.txt
+build_error.*
+*.curl.txt
+test_*.txt
+
 # Prisma
 apps/backend/prisma/migrations/**/migration.sql
 
