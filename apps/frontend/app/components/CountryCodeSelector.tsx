@@ -9,8 +9,16 @@ interface CountryCodeSelectorProps {
   className?: string;
 }
 
-// Popular countries to show first (prioritized list)
-const POPULAR_COUNTRY_CODES = ['MX', 'US', 'CA', 'ES', 'AR', 'CO', 'CL', 'PE', 'VE'];
+// American continent countries only (North, Central, South America, and Caribbean)
+const AMERICAN_COUNTRIES = [
+  'US', 'CA', 'MX', // North America
+  'GT', 'BZ', 'SV', 'HN', 'NI', 'CR', 'PA', // Central America
+  'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 'UY', 'VE', // South America
+  'CU', 'DO', 'HT', 'JM', 'TT', 'BB', 'BS', 'AG', 'DM', 'GD', 'KN', 'LC', 'VC', // Caribbean
+];
+
+// Popular countries within Americas to show first
+const POPULAR_COUNTRY_CODES = ['MX', 'US', 'CA', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
 
 // Cache for lazy-loaded countries data (18KB)
 let countriesCache: Country[] | null = null;
@@ -22,17 +30,19 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Lazy load countries data on mount
+  // Lazy load countries data on mount - Filter to American countries only
   useEffect(() => {
     async function loadCountries() {
       if (countriesCache) {
-        setCountries(countriesCache);
-        setSelectedCountry(countriesCache.find(c => c.dialCode === value) || countriesCache[0]);
+        const americanCountries = countriesCache.filter(c => AMERICAN_COUNTRIES.includes(c.code));
+        setCountries(americanCountries);
+        setSelectedCountry(americanCountries.find(c => c.dialCode === value) || americanCountries[0]);
       } else {
         const module = await import('../utils/countries');
-        countriesCache = module.countries;
-        setCountries(module.countries);
-        setSelectedCountry(module.countries.find(c => c.dialCode === value) || module.countries[0]);
+        const americanCountries = module.countries.filter(c => AMERICAN_COUNTRIES.includes(c.code));
+        countriesCache = module.countries; // Cache all but only use American ones
+        setCountries(americanCountries);
+        setSelectedCountry(americanCountries.find(c => c.dialCode === value) || americanCountries[0]);
       }
     }
     loadCountries();
@@ -52,6 +62,9 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
   // Intelligent search with prioritization
   const filteredCountries = useMemo(() => {
+    // Return empty if countries haven't loaded yet
+    if (countries.length === 0) return [];
+
     if (!searchTerm.trim()) {
       // No search: show popular countries first, then the rest
       const popularCountries = countries.filter(c => POPULAR_COUNTRY_CODES.includes(c.code));
@@ -99,7 +112,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
       // Alphabetical fallback
       return aName.localeCompare(bName);
     });
-  }, [searchTerm]);
+  }, [searchTerm, countries]);
 
   const handleSelect = (country: Country) => {
     setSelectedCountry(country);
@@ -126,8 +139,8 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
       setDropdownPosition({
         top: shouldOpenUpward
-          ? rect.top + window.scrollY - dropdownHeight - 8
-          : rect.bottom + window.scrollY + 8,
+          ? rect.top + window.scrollY - dropdownHeight - 4 // Reduced gap from 8 to 4
+          : rect.bottom + window.scrollY + 4, // Reduced gap from 8 to 4
         left: rect.left + window.scrollX,
         width: rect.width,
         openUpward: shouldOpenUpward,
@@ -212,15 +225,25 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
           </div>
 
           {/* Popular Countries Header */}
-          {showingPopular && (
+          {showingPopular && filteredCountries.length > 0 && (
             <div className="px-4 py-2 bg-gold-50 border-b border-gold-100">
-              <p className="text-xs font-semibold text-gold-900">Popular Countries</p>
+              <p className="text-xs font-semibold text-gold-900">Popular American Countries</p>
             </div>
           )}
 
           {/* Countries List */}
           <div className="max-h-80 overflow-y-auto">
-            {filteredCountries.length === 0 ? (
+            {countries.length === 0 ? (
+              <div className="p-6 text-center">
+                <div className="mx-auto w-12 h-12 mb-3">
+                  <svg className="animate-spin text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-stone-600">Loading countries...</p>
+              </div>
+            ) : filteredCountries.length === 0 ? (
               <div className="p-6 text-center">
                 <svg className="mx-auto w-12 h-12 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -238,7 +261,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
                     <div key={country.code}>
                       {showDivider && (
                         <div className="border-t-2 border-stone-200 my-1">
-                          <p className="px-4 py-2 text-xs font-semibold text-stone-500 bg-stone-50">All Countries</p>
+                          <p className="px-4 py-2 text-xs font-semibold text-stone-500 bg-stone-50">All American Countries</p>
                         </div>
                       )}
                       <button
