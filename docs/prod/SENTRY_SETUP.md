@@ -31,13 +31,13 @@
 ### Frontend
 ```bash
 cd apps/frontend
-npm install @sentry/nextjs
+pnpm install @sentry/nextjs
 ```
 
 ### Backend
 ```bash
 cd apps/backend
-npm install @sentry/node @sentry/profiling-node
+pnpm install @sentry/node @sentry/profiling-node
 ```
 
 ---

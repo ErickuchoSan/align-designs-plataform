@@ -213,34 +213,34 @@ pnpm dev:frontend   # Frontend en http://localhost:3000
 
 ```bash
 # Build de todas las apps
-npm run build
+pnpm build
 
 # Iniciar en modo producción
-npm start
+pnpm start
 
 # O cada app por separado:
-npm run start:backend
-npm run start:frontend
+pnpm start:backend
+pnpm start:frontend
 ```
 
 ### Otros Comandos Útiles
 
 ```bash
 # Prisma Studio (DB GUI)
-npm run prisma:studio
+pnpm prisma:studio
 
 # Tests
-npm test                # Todas las apps
-npm run test:backend    # Solo backend
-npm run test:frontend   # Solo frontend
+pnpm test                # Todas las apps
+pnpm test:backend        # Solo backend
+pnpm test:frontend       # Solo frontend
 
 # Linting
-npm run lint           # Todas las apps
-npm run lint:backend
-npm run lint:frontend
+pnpm lint                # Todas las apps
+pnpm lint:backend
+pnpm lint:frontend
 
 # Limpiar todo
-npm run clean
+pnpm clean
 ```
 
 ### Scripts de Gestión (Windows)

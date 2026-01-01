@@ -209,7 +209,7 @@ COPY . .
 RUN npx prisma generate
 
 # Compilar TypeScript
-RUN npm run build
+RUN pnpm build
 
 # Limpiar dependencias de desarrollo
 RUN npm prune --production
@@ -265,7 +265,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Build optimizado
-RUN npm run build
+RUN pnpm build
 
 FROM node:18-alpine AS runner
 WORKDIR /app
@@ -727,7 +727,7 @@ jobs:
         working-directory: apps/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-        run: npm test
+        run: pnpm test
 
   # Build del backend
   build-backend:
@@ -746,7 +746,7 @@ jobs:
         run: |
           npm ci
           npx prisma generate
-          npm run build
+          pnpm build
 
       - name: Verificar que build existe
         working-directory: apps/backend
@@ -772,7 +772,7 @@ jobs:
         working-directory: apps/frontend
         run: |
           npm ci
-          npm run build
+          pnpm build
 ```
 
 **💡 ¿Qué hace esto?**

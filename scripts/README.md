@@ -6,21 +6,37 @@ Scripts organizados para gestionar el inicio, detención y servicios del monorep
 
 ```
 scripts/
-├── README.md                    # Este archivo
-├── manual/                      # Desarrollo manual (start/stop)
+├── README.md                           # Este archivo
+├── manual/                             # Desarrollo manual (start/stop)
 │   ├── start.ps1
 │   └── stop.ps1
-├── services/                    # Instalación de servicios de Windows
+├── services/                           # Instalación de servicios de Windows
 │   ├── install-all-services.ps1
 │   ├── install-nginx-service.ps1
 │   ├── install-monorepo-service.ps1
-│   └── uninstall-all-services.ps1
-├── utils/                       # Utilidades rápidas
-│   ├── configure-nginx.bat      # Configurar Nginx en PC nueva
-│   ├── restart-services.bat     # Reinicio rápido
-│   └── view-logs.bat            # Ver logs en tiempo real
-└── legacy/                      # Scripts antiguos (no usar)
-    └── (scripts obsoletos)
+│   ├── restart-monorepo-service.ps1
+│   ├── uninstall-all-services.ps1
+│   └── update-monorepo-service-to-pnpm.ps1
+└── utils/                              # Utilidades organizadas por categoría
+    ├── nginx/                          # Nginx configuration and management
+    │   ├── configure-nginx.bat
+    │   ├── force-restart-nginx.bat
+    │   ├── restart-for-ngrok.bat
+    │   └── apply-ngrok-config.bat
+    ├── ngrok/                          # Remote access tunneling
+    │   ├── share-with-ngrok.bat
+    │   ├── share-with-ngrok-test.bat
+    │   ├── stop-ngrok.bat
+    │   ├── get-ngrok-url.ps1
+    │   └── test-ngrok.ps1
+    ├── logs/                           # Log viewing utilities
+    │   ├── view-logs.bat
+    │   └── view-backend-logs.bat
+    └── maintenance/                    # System maintenance
+        ├── restart-services.bat
+        ├── kill-locks.bat
+        ├── restart-and-debug.bat
+        └── check-services.ps1
 ```
 
 ---
@@ -42,8 +58,21 @@ scripts/
 
 ### Opción 3: Utilidades Rápidas
 ```batch
-.\scripts\utils\restart-services.bat   # Reinicia servicios (doble click)
-.\scripts\utils\view-logs.bat          # Ver logs en tiempo real
+# Nginx
+.\scripts\utils\nginx\configure-nginx.bat        # Configurar Nginx en PC nueva
+.\scripts\utils\nginx\force-restart-nginx.bat    # Reinicio forzado de Nginx
+
+# Logs
+.\scripts\utils\logs\view-logs.bat               # Ver logs en tiempo real
+.\scripts\utils\logs\view-backend-logs.bat       # Ver solo logs del backend
+
+# Mantenimiento
+.\scripts\utils\maintenance\restart-services.bat # Reinicia servicios
+.\scripts\utils\maintenance\kill-locks.bat       # Elimina locks de Next.js
+
+# Ngrok (Acceso Remoto)
+.\scripts\utils\ngrok\share-with-ngrok.bat       # Compartir app remotamente
+.\scripts\utils\ngrok\stop-ngrok.bat             # Detener tunnel
 ```
 
 ---
@@ -86,26 +115,44 @@ scripts/
 
 ---
 
-### 📂 utils/ - Utilidades
+### 📂 utils/ - Utilidades Organizadas
+
+#### utils/nginx/ - Configuración de Nginx
 
 | Script | Descripción | Uso |
 |--------|-------------|-----|
-| `configure-nginx.bat` | Configura Nginx en PC nueva | Doble click o `.\scripts\utils\configure-nginx.bat` |
-| `restart-services.bat` | Reinicia servicios rápidamente | Doble click o `.\scripts\utils\restart-services.bat` |
-| `view-logs.bat` | Ver logs en tiempo real | Doble click o `.\scripts\utils\view-logs.bat` |
-| `share-with-ngrok.bat` | Comparte tu app via tunnel público | Doble click o `.\scripts\utils\share-with-ngrok.bat` |
-| `stop-ngrok.bat` | Detiene el tunnel de ngrok | Doble click o `.\scripts\utils\stop-ngrok.bat` |
-| `get-ngrok-url.ps1` | Obtiene URL de ngrok si ya está corriendo | `.\scripts\utils\get-ngrok-url.ps1` |
+| `configure-nginx.bat` | Configura Nginx en PC nueva | `.\scripts\utils\nginx\configure-nginx.bat` |
+| `force-restart-nginx.bat` | Reinicia Nginx forzadamente | `.\scripts\utils\nginx\force-restart-nginx.bat` |
+| `restart-for-ngrok.bat` | Reinicia Nginx con config para ngrok | `.\scripts\utils\nginx\restart-for-ngrok.bat` |
+| `apply-ngrok-config.bat` | Aplica configuración de ngrok | `.\scripts\utils\nginx\apply-ngrok-config.bat` |
 
-**Cuándo usar**:
-- `configure-nginx.bat` → Cuando te cambias de PC o reinstalaciones
-- `restart-services.bat` → Cambios en .env o configuración
-- `view-logs.bat` → Ver qué está pasando en el sistema
-- `share-with-ngrok.bat` → Compartir app con cliente/admin remotamente
-- `stop-ngrok.bat` → Cerrar acceso remoto
-- `get-ngrok-url.ps1` → Recuperar URL de ngrok activo
+#### utils/ngrok/ - Acceso Remoto
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| `share-with-ngrok.bat` | Comparte app vía tunnel público | `.\scripts\utils\ngrok\share-with-ngrok.bat` |
+| `share-with-ngrok-test.bat` | Test de configuración ngrok | `.\scripts\utils\ngrok\share-with-ngrok-test.bat` |
+| `stop-ngrok.bat` | Detiene el tunnel de ngrok | `.\scripts\utils\ngrok\stop-ngrok.bat` |
+| `get-ngrok-url.ps1` | Obtiene URL de ngrok activo | `.\scripts\utils\ngrok\get-ngrok-url.ps1` |
+| `test-ngrok.ps1` | Test completo de ngrok | `.\scripts\utils\ngrok\test-ngrok.ps1` |
 
 **Ngrok - Acceso Remoto**: Ver [documentación completa](../docs/dev/NGROK.md) para setup y troubleshooting
+
+#### utils/logs/ - Visualización de Logs
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| `view-logs.bat` | Ver logs de todos los servicios | `.\scripts\utils\logs\view-logs.bat` |
+| `view-backend-logs.bat` | Ver solo logs del backend | `.\scripts\utils\logs\view-backend-logs.bat` |
+
+#### utils/maintenance/ - Mantenimiento del Sistema
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| `restart-services.bat` | Reinicia todos los servicios | `.\scripts\utils\maintenance\restart-services.bat` |
+| `kill-locks.bat` | Elimina locks de Next.js | `.\scripts\utils\maintenance\kill-locks.bat` |
+| `restart-and-debug.bat` | Reinicia con modo debug | `.\scripts\utils\maintenance\restart-and-debug.bat` |
+| `check-services.ps1` | Verifica estado de servicios | `.\scripts\utils\maintenance\check-services.ps1` |
 
 ---
 
@@ -141,13 +188,13 @@ scripts/
 
 ```batch
 # Compartir app remotamente
-.\scripts\utils\share-with-ngrok.bat
+.\scripts\utils\ngrok\share-with-ngrok.bat
 
 # Obtener URL (si ya está corriendo)
-.\scripts\utils\get-ngrok-url.ps1
+.\scripts\utils\ngrok\get-ngrok-url.ps1
 
 # Detener acceso remoto
-.\scripts\utils\stop-ngrok.bat
+.\scripts\utils\ngrok\stop-ngrok.bat
 ```
 
 ### Cómo Funciona
@@ -173,7 +220,7 @@ scripts/
 
 2. **Configurar Nginx**
    ```batch
-   .\scripts\utils\configure-nginx.bat
+   .\scripts\utils\nginx\configure-nginx.bat
    ```
 
 3. **Configurar hosts file** (como Administrador)
@@ -210,10 +257,11 @@ scripts/
 2. **Logs**:
    - Con servicios → logs van a archivos (`.\logs\monorepo-service.log`)
    - Con manual → logs van a consola
+   - Usa `.\scripts\utils\logs\view-logs.bat` para ver en tiempo real
 
 3. **Orden de Inicio**: El servicio Monorepo espera a que Nginx inicie primero.
 
-4. **Scripts Legacy**: La carpeta `legacy/` contiene scripts antiguos. No los uses.
+4. **Organización**: Los scripts en `utils/` están organizados por categoría (nginx/, ngrok/, logs/, maintenance/) para facilitar su búsqueda.
 
 ---
 

@@ -507,7 +507,7 @@ Error: The specified bucket does not exist
 
 ```bash
 # En el backend
-npm run start:dev
+ppnpm start:dev
 
 # Buscar:
 [StorageService] Bucket "align-designs" created successfully

@@ -47,8 +47,8 @@
 ### Project Status
 
 - [x] Phase 1 completed (caching & metrics implemented)
-- [x] Backend builds successfully (`npm run build`)
-- [x] Frontend builds successfully (`npm run build`)
+- [x] Backend builds successfully (`pnpm build`)
+- [x] Frontend builds successfully (`pnpm build`)
 - [x] All critical features working locally
 
 ---
@@ -126,7 +126,7 @@ COPY . .
 RUN npx prisma generate
 
 # Build the application
-RUN npm run build
+RUN pnpm build
 
 # Remove devDependencies to reduce size
 RUN npm prune --production
@@ -262,7 +262,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+RUN pnpm build
 
 FROM node:18-alpine AS production
 WORKDIR /app
@@ -358,7 +358,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
 # Build Next.js application
-RUN npm run build
+RUN pnpm build
 
 # ============================================
 # Stage 3: Production - Runner

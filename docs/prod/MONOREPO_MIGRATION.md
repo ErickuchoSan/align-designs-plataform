@@ -58,7 +58,7 @@ rmdir /s /q apps\frontend\node_modules
 
 ```bash
 # Desde la raíz del monorepo
-npm install
+pnpm install
 ```
 
 Esto instalará:
@@ -87,78 +87,78 @@ align-designs-demo@1.0.0
 
 ```bash
 # Iniciar backend y frontend simultáneamente
-npm run dev
+pnpm dev
 
 # Solo backend
-npm run dev:backend
+pnpm dev:backend
 
 # Solo frontend
-npm run dev:frontend
+pnpm dev:frontend
 ```
 
 ### Build
 
 ```bash
 # Build de todas las apps
-npm run build
+pnpm build
 
 # Solo backend
-npm run build:backend
+pnpm build:backend
 
 # Solo frontend
-npm run build:frontend
+pnpm build:frontend
 ```
 
 ### Producción
 
 ```bash
 # Iniciar ambas apps en modo producción
-npm start
+pnpm start
 
 # Solo backend
-npm start:backend
+pnpm start:backend
 
 # Solo frontend
-npm start:frontend
+pnpm start:frontend
 ```
 
 ### Prisma
 
 ```bash
 # Generar Prisma Client
-npm run prisma:generate
+pnpm prisma:generate
 
 # Ejecutar migraciones
-npm run prisma:migrate
+pnpm prisma:migrate
 
 # Abrir Prisma Studio
-npm run prisma:studio
+pnpm prisma:studio
 ```
 
 ### Testing
 
 ```bash
 # Tests de todas las apps
-npm test
+pnpm test
 
 # Solo backend
-npm test:backend
+pnpm test:backend
 
 # Solo frontend
-npm test:frontend
+pnpm test:frontend
 ```
 
 ### Linting
 
 ```bash
 # Lint de todas las apps
-npm run lint
+pnpm lint
 
 # Solo backend
-npm run lint:backend
+pnpm lint:backend
 
 # Solo frontend
-npm run lint:frontend
+pnpm lint:frontend
 ```
 
 ## 📝 Cambios en package.json
@@ -173,13 +173,13 @@ Se agregó:
 ### Backend (`apps/backend/package.json`)
 
 **No requiere cambios** - Los scripts permanecen iguales:
-- `npm run start:dev` sigue funcionando
+- `ppnpm start:dev` sigue funcionando
 - Prisma sigue en la misma ubicación relativa
 
 ### Frontend (`apps/frontend/package.json`)
 
 **No requiere cambios** - Los scripts permanecen iguales:
-- `npm run dev` sigue funcionando
+- `pnpm dev` sigue funcionando
 - Next.js funciona igual
 
 ## 🔧 Ajustes de Configuración
@@ -211,7 +211,7 @@ Actualizar referencias de rutas en documentación:
 ### 1. Backend Funciona
 
 ```bash
-npm run dev:backend
+pnpm dev:backend
 ```
 
 Debe iniciar en `http://localhost:4000`
@@ -219,7 +219,7 @@ Debe iniciar en `http://localhost:4000`
 ### 2. Frontend Funciona
 
 ```bash
-npm run dev:frontend
+pnpm dev:frontend
 ```
 
 Debe iniciar en `http://localhost:3000`
@@ -227,7 +227,7 @@ Debe iniciar en `http://localhost:3000`
 ### 3. Ambos Simultáneamente
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Debe iniciar ambos servicios
@@ -235,7 +235,7 @@ Debe iniciar ambos servicios
 ### 4. Prisma Studio
 
 ```bash
-npm run prisma:studio
+pnpm prisma:studio
 ```
 
 Debe abrir en `http://localhost:5555`
@@ -255,15 +255,15 @@ ls apps/
 
 ```bash
 # Reinstala todas las dependencias
-npm run clean
-npm install
+pnpm clean
+pnpm install
 ```
 
 ### Backend no encuentra Prisma Client
 
 ```bash
 # Regenera Prisma Client
-npm run prisma:generate
+pnpm prisma:generate
 ```
 
 ### Puerto en uso
@@ -281,7 +281,7 @@ taskkill /PID <PID> /F
 ## 📚 Ventajas del Monorepo
 
 ✅ **Un solo repositorio Git** - Todo el código en un solo lugar
-✅ **Instalación unificada** - Un solo `npm install`
+✅ **Instalación unificada** - Un solo `pnpm install`
 ✅ **Comandos centralizados** - Scripts en la raíz ejecutan todo
 ✅ **Desarrollo simultáneo** - Backend y frontend con un comando
 ✅ **Consistencia de versiones** - Dependencias compartidas
