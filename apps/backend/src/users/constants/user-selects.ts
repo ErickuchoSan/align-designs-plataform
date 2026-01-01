@@ -15,7 +15,9 @@ export const USER_BASIC_SELECT = {
   phone: true,
   role: true,
   isActive: true,
+  emailVerified: true,
   createdAt: true,
+  updatedAt: true,
 } as const;
 
 /**

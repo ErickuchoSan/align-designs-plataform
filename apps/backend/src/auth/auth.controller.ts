@@ -8,6 +8,7 @@ import {
   UseGuards,
   Res,
   Req,
+  Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
@@ -34,6 +35,8 @@ import { COOKIE_MAX_AGE_ONE_DAY } from '../common/constants/time.constants';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private auditService: AuditService,
@@ -42,15 +45,49 @@ export class AuthController {
   /**
    * Set authentication cookie with secure settings
    * Centralizes cookie configuration to follow DRY principle
+   * Uses Origin/Referer/Host detection to determine secure flag (same as CSRF middleware)
    */
-  private setAuthCookie(res: Response, token: string): void {
-    res.cookie('access_token', token, {
+  private setAuthCookie(res: Response, token: string, req?: Request): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Determine if request is actually over HTTPS
+    // Priority: Origin header > Referer header > Host check for ngrok
+    // This matches the CSRF middleware logic
+    let isHttps = false;
+    if (req) {
+      const origin = req.headers.origin as string | undefined;
+      const referer = req.headers.referer as string | undefined;
+      const host = req.headers.host as string | undefined;
+
+      if (origin) {
+        isHttps = origin.startsWith('https://');
+      } else if (referer) {
+        isHttps = referer.startsWith('https://');
+      } else if (host) {
+        // ngrok domains always use HTTPS, local domains use HTTP
+        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+      }
+    }
+
+    const useSecureCookie = isHttps || isProduction;
+
+    // When secure is true (HTTPS), we can use sameSite: 'none' for cross-origin
+    // When secure is false (HTTP), we must use 'lax' or 'strict'
+    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: useSecureCookie,
+      sameSite: sameSite as 'strict' | 'lax' | 'none',
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
-    });
+      path: '/',
+    };
+
+    this.logger.debug(`Auth Cookie Settings: secure=${useSecureCookie}, sameSite=${sameSite}, isHttps=${isHttps}, host=${req?.headers.host || 'unknown'}`);
+
+    res.cookie('access_token', token, cookieOptions as any);
   }
+
 
   @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
@@ -67,10 +104,18 @@ export class AuthController {
     },
   })
   async getCsrfToken(@Res({ passthrough: true }) res: Response) {
+    // Disable caching for this endpoint to always get fresh CSRF token
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     // The CSRF middleware will generate and set the token automatically
-    // We just need to return a success message
+    // We just need to return a success message with timestamp to prevent 304
     // The token will be available in the X-CSRF-Token response header
-    return { message: 'CSRF token generated' };
+    return {
+      message: 'CSRF token generated',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   @Post('check-email')
@@ -127,10 +172,19 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    console.log('AuthController.login called for:', loginDto.email);
+    // Log login attempt for debugging (only in development/debug mode)
+    this.logger.debug(`Login attempt for email: ${loginDto.email}`, {
+      email: loginDto.email,
+      host: req.headers.host,
+      origin: req.headers.origin,
+      forwardedHost: req.headers['x-forwarded-host'],
+      forwardedProto: req.headers['x-forwarded-proto'],
+    });
+
     const result = await this.authService.loginAdmin(
       loginDto.email,
       loginDto.password,
@@ -156,7 +210,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    this.setAuthCookie(res, result.access_token);
+    this.setAuthCookie(res, result.access_token, req);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
@@ -198,6 +252,7 @@ export class AuthController {
   async verifyOtp(
     @Body() verifyOtpDto: VerifyOtpDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
@@ -226,7 +281,7 @@ export class AuthController {
     );
 
     // Set JWT as httpOnly cookie for enhanced security
-    this.setAuthCookie(res, result.access_token);
+    this.setAuthCookie(res, result.access_token, req);
 
     // Return only user data (token is in httpOnly cookie, not in response body)
     return { user: result.user };
@@ -349,11 +404,30 @@ export class AuthController {
       'logout',
     );
 
-    // Clear the access_token cookie
+    // Clear the access_token cookie with matching settings
+    // Use the same Origin/Referer/Host detection logic as setAuthCookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    let isHttps = false;
+    const origin = req.headers.origin as string | undefined;
+    const referer = req.headers.referer as string | undefined;
+    const host = req.headers.host as string | undefined;
+
+    if (origin) {
+      isHttps = origin.startsWith('https://');
+    } else if (referer) {
+      isHttps = referer.startsWith('https://');
+    } else if (host) {
+      isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+    }
+
+    const useSecureCookie = isHttps || isProduction;
+    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: useSecureCookie,
+      sameSite: sameSite as 'strict' | 'lax' | 'none',
+      path: '/',
     });
 
     return { message: 'Logged out successfully' };

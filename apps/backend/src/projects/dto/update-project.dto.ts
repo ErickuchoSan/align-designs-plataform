@@ -4,8 +4,12 @@ import {
   MaxLength,
   MinLength,
   IsUUID,
+  IsArray,
+  IsNumber,
+  IsPositive,
+  IsDateString,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { Sanitize } from '../../common/decorators/sanitize.decorator';
 import {
   PROJECT_NAME_CONSTRAINTS,
@@ -35,4 +39,27 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsUUID('4', { message: 'Invalid client ID format' })
   clientId?: string;
+
+  // Phase 1: Workflow fields
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true, message: 'Each employee ID must be a valid UUID' })
+  employeeIds?: string[];
+
+  @IsOptional()
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'Initial amount must be a number with maximum 2 decimal places' },
+  )
+  @IsPositive({ message: 'Initial amount must be positive' })
+  @Type(() => Number)
+  initialAmountRequired?: number;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Deadline must be a valid ISO 8601 date string' })
+  deadlineDate?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Initial payment deadline must be a valid ISO 8601 date string' })
+  initialPaymentDeadline?: string;
 }

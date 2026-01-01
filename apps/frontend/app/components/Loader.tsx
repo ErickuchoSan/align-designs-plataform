@@ -25,7 +25,7 @@ export default function Loader({ size = 'md', color = 'blue', text }: LoaderProp
   );
 }
 
-export function PageLoader({ text = 'Cargando...' }: { text?: string }) {
+export function PageLoader({ text = 'Loading...' }: { text?: string }) {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Loader size="lg" text={text} />

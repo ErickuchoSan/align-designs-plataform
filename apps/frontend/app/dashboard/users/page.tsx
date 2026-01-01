@@ -61,6 +61,7 @@ export default function UsersPage() {
                     <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Role</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Created At</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-navy-900 uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-stone-200">
@@ -88,11 +89,10 @@ export default function UsersPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
-                                usr.role === 'ADMIN'
-                                  ? 'bg-navy-100 text-navy-800 border border-navy-300'
-                                  : 'bg-gold-100 text-gold-800 border border-gold-300'
-                              }`}
+                              className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${usr.role === 'ADMIN'
+                                ? 'bg-navy-100 text-navy-800 border border-navy-300'
+                                : 'bg-gold-100 text-gold-800 border border-gold-300'
+                                }`}
                             >
                               {usr.role === 'ADMIN' ? 'Admin' : 'Client'}
                             </span>
@@ -102,15 +102,13 @@ export default function UsersPage() {
                               <button
                                 onClick={() => usersHook.openToggleConfirm(usr)}
                                 disabled={usersHook.togglingUserId === usr.id}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                  usr.isActive ? 'bg-emerald-600' : 'bg-stone-300'
-                                }`}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${usr.isActive ? 'bg-emerald-600' : 'bg-stone-300'
+                                  }`}
                                 aria-label={`${usr.isActive ? 'Deactivate' : 'Activate'} user ${usr.firstName} ${usr.lastName}`}
                               >
                                 <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    usr.isActive ? 'translate-x-6' : 'translate-x-1'
-                                  }`}
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${usr.isActive ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
                                 />
                               </button>
                             ) : (
@@ -121,6 +119,21 @@ export default function UsersPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
                             {formatDate(usr.createdAt)}
+                          </td>
+                          {/* NEW: Delete Action Column */}
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {usr.role === 'CLIENT' && (
+                              <button
+                                onClick={() => usersHook.openDeleteConfirm(usr)}
+                                disabled={usersHook.deletingUserId === usr.id}
+                                className="text-red-600 hover:text-red-900 transition-colors p-2 rounded-full hover:bg-red-50"
+                                aria-label={`Delete user ${usr.firstName} ${usr.lastName}`}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                </svg>
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -149,7 +162,7 @@ export default function UsersPage() {
         isOpen={usersHook.showCreateForm}
         onClose={() => {
           usersHook.setShowCreateForm(false);
-          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '' });
+          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
         }}
         title="Create New Client"
         size="md"
@@ -216,7 +229,7 @@ export default function UsersPage() {
               type="button"
               onClick={() => {
                 usersHook.setShowCreateForm(false);
-                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '' });
+                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
               }}
               disabled={usersHook.creating}
               className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors"
@@ -244,6 +257,18 @@ export default function UsersPage() {
         confirmText={usersHook.userToToggle?.isActive ? 'Deactivate' : 'Activate'}
         isLoading={usersHook.togglingUserId === usersHook.userToToggle?.id}
         variant={usersHook.userToToggle?.isActive ? 'warning' : 'info'}
+      />
+
+      {/* Hard Delete Confirm Modal */}
+      <ConfirmModal
+        isOpen={usersHook.showDeleteConfirm}
+        onClose={usersHook.closeDeleteConfirm}
+        onConfirm={usersHook.handleDeleteUser}
+        title="Delete User Permanently"
+        message={`Are you sure you want to PERMANENTLY delete ${usersHook.userToDelete?.firstName} ${usersHook.userToDelete?.lastName}? This action CANNOT be undone.`}
+        confirmText="Delete Permanently"
+        isLoading={usersHook.deletingUserId === usersHook.userToDelete?.id}
+        variant="danger"
       />
     </>
   );

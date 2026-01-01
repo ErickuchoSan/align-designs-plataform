@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { User, CreateClientDto } from '@/types';
+import { User, CreateClientDto, CreateUserDto } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
 import { useAutoResetMessage } from './useAutoResetMessage';
 import { usePagination } from './usePagination';
@@ -19,11 +19,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
   // Create form state
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState<CreateClientDto>({
+  const [formData, setFormData] = useState<CreateUserDto>({
     email: '',
     firstName: '',
     lastName: '',
     phone: '',
+    role: 'CLIENT',
   });
   const [creating, setCreating] = useState(false);
 
@@ -67,11 +68,11 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       try {
         await api.post('/users', formData);
         setShowCreateForm(false);
-        setFormData({ email: '', firstName: '', lastName: '', phone: '' });
-        setSuccess('Client created successfully');
+        setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
+        setSuccess(`${formData.role === 'CLIENT' ? 'Client' : 'Employee'} created successfully`);
         fetchUsers();
       } catch (err) {
-        setError(getErrorMessage(err, 'Error creating client'));
+        setError(getErrorMessage(err, `Error creating ${formData.role === 'CLIENT' ? 'client' : 'employee'}`));
       } finally {
         setCreating(false);
       }
@@ -110,6 +111,41 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     setUserToToggle(null);
   }, []);
 
+  // Delete user state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const openDeleteConfirm = useCallback((user: User) => {
+    setUserToDelete(user);
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const closeDeleteConfirm = useCallback(() => {
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
+  }, []);
+
+  const handleDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
+
+    setDeletingUserId(userToDelete.id);
+    try {
+      // Pass hard=true to permanent delete
+      await api.delete(`/users/${userToDelete.id}`, {
+        params: { hard: true },
+      });
+      setSuccess('User permanently deleted');
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (err) {
+      setError(getErrorMessage(err, 'Error deleting user'));
+    } finally {
+      setDeletingUserId(null);
+    }
+  }, [userToDelete, fetchUsers]);
+
   return {
     // State
     users,
@@ -132,5 +168,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     openToggleConfirm,
     handleToggleStatus,
     closeToggleConfirm,
+    // Delete
+    showDeleteConfirm,
+    userToDelete,
+    deletingUserId,
+    openDeleteConfirm,
+    closeDeleteConfirm,
+    handleDeleteUser,
   };
 }

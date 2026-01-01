@@ -47,10 +47,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className={`relative bg-white rounded-2xl shadow-2xl ${sizeClasses[size]} w-full animate-slideUp`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      {/* Modal - with max-height and scroll */}
+      <div className={`relative bg-white rounded-2xl shadow-2xl ${sizeClasses[size]} w-full max-h-[90vh] flex flex-col animate-slideUp`}>
+        {/* Header - fixed */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
           <button
             onClick={onClose}
@@ -62,8 +62,8 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content - scrollable */}
+        <div className="p-6 overflow-y-auto flex-grow">
           {children}
         </div>
       </div>

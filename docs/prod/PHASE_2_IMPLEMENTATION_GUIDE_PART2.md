@@ -17,7 +17,7 @@ This is a continuation of PHASE_2_IMPLEMENTATION_GUIDE.md
 ```bash
 # Start backend
 cd apps/backend
-npm run start:dev
+ppnpm start:dev
 
 # Test health endpoint
 curl http://localhost:3000/health
@@ -452,11 +452,11 @@ jobs:
 
       - name: Run ESLint
         working-directory: apps/backend
-        run: npm run lint
+        run: pnpm lint
 
       - name: Check formatting
         working-directory: apps/backend
-        run: npm run format:check
+        run: pnpm format:check
 
   # ============================================
   # Lint Frontend
@@ -482,7 +482,7 @@ jobs:
 
       - name: Run ESLint
         working-directory: apps/frontend
-        run: npm run lint
+        run: pnpm lint
 
   # ============================================
   # Type Check Backend
@@ -579,7 +579,7 @@ jobs:
           JWT_SECRET: test-secret-key-for-ci
           CSRF_SECRET: test-csrf-secret-for-ci
           NODE_ENV: test
-        run: npm test -- --coverage
+        run: pnpm test -- --coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -617,7 +617,7 @@ jobs:
 
       - name: Build application
         working-directory: apps/backend
-        run: npm run build
+        run: pnpm build
 
       - name: Check build output
         working-directory: apps/backend
@@ -655,7 +655,7 @@ jobs:
         working-directory: apps/frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3000
-        run: npm run build
+        run: pnpm build
 
       - name: Check build output
         working-directory: apps/frontend

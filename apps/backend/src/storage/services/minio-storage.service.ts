@@ -212,6 +212,16 @@ export class MinioStorageService implements OnModuleInit {
     expirySeconds: number = STORAGE_PRESIGNED_URL_EXPIRY_SECONDS,
   ): Promise<string> {
     try {
+      // Verify file exists before generating presigned URL
+      try {
+        await this.minioClient.statObject(this.bucketName, storagePath);
+      } catch (statError) {
+        this.logger.warn(`File not found in storage: ${storagePath}`);
+        throw new BadRequestException(
+          'The requested file does not exist in storage. It may have been deleted or the upload may have failed.',
+        );
+      }
+
       const url = await this.minioClient.presignedGetObject(
         this.bucketName,
         storagePath,
@@ -219,6 +229,11 @@ export class MinioStorageService implements OnModuleInit {
       );
       return url;
     } catch (error) {
+      // Re-throw BadRequestException (file not found)
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -227,6 +242,18 @@ export class MinioStorageService implements OnModuleInit {
         errorStack,
       );
       throw new InternalServerErrorException('Error generating download URL');
+    }
+  }
+
+  /**
+   * Check if a file exists in storage
+   */
+  async fileExists(storagePath: string): Promise<boolean> {
+    try {
+      await this.minioClient.statObject(this.bucketName, storagePath);
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 }

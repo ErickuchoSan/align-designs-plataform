@@ -11,14 +11,13 @@ import PhoneInput from '@/app/components/PhoneInput';
 import PasswordInput from '@/app/components/PasswordInput';
 import PasswordRequirements from '@/app/components/PasswordRequirements';
 import DashboardHeader from '@/app/components/DashboardHeader';
-import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { getErrorMessage } from '@/lib/errors';
 import { useAutoResetMessage } from '@/hooks/useAutoResetMessage';
 
 export default function ProfilePage() {
   const { user, loading } = useProtectedRoute();
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const router = useRouter();
 
   // Edit profile state
@@ -61,14 +60,8 @@ export default function ProfilePage() {
       setSuccess('Profile updated successfully');
       setEditingProfile(false);
 
-      // Update user in context and localStorage
-      if (user) {
-        const updatedUser = { ...user, ...profileData };
-        const result = storage.setJSON('user', updatedUser);
-        if (!result.success) {
-          logger.error('Failed to update user in storage:', result.error);
-        }
-      }
+      // Update user in context (which also updates localStorage)
+      updateUser(profileData);
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
@@ -305,6 +298,16 @@ export default function ProfilePage() {
               required
               showStrengthIndicator={true}
             />
+
+            {/* Password Requirements Checklist - shown only for new password */}
+            {passwordData.newPassword && (
+              <div className="mt-3">
+                <PasswordRequirements
+                  password={passwordData.newPassword}
+                  className="bg-stone-50 border border-stone-200 rounded-lg p-4"
+                />
+              </div>
+            )}
           </div>
 
           <div>
@@ -318,15 +321,31 @@ export default function ProfilePage() {
               required
               showStrengthIndicator={false}
             />
+            {/* Show match indicator when user starts typing confirmation */}
+            {passwordData.confirmPassword && (
+              <p className={`mt-2 text-sm flex items-center gap-1 ${
+                passwordData.newPassword === passwordData.confirmPassword
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }`}>
+                {passwordData.newPassword === passwordData.confirmPassword ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Passwords match
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Passwords do not match
+                  </>
+                )}
+              </p>
+            )}
           </div>
-
-          {/* Password Requirements Checklist */}
-          {passwordData.newPassword && (
-            <PasswordRequirements
-              password={passwordData.newPassword}
-              className="bg-stone-50 border border-stone-200 rounded-lg p-4"
-            />
-          )}
 
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
             <button

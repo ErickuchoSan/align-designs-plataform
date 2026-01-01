@@ -1,19 +1,8 @@
 import { formatDate } from '@/lib/utils/date.utils';
+import { Project } from '@/types';
 
 interface ProjectInfoProps {
-  project: {
-    name: string;
-    client: {
-      firstName: string;
-      lastName: string;
-      email: string;
-    };
-    createdAt: string;
-    _count: {
-      files: number;
-      comments: number;
-    };
-  };
+  project: Project;
 }
 
 /**
@@ -21,6 +10,10 @@ interface ProjectInfoProps {
  * Extracted from ProjectDetailsPage for better maintainability
  */
 export default function ProjectInfo({ project }: ProjectInfoProps) {
+  if (!project.client) {
+    return null;
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
       <div className="flex items-center gap-3 mb-4">

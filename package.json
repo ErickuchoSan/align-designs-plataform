@@ -3,38 +3,36 @@
   "version": "1.0.0",
   "private": true,
   "description": "Sistema de gestión de proyectos y archivos - Plataforma",
-  "workspaces": [
-    "apps/*"
-  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "npm run start:dev --workspace=apps/backend",
-    "dev:frontend": "npm run dev --workspace=apps/frontend",
-    "build": "npm run build --workspaces",
-    "build:backend": "npm run build --workspace=apps/backend",
-    "build:frontend": "npm run build --workspace=apps/frontend",
-    "start": "concurrently \"npm run start:prod --workspace=apps/backend\" \"npm run start --workspace=apps/frontend\"",
-    "start:backend": "npm run start:prod --workspace=apps/backend",
-    "start:frontend": "npm run start --workspace=apps/frontend",
-    "lint": "npm run lint --workspaces",
-    "lint:backend": "npm run lint --workspace=apps/backend",
-    "lint:frontend": "npm run lint --workspace=apps/frontend",
-    "test": "npm run test --workspaces",
-    "test:backend": "npm run test --workspace=apps/backend",
-    "test:frontend": "npm run test --workspace=apps/frontend",
-    "prisma:generate": "npm run prisma:generate --workspace=apps/backend",
-    "prisma:migrate": "npm run prisma:migrate:deploy --workspace=apps/backend",
-    "prisma:studio": "npm run prisma:studio --workspace=apps/backend",
-    "clean": "npm run clean --workspaces && rm -rf node_modules",
-    "install:all": "npm install && npm install --workspaces"
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build": "pnpm -r build",
+    "build:backend": "pnpm --filter backend build",
+    "build:frontend": "pnpm --filter frontend build",
+    "start": "concurrently \"pnpm --filter backend start:prod\" \"pnpm --filter frontend start\"",
+    "start:backend": "pnpm --filter backend start:prod",
+    "start:frontend": "pnpm --filter frontend start",
+    "lint": "pnpm -r lint",
+    "lint:backend": "pnpm --filter backend lint",
+    "lint:frontend": "pnpm --filter frontend lint",
+    "test": "pnpm -r test",
+    "test:backend": "pnpm --filter backend test",
+    "test:frontend": "pnpm --filter frontend test",
+    "prisma:generate": "pnpm --filter backend prisma:generate",
+    "prisma:migrate": "pnpm --filter backend prisma:migrate:deploy",
+    "prisma:studio": "pnpm --filter backend prisma:studio",
+    "clean": "pnpm -r clean && rm -rf node_modules pnpm-lock.yaml",
+    "install:all": "pnpm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "pnpm": ">=8.0.0"
   },
+  "packageManager": "pnpm@10.10.0",
   "keywords": [
     "monorepo",
     "nestjs",

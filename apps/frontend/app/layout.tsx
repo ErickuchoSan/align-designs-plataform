@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "./components/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Toaster } from 'react-hot-toast';
+import GlobalErrorModal from "@/components/common/GlobalErrorModal";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +27,9 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <ErrorBoundary>
           <OfflineIndicator />
+          <GlobalErrorModal />
           <AuthProvider>
+            <Toaster position="top-right" />
             {children}
           </AuthProvider>
         </ErrorBoundary>

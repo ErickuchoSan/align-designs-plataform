@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../../storage/storage.service';
 import { FILE_WITH_UPLOADER_INCLUDE } from '../constants/file-selects';
+import { Stage } from '@prisma/client';
 
 /**
  * Service responsible for coordinating file storage operations between database and MinIO
@@ -26,14 +27,12 @@ export class FileStorageCoordinatorService {
     file: Express.Multer.File,
     uploadedBy: string,
     comment?: string,
+    stage?: Stage,
   ) {
-    const filename = `${Date.now()}-${file.originalname}`;
-    const storagePath = `projects/${projectId}/${filename}`;
-
-    // Step 1: Create database record with pending status (storagePath as placeholder)
+    // Step 1: Create database record with pending status (storagePath as null)
     const fileRecord = await this.prisma.file.create({
       data: {
-        filename,
+        filename: null, // Will be set after successful upload
         originalName: file.originalname,
         storagePath: null, // Will be set after successful upload
         mimeType: file.mimetype,
@@ -41,23 +40,27 @@ export class FileStorageCoordinatorService {
         comment: comment || null,
         projectId,
         uploadedBy,
+        stage,
       },
       include: FILE_WITH_UPLOADER_INCLUDE,
     });
 
     try {
-      // Step 2: Upload file to MinIO
-      await this.storageService.uploadFile(file, projectId);
+      // Step 2: Upload file to MinIO - this returns the actual filename and storagePath
+      const uploadResult = await this.storageService.uploadFile(file, projectId);
 
-      // Step 3: Update database record with storagePath after successful upload
+      // Step 3: Update database record with actual storagePath and filename from MinIO
       const updatedFileRecord = await this.prisma.file.update({
         where: { id: fileRecord.id },
-        data: { storagePath },
+        data: {
+          filename: uploadResult.filename,
+          storagePath: uploadResult.storagePath,
+        },
         include: FILE_WITH_UPLOADER_INCLUDE,
       });
 
       this.logger.log(
-        `File uploaded: ${fileRecord.id} (${file.originalname}) to project ${projectId} by user ${uploadedBy}`,
+        `File uploaded: ${fileRecord.id} (${file.originalname}) to ${uploadResult.storagePath} by user ${uploadedBy}`,
       );
 
       return updatedFileRecord;
@@ -146,6 +149,13 @@ export class FileStorageCoordinatorService {
    */
   async getFileDownloadUrl(storagePath: string) {
     return this.storageService.getDownloadUrl(storagePath);
+  }
+
+  /**
+   * Check if a file exists in storage
+   */
+  async fileExistsInStorage(storagePath: string): Promise<boolean> {
+    return this.storageService.fileExists(storagePath);
   }
 
   /**

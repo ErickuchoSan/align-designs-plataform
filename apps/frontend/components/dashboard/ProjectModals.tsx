@@ -1,7 +1,28 @@
+import { useMemo, memo } from 'react';
+import dynamic from 'next/dynamic';
 import { Project } from '@/types';
-import Modal from '@/app/components/Modal';
-import ConfirmModal from '@/app/components/ConfirmModal';
 import { ButtonLoader } from '@/app/components/Loader';
+
+// Lazy load heavy components for better code splitting
+const Modal = dynamic(() => import('@/app/components/Modal'), {
+  loading: () => null,
+  ssr: false,
+});
+
+const ConfirmModal = dynamic(() => import('@/app/components/ConfirmModal'), {
+  loading: () => null,
+  ssr: false,
+});
+
+const EmployeeSelect = dynamic(() => import('../projects/EmployeeSelect').then(mod => ({ default: mod.EmployeeSelect })), {
+  loading: () => null,
+  ssr: false,
+});
+
+const SearchableSelect = dynamic(() => import('@/app/components/SearchableSelect'), {
+  loading: () => null,
+  ssr: false,
+});
 
 interface Client {
   id: string;
@@ -14,6 +35,11 @@ interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  // Phase 1: Workflow fields
+  employeeIds?: string[];
+  initialAmountRequired?: number;
+  deadlineDate?: string; // Project completion deadline
+  initialPaymentDeadline?: string; // Deadline for initial payment
 }
 
 /**
@@ -24,6 +50,7 @@ interface CreateModalState {
   formData: ProjectFormData;
   isSubmitting: boolean;
   clients: Client[];
+  employees: Client[]; // Phase 1: Employee list
   onClose: () => void;
   onFormChange: (data: ProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -70,13 +97,13 @@ interface ProjectModalsProps {
   theme?: 'navy' | 'blue';
 }
 
-export default function ProjectModals({
+function ProjectModals({
   createModal,
   editModal,
   deleteModal,
   theme = 'navy',
 }: ProjectModalsProps) {
-  const themeStyles = {
+  const themeStyles = useMemo(() => ({
     navy: {
       input: 'text-navy-900 placeholder:text-stone-700',
       label: 'text-navy-900',
@@ -91,9 +118,30 @@ export default function ProjectModals({
       createButton: 'bg-gradient-to-r from-blue-600 to-indigo-600',
       editButton: 'bg-gradient-to-r from-yellow-600 to-orange-600',
     },
-  };
+  }), [theme]);
 
   const styles = themeStyles[theme];
+
+  // Fix: Ensure Edit Modal shows both AVAILABLE employees AND CURRENTLY ASSIGNED employees
+  const editModalEmployees = useMemo(() => {
+    const currentEmployees = editModal.project?.employees?.map((e: any) => ({
+      id: e.employee.id,
+      firstName: e.employee.firstName,
+      lastName: e.employee.lastName,
+      email: e.employee.email,
+    })) || [];
+
+    // Deduplicate by ID
+    const employeeMap = new Map();
+
+    // First add available employees
+    createModal.employees.forEach(emp => employeeMap.set(emp.id, emp));
+
+    // Then ensure current employees are included (overwriting if needed, though they shouldn't overlap usually)
+    currentEmployees.forEach(emp => employeeMap.set(emp.id, emp));
+
+    return Array.from(employeeMap.values());
+  }, [createModal.employees, editModal.project]);
 
   return (
     <>
@@ -101,7 +149,7 @@ export default function ProjectModals({
       <Modal
         isOpen={createModal.isOpen}
         onClose={createModal.onClose}
-        title={theme === 'navy' ? 'Crear Nuevo Proyecto' : 'Create New Project'}
+        title={theme === 'navy' ? 'Create New Project' : 'Create New Project'}
       >
         <form onSubmit={createModal.onSubmit} className="space-y-5">
           <div>
@@ -129,28 +177,81 @@ export default function ProjectModals({
               value={createModal.formData.description}
               onChange={(e) => createModal.onFormChange({ ...createModal.formData, description: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Describe el proyecto...' : 'Describe the project...'}
+              placeholder={theme === 'navy' ? 'Describe the project...' : 'Describe the project...'}
             />
           </div>
 
           <div>
-            <label htmlFor="create-client" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Client *
-            </label>
-            <select
+            <SearchableSelect
               id="create-client"
+              label="Client"
               required
               value={createModal.formData.clientId}
-              onChange={(e) => createModal.onFormChange({ ...createModal.formData, clientId: e.target.value })}
+              onChange={(value) => createModal.onFormChange({ ...createModal.formData, clientId: value })}
+              options={createModal.clients.map((client) => ({
+                id: client.id,
+                name: `${client.firstName} ${client.lastName}`,
+                description: client.email,
+              }))}
+              placeholder="Search for a client..."
+            />
+          </div>
+
+          {/* Phase 1: Workflow fields */}
+          <div>
+            <EmployeeSelect
+              employees={createModal.employees}
+              selectedIds={createModal.formData.employeeIds || []}
+              onChange={(employeeIds) => createModal.onFormChange({ ...createModal.formData, employeeIds })}
+              disabled={createModal.isSubmitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="create-amount" className={`block text-sm font-medium ${styles.label} mb-2`}>
+              Initial Amount Required
+            </label>
+            <input
+              id="create-amount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={createModal.formData.initialAmountRequired || ''}
+              onChange={(e) => createModal.onFormChange({
+                ...createModal.formData,
+                initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
+              })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
-            >
-              <option value="">Select a client</option>
-              {createModal.clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.firstName} {client.lastName} ({client.email})
-                </option>
-              ))}
-            </select>
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="create-payment-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
+                Initial Payment Deadline
+              </label>
+              <input
+                id="create-payment-deadline"
+                type="date"
+                value={createModal.formData.initialPaymentDeadline || ''}
+                onChange={(e) => createModal.onFormChange({ ...createModal.formData, initialPaymentDeadline: e.target.value })}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="create-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
+                Project Completion Deadline
+              </label>
+              <input
+                id="create-deadline"
+                type="date"
+                value={createModal.formData.deadlineDate || ''}
+                onChange={(e) => createModal.onFormChange({ ...createModal.formData, deadlineDate: e.target.value })}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
@@ -167,7 +268,7 @@ export default function ProjectModals({
               disabled={createModal.isSubmitting}
               className={`px-5 py-2.5 text-sm font-medium text-white ${styles.createButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
             >
-              {createModal.isSubmitting ? <ButtonLoader /> : (theme === 'navy' ? 'Crear Proyecto' : 'Create Project')}
+              {createModal.isSubmitting ? <ButtonLoader /> : (theme === 'navy' ? 'Create Project' : 'Create Project')}
             </button>
           </div>
         </form>
@@ -183,7 +284,7 @@ export default function ProjectModals({
         onConfirm={editModal.onConfirm}
         title="Confirm Edit"
         message={`Are you sure you want to edit the project "${editModal.project?.name}"?`}
-        confirmText={theme === 'navy' ? 'Editar' : 'Edit'}
+        confirmText={theme === 'navy' ? 'Edit' : 'Edit'}
         variant="warning"
       />
 
@@ -191,7 +292,7 @@ export default function ProjectModals({
       <Modal
         isOpen={editModal.isEditOpen}
         onClose={editModal.onEditClose}
-        title={theme === 'navy' ? 'Editar Proyecto' : 'Edit Project'}
+        title={theme === 'navy' ? 'Edit Project' : 'Edit Project'}
       >
         <form onSubmit={editModal.onSubmit} className="space-y-5">
           <div>
@@ -205,7 +306,7 @@ export default function ProjectModals({
               value={editModal.formData.name}
               onChange={(e) => editModal.onFormChange({ ...editModal.formData, name: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Ej: Diseño de Logo' : 'e.g., Logo Design'}
+              placeholder={theme === 'navy' ? 'e.g., Logo Design' : 'e.g., Logo Design'}
             />
           </div>
 
@@ -219,30 +320,25 @@ export default function ProjectModals({
               value={editModal.formData.description}
               onChange={(e) => editModal.onFormChange({ ...editModal.formData, description: e.target.value })}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Describe el proyecto...' : 'Describe the project...'}
+              placeholder={theme === 'navy' ? 'Describe the project...' : 'Describe the project...'}
             />
           </div>
 
           <div>
-            <label htmlFor="edit-client" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Client *
-            </label>
-            <select
+            <SearchableSelect
               id="edit-client"
+              label="Client"
               required
               value={editModal.formData.clientId}
-              onChange={(e) => editModal.onFormChange({ ...editModal.formData, clientId: e.target.value })}
+              onChange={(value) => editModal.onFormChange({ ...editModal.formData, clientId: value })}
               disabled={!editModal.canChangeClient}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} ${!editModal.canChangeClient ? 'opacity-50 cursor-not-allowed bg-stone-100' : ''}`}
-              title={!editModal.canChangeClient ? 'Cannot change client: current client has uploaded files or comments to this project' : ''}
-            >
-              <option value="">Select a client</option>
-              {createModal.clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.firstName} {client.lastName} ({client.email})
-                </option>
-              ))}
-            </select>
+              options={createModal.clients.map((client) => ({
+                id: client.id,
+                name: `${client.firstName} ${client.lastName}`,
+                description: client.email,
+              }))}
+              placeholder="Search for a client..."
+            />
             {!editModal.canChangeClient && (
               <p className="mt-2 text-sm text-amber-600 flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,6 +347,62 @@ export default function ProjectModals({
                 Client cannot be changed: current client has uploaded files or comments
               </p>
             )}
+          </div>
+
+          <div>
+            <EmployeeSelect
+              employees={editModalEmployees}
+              selectedIds={editModal.formData.employeeIds || []}
+              onChange={(employeeIds) => editModal.onFormChange({ ...editModal.formData, employeeIds })}
+              disabled={editModal.isSubmitting}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-amount" className={`block text-sm font-medium ${styles.label} mb-2`}>
+              Initial Amount Required
+            </label>
+            <input
+              id="edit-amount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={editModal.formData.initialAmountRequired || ''}
+              onChange={(e) => editModal.onFormChange({
+                ...editModal.formData,
+                initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
+              })}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="edit-payment-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
+                Initial Payment Deadline
+              </label>
+              <input
+                id="edit-payment-deadline"
+                type="date"
+                value={editModal.formData.initialPaymentDeadline || ''}
+                onChange={(e) => editModal.onFormChange({ ...editModal.formData, initialPaymentDeadline: e.target.value })}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="edit-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
+                Project Completion Deadline
+              </label>
+              <input
+                id="edit-deadline"
+                type="date"
+                value={editModal.formData.deadlineDate || ''}
+                onChange={(e) => editModal.onFormChange({ ...editModal.formData, deadlineDate: e.target.value })}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
@@ -290,3 +442,7 @@ export default function ProjectModals({
     </>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders of large modal components
+// Only re-renders when modal states or theme change
+export default memo(ProjectModals);

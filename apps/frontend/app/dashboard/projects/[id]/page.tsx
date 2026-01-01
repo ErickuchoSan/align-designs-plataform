@@ -4,7 +4,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { PageLoader } from '@/app/components/Loader';
 import DashboardHeader from '@/app/components/DashboardHeader';
-import Pagination from '@/app/components/Pagination';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 // Hooks
@@ -16,10 +15,11 @@ import type { FileData } from './hooks/useProjectFiles';
 
 // Components
 import ProjectInfo from './components/ProjectInfo';
-import FileActionsBar from './components/FileActionsBar';
+import ProjectWorkflowSection from './components/ProjectWorkflowSection';
 import AlertMessages from './components/AlertMessages';
-import FileList from './components/FileList';
 import FileModalsGroup from './components/FileModalsGroup';
+import TimeTrackingCharts from '@/components/dashboard/TimeTrackingCharts';
+import ProjectStagesView from '@/components/projects/ProjectStagesView';
 
 /**
  * Project Details Page - Refactored for better maintainability
@@ -51,11 +51,11 @@ export default function ProjectDetailsPage() {
   const {
     project,
     files,
-    filteredFiles,
+    // filteredFiles, // Deprecated: we use files directly now as they are server-filtered
     loading: filesLoading,
     error,
     success,
-    setFilteredFiles,
+    // setFilteredFiles,
     setError,
     setSuccess,
     fetchProjectDetails,
@@ -66,11 +66,21 @@ export default function ProjectDetailsPage() {
     setItemsPerPage,
     totalItems,
     totalPages,
+    // Filters (Server-Side)
+    nameFilter,
+    setNameFilter,
+    typeFilter,
+    setTypeFilter,
+    availableTypes,
+    refreshTypes,
   } = useProjectFiles(projectId);
 
-  // UI state (modals and filters)
+  // UI state (modals)
   const modals = useFileModals();
-  const filters = useFileFilters(files);
+  // const filters = useFileFilters(files); // Removed client-side filters
+
+  // Stage selection state for upload/comment modals
+  const [selectedStageForModal, setSelectedStageForModal] = useState<string | null>(null);
 
   // File operations handlers
   const {
@@ -82,7 +92,10 @@ export default function ProjectDetailsPage() {
     handleEditEntry,
     handleDownload,
     handleDelete,
-  } = useFileOperations(projectId, setSuccess, setError, fetchFiles);
+  } = useFileOperations(projectId, setSuccess, setError, async () => {
+    await fetchFiles();
+    await refreshTypes();
+  });
 
   /**
    * Effect 2: Fetch data when authenticated
@@ -96,54 +109,34 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
-  // Local pagination for client-side filtered results (future: move to server)
-  const [localCurrentPage, setLocalCurrentPage] = useState(1);
-  const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
-
-  // Check if client-side filters are active
-  const hasActiveFilters = useMemo(
-    () => filters.nameFilter || filters.typeFilter !== 'all',
-    [filters.nameFilter, filters.typeFilter]
-  );
-
-  /**
-   * Effect 3: Apply client-side filters
-   * Note: This is temporary. Filters should move to backend for better performance.
-   * See HIGH #3 implementation in backend for server-side filtering.
-   */
+  // Handle page resets when filters change
   useEffect(() => {
-    if (!Array.isArray(files)) {
-      setFilteredFiles([]);
-      return;
-    }
-    setFilteredFiles(filters.applyFilters(files));
-  }, [files, filters.nameFilter, filters.typeFilter, filters.applyFilters, setFilteredFiles]);
-
-  /**
-   * Effect 4: Reset pagination when filters change
-   * Ensures user starts at page 1 when applying new filters
-   */
-  useEffect(() => {
-    setLocalCurrentPage(1);
-  }, [filters.nameFilter, filters.typeFilter]);
+    setCurrentPage(1);
+  }, [nameFilter, typeFilter, setCurrentPage]);
 
   // File operation handlers
   const handleUpload = useCallback(
     async (file: File, comment: string) => {
-      const success = await handleFileUpload(file, comment);
-      if (success) modals.closeUploadModal();
+      const success = await handleFileUpload(file, comment, selectedStageForModal || undefined);
+      if (success) {
+        modals.closeUploadModal();
+        setSelectedStageForModal(null);
+      }
       return success;
     },
-    [handleFileUpload, modals]
+    [handleFileUpload, modals, selectedStageForModal]
   );
 
   const handleComment = useCallback(
     async (comment: string) => {
-      const success = await handleCreateComment(comment);
-      if (success) modals.closeCommentModal();
+      const success = await handleCreateComment(comment, selectedStageForModal || undefined);
+      if (success) {
+        modals.closeCommentModal();
+        setSelectedStageForModal(null);
+      }
       return success;
     },
-    [handleCreateComment, modals]
+    [handleCreateComment, modals, selectedStageForModal]
   );
 
   const handleEdit = useCallback(
@@ -154,6 +147,12 @@ export default function ProjectDetailsPage() {
     },
     [handleEditEntry, modals]
   );
+
+  // Memoized callback for project updates (used by ProjectWorkflowSection)
+  const handleProjectUpdate = useCallback(async () => {
+    await fetchProjectDetails();
+    await fetchFiles();
+  }, [fetchProjectDetails, fetchFiles]);
 
   const handleDeleteConfirm = useCallback(
     async (file: FileData) => {
@@ -172,55 +171,6 @@ export default function ProjectDetailsPage() {
     },
     [isAdmin, user]
   );
-
-  // Calculate pagination values based on whether filters are active - memoized
-  const paginationValues = useMemo(
-    () => ({
-      currentPage: hasActiveFilters ? localCurrentPage : currentPage,
-      itemsPerPage: hasActiveFilters ? localItemsPerPage : itemsPerPage,
-      totalItems: hasActiveFilters ? filteredFiles.length : totalItems,
-      totalPages: hasActiveFilters
-        ? Math.ceil(filteredFiles.length / localItemsPerPage)
-        : totalPages,
-    }),
-    [
-      hasActiveFilters,
-      localCurrentPage,
-      currentPage,
-      localItemsPerPage,
-      itemsPerPage,
-      filteredFiles.length,
-      totalItems,
-      totalPages,
-    ]
-  );
-
-  // Apply local pagination to filtered files if filters are active - memoized
-  const displayedFiles = useMemo(() => {
-    if (!hasActiveFilters) return filteredFiles;
-
-    return filteredFiles.slice(
-      (localCurrentPage - 1) * localItemsPerPage,
-      localCurrentPage * localItemsPerPage
-    );
-  }, [hasActiveFilters, filteredFiles, localCurrentPage, localItemsPerPage]);
-
-  const handlePageChange = (page: number) => {
-    if (hasActiveFilters) {
-      setLocalCurrentPage(page);
-    } else {
-      setCurrentPage(page);
-    }
-  };
-
-  const handleItemsPerPageChange = (limit: number) => {
-    if (hasActiveFilters) {
-      setLocalItemsPerPage(limit);
-      setLocalCurrentPage(1);
-    } else {
-      setItemsPerPage(limit);
-    }
-  };
 
   // Early returns for loading and error states
   if (!projectId) {
@@ -261,33 +211,43 @@ export default function ProjectDetailsPage() {
 
           <ProjectInfo project={project} />
 
-          <FileActionsBar
-            nameFilter={filters.nameFilter}
-            setNameFilter={filters.setNameFilter}
-            typeFilter={filters.typeFilter}
-            setTypeFilter={filters.setTypeFilter}
-            availableTypes={filters.availableTypes}
-            onOpenCommentModal={modals.openCommentModal}
-            onOpenUploadModal={modals.openUploadModal}
+          {/* Analytics Section (Admin/Employee Only) */}
+          {(isAdmin || (user && project.employees?.some(pe => pe.employeeId === user.id))) && (
+            <TimeTrackingCharts projectId={projectId} />
+          )}
+
+          <ProjectWorkflowSection
+            project={project}
+            isAdmin={isAdmin}
+            userRole={user?.role}
+            onUpdate={handleProjectUpdate}
           />
 
-          <FileList
-            files={displayedFiles}
-            onDownload={handleDownload}
-            onEdit={modals.openEditModal}
-            onDelete={modals.openDeleteModal}
-            canDelete={canDeleteFile}
-          />
-
-          {paginationValues.totalPages > 0 && (
-            <Pagination
-              currentPage={paginationValues.currentPage}
-              totalPages={paginationValues.totalPages}
-              totalItems={paginationValues.totalItems}
-              itemsPerPage={paginationValues.itemsPerPage}
-              onPageChange={handlePageChange}
-              onItemsPerPageChange={handleItemsPerPageChange}
-            />
+          {/* Stages View - Replaces old file section with stage-based organization */}
+          {!(user?.role === 'CLIENT' && project.status === 'WAITING_PAYMENT') && (
+            <div className="mt-8">
+              <ProjectStagesView
+                projectId={projectId}
+                projectName={project.name}
+                project={project}
+                files={files}
+                onOpenUploadModal={(stage) => {
+                  setSelectedStageForModal(stage);
+                  modals.openUploadModal();
+                }}
+                onOpenCommentModal={(stage) => {
+                  setSelectedStageForModal(stage);
+                  modals.openCommentModal();
+                }}
+                onDownload={handleDownload}
+                onEdit={modals.openEditModal}
+                onDelete={modals.openDeleteModal}
+                onViewHistory={modals.openHistoryModal}
+                onUploadVersion={modals.openUploadVersionModal}
+                canDeleteFile={canDeleteFile}
+                filesLoading={filesLoading}
+              />
+            </div>
           )}
         </main>
       </div>
@@ -312,6 +272,16 @@ export default function ProjectDetailsPage() {
         onDelete={handleDeleteConfirm}
         fileToDelete={modals.fileToDelete}
         deleting={deleting}
+        showHistoryModal={modals.showHistoryModal}
+        onCloseHistoryModal={modals.closeHistoryModal}
+        fileToViewHistory={modals.fileToViewHistory}
+        showUploadVersionModal={modals.showUploadVersionModal}
+        onCloseUploadVersionModal={modals.closeUploadVersionModal}
+        onUploadVersion={async () => {
+          await fetchFiles();
+          modals.closeUploadVersionModal();
+        }}
+        fileToVersion={modals.fileToVersion}
       />
     </>
   );

@@ -3,6 +3,11 @@ node_modules/
 .pnp
 .pnp.js
 
+# Package managers
+package-lock.json
+yarn.lock
+# Keep pnpm-lock.yaml for reproducible builds
+
 # Testing
 coverage/
 .nyc_output
@@ -29,6 +34,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Service logs (Windows auto-start)
+logs/monorepo-service.log
+logs/monorepo-service-error.log
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -52,6 +61,13 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# Debugging files (curl, testing, etc.)
+csrf_response.txt
+cookies.txt
+build_error.*
+*.curl.txt
+test_*.txt
 
 # Prisma
 apps/backend/prisma/migrations/**/migration.sql

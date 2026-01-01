@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Project } from '@/types';
 import { formatDate } from '@/lib/utils/date.utils';
+import { ProjectStatusBadge } from '../projects/ProjectStatusBadge';
 
 interface ProjectCardProps {
   project: Project;
@@ -39,6 +40,8 @@ function ProjectCard({
     onDelete(project);
   }, [onDelete, project]);
 
+  // Memoize styles - recalculates only when theme changes
+  // Fixes bug: was missing theme dependency
   const themeStyles = useMemo(() => ({
     navy: {
       card: 'bg-white shadow-lg border border-stone-200 hover:shadow-2xl',
@@ -62,7 +65,7 @@ function ProjectCard({
       editButton: 'text-blue-600 hover:bg-blue-50',
       deleteButton: 'text-red-600 hover:bg-red-50',
     },
-  }), []);
+  }), [theme]); // Already has correct dependency
 
   const styles = themeStyles[theme];
 
@@ -73,9 +76,17 @@ function ProjectCard({
     >
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
-          <h3 className={`text-xl font-bold ${styles.title} flex-1`}>
-            {project.name}
-          </h3>
+          <div className="flex-1">
+            <h3 className={`text-xl font-bold ${styles.title}`}>
+              {project.name}
+            </h3>
+            {/* Phase 1: Status badge */}
+            {project.status && (
+              <div className="mt-2">
+                <ProjectStatusBadge status={project.status} />
+              </div>
+            )}
+          </div>
           {isAdmin && (
             <div className="flex gap-2 ml-2">
               <button

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Project } from '@/types';
+import { UsersService } from '@/services/users.service';
 import { useProjectsList } from './useProjectsList';
 import { useProjectModals } from './useProjectModals';
 import { useProjectActions } from './useProjectActions';
@@ -23,6 +24,7 @@ type Client = NonNullable<Project['client']>;
  */
 export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const [clients, setClients] = useState<Client[]>([]);
+  const [employees, setEmployees] = useState<Client[]>([]); // Phase 1: Employee list
   const [success, setSuccess] = useState('');
 
   // Auto-reset success messages
@@ -47,6 +49,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   useEffect(() => {
     if (isAuthenticated && userRole === 'ADMIN') {
       fetchClients();
+      fetchEmployees(); // Phase 1: Load employees
     }
   }, [isAuthenticated, userRole]);
 
@@ -57,6 +60,20 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       setClients(clientUsers);
     } catch (err) {
       logger.error('Error loading clients:', err);
+    }
+  };
+
+  // Phase 1: Fetch AVAILABLE employees for assignment (not assigned to ACTIVE projects)
+  const fetchEmployees = async () => {
+    try {
+      const availableEmployees = await UsersService.getAvailableEmployees();
+      setEmployees(availableEmployees);
+
+      if (availableEmployees.length === 0) {
+        logger.warn('No available employees found - all employees are assigned to active projects');
+      }
+    } catch (err) {
+      logger.error('Error loading available employees:', err);
     }
   };
 
@@ -86,10 +103,20 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     }
   };
 
+  // Exposed handler to open modal AND refresh data
+  // Only refresh if employees list is empty (optimization to avoid unnecessary API calls)
+  const openCreateModal = () => {
+    if (employees.length === 0) {
+      fetchEmployees(); // Only fetch if not already loaded
+    }
+    modals.setShowCreateModal(true);
+  };
+
   return {
     // State
     projects: projectsList.projects,
     clients,
+    employees, // Phase 1: Export employees
     loading: projectsList.loading,
     error: projectsList.error,
     success,
@@ -105,6 +132,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
     // Create modal
     showCreateModal: modals.showCreateModal,
     setShowCreateModal: modals.setShowCreateModal,
+    openCreateModal, // New handler
     createFormData: modals.createFormData,
     setCreateFormData: modals.setCreateFormData,
     creating: actions.creating,

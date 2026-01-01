@@ -6,15 +6,15 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Hash de la contraseña del admin: NoloseAlfonso12345
-  const hashedPassword = await bcrypt.hash('NoloseAlfonso12345', 10);
+  // Hash de la contraseña del admin: NoloseAlfonso136!
+  const hashedPassword = await bcrypt.hash('NoloseAlfonso136!', 10);
 
   // Crear usuario admin: Alfonzo Guzman
   const admin = await prisma.user.upsert({
-    where: { email: 'alf.guzman@outlook.com' },
+    where: { email: 'e.bores.i@outlook.com' },
     update: {},
     create: {
-      email: 'alf.guzman@outlook.com',
+      email: 'e.bores.i@outlook.com',
       firstName: 'Alfonzo',
       lastName: 'Guzman',
       phone: '+19565344110',

@@ -55,4 +55,11 @@ export class StorageService {
   async checkHealth(): Promise<boolean> {
     return this.minioStorageService.checkHealth();
   }
+
+  /**
+   * Check if a file exists in storage
+   */
+  async fileExists(storagePath: string): Promise<boolean> {
+    return this.minioStorageService.fileExists(storagePath);
+  }
 }

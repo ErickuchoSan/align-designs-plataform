@@ -1,33 +1,98 @@
 /**
- * Simple logger utility for frontend
- * Only logs in development mode
+ * Centralized logging utility for the frontend application.
+ *
+ * This logger provides environment-aware logging that:
+ * - Logs detailed information in development
+ * - Suppresses debug/info logs in production
+ * - Provides structured logging for better debugging
+ * - Can be integrated with external error tracking services
+ *
+ * Usage:
+ *   import { logger } from '@/lib/logger';
+ *   logger.debug('Detailed debug info', { userId: 123 });
+ *   logger.info('User logged in', { email: user.email });
+ *   logger.warn('API rate limit approaching');
+ *   logger.error('Failed to fetch data', error);
+ *   logger.apiError('/api/users', 500, error);
  */
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-export const logger = {
-  error: (message: string, error?: unknown) => {
-    if (isDevelopment) {
-      console.error(message, error);
-    }
-    // In production, you could send to error tracking service (Sentry, LogRocket, etc.)
-  },
+type LogContext = Record<string, any>;
 
-  warn: (message: string, data?: unknown) => {
-    if (isDevelopment) {
-      console.warn(message, data);
-    }
-  },
+class Logger {
+  private formatMessage(level: string, message: string, context?: LogContext): string {
+    const timestamp = new Date().toISOString();
+    const contextStr = context ? ` | ${JSON.stringify(context)}` : '';
+    return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
+  }
 
-  info: (message: string, data?: unknown) => {
+  /**
+   * Log debug information (development only)
+   * Use for detailed debugging information that helps during development
+   */
+  debug(message: string, context?: LogContext): void {
     if (isDevelopment) {
-      console.log(message, data);
+      console.debug(this.formatMessage('debug', message, context));
     }
-  },
+  }
 
-  debug: (message: string, data?: unknown) => {
+  /**
+   * Log informational messages (development only)
+   * Use for general information about application flow
+   */
+  info(message: string, context?: LogContext): void {
     if (isDevelopment) {
-      console.debug(message, data);
+      console.log(this.formatMessage('info', message, context));
     }
-  },
-};
+  }
+
+  /**
+   * Log warning messages (all environments)
+   * Use for potentially problematic situations
+   */
+  warn(message: string, context?: LogContext): void {
+    console.warn(this.formatMessage('warn', message, context));
+  }
+
+  /**
+   * Log error messages (all environments)
+   * Use for error conditions that need attention
+   */
+  error(message: string, error?: Error | unknown, context?: LogContext): void {
+    const errorDetails = error instanceof Error
+      ? { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined }
+      : error ? { error: String(error) } : {};
+
+    const fullContext = { ...context, ...errorDetails };
+    console.error(this.formatMessage('error', message, fullContext));
+
+    // TODO: Send to error tracking service (Sentry) in production
+    // if (!isDevelopment) {
+    //   sendToErrorTracking(message, error, context);
+    // }
+  }
+
+  /**
+   * Log API errors with structured information
+   * Useful for tracking API failures with endpoint and status code
+   */
+  apiError(endpoint: string, status: number, error: unknown, context?: LogContext): void {
+    const apiContext = {
+      endpoint,
+      status,
+      ...context
+    };
+    this.error(`API Error: ${endpoint} (${status})`, error as Error, apiContext);
+  }
+
+  /**
+   * Log user actions for debugging (development only)
+   * Helps track user flow during development
+   */
+  userAction(action: string, context?: LogContext): void {
+    this.debug(`User Action: ${action}`, context);
+  }
+}
+
+export const logger = new Logger();

@@ -21,9 +21,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
+import { UserAnalyticsService } from './services/user-analytics.service';
 import { CreateClientDto } from './dto/create-client.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ToggleStatusDto } from './dto/toggle-status.dto';
+import { QueryUsersDto } from './dto/query-users.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -44,15 +47,16 @@ import { safeAuditLog } from '../audit/audit.helper';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly userAnalyticsService: UserAnalyticsService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({
-    summary: 'Create new client',
-    description: 'Admin-only: Create a new client user',
+    summary: 'Create new user',
+    description: 'Admin-only: Create a new user (client or employee)',
   })
-  @ApiResponse({ status: 201, description: 'Client created successfully' })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({
     status: 400,
     description: 'Invalid input or email already exists',
@@ -61,12 +65,12 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() createClientDto: CreateClientDto,
+    @Body() createUserDto: CreateUserDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const newUser = await this.usersService.createClient(createClientDto);
+    const newUser = await this.usersService.createUser(createUserDto);
 
     if (!newUser) {
       throw new Error('Failed to create user');
@@ -83,10 +87,10 @@ export class UsersController {
         ipAddress,
         userAgent,
         details: {
-          email: createClientDto.email,
-          firstName: createClientDto.firstName,
-          lastName: createClientDto.lastName,
-          role: 'CLIENT',
+          email: createUserDto.email,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          role: createUserDto.role,
         },
       },
       'user creation',
@@ -103,8 +107,23 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.usersService.findAll(paginationDto);
+  findAll(@Query() queryDto: QueryUsersDto) {
+    return this.usersService.findAll(queryDto, queryDto.role);
+  }
+
+  @Get('available-employees')
+  @ApiOperation({
+    summary: 'Get available employees',
+    description: 'Admin-only: Get employees not assigned to any active project',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Available employees retrieved successfully',
+  })
+  @Roles(Role.ADMIN)
+  @Throttle({ default: RATE_LIMIT_USERS.LIST })
+  getAvailableEmployees(@Query() paginationDto: PaginationDto) {
+    return this.usersService.findAvailableEmployees(paginationDto);
   }
 
   @Get('profile')
@@ -144,6 +163,46 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.usersService.findOne(id, user.userId, user.role);
+  }
+
+  @Get(':id/analytics')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get client analytics',
+    description: 'Get comprehensive analytics for a specific client (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'Client UUID' })
+  @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Client not found' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
+  getClientAnalytics(@Param('id') id: string) {
+    return this.userAnalyticsService.getClientAnalytics(id);
+  }
+
+  @Get(':id/analytics/distribution')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get project distribution for client',
+    description: 'Get project distribution by status for chart visualization (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'Client UUID' })
+  @ApiResponse({ status: 200, description: 'Distribution data retrieved successfully' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
+  getProjectDistribution(@Param('id') id: string) {
+    return this.userAnalyticsService.getProjectDistribution(id);
+  }
+
+  @Get(':id/analytics/monthly')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get monthly activity for client',
+    description: 'Get monthly project activity for the last 12 months (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'Client UUID' })
+  @ApiResponse({ status: 200, description: 'Monthly activity data retrieved successfully' })
+  @Throttle({ default: RATE_LIMIT_USERS.GET })
+  getMonthlyActivity(@Param('id') id: string) {
+    return this.userAnalyticsService.getMonthlyActivity(id);
   }
 
   @Patch(':id')
@@ -206,11 +265,14 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async remove(
     @Param('id') id: string,
+    @Query('hard') hard: boolean,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.usersService.remove(id, user.userId);
+    // Convert string 'true' to boolean if necessary (NestJS ParseBoolPipe is better but this works for now)
+    const isHardDelete = hard === true || String(hard) === 'true';
+    const result = await this.usersService.remove(id, user.userId, isHardDelete);
 
     // Audit log for user deletion (non-blocking)
     await safeAuditLog(

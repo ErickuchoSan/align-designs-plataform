@@ -50,7 +50,7 @@ export function useFileOperations(
   }, []);
 
   const handleFileUpload = useCallback(
-    async (file: File, comment: string) => {
+    async (file: File, comment: string, stage?: string) => {
       // Validate file size before upload
       if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
         const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
@@ -67,6 +67,9 @@ export function useFileOperations(
         formData.append('file', file);
         if (comment) {
           formData.append('comment', comment);
+        }
+        if (stage) {
+          formData.append('stage', stage);
         }
 
         await api.post(`/files/${projectId}/upload`, formData, {
@@ -98,7 +101,7 @@ export function useFileOperations(
   );
 
   const handleCreateComment = useCallback(
-    async (comment: string) => {
+    async (comment: string, stage?: string) => {
       if (!comment.trim()) return false;
 
       setUploading(true);
@@ -106,6 +109,7 @@ export function useFileOperations(
       try {
         await api.post(`/files/${projectId}/comment`, {
           comment: comment,
+          stage: stage,
         });
 
         onSuccessRef.current('Comment created successfully');
@@ -164,48 +168,26 @@ export function useFileOperations(
   const handleDownload = useCallback(
     async (fileId: string, fileName: string) => {
       try {
-        const response = await api.get(`/files/${fileId}/download`, {
-          responseType: 'blob',
-        });
+        // Step 1: Get presigned download URL from backend
+        const response = await api.get(`/files/${fileId}/download`);
+        const { downloadUrl } = response.data;
 
-        // Validate MIME type from response headers
-        const contentType = response.headers['content-type'];
-
-        // List of allowed MIME types for download
-        const allowedMimeTypes = [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-          'application/pdf',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'application/vnd.ms-excel',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/vnd.ms-powerpoint',
-          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          'text/plain',
-          'text/csv',
-          'application/zip',
-          'application/x-zip-compressed',
-        ];
-
-        // Validate content type
-        if (!contentType || !allowedMimeTypes.some(type => contentType.includes(type))) {
-          onErrorRef.current(`Invalid file type received: ${contentType || 'unknown'}. Download blocked for security.`);
+        if (!downloadUrl) {
+          onErrorRef.current('No download URL available for this file');
           return;
         }
 
-        const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+        // Step 2: Download file directly from MinIO using presigned URL
+        // This bypasses CORS and uses the presigned URL's authentication
         const link = document.createElement('a');
-        link.href = url;
+        link.href = downloadUrl;
         link.setAttribute('download', fileName);
+        link.setAttribute('target', '_blank');
         document.body.appendChild(link);
         link.click();
         link.remove();
-        window.URL.revokeObjectURL(url);
 
-        onSuccessRef.current('File downloaded successfully');
+        onSuccessRef.current('File download started');
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
       } catch (error) {
         onErrorRef.current(getErrorMessage(error, 'Error downloading file'));

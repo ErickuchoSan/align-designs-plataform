@@ -18,32 +18,81 @@ datasource db {
 enum Role {
   ADMIN
   CLIENT
+  EMPLOYEE // Phase 1: Added employee role
+}
+
+enum ProjectStatus {
+  WAITING_PAYMENT // Esperando pago inicial
+  ACTIVE // Proyecto activo
+  PAUSED // En pausa por falta de pago
+  COMPLETED // Completado
+  ARCHIVED // Archivado
+}
+
+enum Stage {
+  BRIEF_PROJECT // Brief del Proyecto
+  FEEDBACK_CLIENT // Feedback (Espacio del Cliente)
+  FEEDBACK_EMPLOYEE // Feedback (Espacio del Empleado)
+  REFERENCES // Referencias
+  SUBMITTED // Entregado
+  ADMIN_APPROVED // Aprobado por Admin
+  CLIENT_APPROVED // Aprobado por Cliente
+  PAYMENTS // Pagos
+}
+
+enum PaymentType {
+  INITIAL_PAYMENT // Pago inicial del cliente para activar proyecto
+  INVOICE // Pago de factura (cliente → admin)
+  EMPLOYEE_PAYMENT // Pago a empleado por trabajo aprobado
+}
+
+enum PaymentMethod {
+  TRANSFER
+  CHECK
+}
+
+enum PaymentStatus {
+  PENDING_APPROVAL // Pago subido por cliente, esperando aprobación de admin
+  CONFIRMED // Confirmado por admin
+  REJECTED // Rechazado por admin
+  PENDING_CONFIRMATION // Cheque pendiente de confirmar (legacy)
 }
 
 // Models
 model User {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                 String    @unique @db.VarChar(255)
-  firstName             String    @map("first_name") @db.VarChar(100)
-  lastName              String    @map("last_name") @db.VarChar(100)
-  phone                 String?   @db.VarChar(20)
-  passwordHash          String?   @map("password_hash") @db.Text
-  role                  Role
-  isActive              Boolean   @default(false) @map("is_active")
-  emailVerified         Boolean   @default(false) @map("email_verified")
-  failedLoginAttempts   Int       @default(0) @map("failed_login_attempts")
-  accountLockedUntil    DateTime? @map("account_locked_until") @db.Timestamptz(6)
-  lastFailedLoginAt     DateTime? @map("last_failed_login_at") @db.Timestamptz(6)
-  deletedAt             DateTime? @map("deleted_at") @db.Timestamptz(6)
-  deletedBy             String?   @map("deleted_by") @db.Uuid
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String    @unique @db.VarChar(255)
+  firstName           String    @map("first_name") @db.VarChar(100)
+  lastName            String    @map("last_name") @db.VarChar(100)
+  phone               String?   @db.VarChar(20)
+  passwordHash        String?   @map("password_hash") @db.Text
+  role                Role
+  isActive            Boolean   @default(false) @map("is_active")
+  emailVerified       Boolean   @default(false) @map("email_verified")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  accountLockedUntil  DateTime? @map("account_locked_until") @db.Timestamptz(6)
+  lastFailedLoginAt   DateTime? @map("last_failed_login_at") @db.Timestamptz(6)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(6)
+  deletedBy           String?   @map("deleted_by") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  projectsAsClient  Project[]  @relation("ClientProjects")
-  projectsCreated   Project[]  @relation("CreatedProjects")
-  filesUploaded     File[]     @relation("UploadedFiles")
-  otpTokens         OtpToken[]
+  projectsAsClient          Project[]           @relation("ClientProjects")
+  projectsCreated           Project[]           @relation("CreatedProjects")
+  filesUploaded             File[]              @relation("UploadedFiles")
+  otpTokens                 OtpToken[]
+  assignedProjects          ProjectEmployee[]   @relation("AssignedEmployees") // Phase 1: Employee assignments
+  feedbackCycles            FeedbackCycle[]     @relation("EmployeeCycles") // Phase 1: Feedback cycles
+  createdFeedback           Feedback[]          @relation("CreatedFeedback") // Phase 1: Created feedback
+  paymentsFrom              Payment[]           @relation("PaymentsFrom") // Phase 2: Payments made
+  paymentsTo                Payment[]           @relation("PaymentsTo") // Phase 2: Payments received
+  timeTracking              TimeTracking[]      @relation("EmployeeTracking") // Phase 3: Time tracking
+  invoices                  Invoice[]           @relation("ClientInvoices")
+  notifications             Notification[]
+  employeePaymentsReceived  EmployeePayment[]   @relation("EmployeePayments") // Payments received as employee
+  employeePaymentsCreated   EmployeePayment[]   @relation("CreatedEmployeePayments") // Payments created as admin
+  employeePaymentsApproved  EmployeePayment[]   @relation("ApprovedEmployeePayments") // Payments approved
 
   @@index([email])
   @@index([role])
@@ -66,17 +115,35 @@ model Project {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  // Phase 1: Workflow fields
+  status                   ProjectStatus @default(WAITING_PAYMENT)
+  initialAmountRequired    Decimal?      @map("initial_amount_required") @db.Decimal(10, 2)
+  amountPaid               Decimal       @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  startDate                DateTime?     @map("start_date") @db.Date
+  deadlineDate             DateTime?     @map("deadline_date") @db.Date
+  initialPaymentDeadline   DateTime?     @map("initial_payment_deadline") @db.Date // Deadline para completar pago inicial
+  archivedAt               DateTime?     @map("archived_at") @db.Timestamptz(6)
+
   // Relations
-  client  User   @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
-  creator User   @relation("CreatedProjects", fields: [createdBy], references: [id], onDelete: Restrict)
-  files   File[]
+  client           User              @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
+  creator          User              @relation("CreatedProjects", fields: [createdBy], references: [id], onDelete: Restrict)
+  files            File[]
+  employees        ProjectEmployee[] // Phase 1: Employee assignments
+  feedbackCycles   FeedbackCycle[] // Phase 1: Feedback cycles
+  feedback         Feedback[] // Phase 1: Feedback entries
+  payments         Payment[] // Phase 2: Payments
+  timeTracking     TimeTracking[] // Phase 3: Time tracking
+  invoices         Invoice[]
+  employeePayments EmployeePayment[] // Payments to employees
 
   @@index([clientId])
   @@index([createdBy])
   @@index([deletedAt])
+  @@index([status]) // Phase 1: Index for filtering by status
   @@index([clientId, deletedAt]) // Compound index for efficient client project queries
   @@index([createdBy, deletedAt]) // Compound index for efficient creator project queries
   @@index([createdAt]) // Index for sorting by creation date
+  @@index([status, deletedAt]) // Phase 1: Compound index for active projects
   @@map("projects")
 }
 
@@ -95,16 +162,49 @@ model File {
   uploadedAt   DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz(6)
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  // Phase 1: Workflow fields
+  stage            Stage? // Etapa del archivo
+  feedbackCycleId  String?       @map("feedback_cycle_id") @db.Uuid
+  approvedAdminAt  DateTime?     @map("approved_admin_at") @db.Timestamptz(6)
+  approvedClientAt DateTime?     @map("approved_client_at") @db.Timestamptz(6)
+  pendingPayment   Boolean       @default(false) @map("pending_payment")
+  paymentFiles     PaymentFile[] // Phase 2: Linked payments
+
+  // Phase 3: Versioning & Tracking
+  versionNumber    Int     @default(1) @map("version_number")
+  versionLabel     String? @map("version_label") @db.VarChar(20) // "v1", "v2", "v3"
+  parentFileId     String? @map("parent_file_id") @db.Uuid
+  isCurrentVersion Boolean @default(true) @map("is_current_version")
+  versionNotes     String? @map("version_notes") @db.Text
+
+  // Phase 3: Rejection Tracking
+  rejectionCount          Int       @default(0) @map("rejection_count")
+  lastRejectedAt          DateTime? @map("last_rejected_at") @db.Timestamptz(6)
+  lastRejectionFeedbackId String?   @map("last_rejection_feedback_id") @db.Uuid
+
   // Relations
-  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  uploader User    @relation("UploadedFiles", fields: [uploadedBy], references: [id], onDelete: Restrict)
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploader      User           @relation("UploadedFiles", fields: [uploadedBy], references: [id], onDelete: Restrict)
+  feedbackCycle FeedbackCycle? @relation(fields: [feedbackCycleId], references: [id])
+
+  // Phase 3 Relations
+  parentFile            File?             @relation("FileVersions", fields: [parentFileId], references: [id], onDelete: Restrict)
+  childVersions         File[]            @relation("FileVersions")
+  lastRejectionFeedback Feedback?         @relation("RejectionLink", fields: [lastRejectionFeedbackId], references: [id])
+  rejections            Feedback[]        @relation("RejectedFile")
+  timeTracking          TimeTracking[]    @relation("TrackingApproved")
+  paymentReceipts       EmployeePayment[] @relation("PaymentReceipt") // Employee payment receipts
 
   @@index([projectId])
   @@index([uploadedBy])
   @@index([deletedAt])
+  @@index([stage]) // Phase 1: Index for filtering by stage
+  @@index([feedbackCycleId]) // Phase 1: Index for feedback cycle queries
+  @@index([pendingPayment]) // Phase 1: Index for pending payment queries
   @@index([projectId, deletedAt]) // Compound index for efficient project file queries
   @@index([uploadedBy, deletedAt]) // Compound index for efficient uploader file queries
   @@index([uploadedAt]) // Index for sorting by upload date
+  @@index([projectId, stage, deletedAt]) // Phase 1: Compound index for stage filtering
   @@map("files")
 }
 
@@ -156,4 +256,262 @@ model PasswordHistory {
   @@index([userId])
   @@index([userId, createdAt]) // Compound index for efficient history queries
   @@map("password_history")
+}
+
+// ============================================================================
+// PHASE 1: WORKFLOW SYSTEM MODELS
+// ============================================================================
+
+// Tabla intermedia para empleados asignados a proyectos
+model ProjectEmployee {
+  projectId  String   @map("project_id") @db.Uuid
+  employeeId String   @map("employee_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee User    @relation("AssignedEmployees", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, employeeId])
+  @@index([employeeId])
+  @@index([projectId])
+  @@map("project_employees")
+}
+
+// Ciclos de feedback para rastrear tiempo de trabajo
+model FeedbackCycle {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId  String    @map("project_id") @db.Uuid
+  employeeId String    @map("employee_id") @db.Uuid
+  startDate  DateTime  @map("start_date") @db.Timestamptz(6)
+  endDate    DateTime? @map("end_date") @db.Timestamptz(6)
+  status     String    @default("open") @db.VarChar(20) // open, submitted, approved, rejected
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee     User           @relation("EmployeeCycles", fields: [employeeId], references: [id], onDelete: Restrict)
+  files        File[]
+  feedback     Feedback[]
+  timeTracking TimeTracking[] // Phase 3: Time tracking
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([projectId, employeeId, status]) // Compound index for finding active cycles
+  @@map("feedback_cycles")
+}
+
+// Feedback creado por admin o cliente
+model Feedback {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  feedbackCycleId String   @map("feedback_cycle_id") @db.Uuid
+  projectId       String   @map("project_id") @db.Uuid
+  createdBy       String   @map("created_by") @db.Uuid
+  targetAudience  String   @map("target_audience") @db.VarChar(20) // client_space, employee_space
+  fileDocumentId  String?  @map("file_document_id") @db.Uuid // El contenido del feedback (opcional)
+  content         String?  @db.Text // Texto del feedback (alternativa a archivo)
+  sequenceInCycle Int      @map("sequence_in_cycle") // 1er, 2do, 3er feedback
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cycle   FeedbackCycle @relation(fields: [feedbackCycleId], references: [id], onDelete: Cascade)
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator User          @relation("CreatedFeedback", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  // Phase 3: Rejection Tracking
+  rejectedFileId      String? @map("rejected_file_id") @db.Uuid
+  isRejectionFeedback Boolean @default(false) @map("is_rejection_feedback")
+
+  rejectedFile       File?  @relation("RejectedFile", fields: [rejectedFileId], references: [id])
+  rejectionFeedbacks File[] @relation("RejectionLink") // No se usa explícitamente pero Prisma lo pide si es 1-n en el otro lado? No, File->Feedback es 1-1 opcional (lastRejection). feedback->file (rejection) es 1-1 o n-1? Feedback apunta a File rechazado. File apunta a ULTIMO feedback de rechazo.
+
+  @@index([feedbackCycleId])
+  @@index([projectId])
+  @@index([targetAudience])
+  @@index([createdBy])
+  @@index([projectId, targetAudience]) // Compound index for filtering feedback
+  @@map("feedback")
+}
+
+// ============================================================================
+// PHASE 2: PAYMENT SYSTEM MODELS
+// ============================================================================
+
+model Payment {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId      String        @map("project_id") @db.Uuid
+  type           PaymentType
+  fromUserId     String?       @map("from_user_id") @db.Uuid // Quién paga
+  toUserId       String?       @map("to_user_id") @db.Uuid // Quién recibe
+  amount         Decimal       @db.Decimal(10, 2)
+  paymentMethod  PaymentMethod @map("payment_method")
+  paymentDate    DateTime      @map("payment_date") @db.Date
+  receiptFileUrl String?       @map("receipt_file_url") @db.Text
+  status         PaymentStatus @default(PENDING_APPROVAL)
+  notes          String?       @db.Text
+  reviewedBy     String?       @map("reviewed_by") @db.Uuid // Admin who approved/rejected
+  reviewedAt     DateTime?     @map("reviewed_at") @db.Timestamptz(6)
+  rejectionReason String?      @map("rejection_reason") @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  invoiceId      String?       @map("invoice_id") @db.Uuid
+
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fromUser     User?          @relation("PaymentsFrom", fields: [fromUserId], references: [id], onDelete: Restrict)
+  toUser       User?          @relation("PaymentsTo", fields: [toUserId], references: [id], onDelete: Restrict)
+  invoice      Invoice?       @relation(fields: [invoiceId], references: [id])
+  relatedFiles PaymentFile[] // Archivos relacionados al pago
+  timeTracking TimeTracking[] // Phase 3: Time tracking
+
+  @@index([projectId])
+  @@index([type])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@map("payments")
+}
+
+// Relación many-to-many entre Payment y File (para pagos a empleados o facturas)
+model PaymentFile {
+  paymentId String @map("payment_id") @db.Uuid
+  fileId    String @map("file_id") @db.Uuid
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  file    File    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@id([paymentId, fileId])
+  @@map("payment_files")
+}
+
+// ============================================================================
+// PHASE 3: VERSIONING AND TRACKING MODELS
+// ============================================================================
+
+model TimeTracking {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String    @map("project_id") @db.Uuid
+  employeeId      String    @map("employee_id") @db.Uuid
+  feedbackCycleId String    @map("feedback_cycle_id") @db.Uuid
+  startTime       DateTime  @map("start_time") @db.Timestamptz(6)
+  endTime         DateTime? @map("end_time") @db.Timestamptz(6)
+  durationDays    Int?      @map("duration_days")
+  approvedFileId  String?   @map("approved_file_id") @db.Uuid
+  paymentId       String?   @map("payment_id") @db.Uuid
+  rejectionCount  Int       @default(0) @map("rejection_count")
+  versionCount    Int       @default(1) @map("version_count")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee     User          @relation("EmployeeTracking", fields: [employeeId], references: [id], onDelete: Restrict)
+  cycle        FeedbackCycle @relation(fields: [feedbackCycleId], references: [id], onDelete: Cascade)
+  approvedFile File?         @relation("TrackingApproved", fields: [approvedFileId], references: [id])
+  payment      Payment?      @relation(fields: [paymentId], references: [id])
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@index([feedbackCycleId])
+  @@map("time_tracking")
+}
+
+// PHASE 4: INVOICES & ANALYTICS
+// ============================================================================
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceNumber    String        @unique @map("invoice_number") @db.VarChar(50) // INV-2024-12-20-001
+  projectId        String        @map("project_id") @db.Uuid
+  clientId         String        @map("client_id") @db.Uuid
+  issueDate        DateTime      @map("issue_date") @db.Date
+  dueDate          DateTime      @map("due_date") @db.Date
+  paymentTermsDays Int           @map("payment_terms_days") // 15, 30, 60
+  subtotal         Decimal       @db.Decimal(10, 2)
+  taxAmount        Decimal       @default(0) @map("tax_amount") @db.Decimal(10, 2)
+  totalAmount      Decimal       @map("total_amount") @db.Decimal(10, 2)
+  amountPaid       Decimal       @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  status           InvoiceStatus @default(DRAFT)
+  invoiceFileUrl   String?       @map("invoice_file_url") @db.Text
+  notes            String?       @db.Text
+  sentToClientAt   DateTime?     @map("sent_to_client_at") @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  client   User      @relation("ClientInvoices", fields: [clientId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([projectId])
+  @@index([clientId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+// Employee Payments (Admin pays employees for their work on projects)
+enum EmployeePaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model EmployeePayment {
+  id              String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId       String                @map("project_id") @db.Uuid
+  employeeId      String                @map("employee_id") @db.Uuid
+  amount          Decimal               @db.Decimal(10, 2)
+  description     String?               @db.Text
+  paymentMethod   String                @map("payment_method") @db.VarChar(50) // "Transferencia Bancaria", "PayPal", etc
+  receiptFileId   String?               @map("receipt_file_id") @db.Uuid // Comprobante de pago
+  status          EmployeePaymentStatus @default(PENDING)
+  paymentDate     DateTime              @map("payment_date") @db.Date
+  createdBy       String                @map("created_by") @db.Uuid // Admin who created the payment
+  approvedBy      String?               @map("approved_by") @db.Uuid
+  approvedAt      DateTime?             @map("approved_at") @db.Timestamptz(6)
+  rejectionReason String?               @map("rejection_reason") @db.Text
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee     User    @relation("EmployeePayments", fields: [employeeId], references: [id], onDelete: Restrict)
+  creator      User    @relation("CreatedEmployeePayments", fields: [createdBy], references: [id], onDelete: Restrict)
+  approver     User?   @relation("ApprovedEmployeePayments", fields: [approvedBy], references: [id], onDelete: Restrict)
+  receiptFile  File?   @relation("PaymentReceipt", fields: [receiptFileId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([paymentDate])
+  @@map("employee_payments")
+}
+
+// PHASE 6: NOTIFICATIONS
+// ============================================================================
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType @default(INFO)
+  title     String           @db.VarChar(255)
+  message   String           @db.Text
+  link      String?          @db.Text
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+  @@map("notifications")
 }

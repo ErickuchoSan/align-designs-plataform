@@ -93,8 +93,9 @@ function Pagination({
     }
   }, []);
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  // Memoize item range calculations
+  const startItem = useMemo(() => (currentPage - 1) * itemsPerPage + 1, [currentPage, itemsPerPage]);
+  const endItem = useMemo(() => Math.min(currentPage * itemsPerPage, totalItems), [currentPage, itemsPerPage, totalItems]);
 
   return (
     <nav ref={paginationRef} className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg" aria-label="Pagination">

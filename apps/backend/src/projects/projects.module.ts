@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { ProjectsController } from './projects.controller';
 import { StorageModule } from '../storage/storage.module';
@@ -8,17 +8,38 @@ import { UsersModule } from '../users/users.module';
 import { CacheModule } from '../cache/cache.module';
 import { ProjectRepository } from './repositories/project.repository';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
+// Phase 1: Workflow services
+import { ProjectEmployeeService } from './services/project-employee.service';
+import { ProjectStatusService } from './services/project-status.service';
+// Phase 2: Invoice auto-generation
+import { InvoicesModule } from '../invoices/invoices.module';
 
 @Module({
-  imports: [StorageModule, AuditModule, AuthModule, UsersModule, CacheModule],
+  imports: [
+    StorageModule,
+    AuditModule,
+    AuthModule,
+    UsersModule,
+    CacheModule,
+    forwardRef(() => InvoicesModule),
+  ],
   providers: [
     ProjectsService,
     {
       provide: INJECTION_TOKENS.PROJECT_REPOSITORY,
       useClass: ProjectRepository,
     },
+    // Phase 1: Workflow services
+    ProjectEmployeeService,
+    ProjectStatusService,
   ],
   controllers: [ProjectsController],
-  exports: [INJECTION_TOKENS.PROJECT_REPOSITORY, ProjectsService],
+  exports: [
+    INJECTION_TOKENS.PROJECT_REPOSITORY,
+    ProjectsService,
+    // Phase 1: Export workflow services for use in other modules
+    ProjectEmployeeService,
+    ProjectStatusService,
+  ],
 })
 export class ProjectsModule {}

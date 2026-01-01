@@ -2864,8 +2864,8 @@ Agregar sección de enlaces a documentación:
 docker-compose up -d
 
 # Without Docker
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ### Production Deployment

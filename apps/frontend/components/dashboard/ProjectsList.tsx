@@ -96,7 +96,7 @@ export default function ProjectsList({
           <div className="flex gap-3 ml-auto">
             {showUsersButton && (
               <a
-                href="/dashboard/users"
+                href="/dashboard/admin/users"
                 className={`flex items-center gap-2 rounded-lg ${styles.usersButton} px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ export default function ProjectsList({
             )}
             {showCreateButton && (
               <button
-                onClick={() => projectsHook.setShowCreateModal(true)}
+                onClick={projectsHook.openCreateModal}
                 className={`flex items-center gap-2 rounded-lg ${styles.createButton} px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 ${theme === 'blue' ? 'hover:scale-105' : ''}`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,6 +179,7 @@ export default function ProjectsList({
           onSubmit: projectsHook.handleCreateProject,
           isSubmitting: projectsHook.creating,
           clients: projectsHook.clients,
+          employees: projectsHook.employees, // Phase 1: Pass employees
         }}
         editModal={{
           isConfirmOpen: projectsHook.showEditConfirm,

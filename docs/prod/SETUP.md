@@ -444,3 +444,13 @@ Una vez completada la infraestructura:
 4. ⏭️ Configurar despliegue
 
 Ver [DEVELOPMENT.md](./DEVELOPMENT.md) para continuar con el desarrollo del backend y frontend.
+
+
+## Despliegue a Producción
+
+Para desplegar los cambios de base de datos en producción, ejecuta:
+
+`ash
+npx prisma migrate deploy
+``n
+Esto aplicará la migración 'init_production' que contiene toda la estructura correcta.

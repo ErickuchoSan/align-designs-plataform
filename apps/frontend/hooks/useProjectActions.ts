@@ -3,11 +3,17 @@ import { api } from '@/lib/api';
 import { Project } from '@/types';
 import { getErrorMessage } from '@/lib/errors';
 import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
+import { logger } from '@/lib/logger';
 
 interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  // Phase 1: Workflow fields
+  employeeIds?: string[];
+  initialAmountRequired?: number;
+  deadlineDate?: string;
+  initialPaymentDeadline?: string;
 }
 
 interface UseProjectActionsParams {
@@ -28,12 +34,14 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (formData: ProjectFormData) => {
       try {
         setCreating(true);
+        logger.debug('Creating project', { formData });
         await api.post('/projects', formData);
         onSuccess?.('Project created successfully');
         refetchProjects?.();
         return true;
       } catch (err) {
         const errorMsg = getErrorMessage(err, 'Failed to create project');
+        logger.error('Failed to create project', err, { formData });
         onError?.(errorMsg);
         return false;
       } finally {

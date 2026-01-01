@@ -105,6 +105,16 @@ function ResetPasswordForm() {
               required
               showStrengthIndicator={true}
             />
+
+            {/* Password Requirements Checklist - shown only for new password */}
+            {formData.newPassword && (
+              <div className="mt-3">
+                <PasswordRequirements
+                  password={formData.newPassword}
+                  className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                />
+              </div>
+            )}
           </div>
 
           <div>
@@ -118,15 +128,31 @@ function ResetPasswordForm() {
               required
               showStrengthIndicator={false}
             />
+            {/* Show match indicator when user starts typing confirmation */}
+            {formData.confirmPassword && (
+              <p className={`mt-2 text-sm flex items-center gap-1 ${
+                formData.newPassword === formData.confirmPassword
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }`}>
+                {formData.newPassword === formData.confirmPassword ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Passwords match
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Passwords do not match
+                  </>
+                )}
+              </p>
+            )}
           </div>
-
-          {/* Password Requirements Checklist */}
-          {formData.newPassword && (
-            <PasswordRequirements
-              password={formData.newPassword}
-              className="bg-blue-50 border border-blue-200 rounded-lg p-4"
-            />
-          )}
 
           <button
             type="submit"

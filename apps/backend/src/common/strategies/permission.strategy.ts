@@ -93,6 +93,35 @@ export class ClientPermissionStrategy implements PermissionStrategy {
 }
 
 /**
+ * Permission strategy for EMPLOYEE role
+ * Employees have restricted access - verified by assignment in service layer
+ */
+export class EmployeePermissionStrategy implements PermissionStrategy {
+  verifyProjectAccess(
+    userId: string,
+    projectClientId: string,
+    errorMessage = 'You do not have permission to access this project',
+  ): void {
+    // Employee access is verified by checking project assignment in the service layer
+    // This is a placeholder - actual verification happens in ProjectsService
+  }
+
+  verifyUserAccess(
+    requestUserId: string,
+    targetUserId: string,
+    errorMessage = 'You do not have permission to access this user',
+  ): void {
+    if (requestUserId !== targetUserId) {
+      throw new ForbiddenException(errorMessage);
+    }
+  }
+
+  isAdmin(): boolean {
+    return false;
+  }
+}
+
+/**
  * Context class that uses a permission strategy
  * Provides a clean interface for permission checks
  */
@@ -112,6 +141,8 @@ export class PermissionContext {
         return new AdminPermissionStrategy();
       case Role.CLIENT:
         return new ClientPermissionStrategy();
+      case Role.EMPLOYEE:
+        return new EmployeePermissionStrategy();
       default:
         throw new Error(`Unsupported role: ${role}`);
     }

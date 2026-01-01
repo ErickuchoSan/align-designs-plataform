@@ -249,7 +249,7 @@ MINIO_USE_SSL=false
 **Reiniciar backend**:
 ```bash
 # Si está corriendo, detener con Ctrl+C y:
-npm run start:dev
+ppnpm start:dev
 ```
 
 **Verificar logs**:
@@ -465,7 +465,7 @@ ip link show eth0
 2. **Reiniciar backend** después de cambiar .env:
    ```bash
    # Detener (Ctrl+C) y reiniciar:
-   npm run start:dev
+   ppnpm start:dev
    ```
 
 3. **Verificar logs del backend**:

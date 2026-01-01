@@ -22,11 +22,11 @@ Backend API construido con NestJS 10.
 **Comandos:**
 ```bash
 # Desde la raíz
-npm run dev:backend      # Desarrollo
-npm run build:backend    # Build
-npm run start:backend    # Producción
-npm run prisma:generate  # Generar Prisma Client
-npm run prisma:studio    # Abrir Prisma Studio
+pnpm dev:backend      # Desarrollo
+pnpm build:backend    # Build
+ppnpm start:backend    # Producción
+pnpm prisma:generate  # Generar Prisma Client
+pnpm prisma:studio    # Abrir Prisma Studio
 ```
 
 **Documentación:** Ver [backend/README.md](backend/README.md)
@@ -49,9 +49,9 @@ Frontend web construido con Next.js 15.
 **Comandos:**
 ```bash
 # Desde la raíz
-npm run dev:frontend     # Desarrollo
-npm run build:frontend   # Build
-npm run start:frontend   # Producción
+pnpm dev:frontend     # Desarrollo
+pnpm build:frontend   # Build
+ppnpm start:frontend   # Producción
 ```
 
 **Documentación:** Ver [frontend/README.md](frontend/README.md)
@@ -63,7 +63,7 @@ npm run start:frontend   # Producción
 ### Iniciar Todas las Apps
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Esto inicia backend (4000) y frontend (3000) simultáneamente.
@@ -72,10 +72,10 @@ Esto inicia backend (4000) y frontend (3000) simultáneamente.
 
 ```bash
 # Solo backend
-npm run dev:backend
+pnpm dev:backend
 
 # Solo frontend
-npm run dev:frontend
+pnpm dev:frontend
 ```
 
 ## 📝 Agregar Nueva App
@@ -93,7 +93,7 @@ Para agregar una nueva aplicación al monorepo:
 
 3. Instala dependencias desde la raíz:
    ```bash
-   npm install --workspace=apps/nueva-app <paquete>
+   pnpm install --workspace=apps/nueva-app <paquete>
    ```
 
 4. Agrega scripts en el `package.json` raíz si es necesario.

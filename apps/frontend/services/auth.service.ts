@@ -29,7 +29,7 @@ export interface VerifyOtpCredentials {
  * Reduces coupling between UI components and authentication logic
  */
 export class AuthService {
-  private static readonly BASE_URL = '/api/v1/auth';
+  private static readonly BASE_URL = '/auth';
 
   /**
    * Login with email and password
