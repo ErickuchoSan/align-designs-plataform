@@ -34,6 +34,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Service logs (Windows auto-start)
+logs/monorepo-service.log
+logs/monorepo-service-error.log
+
 # OS files
 .DS_Store
 Thumbs.db
