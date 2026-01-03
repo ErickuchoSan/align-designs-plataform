@@ -21,17 +21,19 @@ export class InvoicesService {
     async create(data: CreateInvoiceDto): Promise<Invoice> {
         const invoiceNumber = await this.generateInvoiceNumber();
 
-        return this.prisma.invoice.create({
+        const invoice = await this.prisma.invoice.create({
             data: {
                 ...data,
                 invoiceNumber,
                 status: InvoiceStatus.DRAFT,
             },
         });
+
+        return this.transformInvoiceDecimals(invoice) as Invoice;
     }
 
     async findAll(filters: { projectId?: string; clientId?: string }) {
-        return this.prisma.invoice.findMany({
+        const invoices = await this.prisma.invoice.findMany({
             where: filters,
             include: {
                 project: { select: { name: true } },
@@ -39,6 +41,22 @@ export class InvoicesService {
             },
             orderBy: { createdAt: 'desc' },
         });
+
+        // Transform Decimal fields to numbers for JSON serialization
+        return invoices.map(inv => this.transformInvoiceDecimals(inv));
+    }
+
+    /**
+     * Transform Prisma Decimal fields to numbers for proper JSON serialization
+     */
+    private transformInvoiceDecimals(invoice: any): any {
+        return {
+            ...invoice,
+            subtotal: Number(invoice.subtotal),
+            taxAmount: Number(invoice.taxAmount),
+            totalAmount: Number(invoice.totalAmount),
+            amountPaid: Number(invoice.amountPaid),
+        };
     }
 
     async findOne(id: string): Promise<Invoice> {
@@ -52,7 +70,7 @@ export class InvoicesService {
         });
 
         if (!invoice) throw new NotFoundException('Invoice not found');
-        return invoice;
+        return this.transformInvoiceDecimals(invoice) as Invoice;
     }
 
     async updateStatus(id: string, status: InvoiceStatus): Promise<Invoice> {
@@ -60,10 +78,11 @@ export class InvoicesService {
         if (status === InvoiceStatus.SENT) {
             data.sentToClientAt = new Date();
         }
-        return this.prisma.invoice.update({
+        const invoice = await this.prisma.invoice.update({
             where: { id },
             data,
         });
+        return this.transformInvoiceDecimals(invoice) as Invoice;
     }
 
     /**
@@ -149,7 +168,7 @@ export class InvoicesService {
             // Admin can manually resend later
         }
 
-        return invoice;
+        return this.transformInvoiceDecimals(invoice) as Invoice;
     }
 
     async generateInvoiceNumber(): Promise<string> {
