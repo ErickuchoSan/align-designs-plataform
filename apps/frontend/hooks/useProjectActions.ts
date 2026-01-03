@@ -54,7 +54,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (projectId: string, formData: ProjectFormData) => {
       try {
         setEditing(true);
-        await api.patch(`/ projects / ${projectId} `, formData);
+        await api.patch(`/projects/${projectId}`, formData);
         onSuccess?.('Project updated successfully');
         refetchProjects?.();
         return true;
@@ -73,7 +73,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (projectId: string) => {
       try {
         setDeleting(true);
-        await api.delete(`/ projects / ${projectId} `);
+        await api.delete(`/projects/${projectId}`);
         onSuccess?.('Project deleted successfully');
         refetchProjects?.();
         return true;

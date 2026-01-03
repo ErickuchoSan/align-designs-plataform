@@ -52,8 +52,8 @@ export function useProjectFiles(projectId: string) {
     try {
       // Parallelize API calls for better performance
       const [projectRes, typesRes] = await Promise.all([
-        api.get(`/ projects / ${projectId} `),
-        api.get(`/ files / project / ${projectId}/types`),
+        api.get(`/projects/${projectId}`),
+        api.get(`/files/project/${projectId}/types`),
       ]);
 
       setProject(projectRes.data);
