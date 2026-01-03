@@ -4,6 +4,8 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, Invoice, NotificationType } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationsService } from '../notifications/notifications.service';
+import { InvoicePdfService } from './invoice-pdf.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class InvoicesService {
@@ -12,6 +14,8 @@ export class InvoicesService {
     constructor(
         private prisma: PrismaService,
         private readonly notificationsService: NotificationsService,
+        private readonly invoicePdfService: InvoicePdfService,
+        private readonly emailService: EmailService,
     ) { }
 
     async create(data: CreateInvoiceDto): Promise<Invoice> {
@@ -110,6 +114,40 @@ export class InvoicesService {
         this.logger.log(
             `Auto-generated invoice ${invoiceNumber} for project ${projectId}, amount: $${amount}`,
         );
+
+        // Generate PDF and send email to client
+        try {
+            // Get full invoice data with all relations for PDF generation
+            const fullInvoice = await this.findOne(invoice.id);
+
+            // Generate PDF
+            const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(fullInvoice);
+
+            // Send email with PDF attachment
+            const clientName = `${invoice.client.firstName} ${invoice.client.lastName}`;
+            await this.emailService.sendInvoiceEmail(
+                invoice.client.email,
+                clientName,
+                invoiceNumber,
+                amount,
+                dueDate,
+                pdfBuffer,
+            );
+
+            // Update invoice status to SENT
+            await this.updateStatus(invoice.id, InvoiceStatus.SENT);
+
+            this.logger.log(
+                `Invoice ${invoiceNumber} PDF generated and email sent to ${invoice.client.email}`,
+            );
+        } catch (error) {
+            this.logger.error(
+                `Failed to generate PDF or send email for invoice ${invoiceNumber}`,
+                error instanceof Error ? error.stack : String(error),
+            );
+            // Don't throw - invoice is created, email is a nice-to-have
+            // Admin can manually resend later
+        }
 
         return invoice;
     }

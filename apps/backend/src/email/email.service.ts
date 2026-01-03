@@ -434,6 +434,123 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Send invoice email with PDF attachment
+   */
+  async sendInvoiceEmail(
+    to: string,
+    clientName: string,
+    invoiceNumber: string,
+    amount: number,
+    dueDate: Date,
+    pdfBuffer: Buffer,
+  ): Promise<void> {
+    try {
+      const formattedAmount = amount.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      });
+
+      const formattedDueDate = dueDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      const emailContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">Align Designs</h1>
+            <p style="color: #d4af37; margin: 10px 0 0 0; font-size: 14px;">Professional Design Solutions</p>
+          </div>
+
+          <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e0e0e0; border-top: none;">
+            <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 24px;">New Invoice</h2>
+
+            <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+              Dear ${escapeHtml(clientName)},
+            </p>
+
+            <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+              Thank you for choosing Align Designs! We've generated a new invoice for your project.
+            </p>
+
+            <div style="background: #f8f9fa; border-left: 4px solid #d4af37; padding: 20px; margin: 30px 0; border-radius: 4px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">Invoice Number:</td>
+                  <td style="padding: 8px 0; color: #1e3a5f; font-weight: bold; font-size: 14px; text-align: right;">${escapeHtml(invoiceNumber)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">Amount Due:</td>
+                  <td style="padding: 8px 0; color: #1e3a5f; font-weight: bold; font-size: 18px; text-align: right;">${formattedAmount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">Due Date:</td>
+                  <td style="padding: 8px 0; color: #dc3545; font-weight: bold; font-size: 14px; text-align: right;">${formattedDueDate}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+              Please find your detailed invoice attached to this email as a PDF document. You can view, download, and print it for your records.
+            </p>
+
+            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin: 20px 0;">
+              <p style="color: #856404; margin: 0; font-size: 14px;">
+                <strong>⚠️ Payment Instructions:</strong><br>
+                Please include your invoice number <strong>${escapeHtml(invoiceNumber)}</strong> in the payment reference.
+              </p>
+            </div>
+
+            <p style="color: #666666; font-size: 14px; line-height: 1.6; margin-top: 30px;">
+              If you have any questions about this invoice, please don't hesitate to contact us at
+              <a href="mailto:invoices@aligndesigns.com" style="color: #d4af37; text-decoration: none;">invoices@aligndesigns.com</a>
+              or call us at <strong>+1 (415) 555-0123</strong>.
+            </p>
+
+            <p style="color: #333333; font-size: 16px; line-height: 1.6; margin-top: 30px;">
+              Thank you for your business!
+            </p>
+
+            <p style="color: #666666; font-size: 14px;">
+              Best regards,<br>
+              <strong style="color: #1e3a5f;">The Align Designs Team</strong>
+            </p>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0; border-top: none;">
+            <p style="color: #999999; font-size: 12px; margin: 0;">
+              Align Designs | 1234 Creative Avenue, Suite 500, San Francisco, CA 94102
+            </p>
+            <p style="color: #999999; font-size: 12px; margin: 5px 0 0 0;">
+              <a href="https://www.aligndesigns.com" style="color: #d4af37; text-decoration: none;">www.aligndesigns.com</a>
+            </p>
+          </div>
+        </div>
+      `;
+
+      await this.transporter.sendMail({
+        from: this.configService.get<string>('EMAIL_FROM'),
+        to,
+        subject: `Invoice ${invoiceNumber} from Align Designs - ${formattedAmount} Due`,
+        html: emailContent,
+        attachments: [
+          {
+            filename: `Invoice-${invoiceNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
+
+      this.logger.log(`Invoice email sent successfully to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send invoice email to ${to}:`, error);
+      throw new InternalServerErrorException('Failed to send invoice email');
+    }
+  }
+
+  /**
    * Check if email service is healthy
    */
   async checkHealth(): Promise<boolean> {

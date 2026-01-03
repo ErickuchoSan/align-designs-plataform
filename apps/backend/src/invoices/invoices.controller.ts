@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards, Res, StreamableFile } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -7,11 +7,16 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { Role, InvoiceStatus } from '@prisma/client';
+import { InvoicePdfService } from './invoice-pdf.service';
+import type { Response } from 'express';
 
 @Controller('invoices')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class InvoicesController {
-    constructor(private readonly invoicesService: InvoicesService) { }
+    constructor(
+        private readonly invoicesService: InvoicesService,
+        private readonly invoicePdfService: InvoicePdfService,
+    ) { }
 
     @Post()
     @Roles(Role.ADMIN)
@@ -47,5 +52,26 @@ export class InvoicesController {
     @Roles(Role.ADMIN)
     updateStatus(@Param('id') id: string, @Body('status') status: InvoiceStatus) {
         return this.invoicesService.updateStatus(id, status);
+    }
+
+    @Get(':id/pdf')
+    async getInvoicePdf(
+        @Param('id') id: string,
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        // Get invoice with all relations
+        const invoice = await this.invoicesService.findOne(id);
+
+        // Generate PDF
+        const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoice);
+
+        // Set headers for PDF download
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `inline; filename="Invoice-${invoice.invoiceNumber}.pdf"`,
+            'Content-Length': pdfBuffer.length,
+        });
+
+        return new StreamableFile(pdfBuffer);
     }
 }
