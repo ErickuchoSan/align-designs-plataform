@@ -246,4 +246,34 @@ export class ProjectsService {
     const response = await api.get<ProjectStagesResponse>(`${this.BASE_URL}/${projectId}/stages`);
     return response.data;
   }
+
+  /**
+   * Check if project has data before deletion
+   * Returns warnings about files, payments, invoices, and employees
+   */
+  static async checkDeletionSafety(projectId: string): Promise<{
+    projectId: string;
+    projectName: string;
+    hasData: boolean;
+    details: {
+      files: boolean;
+      employees: boolean;
+      invoices: boolean;
+      payments: boolean;
+    };
+    counts: {
+      files: number;
+      employees: number;
+      invoices: number;
+      payments: number;
+    };
+    warnings: string[];
+    client: {
+      id: string;
+      name: string;
+    } | null;
+  }> {
+    const response = await api.get(`${this.BASE_URL}/${projectId}/deletion-check`);
+    return response.data;
+  }
 }

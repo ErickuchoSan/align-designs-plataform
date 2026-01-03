@@ -628,4 +628,19 @@ export class ProjectsController {
   ) {
     return this.projectsService.getAccessibleStages(projectId, user.role);
   }
+
+  /**
+   * Check if project has data before deletion
+   */
+  @Get(':id/deletion-check')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Check project deletion safety',
+    description: 'Returns information about project data to warn admin before deletion',
+  })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiResponse({ status: 200, description: 'Deletion check completed' })
+  async checkProjectDeletion(@Param('id') projectId: string) {
+    return this.projectsService.checkProjectDeletionSafety(projectId);
+  }
 }

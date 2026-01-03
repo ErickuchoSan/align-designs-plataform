@@ -105,7 +105,8 @@
       "Bash(powershell -Command \"Stop-Service AlignDesignsMonorepo -Force; Get-Service AlignDesignsMonorepo\")",
       "Bash(where.exe:*)",
       "Bash(grep:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(pnpm run build:*)"
     ],
     "deny": [],
     "ask": []
