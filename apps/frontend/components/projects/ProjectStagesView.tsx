@@ -126,6 +126,25 @@ function ProjectStagesView({
     );
   };
 
+  // IMPORTANT: All hooks must be called before any conditional returns
+  // Memoize current stage lookup
+  const currentStage = useMemo(
+    () => stages.find((s) => s.stage === selectedStage),
+    [stages, selectedStage]
+  );
+
+  // Filter files by selected stage - memoized to avoid filtering on every render
+  const stageFiles = useMemo(
+    () => files.filter((file) => file.stage === selectedStage),
+    [files, selectedStage]
+  );
+
+  // Memoize stage click handler
+  const handleStageClick = useCallback((stage: Stage) => {
+    setSelectedStage(stage);
+  }, []);
+
+  // Conditional renders AFTER all hooks
   if (loading) {
     return <PageLoader text="Loading stages..." />;
   }
@@ -145,22 +164,6 @@ function ProjectStagesView({
       </div>
     );
   }
-
-  const currentStage = useMemo(
-    () => stages.find((s) => s.stage === selectedStage),
-    [stages, selectedStage]
-  );
-
-  // Filter files by selected stage - memoized to avoid filtering on every render
-  const stageFiles = useMemo(
-    () => files.filter((file) => file.stage === selectedStage),
-    [files, selectedStage]
-  );
-
-  // Memoize stage click handler
-  const handleStageClick = useCallback((stage: Stage) => {
-    setSelectedStage(stage);
-  }, []);
 
   return (
     <div className="space-y-6">
