@@ -16,6 +16,11 @@ export const EmployeePaymentsService = {
     return response.data;
   },
 
+  // Alias for getPayments - some components use this name
+  async getByProject(projectId: string): Promise<EmployeePayment[]> {
+    return this.getPayments(projectId);
+  },
+
   async createPayment(projectId: string, data: Partial<EmployeePayment>): Promise<EmployeePayment> {
     const response = await api.post(`/employee-payments/${projectId}`, data);
     return response.data;
