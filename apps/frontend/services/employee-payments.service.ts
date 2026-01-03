@@ -12,7 +12,9 @@ export interface EmployeePayment {
 
 export const EmployeePaymentsService = {
   async getPayments(projectId: string): Promise<EmployeePayment[]> {
-    const response = await api.get(`/employee-payments/project/${projectId}`);
+    const response = await api.get('/employee-payments', {
+      params: { projectId }
+    });
     return response.data;
   },
 
