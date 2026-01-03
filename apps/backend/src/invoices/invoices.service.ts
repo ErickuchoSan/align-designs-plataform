@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, Invoice, NotificationType } from '@prisma/client';
@@ -19,6 +19,27 @@ export class InvoicesService {
     ) { }
 
     async create(data: CreateInvoiceDto): Promise<Invoice> {
+        // Check if there are pending invoices for this project
+        const pendingInvoices = await this.prisma.invoice.findMany({
+            where: {
+                projectId: data.projectId,
+                status: {
+                    in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.DRAFT],
+                },
+            },
+        });
+
+        // Check if any pending invoice has an unpaid balance
+        const hasUnpaidInvoice = pendingInvoices.some(
+            inv => Number(inv.totalAmount) > Number(inv.amountPaid)
+        );
+
+        if (hasUnpaidInvoice) {
+            throw new BadRequestException(
+                'Cannot create a new invoice while there are unpaid invoices for this project. Please ensure all previous invoices are fully paid before generating a new one.'
+            );
+        }
+
         const invoiceNumber = await this.generateInvoiceNumber();
 
         const invoice = await this.prisma.invoice.create({
@@ -210,6 +231,25 @@ export class InvoicesService {
             totalOverdue,
             totalRevenue: revenue._sum.totalAmount || 0
         };
+    }
+
+    /**
+     * Check if a project has any unpaid invoices
+     * Returns true if there are invoices with pending balance
+     */
+    async hasUnpaidInvoices(projectId: string): Promise<boolean> {
+        const pendingInvoices = await this.prisma.invoice.findMany({
+            where: {
+                projectId,
+                status: {
+                    in: [InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.DRAFT],
+                },
+            },
+        });
+
+        return pendingInvoices.some(
+            inv => Number(inv.totalAmount) > Number(inv.amountPaid)
+        );
     }
 
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)

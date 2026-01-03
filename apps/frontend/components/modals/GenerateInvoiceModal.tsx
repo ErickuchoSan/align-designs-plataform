@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { InvoicesService } from '@/services/invoices.service';
 import { CreateInvoiceDto } from '@/types/invoice'; // We might need to create this type if it doesn't exist
 import { logger } from '@/lib/logger';
@@ -20,12 +20,33 @@ export default function GenerateInvoiceModal({
 }: GenerateInvoiceModalProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasUnpaid, setHasUnpaid] = useState(false);
+    const [checkingUnpaid, setCheckingUnpaid] = useState(true);
 
     // Form State
     const [amount, setAmount] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [description, setDescription] = useState('');
     const [items, setItems] = useState([{ description: '', quantity: 1, unitPrice: 0 }]);
+
+    // Check for unpaid invoices when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            checkForUnpaidInvoices();
+        }
+    }, [isOpen, projectId]);
+
+    const checkForUnpaidInvoices = async () => {
+        try {
+            setCheckingUnpaid(true);
+            const unpaid = await InvoicesService.hasUnpaidInvoices(projectId);
+            setHasUnpaid(unpaid);
+        } catch (err) {
+            logger.error('Error checking unpaid invoices:', err);
+        } finally {
+            setCheckingUnpaid(false);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -81,11 +102,38 @@ export default function GenerateInvoiceModal({
 
                 {/* Body */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {error && (
-                        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
-                            {error}
+                    {checkingUnpaid ? (
+                        <div className="flex justify-center items-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800"></div>
                         </div>
-                    )}
+                    ) : hasUnpaid ? (
+                        <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg">
+                            <div className="flex items-start gap-3">
+                                <svg className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div className="flex-1">
+                                    <h4 className="font-semibold text-amber-900 mb-2">Cannot Generate New Invoice</h4>
+                                    <p className="text-sm text-amber-800 mb-3">
+                                        There are still unpaid invoices for this project. Please ensure all previous invoices are fully paid before generating a new one.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {error && (
+                                <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
+                                    {error}
+                                </div>
+                            )}
 
                     <div>
                         <label className="block text-sm font-medium text-stone-700 mb-1">
@@ -155,6 +203,8 @@ export default function GenerateInvoiceModal({
                             )}
                         </button>
                     </div>
+                        </>
+                    )}
                 </form>
             </div>
         </div>

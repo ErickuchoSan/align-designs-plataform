@@ -42,6 +42,13 @@ export class InvoicesController {
         return this.invoicesService.getMetrics();
     }
 
+    @Get('project/:projectId/has-unpaid')
+    @Roles(Role.ADMIN)
+    async checkUnpaidInvoices(@Param('projectId') projectId: string) {
+        const hasUnpaid = await this.invoicesService.hasUnpaidInvoices(projectId);
+        return { hasUnpaidInvoices: hasUnpaid };
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         // TODO: Add ownership check for clients

@@ -212,4 +212,12 @@ export const InvoicesService = {
             invoiceCache.clear();
         }
     },
+
+    /**
+     * Check if a project has any unpaid invoices
+     */
+    async hasUnpaidInvoices(projectId: string): Promise<boolean> {
+        const response = await api.get<{ hasUnpaidInvoices: boolean }>(`/invoices/project/${projectId}/has-unpaid`);
+        return response.data.hasUnpaidInvoices;
+    },
 };
