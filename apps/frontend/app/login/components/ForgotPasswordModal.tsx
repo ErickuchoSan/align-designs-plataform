@@ -7,7 +7,7 @@ import EmailInput from '@/app/components/EmailInput';
 import PasswordInput from '@/app/components/PasswordInput';
 import PasswordRequirements from '@/app/components/PasswordRequirements';
 import { api } from '@/lib/api';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
 import { OTP } from '@/lib/constants/ui.constants';
 
@@ -63,7 +63,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       await api.post('/auth/forgot-password', { email });
       setStep('otp');
     } catch (error) {
-      setError(getErrorMessage(error, 'Error sending code'));
+      setError(handleApiError(error, 'Error sending code'));
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       });
       setSuccess(true);
     } catch (error) {
-      setError(getErrorMessage(error, 'Error resetting password'));
+      setError(handleApiError(error, 'Error resetting password'));
     } finally {
       setLoading(false);
     }
@@ -256,11 +256,10 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                 />
                 {/* Show match indicator when user starts typing confirmation */}
                 {confirmPassword && (
-                  <p className={`mt-2 text-sm flex items-center gap-1 ${
-                    newPassword === confirmPassword
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}>
+                  <p className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                    }`}>
                     {newPassword === confirmPassword ? (
                       <>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

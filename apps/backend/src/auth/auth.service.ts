@@ -333,7 +333,9 @@ export class AuthService {
     // If user doesn't exist, return generic response
     const response = user ? {
       hasPassword: !!user.passwordHash,
-      requiresPasswordSetup: !user.passwordHash && user.role === 'ADMIN',
+      // Only CLIENT and EMPLOYEE need password setup flow
+      // ADMIN is always created with password via seed
+      requiresPasswordSetup: !user.passwordHash && (user.role === 'CLIENT' || user.role === 'EMPLOYEE'),
     } : {
       hasPassword: false,
       requiresPasswordSetup: false,

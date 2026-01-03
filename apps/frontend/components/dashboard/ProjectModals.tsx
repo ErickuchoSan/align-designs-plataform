@@ -221,7 +221,7 @@ function ProjectModals({
                 ...createModal.formData,
                 initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
               })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               placeholder="0.00"
             />
           </div>
@@ -372,7 +372,7 @@ function ProjectModals({
                 ...editModal.formData,
                 initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
               })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               placeholder="0.00"
             />
           </div>

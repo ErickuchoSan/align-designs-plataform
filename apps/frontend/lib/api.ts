@@ -200,6 +200,15 @@ api.interceptors.request.use(
 function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, willRedirect = false): void {
   if (typeof window === 'undefined') return;
 
+  // Only show detailed error modal in developer mode
+  // Regular users will see simple error messages inline
+  const isDevMode = localStorage.getItem('devMode') === 'true';
+  if (!isDevMode && !willRedirect) {
+    // Skip modal for non-dev users (they see inline errors)
+    // Exception: Always show modal if redirecting (auth errors)
+    return;
+  }
+
   const errorData = error.response?.data as any;
   const errorMessage = errorData?.message || errorData?.error || error.message || 'Unknown error occurred';
   const statusCode = error.response?.status || 'N/A';
@@ -222,7 +231,7 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
     message: errorMessage
   });
 
-  // Show error modal using the global manager
+  // Show error modal using the global manager with full error details
   errorModalManager.show({
     title: `Request Failed (${statusCode})`,
     message: errorMessage,
@@ -231,6 +240,12 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
     method,
     statusCode,
     willRedirect,
+    // Pass full error object and config for dev mode display
+    errorObject: error,
+    requestConfig: config,
+    responseData: error.response?.data,
+    stackTrace: error.stack,
+    errorCode: error.code,
     onClose: willRedirect ? () => {
       // Clear auth data and redirect to login
       AuthStorage.clearAuthData();
@@ -326,8 +341,8 @@ api.interceptors.response.use(
 
     // Handle other 4xx errors (400, 403, 404, 422, etc.) - show modal but don't redirect
     if (typeof window !== 'undefined' && error.response &&
-        error.response.status >= 400 && error.response.status < 500 &&
-        error.response.status !== 401 && !config?._errorShown) {
+      error.response.status >= 400 && error.response.status < 500 &&
+      error.response.status !== 401 && !config?._errorShown) {
 
       // Mark error as shown to prevent duplicate modals on retry
       if (config) {
@@ -339,7 +354,7 @@ api.interceptors.response.use(
 
     // Handle 5xx server errors - show modal before retrying
     if (typeof window !== 'undefined' && error.response &&
-        error.response.status >= 500 && !config?._errorShown) {
+      error.response.status >= 500 && !config?._errorShown) {
 
       const willRetry = config && (config.retryCount || 0) < MAX_RETRIES;
       const serverMessage = (error.response.data as any)?.message || 'The server encountered an error.';

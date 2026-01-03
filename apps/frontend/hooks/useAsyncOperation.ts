@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 
 export interface AsyncOperationOptions {
   /** Success message to display */
@@ -31,7 +31,7 @@ export interface AsyncOperationActions {
   reset: () => void;
 }
 
-export interface UseAsyncOperationReturn extends AsyncOperationState, AsyncOperationActions {}
+export interface UseAsyncOperationReturn extends AsyncOperationState, AsyncOperationActions { }
 
 /**
  * Reusable hook for handling async operations with loading/error/success states
@@ -135,7 +135,7 @@ export function useAsyncOperation(): UseAsyncOperationReturn {
 
         return result;
       } catch (err) {
-        const errorMessage = getErrorMessage(err, errorMessagePrefix);
+        const errorMessage = handleApiError(err, errorMessagePrefix);
         setError(errorMessage);
 
         // Execute error callback

@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -69,8 +70,9 @@ export class UsersController {
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
+    @Headers('origin') origin: string,
   ) {
-    const newUser = await this.usersService.createUser(createUserDto);
+    const newUser = await this.usersService.createUser(createUserDto, origin);
 
     if (!newUser) {
       throw new Error('Failed to create user');
@@ -150,6 +152,50 @@ export class UsersController {
       user.userId,
       user.role,
     );
+  }
+
+  @Put(':id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Update user by ID',
+    description: 'Admin-only: Update any user by their ID',
+  })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 409, description: 'Phone number already registered' })
+  @Throttle({ default: RATE_LIMIT_USERS.UPDATE })
+  @HttpCode(HttpStatus.OK)
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const updatedUser = await this.usersService.update(
+      id,
+      updateUserDto,
+      user.userId,
+      user.role,
+    );
+
+    // Audit log for user update (non-blocking)
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.USER_UPDATE,
+        resourceType: 'user',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: { ...updateUserDto },
+      },
+      'user update',
+    );
+
+    return updatedUser;
   }
 
   @Get(':id')

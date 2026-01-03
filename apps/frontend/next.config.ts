@@ -30,7 +30,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
               `img-src 'self' data: blob: https: http: ${minioEndpoint}`,
               "font-src 'self' data:",
-              "connect-src 'self' http://localhost:4000 http://aligndesigns-platform.local", // API endpoints
+              // connect-src uses 'self' which automatically works with the current origin (localhost, ngrok, production)
+              `connect-src 'self' ${minioEndpoint}`,
               `frame-src 'self' ${minioEndpoint}`, // Allow MinIO iframes for receipt preview
               "frame-ancestors 'none'",
               "base-uri 'self'",

@@ -2,12 +2,12 @@
 import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import Loader, { ButtonLoader } from '@/app/components/Loader';
 import PasswordInput from '@/app/components/PasswordInput';
 import PasswordRequirements from '@/app/components/PasswordRequirements';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -44,7 +44,7 @@ function ResetPasswordForm() {
       setSuccess(true);
       setTimeout(() => router.push('/login'), MESSAGE_DURATION.SUCCESS);
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
@@ -130,11 +130,10 @@ function ResetPasswordForm() {
             />
             {/* Show match indicator when user starts typing confirmation */}
             {formData.confirmPassword && (
-              <p className={`mt-2 text-sm flex items-center gap-1 ${
-                formData.newPassword === formData.confirmPassword
-                  ? 'text-green-600'
-                  : 'text-red-600'
-              }`}>
+              <p className={`mt-2 text-sm flex items-center gap-1 ${formData.newPassword === formData.confirmPassword
+                ? 'text-green-600'
+                : 'text-red-600'
+                }`}>
                 {formData.newPassword === formData.confirmPassword ? (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

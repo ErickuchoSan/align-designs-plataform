@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { Project } from '@/types';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 import { logger } from '@/lib/logger';
 
@@ -40,7 +39,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
         refetchProjects?.();
         return true;
       } catch (err) {
-        const errorMsg = getErrorMessage(err, 'Failed to create project');
+        const errorMsg = handleApiError(err, 'Failed to create project');
         logger.error('Failed to create project', err, { formData });
         onError?.(errorMsg);
         return false;
@@ -55,12 +54,12 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (projectId: string, formData: ProjectFormData) => {
       try {
         setEditing(true);
-        await api.patch(`/projects/${projectId}`, formData);
+        await api.patch(`/ projects / ${projectId} `, formData);
         onSuccess?.('Project updated successfully');
         refetchProjects?.();
         return true;
       } catch (err) {
-        const errorMsg = getErrorMessage(err, 'Failed to update project');
+        const errorMsg = handleApiError(err, 'Failed to update project');
         onError?.(errorMsg);
         return false;
       } finally {
@@ -74,12 +73,12 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (projectId: string) => {
       try {
         setDeleting(true);
-        await api.delete(`/projects/${projectId}`);
+        await api.delete(`/ projects / ${projectId} `);
         onSuccess?.('Project deleted successfully');
         refetchProjects?.();
         return true;
       } catch (err) {
-        const errorMsg = getErrorMessage(err, 'Failed to delete project');
+        const errorMsg = handleApiError(err, 'Failed to delete project');
         onError?.(errorMsg);
         return false;
       } finally {

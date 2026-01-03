@@ -11,8 +11,8 @@ import PhoneInput from '@/app/components/PhoneInput';
 import PasswordInput from '@/app/components/PasswordInput';
 import PasswordRequirements from '@/app/components/PasswordRequirements';
 import DashboardHeader from '@/app/components/DashboardHeader';
+import { handleApiError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-import { getErrorMessage } from '@/lib/errors';
 import { useAutoResetMessage } from '@/hooks/useAutoResetMessage';
 
 export default function ProfilePage() {
@@ -35,6 +35,9 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Developer mode (only for ADMIN)
+  const [isDevMode, setIsDevMode] = useState(false);
+
   // Auto-reset success messages
   useAutoResetMessage(success, setSuccess);
 
@@ -46,6 +49,12 @@ export default function ProfilePage() {
         lastName: user.lastName,
         phone: user.phone || '',
       });
+
+      // Load dev mode preference (only for ADMIN)
+      if (user.role === 'ADMIN') {
+        const savedDevMode = localStorage.getItem('devMode') === 'true';
+        setIsDevMode(savedDevMode);
+      }
     }
   }, [user]);
 
@@ -63,7 +72,7 @@ export default function ProfilePage() {
       // Update user in context (which also updates localStorage)
       updateUser(profileData);
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
       logger.error('Error updating profile:', err);
     } finally {
@@ -82,7 +91,7 @@ export default function ProfilePage() {
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowSuccessModal(true);
     } catch (err) {
-      const errorMessage = getErrorMessage(err);
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
       logger.error('Error changing password:', err);
     } finally {
@@ -135,7 +144,8 @@ export default function ProfilePage() {
             <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-navy-900">Personal Information</h2>
-                {!editingProfile && (
+                {/* Only ADMIN can edit their own profile */}
+                {!editingProfile && user.role === 'ADMIN' && (
                   <button
                     onClick={() => setEditingProfile(true)}
                     className="text-navy-700 hover:text-navy-900 font-medium hover:underline"
@@ -167,11 +177,10 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">Role</label>
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      user.role === 'ADMIN'
-                        ? 'bg-gold-100 text-gold-800'
-                        : 'bg-navy-100 text-navy-800'
-                    }`}>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${user.role === 'ADMIN'
+                      ? 'bg-gold-100 text-gold-800'
+                      : 'bg-navy-100 text-navy-800'
+                      }`}>
                       {user.role === 'ADMIN' ? 'Administrator' : 'Client'}
                     </span>
                   </div>
@@ -247,6 +256,36 @@ export default function ProfilePage() {
                 Change Password
               </button>
             </div>
+
+            {/* Developer Mode Card - Only for ADMIN */}
+            {user.role === 'ADMIN' && (
+              <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
+                <h2 className="text-2xl font-bold text-navy-900 mb-4">Developer Settings</h2>
+                <p className="text-stone-700 mb-6">
+                  Enable detailed error messages for debugging. This will show technical details instead of user-friendly messages.
+                </p>
+                <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200">
+                  <div>
+                    <h3 className="text-sm font-semibold text-navy-900">Developer Mode</h3>
+                    <p className="text-xs text-stone-600 mt-1">Show technical error details</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const newDevMode = !isDevMode;
+                      setIsDevMode(newDevMode);
+                      localStorage.setItem('devMode', newDevMode ? 'true' : 'false');
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 ${isDevMode ? 'bg-gold-600' : 'bg-stone-300'
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDevMode ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -323,11 +362,10 @@ export default function ProfilePage() {
             />
             {/* Show match indicator when user starts typing confirmation */}
             {passwordData.confirmPassword && (
-              <p className={`mt-2 text-sm flex items-center gap-1 ${
-                passwordData.newPassword === passwordData.confirmPassword
-                  ? 'text-green-600'
-                  : 'text-red-600'
-              }`}>
+              <p className={`mt-2 text-sm flex items-center gap-1 ${passwordData.newPassword === passwordData.confirmPassword
+                ? 'text-green-600'
+                : 'text-red-600'
+                }`}>
                 {passwordData.newPassword === passwordData.confirmPassword ? (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,7 +412,7 @@ export default function ProfilePage() {
       {/* Success Confirmation Modal */}
       <Modal
         isOpen={showSuccessModal}
-        onClose={() => {}} // Prevent closing without confirming
+        onClose={() => { }} // Prevent closing without confirming
         title="Password Updated"
         size="sm"
       >

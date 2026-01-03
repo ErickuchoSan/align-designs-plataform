@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { Project } from '@/types';
 import { logger } from '@/lib/logger';
 
@@ -52,14 +52,14 @@ export function useProjectFiles(projectId: string) {
     try {
       // Parallelize API calls for better performance
       const [projectRes, typesRes] = await Promise.all([
-        api.get(`/projects/${projectId}`),
-        api.get(`/files/project/${projectId}/types`),
+        api.get(`/ projects / ${projectId} `),
+        api.get(`/ files / project / ${projectId}/types`),
       ]);
 
       setProject(projectRes.data);
       setAvailableTypes(typesRes.data || []);
     } catch (error) {
-      setError(getErrorMessage(error, 'Error loading project'));
+      setError(handleApiError(error, 'Error loading project'));
     }
   }, [projectId]);
 
@@ -83,7 +83,7 @@ export function useProjectFiles(projectId: string) {
       setTotalItems(data.meta?.total || 0);
       setTotalPages(data.meta?.totalPages || 0);
     } catch (error) {
-      setError(getErrorMessage(error, 'Error loading files'));
+      setError(handleApiError(error, 'Error loading files'));
       setFiles([]); // Reset to empty array on error
     } finally {
       setLoading(false);

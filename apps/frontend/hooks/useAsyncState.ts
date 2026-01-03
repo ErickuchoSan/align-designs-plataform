@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { getErrorMessage } from '@/lib/errors';
+import { useState, useCallback, useEffect } from 'react';
+import { handleApiError } from '@/lib/errors';
 
 export interface AsyncState<T> {
   data: T | null;
@@ -68,7 +68,7 @@ export function useAsyncState<T = any>(
           });
           return result;
         } catch (err) {
-          const errorMessage = getErrorMessage(err, 'An error occurred');
+          const errorMessage = handleApiError(err, 'An error occurred');
           setState((prev) => ({
             ...prev,
             loading: false,

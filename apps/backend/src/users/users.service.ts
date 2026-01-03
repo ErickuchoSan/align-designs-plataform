@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheManagerService } from '../cache/services/cache-manager.service';
 import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
+import { EmailService } from '../email/email.service';
 import type { IUserRepository } from './repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -37,12 +38,13 @@ export class UsersService {
     private readonly userRepo: IUserRepository,
     private readonly prisma: PrismaService,
     private readonly cacheManager: CacheManagerService,
+    private readonly mailService: EmailService,
   ) { }
 
   /**
    * Create a new client (Admin only)
    */
-  async createClient(createClientDto: CreateClientDto) {
+  async createClient(createClientDto: CreateClientDto, origin?: string) {
     // Check if email already exists (only check active users, not soft-deleted)
     const existingUser = await this.userRepo.findByEmail(createClientDto.email);
 
@@ -50,10 +52,30 @@ export class UsersService {
       throw new ConflictException('Email already registered');
     }
 
+    // Check if phone already exists
+    if (createClientDto.phone) {
+      const existingPhone = await this.prisma.user.findFirst({
+        where: { phone: createClientDto.phone },
+      });
+
+      if (existingPhone) {
+        throw new ConflictException('Phone number already registered');
+      }
+    }
+
     const client = await this.userRepo.create(createClientDto);
 
     // Invalidate user list cache
     await this.cacheManager.invalidateUserCaches();
+
+    // Send welcome email only if origin is provided (to ensure correct login link)
+    if (origin) {
+      await this.mailService.sendWelcomeEmail(
+        client.email,
+        `${client.firstName} ${client.lastName}`,
+        origin,
+      );
+    }
 
     // Return with selected fields for response
     return this.prisma.user.findFirst({
@@ -67,6 +89,7 @@ export class UsersService {
    */
   async createUser(
     createUserDto: CreateClientDto & { role: 'CLIENT' | 'EMPLOYEE' },
+    origin?: string,
   ) {
     // Check if email already exists (only check active users, not soft-deleted)
     const existingUser = await this.userRepo.findByEmail(createUserDto.email);
@@ -75,10 +98,30 @@ export class UsersService {
       throw new ConflictException('Email already registered');
     }
 
+    // Check if phone already exists
+    if (createUserDto.phone) {
+      const existingPhone = await this.prisma.user.findFirst({
+        where: { phone: createUserDto.phone },
+      });
+
+      if (existingPhone) {
+        throw new ConflictException('Phone number already registered');
+      }
+    }
+
     const user = await this.userRepo.createWithRole(createUserDto);
 
     // Invalidate user list cache
     await this.cacheManager.invalidateUserCaches();
+
+    // Send welcome email only if origin is provided (to ensure correct login link)
+    if (origin) {
+      await this.mailService.sendWelcomeEmail(
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        origin,
+      );
+    }
 
     // Return with selected fields for response
     return this.prisma.user.findFirst({
@@ -193,6 +236,21 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Check if phone is being updated and if it's already in use by another user
+    if (updateUserDto.phone && updateUserDto.phone !== user.phone) {
+      const existingUserWithPhone = await this.prisma.user.findFirst({
+        where: {
+          phone: updateUserDto.phone,
+          id: { not: id }, // Exclude current user
+          deletedAt: null,
+        },
+      });
+
+      if (existingUserWithPhone) {
+        throw new ConflictException('Phone number already registered');
+      }
     }
 
     const updatedUser = await this.prisma.user.update({

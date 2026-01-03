@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
 import EmailStep from './components/EmailStep';
 import PasswordStep from './components/PasswordStep';
@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<LoginStep>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // User data
   const [email, setEmail] = useState('');
@@ -83,7 +84,7 @@ export default function LoginPage() {
       // Fallback: proceed to password step
       setStep('password');
     } catch (error) {
-      setError(getErrorMessage(error, 'An error occurred. Please try again.'));
+      setError(handleApiError(error, 'An error occurred. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ export default function LoginPage() {
       await login({ email, password });
       router.push('/dashboard');
     } catch (error) {
-      setError(getErrorMessage(error, 'Invalid credentials'));
+      setError(handleApiError(error, 'Invalid credentials'));
     } finally {
       setLoading(false);
     }
@@ -121,7 +122,7 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (error) {
-      setError(getErrorMessage(error, 'Invalid OTP code'));
+      setError(handleApiError(error, 'Invalid OTP code'));
     } finally {
       setLoading(false);
     }
@@ -152,10 +153,17 @@ export default function LoginPage() {
         confirmPassword: confirmPassword,
       });
 
-      // Show success message and redirect to dashboard
-      router.push('/dashboard');
+      // Reset to login page so user can log in normally
+      setStep('email');
+      setEmail('');
+      setPassword('');
+      setOtpToken('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setError('');
+      setSuccess('Password set successfully! Please log in with your email and password.');
     } catch (error) {
-      setError(getErrorMessage(error, 'Error setting password'));
+      setError(handleApiError(error, 'Error setting password'));
     } finally {
       setLoading(false);
     }
@@ -168,7 +176,7 @@ export default function LoginPage() {
     try {
       await api.post('/auth/otp/request', { email });
     } catch (error) {
-      setError(getErrorMessage(error, 'Error resending code'));
+      setError(handleApiError(error, 'Error resending code'));
     } finally {
       setLoading(false);
     }
@@ -187,7 +195,7 @@ export default function LoginPage() {
       await api.post('/auth/otp/request', { email });
       setStep('otp');
     } catch (error) {
-      setError(getErrorMessage(error, 'Error requesting OTP'));
+      setError(handleApiError(error, 'Error requesting OTP'));
     } finally {
       setLoading(false);
     }

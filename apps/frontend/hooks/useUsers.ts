@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { User, CreateClientDto, CreateUserDto } from '@/types';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { useAutoResetMessage } from './useAutoResetMessage';
 import { usePagination } from './usePagination';
 
@@ -53,7 +53,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       pagination.setTotalPages(data.meta?.totalPages || 0);
       setError('');
     } catch (err) {
-      setError(getErrorMessage(err, 'Error loading users'));
+      setError(handleApiError(err, 'Error loading users'));
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
         setSuccess(`${formData.role === 'CLIENT' ? 'Client' : 'Employee'} created successfully`);
         fetchUsers();
       } catch (err) {
-        setError(getErrorMessage(err, `Error creating ${formData.role === 'CLIENT' ? 'client' : 'employee'}`));
+        setError(handleApiError(err, `Error creating ${formData.role === 'CLIENT' ? 'client' : 'employee'}`));
       } finally {
         setCreating(false);
       }
@@ -100,7 +100,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       setUserToToggle(null);
       fetchUsers();
     } catch (err) {
-      setError(getErrorMessage(err, 'Error changing status'));
+      setError(handleApiError(err, 'Error changing status'));
     } finally {
       setTogglingUserId(null);
     }
@@ -140,11 +140,63 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       setUserToDelete(null);
       fetchUsers();
     } catch (err) {
-      setError(getErrorMessage(err, 'Error deleting user'));
+      setError(handleApiError(err, 'Error deleting user'));
     } finally {
       setDeletingUserId(null);
     }
   }, [userToDelete, fetchUsers]);
+
+  // Edit user state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [editError, setEditError] = useState(''); // Separate error for modal
+  const [editFormData, setEditFormData] = useState<Partial<User>>({
+    firstName: '',
+    lastName: '',
+    phone: '',
+  });
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  const openEditModal = useCallback((user: User) => {
+    setUserToEdit(user);
+    setEditFormData({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone || '',
+    });
+    setEditError(''); // Clear modal error
+    setError(''); // Clear page error
+    setShowEditModal(true);
+  }, []);
+
+  const closeEditModal = useCallback(() => {
+    setShowEditModal(false);
+    setUserToEdit(null);
+    setEditFormData({ firstName: '', lastName: '', phone: '' });
+    setEditError(''); // Clear modal error
+  }, []);
+
+  const handleUpdateUser = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!userToEdit) return;
+
+      setUpdatingUserId(userToEdit.id);
+      setEditError(''); // Clear modal error
+
+      try {
+        await api.put(`/users/${userToEdit.id}`, editFormData);
+        setSuccess('User updated successfully');
+        closeEditModal();
+        fetchUsers();
+      } catch (err) {
+        setEditError(handleApiError(err, 'Error updating user')); // Set modal error only
+      } finally {
+        setUpdatingUserId(null);
+      }
+    },
+    [userToEdit, editFormData, fetchUsers, closeEditModal]
+  );
 
   return {
     // State
@@ -175,5 +227,15 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     openDeleteConfirm,
     closeDeleteConfirm,
     handleDeleteUser,
+    // Edit
+    showEditModal,
+    userToEdit,
+    editError,
+    editFormData,
+    setEditFormData,
+    updatingUserId,
+    openEditModal,
+    closeEditModal,
+    handleUpdateUser,
   };
 }

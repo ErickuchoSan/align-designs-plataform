@@ -12,6 +12,12 @@ interface ErrorModalData {
   statusCode?: number | string;
   willRedirect?: boolean;
   onClose?: () => void;
+  // Full error object for dev mode
+  errorObject?: any;
+  requestConfig?: any;
+  responseData?: any;
+  stackTrace?: string;
+  errorCode?: string;
 }
 
 type ErrorModalCallback = (data: ErrorModalData | null) => void;

@@ -13,6 +13,12 @@ interface ErrorModalProps {
   statusCode?: number | string;
   onClose: () => void;
   willRedirect?: boolean;
+  // New fields for dev mode display
+  errorObject?: any;
+  requestConfig?: any;
+  responseData?: any;
+  stackTrace?: string;
+  errorCode?: string;
 }
 
 export default function ErrorModal({
@@ -25,6 +31,11 @@ export default function ErrorModal({
   statusCode,
   onClose,
   willRedirect = false,
+  errorObject,
+  requestConfig,
+  responseData,
+  stackTrace,
+  errorCode,
 }: ErrorModalProps) {
   // Use safe version to avoid errors when modal is rendered outside AuthProvider
   const authContext = useAuthSafe();
@@ -32,8 +43,11 @@ export default function ErrorModal({
   const isAdmin = user?.role === 'ADMIN';
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  // Show technical details only to admins in production, or everyone in development
-  const showTechnicalDetails = isDevelopment || isAdmin;
+  // Check devMode from localStorage
+  const isDevMode = typeof window !== 'undefined' && localStorage.getItem('devMode') === 'true';
+
+  // Show technical details only in dev mode
+  const showTechnicalDetails = isDevMode;
 
   // Handle escape key
   useEffect(() => {
@@ -70,25 +84,22 @@ export default function ErrorModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden animate-slideUp">
+      <div className={`relative bg-white rounded-xl shadow-2xl ${showTechnicalDetails ? 'max-w-4xl' : 'max-w-md'} w-full max-h-[90vh] overflow-hidden animate-slideUp`}>
         {/* Header */}
-        <div className={`px-6 py-4 border-b ${
-          statusCode === 401 || statusCode === 403 ? 'bg-red-50 border-red-200' :
+        <div className={`px-6 py-4 border-b ${statusCode === 401 || statusCode === 403 ? 'bg-red-50 border-red-200' :
           statusCode && statusCode >= 500 ? 'bg-orange-50 border-orange-200' :
-          'bg-amber-50 border-amber-200'
-        }`}>
+            'bg-amber-50 border-amber-200'
+          }`}>
           <div className="flex items-start gap-3">
-            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-              statusCode === 401 || statusCode === 403 ? 'bg-red-100' :
+            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${statusCode === 401 || statusCode === 403 ? 'bg-red-100' :
               statusCode && statusCode >= 500 ? 'bg-orange-100' :
-              'bg-amber-100'
-            }`}>
+                'bg-amber-100'
+              }`}>
               <svg
-                className={`w-6 h-6 ${
-                  statusCode === 401 || statusCode === 403 ? 'text-red-600' :
+                className={`w-6 h-6 ${statusCode === 401 || statusCode === 403 ? 'text-red-600' :
                   statusCode && statusCode >= 500 ? 'text-orange-600' :
-                  'text-amber-600'
-                }`}
+                    'text-amber-600'
+                  }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -164,6 +175,68 @@ export default function ErrorModal({
               <p className="text-sm text-blue-800">
                 ℹ️ Contact support if you need technical assistance. Error details are available to administrators.
               </p>
+            </div>
+          )}
+
+          {/* DEV MODE: Request Details */}
+          {showTechnicalDetails && requestConfig && (
+            <div className="mb-4 p-3 bg-stone-50 border border-stone-200 rounded-lg">
+              <p className="text-xs font-bold text-stone-900 mb-2">📤 REQUEST DETAILS</p>
+              <div className="space-y-1 text-xs font-mono">
+                <div><span className="font-semibold">Base URL:</span> {requestConfig.baseURL || 'N/A'}</div>
+                <div><span className="font-semibold">Path:</span> {endpoint}</div>
+                <div><span className="font-semibold">Full URL:</span> {requestConfig.baseURL ? `${requestConfig.baseURL}${endpoint}` : endpoint}</div>
+                <div><span className="font-semibold">Method:</span> {method}</div>
+
+                {requestConfig.params && (
+                  <div className="mt-2">
+                    <span className="font-semibold">Query Params:</span>
+                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs">
+                      {JSON.stringify(requestConfig.params, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {requestConfig.data && (
+                  <div className="mt-2">
+                    <span className="font-semibold">Request Body:</span>
+                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs max-h-48">
+                      {JSON.stringify(
+                        typeof requestConfig.data === 'string' ? JSON.parse(requestConfig.data) : requestConfig.data,
+                        null,
+                        2
+                      )}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* DEV MODE: Response Details */}
+          {showTechnicalDetails && responseData && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-xs font-bold text-red-900 mb-2">📥 RESPONSE DATA</p>
+              <pre className="bg-white p-2 rounded border border-red-300 overflow-x-auto text-xs max-h-48 font-mono">
+                {JSON.stringify(responseData, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* DEV MODE: Stack Trace */}
+          {showTechnicalDetails && stackTrace && (
+            <div className="mb-4 p-3 bg-gray-900 text-gray-100 rounded-lg border border-gray-700">
+              <p className="text-xs font-bold mb-2">📚 STACK TRACE</p>
+              <pre className="overflow-x-auto text-xs font-mono whitespace-pre-wrap max-h-64">
+                {stackTrace}
+              </pre>
+            </div>
+          )}
+
+          {/* DEV MODE: Error Code */}
+          {showTechnicalDetails && errorCode && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg">
+              <p className="text-xs font-mono"><span className="font-bold">Error Code:</span> {errorCode}</p>
             </div>
           )}
 

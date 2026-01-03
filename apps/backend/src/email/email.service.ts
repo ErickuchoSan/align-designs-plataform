@@ -156,6 +156,61 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Send welcome email to new users
+   */
+  async sendWelcomeEmail(
+    to: string,
+    userName: string,
+    origin: string,
+  ): Promise<void> {
+    try {
+      const emailFrom = this.configService.get<string>('EMAIL_FROM');
+
+      // origin is required to ensure the login link is correct for the user's context
+      if (!origin) {
+        this.logger.error('sendWelcomeEmail called without origin - cannot send email with incorrect link');
+        return; // Silently fail to avoid blocking user creation
+      }
+
+      // Construct the full login URL using the provided origin
+      const loginUrl = `${origin}/login`;
+
+      const mailOptions = {
+        from: emailFrom,
+        to: to,
+        subject: 'Welcome to Align Designs Platform',
+        html: getBaseEmailTemplate({
+          title: 'Welcome to Align Designs!',
+          userName,
+          preMessage: 'Your account has been successfully created.',
+          bodyContent: `
+            <p>You can now log in to the platform using your email address: <strong>${to}</strong></p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${loginUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Log In Now</a>
+            </div>
+            <p><strong>To set your password:</strong></p>
+            <ol>
+              <li>Go to the login page.</li>
+              <li>Enter your email and click "Continue".</li>
+              <li>You will receive a verification code via email.</li>
+              <li>Enter the verification code.</li>
+              <li>Create your secure password.</li>
+            </ol>
+          `,
+          postMessage: 'We are excited to have you on board!',
+          warningMessage: '',
+        }),
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Welcome email sent successfully to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send welcome email to ${to}:`, error);
+      // Don't throw to avoid blocking user creation if email fails
+    }
+  }
+
+  /**
    * Send OTP email for user login
    */
   async sendOtpEmail(
@@ -182,14 +237,18 @@ export class EmailService implements OnModuleInit {
     to: string,
     resetToken: string,
     userName: string,
+    origin: string,
   ): Promise<void> {
     try {
       const emailFrom = this.configService.get<string>('EMAIL_FROM');
-      const frontendUrl = this.configService.get<string>(
-        'FRONTEND_URL',
-        'http://localhost:3000',
-      );
-      const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+      // origin is required to ensure the reset link is correct for the user's context
+      if (!origin) {
+        this.logger.error('sendPasswordResetEmail called without origin - cannot send email with incorrect link');
+        throw new InternalServerErrorException('Origin is required to send password reset email.');
+      }
+
+      const resetLink = `${origin}/reset-password?token=${resetToken}`;
 
       const mailOptions = {
         from: emailFrom,

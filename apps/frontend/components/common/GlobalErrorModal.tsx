@@ -19,6 +19,12 @@ export default function GlobalErrorModal() {
     statusCode?: number | string;
     willRedirect?: boolean;
     onClose?: () => void;
+    // New fields for dev mode
+    errorObject?: any;
+    requestConfig?: any;
+    responseData?: any;
+    stackTrace?: string;
+    errorCode?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -46,6 +52,11 @@ export default function GlobalErrorModal() {
       method={errorData.method}
       statusCode={errorData.statusCode}
       willRedirect={errorData.willRedirect}
+      errorObject={errorData.errorObject}
+      requestConfig={errorData.requestConfig}
+      responseData={errorData.responseData}
+      stackTrace={errorData.stackTrace}
+      errorCode={errorData.errorCode}
       onClose={handleClose}
     />
   );

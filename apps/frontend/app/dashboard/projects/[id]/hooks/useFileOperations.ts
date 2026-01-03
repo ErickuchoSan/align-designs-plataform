@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { getErrorMessage } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { MESSAGE_DURATION, FILE_UPLOAD } from '@/lib/constants/ui.constants';
 import type { FileData } from './useProjectFiles';
 
@@ -90,7 +90,7 @@ export function useFileOperations(
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onErrorRef.current(getErrorMessage(error, 'Error uploading file'));
+        onErrorRef.current(handleApiError(error, 'Error uploading file'));
         return false;
       } finally {
         setUploading(false);
@@ -118,7 +118,7 @@ export function useFileOperations(
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onErrorRef.current(getErrorMessage(error, 'Error creating comment'));
+        onErrorRef.current(handleApiError(error, 'Error creating comment'));
         return false;
       } finally {
         setUploading(false);
@@ -156,7 +156,7 @@ export function useFileOperations(
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onErrorRef.current(getErrorMessage(error, 'Error updating entry'));
+        onErrorRef.current(handleApiError(error, 'Error updating entry'));
         return false;
       } finally {
         setUploading(false);
@@ -190,7 +190,7 @@ export function useFileOperations(
         onSuccessRef.current('File download started');
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
       } catch (error) {
-        onErrorRef.current(getErrorMessage(error, 'Error downloading file'));
+        onErrorRef.current(handleApiError(error, 'Error downloading file'));
       }
     },
     [setTrackedTimeout]
@@ -208,7 +208,7 @@ export function useFileOperations(
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onErrorRef.current(getErrorMessage(error, 'Error deleting file'));
+        onErrorRef.current(handleApiError(error, 'Error deleting file'));
         return false;
       } finally {
         setDeleting(false);
