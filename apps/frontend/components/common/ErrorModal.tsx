@@ -182,16 +182,16 @@ export default function ErrorModal({
           {showTechnicalDetails && requestConfig && (
             <div className="mb-4 p-3 bg-stone-50 border border-stone-200 rounded-lg">
               <p className="text-xs font-bold text-stone-900 mb-2">📤 REQUEST DETAILS</p>
-              <div className="space-y-1 text-xs font-mono">
-                <div><span className="font-semibold">Base URL:</span> {requestConfig.baseURL || 'N/A'}</div>
-                <div><span className="font-semibold">Path:</span> {endpoint}</div>
-                <div><span className="font-semibold">Full URL:</span> {requestConfig.baseURL ? `${requestConfig.baseURL}${endpoint}` : endpoint}</div>
-                <div><span className="font-semibold">Method:</span> {method}</div>
+              <div className="space-y-1 text-xs font-mono text-stone-900">
+                <div><span className="font-semibold text-navy-900">Base URL:</span> {requestConfig.baseURL || 'N/A'}</div>
+                <div><span className="font-semibold text-navy-900">Path:</span> {endpoint}</div>
+                <div><span className="font-semibold text-navy-900">Full URL:</span> {requestConfig.baseURL ? `${requestConfig.baseURL}${endpoint}` : endpoint}</div>
+                <div><span className="font-semibold text-navy-900">Method:</span> {method}</div>
 
                 {requestConfig.params && (
                   <div className="mt-2">
-                    <span className="font-semibold">Query Params:</span>
-                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs">
+                    <span className="font-semibold text-navy-900">Query Params:</span>
+                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs text-stone-900">
                       {JSON.stringify(requestConfig.params, null, 2)}
                     </pre>
                   </div>
@@ -199,8 +199,8 @@ export default function ErrorModal({
 
                 {requestConfig.data && (
                   <div className="mt-2">
-                    <span className="font-semibold">Request Body:</span>
-                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs max-h-48">
+                    <span className="font-semibold text-navy-900">Request Body:</span>
+                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs max-h-48 text-stone-900">
                       {JSON.stringify(
                         typeof requestConfig.data === 'string' ? JSON.parse(requestConfig.data) : requestConfig.data,
                         null,
@@ -217,7 +217,7 @@ export default function ErrorModal({
           {showTechnicalDetails && responseData && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-xs font-bold text-red-900 mb-2">📥 RESPONSE DATA</p>
-              <pre className="bg-white p-2 rounded border border-red-300 overflow-x-auto text-xs max-h-48 font-mono">
+              <pre className="bg-white p-2 rounded border border-red-300 overflow-x-auto text-xs max-h-48 font-mono text-stone-900">
                 {JSON.stringify(responseData, null, 2)}
               </pre>
             </div>
@@ -236,7 +236,7 @@ export default function ErrorModal({
           {/* DEV MODE: Error Code */}
           {showTechnicalDetails && errorCode && (
             <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg">
-              <p className="text-xs font-mono"><span className="font-bold">Error Code:</span> {errorCode}</p>
+              <p className="text-xs font-mono text-amber-900"><span className="font-bold">Error Code:</span> {errorCode}</p>
             </div>
           )}
 
