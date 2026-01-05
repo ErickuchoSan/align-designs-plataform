@@ -116,8 +116,8 @@ export default function ProjectDetailsPage() {
 
   // File operation handlers
   const handleUpload = useCallback(
-    async (file: File, comment: string) => {
-      const success = await handleFileUpload(file, comment, selectedStageForModal || undefined);
+    async (files: File[], comment: string) => {
+      const success = await handleFileUpload(files, comment, selectedStageForModal || undefined);
       if (success) {
         modals.closeUploadModal();
         setSelectedStageForModal(null);
@@ -128,8 +128,11 @@ export default function ProjectDetailsPage() {
   );
 
   const handleComment = useCallback(
-    async (comment: string) => {
-      const success = await handleCreateComment(comment, selectedStageForModal || undefined);
+    async (comment: string, files: File[]) => {
+      // Use relatedFile from modals if available (for rejections), or fallback to simple stage selection
+      const relatedFileId = modals.relatedFile?.id;
+      const success = await handleCreateComment(comment, files, selectedStageForModal || undefined, relatedFileId);
+
       if (success) {
         modals.closeCommentModal();
         setSelectedStageForModal(null);
@@ -140,8 +143,8 @@ export default function ProjectDetailsPage() {
   );
 
   const handleEdit = useCallback(
-    async (fileToEdit: FileData, editComment: string, editFile: File | null) => {
-      const success = await handleEditEntry(fileToEdit, editComment, editFile);
+    async (fileToEdit: FileData, editComment: string, editFiles: File[]) => {
+      const success = await handleEditEntry(fileToEdit, editComment, editFiles);
       if (success) modals.closeEditModal();
       return success;
     },
@@ -235,9 +238,9 @@ export default function ProjectDetailsPage() {
                   setSelectedStageForModal(stage);
                   modals.openUploadModal();
                 }}
-                onOpenCommentModal={(stage) => {
+                onOpenCommentModal={(stage, file) => {
                   setSelectedStageForModal(stage);
-                  modals.openCommentModal();
+                  modals.openCommentModal(file);
                 }}
                 onDownload={handleDownload}
                 onEdit={modals.openEditModal}
@@ -246,6 +249,7 @@ export default function ProjectDetailsPage() {
                 onUploadVersion={modals.openUploadVersionModal}
                 canDeleteFile={canDeleteFile}
                 filesLoading={filesLoading}
+                onRefresh={handleProjectUpdate}
               />
             </div>
           )}

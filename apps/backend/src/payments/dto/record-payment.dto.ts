@@ -39,4 +39,8 @@ export class RecordPaymentDto {
     @IsOptional()
     @IsUUID('4', { each: true })
     relatedFileIds?: string[];
+
+    @IsUUID()
+    @IsOptional()
+    invoiceId?: string;
 }

@@ -31,12 +31,27 @@ export default function PayEmployeeModal({
     const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
     const [description, setDescription] = useState('');
 
+    // Pending Items State
+    const [pendingItems, setPendingItems] = useState<any[]>([]);
+    const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+    const [loadingItems, setLoadingItems] = useState(false);
+
     // Fetch employees when modal opens
     useEffect(() => {
         if (isOpen) {
             fetchEmployees();
         }
     }, [isOpen]);
+
+    // Fetch pending items when employee is selected
+    useEffect(() => {
+        if (employeeId && projectId) {
+            fetchPendingItems();
+        } else {
+            setPendingItems([]);
+            setSelectedItemIds([]);
+        }
+    }, [employeeId, projectId]);
 
     const fetchEmployees = async () => {
         try {
@@ -51,6 +66,27 @@ export default function PayEmployeeModal({
         }
     };
 
+    const fetchPendingItems = async () => {
+        try {
+            setLoadingItems(true);
+            const items = await EmployeePaymentsService.getPendingItems(projectId, employeeId);
+            setPendingItems(items);
+        } catch (err) {
+            logger.error('Error fetching pending items:', err);
+            // Don't block payment if fetch fails, simplify let user proceed
+        } finally {
+            setLoadingItems(false);
+        }
+    };
+
+    const toggleItemSelection = (itemId: string) => {
+        setSelectedItemIds(prev =>
+            prev.includes(itemId)
+                ? prev.filter(id => id !== itemId)
+                : [...prev, itemId]
+        );
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -62,15 +98,15 @@ export default function PayEmployeeModal({
             }
 
             const payload = {
-                projectId,
                 employeeId,
                 amount: Number(amount),
                 paymentMethod,
                 paymentDate: new Date(paymentDate).toISOString(),
                 description: description || undefined,
+                projectItemIds: selectedItemIds.length > 0 ? selectedItemIds : undefined,
             };
 
-            await EmployeePaymentsService.create(payload);
+            await EmployeePaymentsService.create(projectId, payload);
             await onSuccess();
             handleClose();
         } catch (err: any) {
@@ -88,6 +124,8 @@ export default function PayEmployeeModal({
         setPaymentDate(new Date().toISOString().split('T')[0]);
         setPaymentMethod('TRANSFER');
         setDescription('');
+        setPendingItems([]);
+        setSelectedItemIds([]);
         setError(null);
         onClose();
     };
@@ -96,9 +134,9 @@ export default function PayEmployeeModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50">
+                <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50 flex-shrink-0">
                     <h3 className="text-lg font-semibold text-navy-900">Record Employee Payment</h3>
                     <button
                         onClick={handleClose}
@@ -111,7 +149,7 @@ export default function PayEmployeeModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-grow">
                     {error && (
                         <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
                             {error}
@@ -139,6 +177,41 @@ export default function PayEmployeeModal({
                         {loadingEmployees && <p className="text-xs text-stone-500 mt-1">Loading employees...</p>}
                     </div>
 
+                    {/* Pending Items Selection */}
+                    {employeeId && (
+                        <div className="border border-stone-200 rounded-lg p-3 bg-stone-50">
+                            <label className="block text-sm font-medium text-stone-700 mb-2">
+                                Client Approved Items (Unpaid)
+                            </label>
+
+                            {loadingItems ? (
+                                <p className="text-xs text-stone-500">Loading pending items...</p>
+                            ) : pendingItems.length === 0 ? (
+                                <p className="text-xs text-stone-500 italic">No pending approved items found.</p>
+                            ) : (
+                                <div className="space-y-2 max-h-32 overflow-y-auto">
+                                    {pendingItems.map((item) => (
+                                        <div key={item.id} className="flex items-start gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id={`item-${item.id}`}
+                                                checked={selectedItemIds.includes(item.id)}
+                                                onChange={() => toggleItemSelection(item.id)}
+                                                className="mt-1 rounded border-stone-300 text-navy-900 focus:ring-navy-900"
+                                            />
+                                            <label htmlFor={`item-${item.id}`} className="text-sm text-stone-700 cursor-pointer">
+                                                <span className="font-medium block">{item.originalName || item.filename}</span>
+                                                <span className="text-xs text-stone-500">
+                                                    Apv: {new Date(item.approvedClientAt).toLocaleDateString()}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-sm font-medium text-stone-700 mb-1">
                             Amount (MXN)
@@ -162,17 +235,12 @@ export default function PayEmployeeModal({
                             <label className="block text-sm font-medium text-stone-700 mb-1">
                                 Payment Method
                             </label>
-                            <select
-                                value={paymentMethod}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                                required
-                                className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
-                            >
-                                <option value="TRANSFER">Transfer</option>
-                                <option value="CASH">Cash</option>
-                                <option value="CHECK">Check</option>
-                                <option value="OTHER">Other</option>
-                            </select>
+                            <input
+                                type="text"
+                                value="Transfer"
+                                disabled
+                                className="w-full px-4 py-2 border border-stone-300 bg-stone-100 rounded-lg text-stone-500 cursor-not-allowed"
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-stone-700 mb-1">
@@ -201,8 +269,7 @@ export default function PayEmployeeModal({
                         />
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-3 pt-4 flex-shrink-0">
                         <button
                             type="button"
                             onClick={handleClose}

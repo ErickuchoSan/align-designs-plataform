@@ -112,16 +112,16 @@ export class OtpService {
     });
 
     // Log OTP generation without sensitive details
-    // Note: OTP code is never logged, even in development, to prevent security leaks
+    // Note: In development, we show the OTP for testing purposes when emails fail
     const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
     if (nodeEnv === 'development') {
-      this.logger.debug(
+      this.logger.warn(
         '\n🔐 ==================== OTP GENERATED ====================',
       );
-      this.logger.debug(`   User ID: ${userId.substring(0, 8)}...`);
-      this.logger.debug(`   OTP Code: [REDACTED - Check email or database]`);
-      this.logger.debug(`   Expires in: ${OTP_EXPIRATION_MINUTES} minutes`);
-      this.logger.debug(
+      this.logger.warn(`   User ID: ${userId.substring(0, 8)}...`);
+      this.logger.warn(`   🔑 OTP Code: ${token}`);
+      this.logger.warn(`   ⏰ Expires in: ${OTP_EXPIRATION_MINUTES} minutes`);
+      this.logger.warn(
         '========================================================\n',
       );
     } else {

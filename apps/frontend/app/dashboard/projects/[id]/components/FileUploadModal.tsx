@@ -7,7 +7,7 @@ import { formatFileSize } from '@/lib/utils/file.utils';
 interface FileUploadModalProps {
   show: boolean;
   onClose: () => void;
-  onUpload: (file: File, comment: string) => Promise<boolean>;
+  onUpload: (files: File[], comment: string) => Promise<boolean>;
   uploading: boolean;
   uploadProgress: number;
   error: string;
@@ -21,21 +21,21 @@ export default function FileUploadModal({
   uploadProgress,
   error,
 }: FileUploadModalProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadComment, setUploadComment] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile || uploading) return;
+    if (selectedFiles.length === 0 || uploading) return;
 
-    const success = await onUpload(selectedFile, uploadComment);
+    const success = await onUpload(selectedFiles, uploadComment);
     if (success) {
       handleClose();
     }
   };
 
   const handleClose = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setUploadComment('');
     onClose();
   };
@@ -44,7 +44,7 @@ export default function FileUploadModal({
     <Modal
       isOpen={show}
       onClose={handleClose}
-      title="Upload File"
+      title="Upload Files"
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -62,16 +62,24 @@ export default function FileUploadModal({
 
         <div>
           <label className="block text-sm font-medium text-navy-900 mb-2">
-            Select file
+            Select files
           </label>
           <FileInput
-            onChange={(file) => setSelectedFile(file)}
+            onChange={(files) => setSelectedFiles(files || [])}
             required
+            multiple={true}
           />
-          {selectedFile && (
-            <p className="mt-2 text-sm text-stone-700">
-              Selected file: {selectedFile.name} ({formatFileSize(selectedFile.size)})
-            </p>
+          {selectedFiles.length > 0 && (
+            <div className="mt-2 text-sm text-stone-700 max-h-32 overflow-y-auto">
+              <p className="font-medium mb-1">{selectedFiles.length} file(s) selected:</p>
+              <ul className="list-disc list-inside">
+                {selectedFiles.map((file, idx) => (
+                  <li key={idx} className="truncate">
+                    {file.name} ({formatFileSize(file.size)})
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 
@@ -115,10 +123,10 @@ export default function FileUploadModal({
           </button>
           <button
             type="submit"
-            disabled={uploading || !selectedFile}
+            disabled={uploading || selectedFiles.length === 0}
             className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] flex items-center justify-center"
           >
-            {uploading ? <ButtonLoader /> : 'Upload File'}
+            {uploading ? <ButtonLoader /> : (selectedFiles.length > 1 ? 'Upload Files' : 'Upload File')}
           </button>
         </div>
       </form>

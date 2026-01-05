@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { InvoicesService } from '@/services/invoices.service';
+import { ProjectsService } from '@/services/projects.service';
 import { CreateInvoiceDto } from '@/types/invoice'; // We might need to create this type if it doesn't exist
 import { logger } from '@/lib/logger';
 
@@ -22,6 +23,7 @@ export default function GenerateInvoiceModal({
     const [error, setError] = useState<string | null>(null);
     const [hasUnpaid, setHasUnpaid] = useState(false);
     const [checkingUnpaid, setCheckingUnpaid] = useState(true);
+    const [clientId, setClientId] = useState<string | null>(null);
 
     // Form State
     const [amount, setAmount] = useState('');
@@ -39,10 +41,17 @@ export default function GenerateInvoiceModal({
     const checkForUnpaidInvoices = async () => {
         try {
             setCheckingUnpaid(true);
-            const unpaid = await InvoicesService.hasUnpaidInvoices(projectId);
+            const [unpaid, project] = await Promise.all([
+                InvoicesService.hasUnpaidInvoices(projectId),
+                ProjectsService.getById(projectId)
+            ]);
             setHasUnpaid(unpaid);
+            if (project?.clientId) {
+                setClientId(project.clientId);
+            }
         } catch (err) {
-            logger.error('Error checking unpaid invoices:', err);
+            logger.error('Error checking project/invoices:', err);
+            setError('Failed to load project details');
         } finally {
             setCheckingUnpaid(false);
         }
@@ -61,16 +70,24 @@ export default function GenerateInvoiceModal({
                 throw new Error('Please fill in all required fields');
             }
 
+            if (!clientId) {
+                throw new Error('Client ID not found for this project');
+            }
+
+            const issueDate = new Date(); // Current date as issue date
+            const due = new Date(dueDate);
+            const diffTime = Math.abs(due.getTime() - issueDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
             const payload = {
                 projectId,
+                clientId,
+                issueDate: issueDate.toISOString(),
+                dueDate: due.toISOString(),
+                paymentTermsDays: diffDays > 0 ? diffDays : 0,
+                subtotal: Number(amount),
                 totalAmount: Number(amount),
-                dueDate: new Date(dueDate).toISOString(),
-                items: items.map(item => ({
-                    description: description || 'Professional Services', // Simplified for now
-                    quantity: 1,
-                    unitPrice: Number(amount)
-                })),
-                status: 'SENT' // Default status
+                notes: description || undefined,
             };
 
             await InvoicesService.create(payload as any); // Type assertion until DTO is fully defined
@@ -135,74 +152,74 @@ export default function GenerateInvoiceModal({
                                 </div>
                             )}
 
-                    <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
-                            Total Amount (MXN)
-                        </label>
-                        <div className="relative">
-                            <span className="absolute left-3 top-2 text-stone-500">$</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                required
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="w-full pl-7 pr-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
-                                placeholder="0.00"
-                            />
-                        </div>
-                    </div>
+                            <div>
+                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                    Total Amount (MXN)
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-2 text-stone-500">$</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        required
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        className="w-full pl-7 pr-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
-                            Due Date
-                        </label>
-                        <input
-                            type="date"
-                            required
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
-                        />
-                    </div>
+                            <div>
+                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                    Due Date
+                                </label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={dueDate}
+                                    onChange={(e) => setDueDate(e.target.value)}
+                                    className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                />
+                            </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
-                            Description / Concept
-                        </label>
-                        <textarea
-                            rows={3}
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
-                            placeholder="e.g. Web Development Phase 1..."
-                        />
-                    </div>
+                            <div>
+                                <label className="block text-sm font-medium text-stone-700 mb-1">
+                                    Description / Concept
+                                </label>
+                                <textarea
+                                    rows={3}
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                    placeholder="e.g. Web Development Phase 1..."
+                                />
+                            </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-4">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg font-medium transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Saving...</span>
-                                </>
-                            ) : (
-                                'Generate Invoice'
-                            )}
-                        </button>
-                    </div>
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="flex-1 px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Saving...</span>
+                                        </>
+                                    ) : (
+                                        'Generate Invoice'
+                                    )}
+                                </button>
+                            </div>
                         </>
                     )}
                 </form>

@@ -118,31 +118,65 @@ export default function ClientProfilePage() {
                 <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                     <h3 className="text-lg font-medium text-gray-900">Invoices</h3>
                 </div>
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Number</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {invoices.map(invoice => (
-                            <tr key={invoice.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 text-sm font-medium text-navy-600">
-                                    <Link href={`/dashboard/admin/invoices/${invoice.id}`}>{invoice.invoiceNumber}</Link>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{formatDate(invoice.issueDate)}</td>
-                                <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(invoice.totalAmount)}</td>
-                                <td className="px-6 py-4"><InvoiceStatusBadge status={invoice.status} /></td>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Number</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             </tr>
-                        ))}
-                        {invoices.length === 0 && (
-                            <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">No invoices found</td></tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {invoices.map(invoice => (
+                                <tr key={invoice.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 text-sm font-medium text-navy-600">
+                                        <Link href={`/dashboard/admin/invoices/${invoice.id}`}>{invoice.invoiceNumber}</Link>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(invoice.issueDate)}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(invoice.totalAmount)}</td>
+                                    <td className="px-6 py-4"><InvoiceStatusBadge status={invoice.status} /></td>
+                                </tr>
+                            ))}
+                            {invoices.length === 0 && (
+                                <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">No invoices found</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-200">
+                    {invoices.length === 0 ? (
+                        <div className="px-6 py-8 text-center text-gray-500">No invoices found</div>
+                    ) : (
+                        invoices.map(invoice => (
+                            <Link key={invoice.id} href={`/dashboard/admin/invoices/${invoice.id}`}>
+                                <div className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="text-sm font-medium text-navy-600">
+                                            {invoice.invoiceNumber}
+                                        </div>
+                                        <InvoiceStatusBadge status={invoice.status} />
+                                    </div>
+                                    <div className="space-y-1 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Date:</span>
+                                            <span className="text-gray-700">{formatDate(invoice.issueDate)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Amount:</span>
+                                            <span className="text-gray-900 font-medium">{formatCurrency(invoice.totalAmount)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))
+                    )}
+                </div>
             </div>
         </div>
     );

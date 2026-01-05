@@ -70,13 +70,13 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
   /**
    * SUBMITTED
    * Employees submit their work here
-   * Supports versioning with notes
+   * STRICT: Admin Read-Only (Download/View). Employee uploads files (Link/File).
    */
   SUBMITTED: {
     canView: [Role.ADMIN, Role.EMPLOYEE],
-    canWrite: [Role.ADMIN, Role.EMPLOYEE],
-    canDelete: [Role.ADMIN],
-    description: 'Employees submit work. Supports versioning with notes.',
+    canWrite: [Role.EMPLOYEE], // Only employees can upload/write here
+    canDelete: [], // Neither can delete (strict record)
+    description: 'Employees submit work. Admin read-only.',
   },
 
   /**

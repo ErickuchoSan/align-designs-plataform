@@ -101,7 +101,8 @@ async function fetchCsrfToken(): Promise<void> {
       const newToken = response.headers['x-csrf-token'];
       if (newToken) {
         csrfToken = newToken;
-        logger.debug('New CSRF token received', { tokenPreview: csrfToken.substring(0, 20) + '...' });
+        const preview = csrfToken ? csrfToken.substring(0, 20) + '...' : 'unknown';
+        logger.debug('New CSRF token received', { tokenPreview: preview });
       } else {
         logger.error('No CSRF token in response headers', undefined, { headers: response.headers });
       }
@@ -156,18 +157,10 @@ const shouldRetry = (error: AxiosError): boolean => {
 // sent automatically with withCredentials: true
 api.interceptors.request.use(
   async (config) => {
-    // Request deduplication for GET requests only
-    // Deduplicate identical concurrent requests to prevent redundant API calls
-    const method = config.method?.toUpperCase();
-    if (method === 'GET' && typeof window !== 'undefined') {
-      const requestKey = getRequestKey(config);
-      const pendingRequest = pendingRequests.get(requestKey);
+    // Request deduplication logic removed due to type incompatibility in interceptor
+    // and incomplete implementation.
 
-      if (pendingRequest) {
-        logger.debug('Deduplicating request', { url: config.url });
-        return pendingRequest;
-      }
-    }
+    const method = config.method?.toUpperCase();
 
     // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
     if (typeof window !== 'undefined') {
@@ -268,7 +261,8 @@ api.interceptors.response.use(
     const newCsrfToken = response.headers['x-csrf-token'];
     if (newCsrfToken && !csrfToken) {
       csrfToken = newCsrfToken;
-      logger.debug('CSRF token auto-updated from response', { tokenPreview: csrfToken.substring(0, 20) + '...' });
+      const preview = csrfToken ? csrfToken.substring(0, 20) + '...' : 'unknown';
+      logger.debug('CSRF token auto-updated from response', { tokenPreview: preview });
     }
     return response;
   },
@@ -308,6 +302,7 @@ api.interceptors.response.use(
       const shouldNotRedirect =
         url.includes('/auth/change-password') ||
         url.includes('/auth/reset-password') ||
+        url.includes('/auth/logout') ||
         window.location.pathname.includes('/login');
 
       if (!shouldNotRedirect) {

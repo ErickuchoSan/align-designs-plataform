@@ -24,6 +24,7 @@ export interface FileData {
   isCurrentVersion?: boolean;
   parentFileId?: string;
   rejectionCount?: number;
+  stage?: string;
 }
 
 // Use Project type from types index

@@ -24,6 +24,7 @@ export interface Payment {
     paymentMethod: PaymentMethod;
     paymentDate: string;
     receiptFileUrl?: string;
+    invoiceId?: string;
     status: PaymentStatus;
     notes?: string;
     createdAt: string;

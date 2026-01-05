@@ -626,7 +626,7 @@ export class ProjectsController {
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
   ) {
-    return this.projectsService.getAccessibleStages(projectId, user.role);
+    return this.projectsService.getAccessibleStages(projectId, user.role, user.userId);
   }
 
   /**

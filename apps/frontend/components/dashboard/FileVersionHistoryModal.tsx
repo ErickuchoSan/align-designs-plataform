@@ -61,60 +61,36 @@ export default function FileVersionHistoryModal({ isOpen, onClose, file, onDownl
                             <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                                 <div className="flex justify-between items-center mb-6">
                                     <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 flex items-center gap-2">
-                                        <ClockIcon className="h-5 w-5 text-indigo-500" />
-                                        Version History: {file.originalName}
+                                        <svg className="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        </svg>
+                                        Submission Comments: {file.originalName}
                                     </Dialog.Title>
                                     <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                                         <XMarkIcon className="h-6 w-6" />
                                     </button>
                                 </div>
 
-                                <div className="flow-root">
-                                    <ul role="list" className="-mb-8">
-                                        {history.map((version, versionIdx) => (
-                                            <li key={version.id}>
-                                                <div className="relative pb-8">
-                                                    {versionIdx !== history.length - 1 ? (
-                                                        <span
-                                                            className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
-                                                            aria-hidden="true"
-                                                        />
-                                                    ) : null}
-                                                    <div className="relative flex space-x-3">
-                                                        <div>
-                                                            <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${versionIdx === 0 ? 'bg-indigo-500' : 'bg-gray-400'
-                                                                }`}>
-                                                                <span className="text-white text-xs font-bold">
-                                                                    {version.versionLabel || `v${version.versionNumber || 1}`}
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                                                            <div>
-                                                                <p className="text-sm text-gray-500">
-                                                                    Uploaded by <span className="font-medium text-gray-900">{version.uploader.firstName}</span>
-                                                                </p>
-                                                                {version.comment && (
-                                                                    <p className="mt-1 text-sm text-gray-700 bg-gray-50 p-2 rounded">
-                                                                        {version.comment}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                            <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                                                                <time dateTime={version.uploadedAt}>{formatDate(version.uploadedAt)}</time>
-                                                                <button
-                                                                    onClick={() => onDownload(version.id, version.originalName!)}
-                                                                    className="block mt-1 text-indigo-600 hover:text-indigo-900 text-xs font-medium"
-                                                                >
-                                                                    Download
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                <div className="space-y-4">
+                                    {file.comment ? (
+                                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="font-medium text-gray-900">
+                                                    {file.uploader.firstName} {file.uploader.lastName}
+                                                </span>
+                                                <span className="text-xs text-gray-500">
+                                                    {formatDate(file.uploadedAt)}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                                {file.comment}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500 italic">
+                                            No comments provided for this submission.
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mt-6 flex justify-end">

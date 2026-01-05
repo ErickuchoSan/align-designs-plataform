@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { InvoicesService } from '@/services/invoices.service';
-import { Invoice } from '@/types/invoice'; // Ensure this type exists and includes 'project' or 'id'
+import { PaymentsService } from '@/services/payments.service';
+import { Invoice } from '@/types/invoice';
 import { logger } from '@/lib/logger';
 
 interface UploadPaymentProofModalProps {
@@ -77,23 +78,23 @@ export default function UploadPaymentProofModal({
             // Assuming a standard flow where we create a payment record.
             // If the backend `InvoicesService` has a `recordPayment` method:
 
-            const payload = {
-                amount: Number(amountPaid),
-                paymentDate: new Date(paymentDate).toISOString(),
-                paymentMethod,
-                referenceNumber,
-                // notes: 'Payment Proof Uploaded', 
-                // We might need to handle the file upload separately if the DTO doesn't support it directly
-                // For now, let's assume we send the data. 
-                // Check `InvoicesService.recordPayment` signature if available.
-            };
+            // Create FormData for upload
+            const formData = new FormData();
+            formData.append('invoiceId', selectedInvoiceId);
+            formData.append('amount', amountPaid);
+            formData.append('paymentDate', new Date(paymentDate).toISOString());
+            formData.append('paymentMethod', paymentMethod);
+            if (referenceNumber) {
+                formData.append('notes', `Ref: ${referenceNumber}`);
+            }
+            // Project ID is implicit from Invoice, but API might require it or infer it.
+            // PaymentsService.uploadClientPayment likely expects file + dto fields.
 
-            // Since we don't have a direct "Upload Proof" endpoint visible in previous context,
-            // we might need to use `recordPayment`. 
-            // If file upload is required, we might need an `upload` service.
+            if (file) {
+                formData.append('file', file);
+            }
 
-            // Temporary: Use recordPayment. If file is needed, it should be uploaded to an endpoint returning an ID/URL.
-            await InvoicesService.recordPayment(selectedInvoiceId, payload);
+            await PaymentsService.uploadClientPayment(formData);
 
             await onSuccess();
             handleClose();
@@ -203,9 +204,7 @@ export default function UploadPaymentProofModal({
                                 className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
                             >
                                 <option value="TRANSFER">Transfer</option>
-                                <option value="DEPOSIT">Deposit</option>
                                 <option value="CHECK">Check</option>
-                                <option value="OTHER">Other</option>
                             </select>
                         </div>
                         <div>

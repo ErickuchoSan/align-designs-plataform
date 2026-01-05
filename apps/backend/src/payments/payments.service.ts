@@ -108,9 +108,27 @@ export class PaymentsService {
         return payment;
     }
 
-    async findAllByProject(projectId: string): Promise<Payment[]> {
+    async findAllByProject(projectId: string, userId?: string, userRole?: string): Promise<Payment[]> {
+        // Build where clause based on user role and permissions
+        const whereClause: any = { projectId };
+
+        // EMPLOYEE: Only see payments TO them (employee payments they received)
+        if (userRole === 'EMPLOYEE') {
+            whereClause.toUserId = userId;
+            whereClause.type = PaymentType.EMPLOYEE_PAYMENT;
+        }
+        // CLIENT: Only see payments FROM them (initial payments, invoice payments they made)
+        else if (userRole === 'CLIENT') {
+            whereClause.OR = [
+                { fromUserId: userId },
+                { type: PaymentType.INITIAL_PAYMENT },
+                { type: PaymentType.INVOICE },
+            ];
+        }
+        // ADMIN: See all payments (no additional filters)
+
         return this.prisma.payment.findMany({
-            where: { projectId },
+            where: whereClause,
             include: {
                 fromUser: {
                     select: {
@@ -185,6 +203,19 @@ export class PaymentsService {
             throw new BadRequestException('You can only upload payments for your own projects');
         }
 
+        // Check if there's an open invoice for this project
+        const openInvoice = await this.prisma.invoice.findFirst({
+            where: {
+                projectId,
+                status: {
+                    in: ['SENT', 'PARTIALLY_PAID', 'OVERDUE'],
+                },
+            },
+            orderBy: {
+                createdAt: 'desc', // Get the most recent one
+            },
+        });
+
         // Create payment with PENDING_APPROVAL status
         const payment = await this.prisma.payment.create({
             data: {
@@ -192,10 +223,11 @@ export class PaymentsService {
                 amount,
                 ...rest,
                 fromUserId: userId, // Client is paying
-                type: PaymentType.INITIAL_PAYMENT,
+                type: openInvoice ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT,
                 paymentDate: new Date(createPaymentDto.paymentDate),
                 receiptFileUrl,
                 status: PaymentStatus.PENDING_APPROVAL,
+                invoiceId: openInvoice?.id, // Link to invoice if exists
             },
             include: {
                 fromUser: {
@@ -217,7 +249,7 @@ export class PaymentsService {
         });
 
         this.logger.log(
-            `Client payment uploaded: ${payment.id} for project ${projectId} amount ${amount} - PENDING_APPROVAL`,
+            `Client payment uploaded: ${payment.id} for project ${projectId} amount ${amount} - PENDING_APPROVAL${openInvoice ? ` (linked to invoice ${openInvoice.id})` : ''}`,
         );
 
         // Notify admin (project creator) for review
@@ -310,6 +342,38 @@ export class PaymentsService {
 
         // Update project amountPaid
         await this.projectStatusService.updateProjectPayment(payment.project.id, finalAmount);
+
+        // If payment is associated with an invoice, update the invoice
+        if (payment.invoiceId) {
+            const invoice = await this.prisma.invoice.findUnique({
+                where: { id: payment.invoiceId },
+            });
+
+            if (invoice) {
+                const newAmountPaid = Number(invoice.amountPaid) + finalAmount;
+                const totalAmount = Number(invoice.totalAmount);
+
+                // Determine new status
+                let newStatus = invoice.status;
+                if (newAmountPaid >= totalAmount) {
+                    newStatus = 'PAID';
+                } else if (newAmountPaid > 0) {
+                    newStatus = 'PARTIALLY_PAID';
+                }
+
+                await this.prisma.invoice.update({
+                    where: { id: payment.invoiceId },
+                    data: {
+                        amountPaid: newAmountPaid,
+                        status: newStatus,
+                    },
+                });
+
+                this.logger.log(
+                    `Updated invoice ${payment.invoiceId} amountPaid to ${newAmountPaid}, status: ${newStatus}`,
+                );
+            }
+        }
 
         // Notify client
         if (payment.fromUser) {

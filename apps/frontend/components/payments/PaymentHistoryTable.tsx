@@ -42,27 +42,47 @@ const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment
                 ${formattedAmount}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    payment.status === 'CONFIRMED'
+                        ? 'bg-green-100 text-green-800'
+                        : payment.status === 'REJECTED'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
                     }`}>
                     {PAYMENT_STATUS_LABELS[payment.status]}
                 </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:text-blue-900">
                 {payment.receiptFileUrl ? (
-                    isAdmin && onViewReceipt ? (
-                        <button
-                            onClick={() => onViewReceipt(payment)}
-                            className="hover:underline font-medium"
-                        >
-                            View Receipt
-                        </button>
-                    ) : (
-                        <a href={payment.receiptFileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            View Receipt
-                        </a>
-                    )
+                    <div className="flex justify-center">
+                        {isAdmin && onViewReceipt ? (
+                            <button
+                                onClick={() => onViewReceipt(payment)}
+                                className="text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-blue-50"
+                                title="View Receipt"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 5 8.268 7.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        ) : (
+                            <a
+                                href={`${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-blue-50 inline-block"
+                                title="View Receipt"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 5 8.268 7.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </a>
+                        )}
+                    </div>
                 ) : (
-                    <span className="text-gray-400">-</span>
+                    <span className="text-gray-400 text-xs">-</span>
                 )}
             </td>
         </tr>
@@ -72,6 +92,10 @@ const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment
 PaymentRow.displayName = 'PaymentRow';
 
 function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: PaymentHistoryTableProps) {
+    // Use regular table for small lists (< 50 items), virtualized for large lists
+    // This prevents unnecessary complexity for most use cases
+    const useVirtualization = payments.length > 50;
+
     if (isLoading) {
         return <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded"></div>)}
@@ -82,15 +106,115 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Pa
         return <div className="text-center py-8 text-gray-500">No payments recorded.</div>;
     }
 
-    // Use regular table for small lists (< 50 items), virtualized for large lists
-    // This prevents unnecessary complexity for most use cases
-    const useVirtualization = payments.length > 50;
-
     if (!useVirtualization) {
         return (
-            <div className="overflow-x-auto">
+            <>
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {payments.map((payment) => (
+                                <PaymentRow
+                                    key={payment.id}
+                                    payment={payment}
+                                    isAdmin={isAdmin}
+                                    onViewReceipt={onViewReceipt}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                    {payments.map((payment) => {
+                        const formattedAmount = formatCurrency(payment.amount);
+                        const formattedDate = formatDateSimple(payment.paymentDate);
+
+                        return (
+                            <div key={payment.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">{formattedDate}</div>
+                                        <div className="text-xs text-gray-500 mt-1">{PAYMENT_TYPE_LABELS[payment.type]}</div>
+                                    </div>
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                        payment.status === 'CONFIRMED'
+                                            ? 'bg-green-100 text-green-800'
+                                            : payment.status === 'REJECTED'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                        {PAYMENT_STATUS_LABELS[payment.status]}
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <div className="text-xs text-gray-500">Method</div>
+                                        <div className="text-sm text-gray-900">{PAYMENT_METHOD_LABELS[payment.paymentMethod]}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">Amount</div>
+                                        <div className="text-sm font-semibold text-gray-900">${formattedAmount}</div>
+                                    </div>
+                                </div>
+
+                                {payment.receiptFileUrl && (
+                                    <div className="pt-3 border-t border-gray-200">
+                                        {isAdmin && onViewReceipt ? (
+                                            <button
+                                                onClick={() => onViewReceipt(payment)}
+                                                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                <span className="text-sm font-medium">View Receipt</span>
+                                            </button>
+                                        ) : (
+                                            <a
+                                                href={`${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                <span className="text-sm font-medium">View Receipt</span>
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </>
+        );
+    }
+
+    // For large lists (50+ items), use virtualized rendering
+    // This dramatically improves performance with 100s or 1000s of payments
+    return (
+        <>
+            {/* Desktop Virtualized Table */}
+            <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
@@ -100,55 +224,98 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Pa
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {payments.map((payment) => (
-                            <PaymentRow
-                                key={payment.id}
-                                payment={payment}
-                                isAdmin={isAdmin}
-                                onViewReceipt={onViewReceipt}
-                            />
-                        ))}
-                    </tbody>
                 </table>
+                <div className="relative">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {payments.map((payment) => (
+                                <PaymentRow
+                                    key={payment.id}
+                                    payment={payment}
+                                    isAdmin={isAdmin}
+                                    onViewReceipt={onViewReceipt}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 px-2">
+                    Showing {payments.length} payments (optimized mode for large lists)
+                </div>
             </div>
-        );
-    }
 
-    // For large lists (50+ items), use virtualized rendering
-    // This dramatically improves performance with 100s or 1000s of payments
-    return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
-                    </tr>
-                </thead>
-            </table>
-            <div className="relative">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {payments.map((payment) => (
-                            <PaymentRow
-                                key={payment.id}
-                                payment={payment}
-                                isAdmin={isAdmin}
-                                onViewReceipt={onViewReceipt}
-                            />
-                        ))}
-                    </tbody>
-                </table>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+                {payments.map((payment) => {
+                    const formattedAmount = formatCurrency(payment.amount);
+                    const formattedDate = formatDateSimple(payment.paymentDate);
+
+                    return (
+                        <div key={payment.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <div className="text-sm font-medium text-gray-900">{formattedDate}</div>
+                                    <div className="text-xs text-gray-500 mt-1">{PAYMENT_TYPE_LABELS[payment.type]}</div>
+                                </div>
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    payment.status === 'CONFIRMED'
+                                        ? 'bg-green-100 text-green-800'
+                                        : payment.status === 'REJECTED'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                    {PAYMENT_STATUS_LABELS[payment.status]}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <div className="text-xs text-gray-500">Method</div>
+                                    <div className="text-sm text-gray-900">{PAYMENT_METHOD_LABELS[payment.paymentMethod]}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500">Amount</div>
+                                    <div className="text-sm font-semibold text-gray-900">${formattedAmount}</div>
+                                </div>
+                            </div>
+
+                            {payment.receiptFileUrl && (
+                                <div className="pt-3 border-t border-gray-200">
+                                    {isAdmin && onViewReceipt ? (
+                                        <button
+                                            onClick={() => onViewReceipt(payment)}
+                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            <span className="text-sm font-medium">View Receipt</span>
+                                        </button>
+                                    ) : (
+                                        <a
+                                            href={`${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            <span className="text-sm font-medium">View Receipt</span>
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+                <div className="text-xs text-gray-500 mt-2 px-2 text-center">
+                    Showing {payments.length} payments
+                </div>
             </div>
-            <div className="text-xs text-gray-500 mt-2 px-2">
-                Showing {payments.length} payments (optimized mode for large lists)
-            </div>
-        </div>
+        </>
     );
 }
 

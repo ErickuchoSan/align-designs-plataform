@@ -169,6 +169,7 @@ model File {
   approvedClientAt DateTime?     @map("approved_client_at") @db.Timestamptz(6)
   pendingPayment   Boolean       @default(false) @map("pending_payment")
   paymentFiles     PaymentFile[] // Phase 2: Linked payments
+  employeePaymentId String?      @map("employee_payment_id") @db.Uuid // Payment related to this file (work delivered)
 
   // Phase 3: Versioning & Tracking
   versionNumber    Int     @default(1) @map("version_number")
@@ -186,6 +187,7 @@ model File {
   project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   uploader      User           @relation("UploadedFiles", fields: [uploadedBy], references: [id], onDelete: Restrict)
   feedbackCycle FeedbackCycle? @relation(fields: [feedbackCycleId], references: [id])
+  employeePayment EmployeePayment? @relation("PaymentFiles", fields: [employeePaymentId], references: [id], onDelete: SetNull)
 
   // Phase 3 Relations
   parentFile            File?             @relation("FileVersions", fields: [parentFileId], references: [id], onDelete: Restrict)
@@ -201,6 +203,7 @@ model File {
   @@index([stage]) // Phase 1: Index for filtering by stage
   @@index([feedbackCycleId]) // Phase 1: Index for feedback cycle queries
   @@index([pendingPayment]) // Phase 1: Index for pending payment queries
+  @@index([employeePaymentId]) // Index for payment linking
   @@index([projectId, deletedAt]) // Compound index for efficient project file queries
   @@index([uploadedBy, deletedAt]) // Compound index for efficient uploader file queries
   @@index([uploadedAt]) // Index for sorting by upload date
@@ -416,6 +419,7 @@ enum InvoiceStatus {
   DRAFT
   SENT
   PAID
+  PARTIALLY_PAID
   OVERDUE
   CANCELLED
 }
@@ -480,6 +484,7 @@ model EmployeePayment {
   creator      User    @relation("CreatedEmployeePayments", fields: [createdBy], references: [id], onDelete: Restrict)
   approver     User?   @relation("ApprovedEmployeePayments", fields: [approvedBy], references: [id], onDelete: Restrict)
   receiptFile  File?   @relation("PaymentReceipt", fields: [receiptFileId], references: [id], onDelete: SetNull)
+  relatedFiles File[]  @relation("PaymentFiles") // Files deliverables paid by this payment
 
   @@index([projectId])
   @@index([employeeId])

@@ -47,8 +47,67 @@ export class InvoicesService {
                 ...data,
                 invoiceNumber,
                 status: InvoiceStatus.DRAFT,
+                amountPaid: 0, // Ensure initial amount paid is 0
+                taxAmount: data.taxAmount || 0,
+            },
+            include: {
+                project: {
+                    select: {
+                        name: true,
+                    },
+                },
+                client: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                    },
+                },
             },
         });
+
+        this.logger.log(
+            `Invoice ${invoiceNumber} created manually for project ${data.projectId}, amount: $${data.totalAmount}`,
+        );
+
+        // Generate PDF and send email to client
+        try {
+            // Get full invoice data with all relations for PDF generation (re-fetching generally safer for consistency)
+            const fullInvoice = await this.findOne(invoice.id);
+
+            // Generate PDF
+            this.logger.log(`Generating PDF for invoice ${invoiceNumber}...`);
+            // Creates a copy of the invoice with status SENT for the PDF
+            const invoiceForPdf = { ...fullInvoice, status: InvoiceStatus.SENT };
+            const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoiceForPdf as any);
+            this.logger.log(`PDF generated successfully. Size: ${pdfBuffer.length} bytes.`);
+
+            // Send email with PDF attachment
+            const clientName = `${invoice.client.firstName} ${invoice.client.lastName}`;
+            this.logger.log(`Sending email to ${invoice.client.email} with attachment...`);
+
+            await this.emailService.sendInvoiceEmail(
+                invoice.client.email,
+                clientName,
+                invoiceNumber,
+                Number(data.totalAmount),
+                new Date(data.dueDate),
+                pdfBuffer,
+            );
+
+            // Update invoice status to SENT
+            await this.updateStatus(invoice.id, InvoiceStatus.SENT);
+
+            this.logger.log(
+                `Invoice ${invoiceNumber} PDF generated and email sent to ${invoice.client.email}`,
+            );
+        } catch (error) {
+            this.logger.error(
+                `Failed to generate PDF or send email for invoice ${invoiceNumber}. Error: ${error instanceof Error ? error.message : String(error)}`,
+                error instanceof Error ? error.stack : String(error),
+            );
+            // Don't throw - user can resend later
+        }
 
         return this.transformInvoiceDecimals(invoice) as Invoice;
     }
@@ -155,16 +214,70 @@ export class InvoicesService {
             `Auto-generated invoice ${invoiceNumber} for project ${projectId}, amount: $${amount}`,
         );
 
+        // Link existing INITIAL_PAYMENT payments to this invoice
+        const existingPayments = await this.prisma.payment.findMany({
+            where: {
+                projectId,
+                type: 'INITIAL_PAYMENT',
+                status: 'CONFIRMED',
+                invoiceId: null, // Not yet linked to any invoice
+            },
+        });
+
+        if (existingPayments.length > 0) {
+            const totalExistingPayments = existingPayments.reduce(
+                (sum, p) => sum + Number(p.amount),
+                0
+            );
+
+            // Link payments to invoice
+            await this.prisma.payment.updateMany({
+                where: {
+                    id: { in: existingPayments.map(p => p.id) },
+                },
+                data: {
+                    invoiceId: invoice.id,
+                },
+            });
+
+            // Update invoice amountPaid and status
+            const newAmountPaid = totalExistingPayments;
+            let newStatus = invoice.status;
+            if (newAmountPaid >= amount) {
+                newStatus = InvoiceStatus.PAID;
+            } else if (newAmountPaid > 0) {
+                newStatus = 'PARTIALLY_PAID' as any;
+            }
+
+            await this.prisma.invoice.update({
+                where: { id: invoice.id },
+                data: {
+                    amountPaid: newAmountPaid,
+                    status: newStatus,
+                },
+            });
+
+            this.logger.log(
+                `Linked ${existingPayments.length} existing payments (total: $${totalExistingPayments}) to invoice ${invoiceNumber}. Updated status to ${newStatus}`,
+            );
+        }
+
         // Generate PDF and send email to client
         try {
             // Get full invoice data with all relations for PDF generation
             const fullInvoice = await this.findOne(invoice.id);
 
             // Generate PDF
-            const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(fullInvoice);
+            this.logger.log(`Generating PDF for invoice ${invoiceNumber}...`);
+            // Creates a copy of the invoice with status SENT for the PDF
+            const invoiceForPdf = { ...fullInvoice, status: InvoiceStatus.SENT };
+            const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoiceForPdf as any);
+            this.logger.log(`PDF generated successfully. Size: ${pdfBuffer.length} bytes.`);
 
             // Send email with PDF attachment
             const clientName = `${invoice.client.firstName} ${invoice.client.lastName}`;
+            this.logger.log(`Sending email to ${invoice.client.email} with attachment...`);
+
             await this.emailService.sendInvoiceEmail(
                 invoice.client.email,
                 clientName,
@@ -182,14 +295,54 @@ export class InvoicesService {
             );
         } catch (error) {
             this.logger.error(
-                `Failed to generate PDF or send email for invoice ${invoiceNumber}`,
+                `Failed to generate PDF or send email for invoice ${invoiceNumber}. Error: ${error instanceof Error ? error.message : String(error)}`,
                 error instanceof Error ? error.stack : String(error),
             );
+            if (error && typeof error === 'object') {
+                this.logger.error('Full error object:', JSON.stringify(error, null, 2));
+            }
             // Don't throw - invoice is created, email is a nice-to-have
             // Admin can manually resend later
         }
 
         return this.transformInvoiceDecimals(invoice) as Invoice;
+    }
+
+    /**
+     * Manually resend invoice email
+     * Throws error if email sending fails, allowing admin to see the reason
+     */
+    async resendInvoiceEmail(id: string): Promise<void> {
+        const invoice: any = await this.findOne(id);
+        const invoiceNumber = invoice.invoiceNumber;
+        const amount = Number(invoice.totalAmount);
+
+        this.logger.log(`Resending invoice ${invoiceNumber} email to ${invoice.client.email}`);
+
+        // Generate PDF
+        // Ensure PDF shows "Sent" status even if currently Draft
+        const invoiceForPdf = { ...invoice, status: InvoiceStatus.SENT };
+        const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoiceForPdf);
+
+        // Send email with PDF attachment
+        const clientName = `${invoice.client.firstName} ${invoice.client.lastName}`;
+        await this.emailService.sendInvoiceEmail(
+            invoice.client.email,
+            clientName,
+            invoiceNumber,
+            amount,
+            invoice.dueDate,
+            pdfBuffer,
+        );
+
+        // Update invoice status to SENT if it wasn't already (or PAID/OVERDUE)
+        if (invoice.status === InvoiceStatus.DRAFT) {
+            await this.updateStatus(invoice.id, InvoiceStatus.SENT);
+        }
+
+        this.logger.log(
+            `Invoice ${invoiceNumber} email resent successfully to ${invoice.client.email}`,
+        );
     }
 
     async generateInvoiceNumber(): Promise<string> {

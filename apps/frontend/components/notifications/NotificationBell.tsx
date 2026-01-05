@@ -94,24 +94,24 @@ function NotificationBell() {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white shadow-xl border border-stone-200 z-50 animate-slideDown overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100 bg-stone-50">
-                        <h3 className="font-semibold text-navy-900">
-                            Notifications {unreadCount > 0 && <span className="text-sm font-normal text-stone-500">({unreadCount})</span>}
+                <div className="fixed sm:absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 mx-2 sm:mx-0 sm:w-80 md:w-96 rounded-lg bg-white shadow-xl border border-stone-200 z-50 animate-slideDown overflow-hidden">
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-stone-100 bg-stone-50">
+                        <h3 className="font-semibold text-navy-900 text-sm sm:text-base">
+                            Notifications {unreadCount > 0 && <span className="text-xs sm:text-sm font-normal text-stone-500">({unreadCount})</span>}
                         </h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllAsRead}
-                                className="text-xs text-gold-600 hover:text-gold-700 font-medium"
+                                className="text-[10px] sm:text-xs text-gold-600 hover:text-gold-700 font-medium whitespace-nowrap"
                             >
-                                Mark all as read
+                                Mark all read
                             </button>
                         )}
                     </div>
 
                     {/* Optimized scrolling container - uses native browser virtualization with max-height */}
                     {/* For 100+ notifications, browser handles virtual scrolling efficiently */}
-                    <div className="max-h-96 overflow-y-auto">
+                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
                         {notifications.length === 0 ? (
                             <div className="px-4 py-8 text-center text-stone-500 text-sm">
                                 No notifications yet.
@@ -122,16 +122,16 @@ function NotificationBell() {
                                     <li
                                         key={notification.id}
                                         onClick={() => handleNotificationClick(notification)}
-                                        className={`px-4 py-3 hover:bg-stone-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50/50' : ''
+                                        className={`px-3 sm:px-4 py-3 hover:bg-stone-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50/50' : ''
                                             }`}
                                     >
-                                        <div className="flex gap-3">
+                                        <div className="flex gap-2 sm:gap-3">
                                             {getIcon(notification.type)}
                                             <div className="flex-1 min-w-0">
-                                                <p className={`text-sm font-medium ${!notification.isRead ? 'text-navy-900' : 'text-stone-600'}`}>
+                                                <p className={`text-xs sm:text-sm font-medium line-clamp-2 ${!notification.isRead ? 'text-navy-900' : 'text-stone-600'}`}>
                                                     {notification.title}
                                                 </p>
-                                                <p className="text-xs text-stone-500 mt-1 truncate">
+                                                <p className="text-[11px] sm:text-xs text-stone-500 mt-1 line-clamp-2">
                                                     {notification.message}
                                                 </p>
                                                 <p className="text-[10px] text-stone-400 mt-1">

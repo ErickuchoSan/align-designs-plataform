@@ -82,7 +82,7 @@ export class AuthService {
   }
 
   /**
-   * Request OTP for Client
+   * Request OTP for Client or Employee
    */
   async requestOtpForClient(email: string) {
     const user = await this.prisma.user.findFirst({
@@ -92,7 +92,7 @@ export class AuthService {
       },
     });
 
-    if (!user || user.role !== Role.CLIENT) {
+    if (!user || (user.role !== Role.CLIENT && user.role !== Role.EMPLOYEE)) {
       // Return generic message to prevent user enumeration
       return {
         message:
@@ -130,7 +130,7 @@ export class AuthService {
   }
 
   /**
-   * Verify OTP and generate JWT token for Client
+   * Verify OTP and generate JWT token for Client or Employee
    */
   async verifyOtpForClient(email: string, token: string) {
     const user = await this.prisma.user.findFirst({
@@ -140,7 +140,7 @@ export class AuthService {
       },
     });
 
-    if (!user || user.role !== Role.CLIENT) {
+    if (!user || (user.role !== Role.CLIENT && user.role !== Role.EMPLOYEE)) {
       this.logger.warn(`Failed OTP verification attempt for email: ${email}`);
       throw new UnauthorizedException('Invalid credentials');
     }

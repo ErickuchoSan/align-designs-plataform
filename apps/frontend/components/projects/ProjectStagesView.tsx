@@ -19,7 +19,7 @@ interface FileItem {
   sizeBytes: number | null;
   uploadedBy: string;
   uploadedAt: string;
-  stage?: Stage;
+  stage?: string | Stage;
   uploader: {
     firstName: string;
     lastName: string;
@@ -39,7 +39,7 @@ interface ProjectStagesViewProps {
   project: Project;
   files: FileItem[];
   onOpenUploadModal: (stage: Stage) => void;
-  onOpenCommentModal: (stage: Stage) => void;
+  onOpenCommentModal: (stage: Stage, file?: FileItem) => void;
   onDownload: (fileId: string, fileName: string) => void;
   onEdit: (file: FileItem) => void;
   onDelete: (file: FileItem) => void;
@@ -47,6 +47,7 @@ interface ProjectStagesViewProps {
   onUploadVersion: (file: FileItem) => void;
   canDeleteFile: (file: FileItem) => boolean;
   filesLoading: boolean;
+  onRefresh?: () => void;
 }
 
 /**
@@ -77,6 +78,7 @@ function ProjectStagesView({
   onUploadVersion,
   canDeleteFile,
   filesLoading,
+  onRefresh,
 }: ProjectStagesViewProps) {
   const { user } = useAuth();
   const [stages, setStages] = useState<StageInfo[]>([]);
@@ -119,10 +121,17 @@ function ProjectStagesView({
 
   const updateFileCounts = () => {
     setStages((prevStages) =>
-      prevStages.map((stage) => ({
-        ...stage,
-        fileCount: files.filter((file) => file.stage === stage.stage).length,
-      }))
+      prevStages.map((stage) => {
+        // For PAYMENTS stage, preserve the count from the server (handled by backend)
+        if (stage.stage === Stage.PAYMENTS) {
+          return stage;
+        }
+
+        return {
+          ...stage,
+          fileCount: files.filter((file) => file.stage === stage.stage).length,
+        };
+      })
     );
   };
 
@@ -202,44 +211,67 @@ function ProjectStagesView({
                 </p>
               </div>
 
-              {/* Action Buttons - Only show for non-PAYMENTS stages */}
-              {currentStage.stage !== Stage.PAYMENTS && (
-                <div className="flex items-center gap-3">
-                  {/* Create Comment Button */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                {/* Create Comment Button - HIDDEN for Admin in Submitted, HIDDEN for Employee in Submitted, HIDDEN in Employee Feedback (all roles), HIDDEN for Employee in Project Brief, HIDDEN in Payments */}
+                {!(currentStage.stage === Stage.SUBMITTED || currentStage.stage === Stage.FEEDBACK_EMPLOYEE || currentStage.stage === Stage.PAYMENTS || (currentStage.stage === Stage.BRIEF_PROJECT && user?.role === 'EMPLOYEE')) && (
                   <button
                     onClick={() => onOpenCommentModal(currentStage.stage)}
-                    className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
-                    Create Comment
+                    <span className="whitespace-nowrap">Create Comment</span>
                   </button>
+                )}
 
-                  {/* Upload Button - Only show if user has write permission */}
-                  {currentStage.permissions.canWrite && (
-                    <button
-                      onClick={() => onOpenUploadModal(currentStage.stage)}
-                      className="flex items-center gap-2 px-4 py-2 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
+                {/* Bulk Download Button - Show if multiple files exist AND have filenames */}
+                {stageFiles.filter(f => f.filename).length > 1 && (
+                  <button
+                    onClick={() => {
+                      // Trigger download for all files in this stage that have a filename
+                      stageFiles
+                        .filter(f => f.filename)
+                        .forEach((file, index) => {
+                          // Use timeout to prevent browser blocking multiple downloads
+                          setTimeout(() => {
+                            onDownload(file.id, file.originalName || `file-${index}`);
+                          }, index * 500);
+                        });
+                    }}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-lg font-medium transition-colors border border-stone-300 text-sm sm:text-base"
+                    title="Download All Files"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span className="whitespace-nowrap">Download All</span>
+                  </button>
+                )}
+
+                {/* Upload Button - HIDDEN for Admin in Submitted, HIDDEN in Employee Feedback (all roles), HIDDEN in Payments */}
+                {currentStage.permissions.canWrite && !(user?.role === 'ADMIN' && currentStage.stage === Stage.SUBMITTED) && currentStage.stage !== Stage.FEEDBACK_EMPLOYEE && currentStage.stage !== Stage.PAYMENTS && (
+                  <button
+                    onClick={() => onOpenUploadModal(currentStage.stage)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+                  >
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      Upload File
-                    </button>
-                  )}
-                </div>
-              )}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    <span className="whitespace-nowrap">{currentStage.stage === Stage.SUBMITTED ? 'Submit Work' : 'Upload File'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -264,6 +296,7 @@ function ProjectStagesView({
                     // TODO: Open Upload Payment Proof modal
                     console.log('Upload Payment Proof clicked');
                   }}
+                  onRefresh={onRefresh}
                 />
               )
             ) : filesLoading ? (
@@ -311,49 +344,85 @@ function ProjectStagesView({
 
                     {/* File Actions */}
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onDownload(file.id, file.originalName || 'file')}
-                        className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
-                        title="Download"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                      </button>
-
-                      <button
-                        onClick={() => onViewHistory(file)}
-                        className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
-                        title="View History"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-
-                      {currentStage.permissions.canWrite && (
+                      {file.filename && (
                         <button
-                          onClick={() => onUploadVersion(file)}
-                          className="p-2 text-stone-600 hover:text-blue-600 hover:bg-stone-200 rounded-lg transition-colors"
-                          title="Upload New Version"
+                          onClick={() => onDownload(file.id, file.originalName || 'file')}
+                          className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+                          title="Download"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                           </svg>
                         </button>
                       )}
 
                       <button
-                        onClick={() => onEdit(file)}
-                        className="p-2 text-stone-600 hover:text-amber-600 hover:bg-stone-200 rounded-lg transition-colors"
-                        title="Edit"
+                        onClick={() => onViewHistory(file)}
+                        className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+                        title="View Comments"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
                       </button>
 
-                      {canDeleteFile(file) && (
+
+
+                      {/* Standard Edit - Hidden for Admin in SUBMITTED, and Hidden for Employee always */}
+                      {!(user?.role === 'ADMIN' && currentStage.stage === Stage.SUBMITTED) && user?.role !== 'EMPLOYEE' && (
+                        <button
+                          onClick={() => onEdit(file)}
+                          className="p-2 text-stone-600 hover:text-amber-600 hover:bg-stone-200 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
+
+                      {/* Special Admin Actions in SUBMITTED */}
+                      {user?.role === 'ADMIN' && currentStage.stage === Stage.SUBMITTED && (
+                        <>
+                          {(!file.rejectionCount || file.rejectionCount === 0) && (
+                            <button
+                              onClick={() => onEdit(file)}
+                              className="p-2 text-stone-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Approve (Move to Admin Approved)"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              if (!file.rejectionCount || file.rejectionCount === 0) {
+                                onOpenCommentModal(Stage.FEEDBACK_EMPLOYEE, file);
+                              }
+                            }}
+                            className={`p-2 rounded-lg transition-colors ${file.rejectionCount && file.rejectionCount > 0
+                              ? 'text-red-600 bg-red-50 cursor-default opacity-80'
+                              : 'text-stone-600 hover:text-red-600 hover:bg-red-50'
+                              }`}
+                            disabled={!!(file.rejectionCount && file.rejectionCount > 0)}
+                            title={file.rejectionCount ? `Rejected (${file.rejectionCount} times)` : "Reject (Create Feedback)"}
+                          >
+                            {file.rejectionCount && file.rejectionCount > 0 ? (
+                              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            )}
+                          </button>
+                        </>
+                      )}
+
+                      {canDeleteFile(file) && !(user?.role === 'ADMIN' && currentStage.stage === Stage.SUBMITTED) && user?.role !== 'EMPLOYEE' && (
                         <button
                           onClick={() => onDelete(file)}
                           className="p-2 text-stone-600 hover:text-red-600 hover:bg-stone-200 rounded-lg transition-colors"

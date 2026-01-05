@@ -8,7 +8,7 @@ import type { FileData } from '../hooks/useProjectFiles';
 interface FileEditModalProps {
   show: boolean;
   onClose: () => void;
-  onEdit: (fileToEdit: FileData, editComment: string, editFile: File | null) => Promise<boolean>;
+  onEdit: (fileToEdit: FileData, editComment: string, editFiles: File[]) => Promise<boolean>;
   file: FileData | null;
   uploading: boolean;
 }
@@ -21,12 +21,12 @@ export default function FileEditModal({
   uploading,
 }: FileEditModalProps) {
   const [editComment, setEditComment] = useState('');
-  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editFiles, setEditFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (file) {
       setEditComment(file.comment || '');
-      setEditFile(null);
+      setEditFiles([]);
     }
   }, [file]);
 
@@ -34,7 +34,7 @@ export default function FileEditModal({
     e.preventDefault();
     if (!file) return;
 
-    const success = await onEdit(file, editComment, editFile);
+    const success = await onEdit(file, editComment, editFiles);
     if (success) {
       handleClose();
     }
@@ -42,7 +42,7 @@ export default function FileEditModal({
 
   const handleClose = () => {
     setEditComment('');
-    setEditFile(null);
+    setEditFiles([]);
     onClose();
   };
 
@@ -72,7 +72,7 @@ export default function FileEditModal({
 
         <div>
           <label className="block text-sm font-medium text-navy-900 mb-2">
-            {file?.filename ? 'Replace file (optional)' : 'Add file (optional)'}
+            {file?.filename ? 'Replace file & Add more (optional)' : 'Add files (optional)'}
           </label>
           {file?.filename && (
             <p className="mb-2 text-sm text-stone-700">
@@ -80,13 +80,25 @@ export default function FileEditModal({
             </p>
           )}
           <FileInput
-            onChange={(file) => setEditFile(file)}
-            placeholder="No file selected"
+            onChange={(files) => setEditFiles(files || [])}
+            placeholder="No files selected"
+            multiple={true}
           />
-          {editFile && (
-            <p className="mt-2 text-sm text-emerald-700 font-medium">
-              New file: {editFile.name} ({formatFileSize(editFile.size)})
-            </p>
+          {editFiles.length > 0 && (
+            <div className="mt-2 text-sm text-stone-700 max-h-32 overflow-y-auto">
+              <p className="font-medium mb-1 text-emerald-700">{editFiles.length} new file(s) selected:</p>
+              <ul className="list-disc list-inside">
+                {editFiles.map((f, idx) => (
+                  <li key={idx} className="truncate">
+                    {idx === 0 && file?.filename ?
+                      <span className="font-semibold text-amber-700">[Replaces Current] </span> :
+                      <span className="font-semibold text-blue-700">[New Entry] </span>
+                    }
+                    {f.name} ({formatFileSize(f.size)})
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 

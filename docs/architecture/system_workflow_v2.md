@@ -211,166 +211,42 @@ Users **only see stages they have permission to access**. Clicking a stage opens
 | **Feedback (Client)** | 💬 | R+W ✅ | R+W ✅ | NO ❌ | Client creates feedback. Admin responds. **Client DOES see this stage.** |
 | **Feedback (Employee)** | 📝 | R+W ✅ | NO ❌ | R 👁️ | Admin creates feedback for employees. Employees read only. **Client does NOT see this stage.** |
 | **References** | 🔗 | R+W ✅ | R+W ✅ | NO ❌ | Client uploads links (Pinterest, Google Drive, etc.). |
-| **Submitted** | 📤 | R+W ✅ | NO ❌ | R+W ✅ | Employees submit work. Supports versioning with notes. |
+| **Submitted** | 📤 | R 👁️ | NO ❌ | R+W ✅ | **STRICT:** Admin Read-Only (Download/View). Employee uploads files (Link/File). No standalone comments (must upload file). |
 | **Admin Approved** | ✅ | R+W ✅ | NO ❌ | NO ❌ | Admin only. Files approved by admin awaiting client review. |
 | **Client Approved** | ⭐ | R+W ✅ | NO ❌ | NO ❌ | Admin only. **Client does NOT see this stage.** Files approved by client. |
 | **Payments** | 💰 | R+W ✅ | R* 👁️ | R** 👁️ | *Client: Only THEIR invoices & payments. **Employee: Only THEIR payments. |
 
 **Legend:**
 - ✅ Read + Write (full access)
-- 👁️ Read Only
+- 👁️ Read Only (View + Download)
 - ❌ No Access (stage not even displayed to user)
-
-### 🆕 UI Example - What Each User Sees:
-
-**Admin sees ALL 8 stages:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ Project Sections                                         │
-├─────────────────────────────────────────────────────────┤
-│ 📋 Project Brief  💬 Client Feedback 📝 Employee Feedback│
-│ 3 files           5 files            2 files             │
-│ Read + Write      Read + Write       Read + Write        │
-│                                                          │
-│ 🔗 References     📤 Submitted       ✅ Admin Approved   │
-│ 8 files           4 files            12 files            │
-│ Read + Write      Read + Write       Read + Write        │
-│                                                          │
-│ ⭐ Client Approved 💰 Payments                           │
-│ 8 files            15 files                              │
-│ Read + Write       Read + Write                          │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Client sees ONLY 3 stages:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ Project Sections                                         │
-├─────────────────────────────────────────────────────────┤
-│ 💬 Client Feedback 🔗 References    💰 Payments         │
-│ 5 files            8 files          3 invoices (theirs) │
-│ Read + Write       Read + Write     Read Only           │
-│                                                          │
-│ (Other stages not shown - no access)                    │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Employee sees ONLY 4 stages:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ Project Sections                                         │
-├─────────────────────────────────────────────────────────┤
-│ 📋 Project Brief  📝 Employee Feedback 📤 Submitted     │
-│ 3 files           2 files              4 files          │
-│ Read Only         Read Only            Read + Write     │
-│                                                          │
-│ 💰 Payments                                             │
-│ 2 payments (theirs only)                                │
-│ Read Only                                               │
-└─────────────────────────────────────────────────────────┘
-```
 
 ### Payment Sub-stages (3 Types with Privacy):
 
 The **Payments** stage contains **3 separate subsections**, each with **strict privacy filtering**:
 
 #### 1️⃣ Invoices (Admin → Client)
-
-**Purpose:** Admin creates and tracks invoices sent to clients
-
-**Features:**
-- **Auto-generation:** Creating project with `initialAmountRequired` auto-creates invoice
-- **Invoice Number:** Auto-generated `INV-2024-12-20-001` format
-- **Payment Terms:** Net 15, 30, 60, or custom days
-- **Due Date:** Automatically calculated
-- **Status Tracking:** Pending, Partially Paid, Paid, Overdue
-- **Overdue Detection:** System automatically flags overdue invoices
-
-**Who Sees What:**
-- **Admin:** ALL invoices to ALL clients across ALL projects
-- **Client:** ONLY their own invoices
-- **Employee:** NO access (doesn't see this subsection)
-
-**Client Payment Process:**
-1. Client sees invoice in Payments → Invoices tab
-2. Client uploads payment receipt with warning about using bank's SHARE feature
-3. Payment goes to `PENDING_APPROVAL` status
-4. Admin reviews and approves/corrects/rejects
-5. Upon approval, invoice shows payment progress
-6. When fully paid, invoice status → `PAID`
+*Standard invoice tracking system...*
 
 #### 2️⃣ Client Payments (Client → Admin)
-
-**Purpose:** Track all payments from clients (initial payments, invoice payments, etc.)
-
-**Payment States:**
-- `PENDING_APPROVAL` - Client uploaded, awaiting admin review
-- `CONFIRMED` - Admin approved payment
-- `REJECTED` - Admin rejected, client can re-upload
-
-**Admin Review Options:**
-- ✅ Approve with claimed amount
-- ✏️ Approve but correct amount
-- ❌ Reject (request new receipt)
-
-**Who Sees What:**
-- **Admin:** ALL payments from ALL clients
-- **Client:** ONLY their own payments
-- **Employee:** NO access
-
-**Visible Information:**
-- Payment amount (claimed vs. approved)
-- Receipt file
-- Payment date
-- Status
-- Admin notes/corrections
+*Standard client payment tracking...*
 
 #### 3️⃣ Employee Payments (Admin → Employee)
 
-**Purpose:** Track payments from admin to employees for completed work
+**Purpose:** Pay employees for specific completed work.
 
-**Features:**
-- Admin uploads transfer receipt + amount + date
-- Admin links payment to specific approved file(s)
-- Tracks which deliverables are "Pending payment" vs "Paid"
-- Shows payment history per employee
-- Shows rejection count and approval dates for each file
+**Workflow:**
+1. Work must be in **"Client Approved"** stage.
+2. Admin goes to "Record Employee Payment".
+3. Admin selects Employee.
+4. **System fetches and displays list of "Client Approved" files** that are not yet paid.
+5. Admin selects which file(s) are being paid (checkboxes).
+6. Admin enters amount, date, and "Transfer" method.
+7. Payment is linked to those specific deliverables.
 
-**Who Sees What:**
-- **Admin:** ALL payments to ALL employees
-- **Client:** NO access (doesn't see this subsection)
-- **Employee:** ONLY their own payments received
-
-**Employee View - Pending Payments:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ MY PENDING PAYMENTS                                      │
-├─────────────────────────────────────────────────────────┤
-│ ✓ Kitchen Design Final                                  │
-│   Approved: Dec 22, 2024                                │
-│   Versions: 3 (rejected 2 times)                        │
-│   Status: PENDING PAYMENT                               │
-│                                                          │
-│ ✓ Living Room Layout                                    │
-│   Approved: Dec 25, 2024                                │
-│   Versions: 1 (approved first try)                      │
-│   Status: PENDING PAYMENT                               │
-│                                                          │
-│ Total Pending: 2 files | Estimated: $5,500             │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Employee View - Payment History:**
-```
-┌─────────────────────────────────────────────────────────┐
-│ MY PAYMENT HISTORY                                       │
-├─────────────────────────────────────────────────────────┤
-│ ✅ Bedroom Design | $3,000 | Paid Dec 28, 2024         │
-│ ✅ Bathroom Layout | $2,000 | Paid Dec 20, 2024        │
-│                                                          │
-│ Total Received: $5,000                                  │
-└─────────────────────────────────────────────────────────┘
-```
+**Employee View:**
+- Sees received payments.
+- Sees which deliverables have been paid.
 
 ---
 
@@ -642,17 +518,15 @@ The **Payments** stage contains **3 separate subsections**, each with **strict p
 **ID Relationship System:**
 
 ```
-Feedback_Cycle_ID_123
-├─ First_Feedback_ID_124 (Admin → Employee 1) [Dec 15, 2025 11:00 AM]
-│  └─→ 🆕 Rejected_File_ID_450 (v1) - Kitchen Design
-├─ Second_Feedback_ID_125 (Admin → Employee 1) [Dec 16, 2025 2:00 PM]
-│  └─→ 🆕 Rejected_File_ID_451 (v2) - Kitchen Design
-├─ Third_Feedback_ID_126 (Admin → Employee 1) [Dec 17, 2025 10:00 AM]
-└─→ Submitted_ID_456 (Employee 1) [Dec 18, 2025 4:26 PM]
-    └─→ 🆕 Version: v3, Rejection Count: 2
-     └─→ Admin_Approved_ID_789 [Dec 19, 2025 - selected by admin]
-          └─→ Client_Approved_ID_101112 [Dec 20, 2025 - selected by admin]
-               └─→ Payment_ID_131415 [$3,000] [Dec 22, 2025 - selected by admin]
+Feedback_Cycle_ID_123 (In "Employee Feedback" stage)
+├─ Feedback_Item_A (Admin → Employee)
+│  └─→ Links to: Submitted_File_ID_450 (if rejecting a specific file)
+│
+Submitted_ID_456 (In "Submitted" stage)
+└─→ 🆕 Version: v3
+ └─→ Admin_Approved_ID_789 (Moved to "Admin Approved")
+      └─→ Client_Approved_ID_101112 (Moved to "Client Approved")
+           └─→ Payment_ID_131415 (Selected in "Pay Employee")
 ```
 
 **Time Calculation:**

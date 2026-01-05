@@ -50,47 +50,67 @@ export function useFileOperations(
   }, []);
 
   const handleFileUpload = useCallback(
-    async (file: File, comment: string, stage?: string) => {
-      // Validate file size before upload
-      if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
-        const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
-        const maxSizeGB = (FILE_UPLOAD.MAX_SIZE_MB / 1000).toFixed(0);
-        onErrorRef.current(`File size (${fileSizeGB}GB) exceeds maximum allowed size of ${maxSizeGB}GB.`);
-        return false;
+    async (files: File[], comment: string, stage?: string) => {
+      // Validate inputs
+      if (!files || files.length === 0) return false;
+
+      // Validate all files first
+      for (const file of files) {
+        if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
+          const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
+          const maxSizeGB = (FILE_UPLOAD.MAX_SIZE_MB / 1000).toFixed(0);
+          onErrorRef.current(`File "${file.name}" exceeds size limit of ${maxSizeGB}GB.`);
+          return false;
+        }
       }
 
       setUploading(true);
       setUploadProgress(0);
 
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        if (comment) {
-          formData.append('comment', comment);
-        }
-        if (stage) {
-          formData.append('stage', stage);
+        let successCount = 0;
+        const totalFiles = files.length;
+
+        for (let i = 0; i < totalFiles; i++) {
+          const file = files[i];
+          const fileComment = i === 0 ? comment : ''; // Attach comment to first file only (or all? usually first)
+
+          const formData = new FormData();
+          formData.append('file', file);
+          if (fileComment) formData.append('comment', fileComment);
+          if (stage) formData.append('stage', stage);
+
+          try {
+            await api.post(`/files/${projectId}/upload`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+              onUploadProgress: (progressEvent) => {
+                // Approximate progress for current file in total context
+                if (progressEvent.total) {
+                  const filePercent = (progressEvent.loaded / progressEvent.total) * 100;
+                  const totalPercent = ((i * 100) + filePercent) / totalFiles;
+                  setUploadProgress(Math.round(totalPercent));
+                }
+              },
+            });
+            successCount++;
+          } catch (err) {
+            console.error(`Failed to upload ${file.name}`, err);
+          }
         }
 
-        await api.post(`/files/${projectId}/upload`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = progressEvent.total
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
-            setUploadProgress(percentCompleted);
-          },
-        });
+        if (successCount === totalFiles) {
+          onSuccessRef.current(totalFiles > 1 ? 'Files uploaded successfully' : 'File uploaded successfully');
+        } else if (successCount > 0) {
+          onSuccessRef.current(`${successCount} of ${totalFiles} files uploaded.`);
+        } else {
+          throw new Error('All uploads failed');
+        }
 
-        onSuccessRef.current('File uploaded successfully');
         await onRefreshRef.current();
-
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
         return true;
       } catch (error) {
-        onErrorRef.current(handleApiError(error, 'Error uploading file'));
+        onErrorRef.current(handleApiError(error, 'Error uploading files'));
         return false;
       } finally {
         setUploading(false);
@@ -101,24 +121,74 @@ export function useFileOperations(
   );
 
   const handleCreateComment = useCallback(
-    async (comment: string, stage?: string) => {
-      if (!comment.trim()) return false;
+    async (comment: string, files: File[], stage?: string, relatedFileId?: string) => {
+      // Validate inputs
+      if (!comment.trim() && files.length === 0) return false;
 
       setUploading(true);
 
       try {
-        await api.post(`/files/${projectId}/comment`, {
-          comment: comment,
-          stage: stage,
-        });
+        // CASE A: Files attached - Upload each file
+        if (files.length > 0) {
+          let totalSuccess = true;
 
-        onSuccessRef.current('Comment created successfully');
-        await onRefreshRef.current();
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
 
-        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
-        return true;
+            // Only attach the full comment to the first file to avoid duplication
+            // For others, we could leave empty or add a reference
+            const fileComment = i === 0 ? comment : '';
+
+            // Re-use internal file upload logic manually to avoid state conflicts if we called handleFileUpload
+            const formData = new FormData();
+            formData.append('file', file);
+            if (fileComment) {
+              formData.append('comment', fileComment);
+            }
+            if (stage) {
+              formData.append('stage', stage);
+            }
+            if (relatedFileId) {
+              formData.append('relatedFileId', relatedFileId);
+            }
+
+            try {
+              await api.post(`/files/${projectId}/upload`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+            } catch (err) {
+              console.error(`Failed to upload file ${file.name}`, err);
+              totalSuccess = false;
+              // Continue uploading others? Yes.
+            }
+          }
+
+          if (totalSuccess) {
+            onSuccessRef.current('Feedback created successfully');
+          } else {
+            onErrorRef.current('Some files failed to upload');
+          }
+
+          await onRefreshRef.current();
+          setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
+          return totalSuccess;
+
+        } else {
+          // CASE B: Text only comment
+          await api.post(`/files/${projectId}/comment`, {
+            comment: comment,
+            stage: stage,
+            relatedFileId: relatedFileId,
+          });
+
+          onSuccessRef.current('Comment created successfully');
+          await onRefreshRef.current();
+          setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
+          return true;
+        }
+
       } catch (error) {
-        onErrorRef.current(handleApiError(error, 'Error creating comment'));
+        onErrorRef.current(handleApiError(error, 'Error creating feedback'));
         return false;
       } finally {
         setUploading(false);
@@ -128,33 +198,86 @@ export function useFileOperations(
   );
 
   const handleEditEntry = useCallback(
-    async (fileToEdit: FileData, editComment: string, editFile: File | null) => {
+    async (fileToEdit: FileData, editComment: string, editFiles: File[]) => {
       setUploading(true);
+      let successCount = 0;
+      let hasError = false;
 
       try {
-        const formData = new FormData();
+        // 1. Update the existing file (PATCH) - optionally replacing content with first file
+        const updateFormData = new FormData();
 
-        // Add comment if changed
+        // Always send comment if changed (or even if not, to ensure sync? logic says if changed)
         if (editComment !== fileToEdit.comment) {
-          formData.append('comment', editComment);
+          updateFormData.append('comment', editComment);
         }
 
-        // Add file if user selected one
-        if (editFile) {
-          formData.append('file', editFile);
+        const primaryFile = editFiles.length > 0 ? editFiles[0] : null;
+
+        if (primaryFile) {
+          updateFormData.append('file', primaryFile);
         }
 
-        await api.patch(`/files/${fileToEdit.id}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        // Only call patch if there's something to update
+        if (editComment !== fileToEdit.comment || primaryFile) {
+          try {
+            await api.patch(`/files/${fileToEdit.id}`, updateFormData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            successCount++;
+          } catch (error) {
+            console.error('Error updating original file:', error);
+            hasError = true;
+          }
+        } else {
+          // Nothing to update on primary file
+          successCount++;
+        }
 
-        onSuccessRef.current('Entry updated successfully');
+        // 2. Upload any additional files (POST) as new entries
+        if (editFiles.length > 1) {
+          const additionalFiles = editFiles.slice(1);
+          for (const file of additionalFiles) {
+            const formData = new FormData();
+            formData.append('file', file);
+            // Should we attach the same comment? 
+            // Context implicitly implies these are related. 
+            // But usually "Edit" comment applies to the Main file. 
+            // Let's add the comment to new files too if it exists, or leave blank?
+            // User said "recuerda que al editar me permite subir mas de un archivo... o sin archivos pero si con comentarios..."
+            // Safest is maybe NO comment on extras unless user specified?
+            // Or maybe the SAME comment? 
+            // Let's assume SAME comment for now as they are a "batch" logically.
+            if (editComment) {
+              formData.append('comment', editComment);
+            }
+            // Important: Use the same STAGE as the original file
+            if (fileToEdit.stage) {
+              formData.append('stage', fileToEdit.stage);
+            }
+
+            try {
+              await api.post(`/files/${projectId}/upload`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              successCount++;
+            } catch (err) {
+              console.error('Error uploading additional file:', err);
+              hasError = true;
+            }
+          }
+        }
+
+        if (hasError) {
+          onErrorRef.current('Some changes failed to save.');
+        } else {
+          onSuccessRef.current('Entry updated successfully');
+        }
+
         await onRefreshRef.current();
-
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
-        return true;
+        return !hasError;
+
       } catch (error) {
         onErrorRef.current(handleApiError(error, 'Error updating entry'));
         return false;
@@ -162,7 +285,7 @@ export function useFileOperations(
         setUploading(false);
       }
     },
-    [setTrackedTimeout]
+    [projectId, setTrackedTimeout]
   );
 
   const handleDownload = useCallback(

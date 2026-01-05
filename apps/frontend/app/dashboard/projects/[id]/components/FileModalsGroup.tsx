@@ -37,7 +37,7 @@ interface FileModalsGroupProps {
   // Upload Modal
   showUploadModal: boolean;
   onCloseUploadModal: () => void;
-  onUpload: (file: File, comment: string) => Promise<boolean>;
+  onUpload: (files: File[], comment: string) => Promise<boolean>;
   uploading: boolean;
   uploadProgress: number;
   uploadError: string;
@@ -46,12 +46,12 @@ interface FileModalsGroupProps {
   // Comment Modal
   showCommentModal: boolean;
   onCloseCommentModal: () => void;
-  onSubmitComment: (comment: string) => Promise<boolean>;
+  onSubmitComment: (comment: string, files: File[]) => Promise<boolean>;
 
   // Edit Modal
   showEditModal: boolean;
   onCloseEditModal: () => void;
-  onEdit: (fileToEdit: FileData, comment: string, file: File | null) => Promise<boolean>;
+  onEdit: (fileToEdit: FileData, comment: string, files: File[]) => Promise<boolean>;
   fileToEdit: FileData | null;
 
   // Delete Modal

@@ -133,7 +133,8 @@ export default function InvoiceDetailPage() {
 
                     {/* Line Items (Simplified as one main item for Phase 4) */}
                     <div>
-                        <table className="min-w-full divide-y divide-gray-200">
+                        {/* Desktop Table View */}
+                        <table className="hidden md:table min-w-full divide-y divide-gray-200">
                             <thead>
                                 <tr>
                                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
@@ -152,6 +153,21 @@ export default function InvoiceDetailPage() {
                                 </tr>
                             </tbody>
                         </table>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden bg-gray-50 rounded-lg p-4">
+                            <div className="text-xs font-medium text-gray-500 uppercase mb-2">Description</div>
+                            <div className="text-sm text-gray-900 mb-2">
+                                Professional Services for Project: <strong>{invoice.project?.name}</strong>
+                            </div>
+                            {invoice.notes && (
+                                <div className="text-gray-500 text-xs mb-3">{invoice.notes}</div>
+                            )}
+                            <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                                <span className="text-xs font-medium text-gray-500 uppercase">Amount</span>
+                                <span className="text-sm font-medium text-gray-900">{formatCurrency(invoice.subtotal)}</span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Totals */}

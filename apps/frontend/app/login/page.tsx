@@ -42,6 +42,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess(''); // Clear success message
 
     // Validate email format before submitting
     if (!isValidEmail(email)) {
@@ -227,6 +228,12 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 space-y-6">
+            {success && (
+              <div className="rounded-lg bg-green-50 border border-green-200 p-4 animate-slideDown">
+                <p className="text-sm text-green-800">{success}</p>
+              </div>
+            )}
+
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 p-4 animate-slideDown">
                 <p className="text-sm text-red-800">{error}</p>

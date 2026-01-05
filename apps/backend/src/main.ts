@@ -12,6 +12,11 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { validateEnvironmentVariables } from './common/config/env-validator';
 
+// Handle BigInt serialization
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 async function bootstrap() {
   // Validate environment variables before starting the application
   validateEnvironmentVariables();
@@ -99,6 +104,7 @@ async function bootstrap() {
       },
       crossOriginEmbedderPolicy: false, // Allow file downloads
       crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow CORS requests
+      crossOriginOpenerPolicy: false, // Suppress COOP warnings in dev (HTTP)
     }),
   );
 

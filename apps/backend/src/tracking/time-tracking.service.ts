@@ -133,8 +133,9 @@ export class TimeTrackingService {
 
     /**
      * Get stats by project
+     * Validates that employees can only see projects they're assigned to
      */
-    async getProjectStats(projectId: string) {
+    async getProjectStats(projectId: string, userId?: string, userRole?: string) {
         // Get project to calculate total duration
         const project = await this.prisma.project.findUnique({
             where: { id: projectId },
@@ -142,11 +143,24 @@ export class TimeTrackingService {
                 createdAt: true,
                 status: true,
                 updatedAt: true,
+                employees: {
+                    select: {
+                        employeeId: true,
+                    },
+                },
             }
         });
 
         if (!project) {
             throw new Error(`Project ${projectId} not found`);
+        }
+
+        // If user is an employee, verify they're assigned to this project
+        if (userRole === 'EMPLOYEE' && userId) {
+            const isAssigned = project.employees.some(pe => pe.employeeId === userId);
+            if (!isAssigned) {
+                throw new Error('You do not have access to this project');
+            }
         }
 
         // Calculate total duration from project creation to now (or completion)

@@ -38,4 +38,9 @@ export class UploadFileDto {
     return value;
   })
   stage?: Stage;
+
+  @ApiPropertyOptional({ description: 'ID of the file related to this upload (e.g. usage for rejection evidence)' })
+  @IsOptional()
+  @IsString()
+  relatedFileId?: string;
 }

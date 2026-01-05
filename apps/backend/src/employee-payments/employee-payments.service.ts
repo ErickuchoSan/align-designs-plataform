@@ -1,12 +1,19 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateEmployeePaymentDto } from './dto/create-employee-payment.dto';
 import { UpdateEmployeePaymentDto } from './dto/update-employee-payment.dto';
 import { EmployeePaymentStatus, Role } from '@prisma/client';
 
 @Injectable()
+@Injectable()
 export class EmployeePaymentsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(EmployeePaymentsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService,
+  ) { }
 
   async create(createDto: CreateEmployeePaymentDto, createdBy: string) {
     // Verify project exists
@@ -178,7 +185,7 @@ export class EmployeePaymentsService {
     });
   }
 
-  async approve(id: string, approvedBy: string) {
+  async approve(id: string, approvedBy: string, file?: Express.Multer.File) {
     const payment = await this.prisma.employeePayment.findUnique({
       where: { id },
     });
@@ -191,12 +198,34 @@ export class EmployeePaymentsService {
       throw new BadRequestException('Payment is not pending approval');
     }
 
-    return this.prisma.employeePayment.update({
+    if (!file) {
+      throw new BadRequestException('Payment receipt file is required for approval');
+    }
+
+    // Upload receipt file
+    const uploadResult = await this.storageService.uploadFile(file, payment.projectId);
+
+    // Create File record for the receipt
+    const receiptFile = await this.prisma.file.create({
+      data: {
+        projectId: payment.projectId,
+        uploadedBy: approvedBy,
+        filename: file.originalname,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        sizeBytes: file.size,
+        storagePath: uploadResult.storagePath,
+        pendingPayment: false, // It IS the payment proof
+      }
+    });
+
+    const updatedPayment = await this.prisma.employeePayment.update({
       where: { id },
       data: {
         status: EmployeePaymentStatus.APPROVED,
         approvedBy,
         approvedAt: new Date(),
+        receiptFileId: receiptFile.id,
       },
       include: {
         employee: {
@@ -216,6 +245,8 @@ export class EmployeePaymentsService {
         receiptFile: true,
       },
     });
+
+    return updatedPayment;
   }
 
   async reject(id: string, rejectionReason: string, userId: string) {
@@ -274,5 +305,51 @@ export class EmployeePaymentsService {
     return this.prisma.employeePayment.delete({
       where: { id },
     });
+  }
+
+  /**
+   * Get pending payment items for employee
+   */
+  async getPendingPaymentItems(projectId: string, employeeId: string) {
+    // Determine the CLIENT_APPROVED stage value
+    // Assuming 'CLIENT_APPROVED' is the enum value in prisma
+    const clientApprovedStage = 'CLIENT_APPROVED';
+
+    const items = await this.prisma.file.findMany({
+      where: {
+        projectId,
+        uploadedBy: employeeId,
+        stage: clientApprovedStage as any, // Cast to any or import Stage enum
+        employeePaymentId: null, // Not yet linked to a payment
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        filename: true,
+        originalName: true,
+        uploadedAt: true,
+        approvedClientAt: true,
+        comment: true,
+      },
+      orderBy: {
+        approvedClientAt: 'desc',
+      },
+    });
+
+    return items;
+  }
+
+  /**
+   * Get presigned URL for payment receipt
+   */
+  async getReceiptDownloadUrl(paymentId: string, userId: string, userRole: Role): Promise<string> {
+    const payment = await this.findOne(paymentId, userId, userRole);
+
+    if (!payment.receiptFile || !payment.receiptFile.storagePath) {
+      throw new BadRequestException('This payment has no receipt file');
+    }
+
+    // Generate presigned URL from MinIO
+    return this.storageService.getDownloadUrl(payment.receiptFile.storagePath);
   }
 }

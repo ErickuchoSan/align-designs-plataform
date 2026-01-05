@@ -40,6 +40,7 @@ export class FilesService {
     uploadedBy: string,
     userRole: Role,
     stage?: Stage,
+    relatedFileId?: string,
   ) {
     if (!file) {
       throw new BadRequestException('No file was provided');
@@ -62,6 +63,11 @@ export class FilesService {
       stage,
     );
 
+    // Handle Rejection Logic
+    if (relatedFileId) {
+      await this.handleFileRejection(relatedFileId, fileRecord.id, uploadedBy, userRole);
+    }
+
     // Invalidate caches
     await this.cacheManager.invalidateFileCaches(projectId, fileRecord.id);
 
@@ -78,6 +84,7 @@ export class FilesService {
     uploadedBy: string,
     userRole: Role,
     stage?: Stage,
+    relatedFileId?: string,
   ) {
     // Verify project access and permissions
     await this.permissions.verifyProjectAccess(
@@ -86,6 +93,11 @@ export class FilesService {
       userRole,
       'You do not have permission to create comments in this project',
     );
+
+    // STRICT RULE: No standalone comments in SUBMITTED stage
+    if (stage === Stage.SUBMITTED) {
+      throw new ForbiddenException('Standalone comments are not allowed in the Submitted stage. Please upload a file.');
+    }
 
     // Save comment in database (without file)
     const commentRecord = await this.prisma.file.create({
@@ -106,6 +118,11 @@ export class FilesService {
         },
       },
     });
+
+    // Handle Rejection Logic
+    if (relatedFileId) {
+      await this.handleFileRejection(relatedFileId, commentRecord.id, uploadedBy, userRole);
+    }
 
     // Invalidate caches
     await this.cacheManager.invalidateFileCaches(projectId, commentRecord.id);
@@ -490,5 +507,28 @@ export class FilesService {
         },
       },
     });
+  }
+
+  /**
+   * Helper to handle file rejection updates
+   */
+  private async handleFileRejection(targetFileId: string, feedbackFileId: string, userId: string, role: Role) {
+    // Only Admins (and Clients) can reject work
+    if (role !== Role.ADMIN && role !== Role.CLIENT) return;
+
+    try {
+      await this.prisma.file.update({
+        where: { id: targetFileId },
+        data: {
+          rejectionCount: { increment: 1 },
+          lastRejectedAt: new Date(),
+          // lastRejectionFeedbackId: feedbackFileId, // FIXME: Requires valid Feedback ID, not File ID.
+        }
+      });
+      this.logger.log(`File ${targetFileId} rejected by user ${userId}. Count incremented.`);
+    } catch (error) {
+      this.logger.error(`Failed to update rejection stats for file ${targetFileId}`, error);
+      // Non-blocking: don't fail the upload just because stat update failed
+    }
   }
 }

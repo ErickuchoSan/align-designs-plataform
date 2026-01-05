@@ -24,6 +24,13 @@ export class InvoicesController {
         return this.invoicesService.create(createInvoiceDto);
     }
 
+    @Post(':id/resend')
+    @Roles(Role.ADMIN)
+    async resendEmail(@Param('id') id: string) {
+        await this.invoicesService.resendInvoiceEmail(id);
+        return { message: 'Invoice email queued for sending' };
+    }
+
     @Get()
     @Get()
     findAll(

@@ -31,4 +31,9 @@ export class CreateCommentDto {
     return value;
   })
   stage?: Stage;
+
+  @ApiPropertyOptional({ description: 'ID of the file related to this comment (e.g. usage for rejection)' })
+  @IsOptional()
+  @IsString()
+  relatedFileId?: string;
 }

@@ -27,13 +27,13 @@ export default function DashboardHeader({
 
   return (
     <header className="bg-navy-900 shadow-lg">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             {showBackButton && (
               <button
                 onClick={() => router.push(backUrl)}
-                className="rounded-lg bg-navy-800 p-2 text-white hover:bg-navy-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gold-400"
+                className="rounded-lg bg-navy-800 p-2 text-white hover:bg-navy-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gold-400 flex-shrink-0"
                 title="Back"
                 aria-label="Go back to previous page"
               >
@@ -42,34 +42,36 @@ export default function DashboardHeader({
                 </svg>
               </button>
             )}
-            <h1 className="text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white truncate">
               {title}
             </h1>
           </div>
 
           {/* Additional content (buttons, etc.) */}
           {children && (
-            <div className="flex-1 flex justify-center">
+            <div className="hidden lg:flex flex-1 justify-center">
               {children}
             </div>
           )}
 
           {/* Right Section: Notifications + Profile */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <NotificationBell />
 
             {/* Profile Dropdown */}
             <div className="relative" ref={menuRef}>
               <button
                 onClick={toggleProfileMenu}
-                className="flex items-center gap-3 rounded-lg bg-navy-800 px-4 py-2 text-sm font-medium text-white hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-navy-900 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 rounded-lg bg-navy-800 px-2 sm:px-4 py-2 text-sm font-medium text-white hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-navy-900 transition-colors"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-gold-500 to-gold-600 rounded-full flex items-center justify-center text-navy-900 font-bold text-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-gold-500 to-gold-600 rounded-full flex items-center justify-center text-navy-900 font-bold text-sm flex-shrink-0">
                   {user.firstName[0]}{user.lastName[0]}
                 </div>
-                <span className="text-gold-400">{user.firstName} {user.lastName}</span>
+                <span className="text-gold-400 hidden sm:block truncate max-w-[120px] md:max-w-[200px]">
+                  {user.firstName} {user.lastName}
+                </span>
                 <svg
-                  className={`w-4 h-4 text-gold-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 text-gold-400 transition-transform flex-shrink-0 ${showProfileMenu ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -92,8 +94,9 @@ export default function DashboardHeader({
                   </a>
                   <div className="border-t border-stone-200 my-1" />
                   <button
-                    onClick={() => {
-                      logout();
+                    onClick={async () => {
+                      closeProfileMenu();
+                      await logout();
                       router.push('/login');
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"

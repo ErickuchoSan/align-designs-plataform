@@ -59,6 +59,9 @@ export class EmailService implements OnModuleInit {
     this.logger.log(
       `Email transport configured - Host: ${this.configService.get<string>('EMAIL_HOST')}, Port: ${emailPort}, Secure: ${isSecure}, RequireTLS: ${!isSecure}`,
     );
+    this.logger.debug(`Email User: ${this.configService.get<string>('EMAIL_USER') ? '***SET***' : 'NOT SET'}`);
+    this.logger.debug(`Email Pass: ${this.configService.get<string>('EMAIL_PASSWORD') ? '***SET***' : 'NOT SET'}`);
+    this.logger.debug(`Email From: ${this.configService.get<string>('EMAIL_FROM')}`);
   }
 
   /**
@@ -545,7 +548,10 @@ export class EmailService implements OnModuleInit {
 
       this.logger.log(`Invoice email sent successfully to ${to}`);
     } catch (error) {
-      this.logger.error(`Failed to send invoice email to ${to}:`, error);
+      this.logger.error(`Failed to send invoice email to ${to} (Attempted to send PDF: ${pdfBuffer ? 'Yes' : 'No'}, Size: ${pdfBuffer?.length} bytes):`, error);
+      if (error && typeof error === 'object') {
+        this.logger.error('Error details:', JSON.stringify(error, null, 2));
+      }
       throw new InternalServerErrorException('Failed to send invoice email');
     }
   }

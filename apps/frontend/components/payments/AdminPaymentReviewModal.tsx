@@ -1,21 +1,78 @@
-'use client';
-
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import { toast } from 'react-hot-toast';
+import { Payment, PaymentStatus } from '@/types/payments';
+import { PaymentsService } from '@/services/payments.service';
 
 interface AdminPaymentReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  paymentId?: string;
+  payment?: Payment;
   onSuccess?: () => void;
 }
 
 export default function AdminPaymentReviewModal({
   isOpen,
   onClose,
-  paymentId,
+  payment,
   onSuccess,
 }: AdminPaymentReviewModalProps) {
+  const [processing, setProcessing] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
+  const [correctedAmount, setCorrectedAmount] = useState<string>('');
+
+  if (!payment) return null;
+
+  const handleApprove = async () => {
+    setProcessing(true);
+    try {
+      const finalAmount = isEditingAmount && correctedAmount ? Number(correctedAmount) : undefined;
+      await PaymentsService.approve(payment.id, finalAmount);
+      toast.success('Payment approved successfully');
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error('Error approving payment:', error);
+      toast.error('Failed to approve payment');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error('Rejection reason is required');
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      await PaymentsService.reject(payment.id, rejectionReason);
+      toast.success('Payment rejected');
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error('Error rejecting payment:', error);
+      toast.error('Failed to reject payment');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const toggleEditAmount = () => {
+    if (isEditingAmount) {
+      setIsEditingAmount(false);
+      setCorrectedAmount('');
+    } else {
+      setIsEditingAmount(true);
+      setCorrectedAmount(payment.amount.toString());
+    }
+  };
+
+  const receiptUrl = `${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`;
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -28,7 +85,7 @@ export default function AdminPaymentReviewModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black bg-opacity-50" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -42,23 +99,182 @@ export default function AdminPaymentReviewModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-navy-900 mb-4 flex justify-between items-center">
                   Review Payment
-                </Dialog.Title>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    This feature is under development.
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200"
-                    onClick={onClose}
-                  >
-                    Close
+                  <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
+                </Dialog.Title>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left Column: Details & Actions */}
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                      <h4 className="font-semibold text-navy-900">Payment Details</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500">Amount</p>
+                          <p className="font-bold text-lg text-green-600">
+                            ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Date</p>
+                          <p className="font-medium text-gray-900">
+                            {new Date(payment.paymentDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Method</p>
+                          <p className="font-medium text-gray-900 capitalize">{payment.paymentMethod.replace('_', ' ')}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Currently</p>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.status === PaymentStatus.CONFIRMED ? 'bg-green-100 text-green-800' :
+                            payment.status === PaymentStatus.REJECTED ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {payment.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+                      {payment.notes && (
+                        <div className="border-t border-gray-200 pt-3 mt-3">
+                          <p className="text-gray-500 mb-1">Customer Notes:</p>
+                          <p className="text-gray-700 italic">"{payment.notes}"</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    {payment.status === PaymentStatus.PENDING_APPROVAL && (
+                      <div className="space-y-4">
+                        {!rejecting ? (
+                          <div className="space-y-3">
+                            {isEditingAmount ? (
+                              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 animate-in fade-in slide-in-from-top-2">
+                                <h5 className="font-semibold text-blue-800 mb-2 text-sm">Correct Payment Amount</h5>
+                                <p className="text-xs text-blue-600 mb-2">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className="text-gray-500 font-medium">$</span>
+                                  <input
+                                    type="number"
+                                    value={correctedAmount}
+                                    onChange={(e) => setCorrectedAmount(e.target.value)}
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    placeholder="0.00"
+                                  />
+                                </div>
+                              </div>
+                            ) : null}
+
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleApprove}
+                                disabled={processing}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                              >
+                                {processing ? 'Processing...' : (
+                                  <>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {isEditingAmount ? 'Confirm with Changes' : 'Approve Payment'}
+                                  </>
+                                )}
+                              </button>
+
+                              {!isEditingAmount && (
+                                <button
+                                  onClick={toggleEditAmount}
+                                  disabled={processing}
+                                  className="px-4 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 py-3 rounded-lg font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 tooltip-trigger"
+                                  title="Approve with Amount Correction"
+                                >
+                                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => setRejecting(true)}
+                                disabled={processing}
+                                className="bg-white border border-red-300 text-red-600 hover:bg-red-50 px-6 py-3 rounded-lg font-semibold shadow-sm transition-colors disabled:opacity-50"
+                              >
+                                Reject
+                              </button>
+                            </div>
+
+                            {isEditingAmount && (
+                              <div className="text-center">
+                                <button
+                                  onClick={toggleEditAmount}
+                                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                >
+                                  Cancel Correction
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-red-50 p-4 rounded-lg border border-red-100 animate-in fade-in slide-in-from-top-2">
+                            <h5 className="font-semibold text-red-800 mb-2">Rejection Reason</h5>
+                            <textarea
+                              value={rejectionReason}
+                              onChange={(e) => setRejectionReason(e.target.value)}
+                              placeholder="Please explain why this payment is being rejected..."
+                              className="w-full rounded-md border-red-200 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm mb-3"
+                              rows={3}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => setRejecting(false)}
+                                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleReject}
+                                disabled={processing || !rejectionReason.trim()}
+                                className="px-4 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                              >
+                                {processing ? 'Rejecting...' : 'Confirm Rejection'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column: Receipt Preview */}
+                  <div className="bg-gray-100 rounded-lg border border-gray-200 overflow-hidden flex flex-col h-[500px]">
+                    <div className="bg-gray-200 px-4 py-2 border-b border-gray-300 flex justify-between items-center">
+                      <span className="font-medium text-gray-700 text-sm">Receipt Preview</span>
+                      <a
+                        href={receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1"
+                      >
+                        Open in new tab
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                    <div className="flex-1 bg-white relative">
+                      <iframe
+                        src={receiptUrl}
+                        className="w-full h-full border-0"
+                        title="Receipt Preview"
+                      />
+                    </div>
+                  </div>
                 </div>
               </Dialog.Panel>
             </Transition.Child>

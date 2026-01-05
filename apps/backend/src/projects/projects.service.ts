@@ -675,9 +675,9 @@ export class ProjectsService {
       warnings,
       client: client
         ? {
-            id: client.id,
-            name: `${client.firstName} ${client.lastName}`,
-          }
+          id: client.id,
+          name: `${client.firstName} ${client.lastName}`,
+        }
         : null,
     };
   }
@@ -815,7 +815,7 @@ export class ProjectsService {
    * Get accessible stages for a project based on user role
    * Returns stage information with permissions and file counts
    */
-  async getAccessibleStages(projectId: string, userRole: Role) {
+  async getAccessibleStages(projectId: string, userRole: Role, userId?: string) {
     // Verify project exists
     const project = await this.projectRepo.findById(projectId);
     if (!project) {
@@ -838,6 +838,34 @@ export class ProjectsService {
     const countsMap = new Map(
       fileCounts.map((fc) => [fc.stage, fc._count.id]),
     );
+
+    // Special handling for PAYMENTS stage count
+    // For Employees: Count their own payments
+    // For Admin: Count all project payments
+    if (userRole === Role.EMPLOYEE && userId) {
+      const paymentCount = await this.prisma.employeePayment.count({
+        where: {
+          projectId,
+          employeeId: userId,
+        },
+      });
+      countsMap.set(Stage.PAYMENTS, paymentCount);
+    } else if (userRole === Role.ADMIN) {
+      const paymentCount = await this.prisma.employeePayment.count({
+        where: {
+          projectId,
+        },
+      });
+      countsMap.set(Stage.PAYMENTS, paymentCount);
+    } else if (userRole === Role.CLIENT) {
+      // For Clients: Count their project payments (Initial/Invoice payments)
+      const paymentCount = await this.prisma.payment.count({
+        where: {
+          projectId,
+        },
+      });
+      countsMap.set(Stage.PAYMENTS, paymentCount);
+    }
 
     // Get accessible stages for this user role
     const accessibleStages = getAccessibleStagesHelper(userRole);

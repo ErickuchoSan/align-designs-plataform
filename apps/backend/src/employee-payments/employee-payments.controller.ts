@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmployeePaymentsService } from './employee-payments.service';
 import { CreateEmployeePaymentDto } from './dto/create-employee-payment.dto';
@@ -13,7 +15,8 @@ import { Role } from '@prisma/client';
 @Controller('employee-payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EmployeePaymentsController {
-  constructor(private readonly employeePaymentsService: EmployeePaymentsService) {}
+  constructor(private readonly employeePaymentsService: EmployeePaymentsService) { }
+  // Force rebuild
 
   @Post()
   @Roles(Role.ADMIN)
@@ -45,9 +48,14 @@ export class EmployeePaymentsController {
 
   @Patch(':id/approve')
   @Roles(Role.ADMIN)
+  @UseInterceptors(FileInterceptor('receiptFile'))
   @ApiOperation({ summary: 'Approve employee payment (Admin only)' })
-  approve(@Param('id') id: string, @Req() req: any) {
-    return this.employeePaymentsService.approve(id, req.user.userId);
+  approve(
+    @Param('id') id: string,
+    @Req() req: any,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return this.employeePaymentsService.approve(id, req.user.userId, file);
   }
 
   @Patch(':id/reject')
@@ -62,5 +70,38 @@ export class EmployeePaymentsController {
   @ApiOperation({ summary: 'Delete employee payment (Admin only, only PENDING/REJECTED)' })
   remove(@Param('id') id: string) {
     return this.employeePaymentsService.remove(id);
+  }
+
+  @Get(':id/receipt-url')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
+  @ApiOperation({ summary: 'Get receipt URL' })
+  async getReceiptUrl(
+    @Param('id') id: string,
+    @Req() req: any
+  ) {
+    const url = await this.employeePaymentsService.getReceiptDownloadUrl(id, req.user.userId, req.user.role);
+    return { url };
+  }
+
+  @Get(':id/receipt')
+  @Roles(Role.ADMIN, Role.EMPLOYEE)
+  @ApiOperation({ summary: 'Redirect to receipt' })
+  async redirectReceipt(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Res() res: Response
+  ) {
+    const url = await this.employeePaymentsService.getReceiptDownloadUrl(id, req.user.userId, req.user.role);
+    // The original code had a misplaced endpoint here. It has been moved.
+  }
+
+  @Get('pending-items')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get pending payment items for employee' })
+  getPendingItems(
+    @Query('projectId') projectId: string,
+    @Query('employeeId') employeeId: string
+  ) {
+    return this.employeePaymentsService.getPendingPaymentItems(projectId, employeeId);
   }
 }

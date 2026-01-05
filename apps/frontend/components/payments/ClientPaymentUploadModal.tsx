@@ -1,13 +1,22 @@
 'use client';
 
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { useState, useEffect } from 'react';
+import Modal from '@/app/components/Modal';
+import { PaymentMethodSelect } from './PaymentMethodSelect';
+import { ButtonLoader } from '@/app/components/Loader';
+import { toast } from 'react-hot-toast';
+import { PaymentsService } from '@/services/payments.service';
+import { InvoicesService } from '@/services/invoices.service';
+import { Invoice } from '@/types/invoice';
+import { PaymentMethod, PaymentType } from '@/types/payments';
 
 interface ClientPaymentUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
   onSuccess?: () => void;
+  suggestedAmount?: number;
+  maxAmount?: number;
 }
 
 export default function ClientPaymentUploadModal({
@@ -15,56 +24,240 @@ export default function ClientPaymentUploadModal({
   onClose,
   projectId,
   onSuccess,
+  suggestedAmount,
+  maxAmount,
 }: ClientPaymentUploadModalProps) {
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
-        </Transition.Child>
+  const [amount, setAmount] = useState<number | string>('');
+  const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.TRANSFER);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [invoiceId, setInvoiceId] = useState<string>('');
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                  Upload Payment Proof
-                </Dialog.Title>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    This feature is under development.
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200"
-                    onClick={onClose}
-                  >
-                    Close
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setAmount(suggestedAmount || '');
+      fetchInvoices();
+    } else {
+      // Reset form
+      setAmount('');
+      setMethod(PaymentMethod.TRANSFER);
+      setDate(new Date().toISOString().split('T')[0]);
+      setNotes('');
+      setFile(null);
+      setInvoiceId('');
+    }
+  }, [isOpen, suggestedAmount, projectId]);
+
+  const fetchInvoices = async () => {
+    try {
+      setLoadingInvoices(true);
+      const data = await InvoicesService.getByProject(projectId);
+      // Filter unpaid or partially paid invoices
+      const unpaid = data.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
+      setInvoices(unpaid);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      // Silent error or toast?
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
+
+  // Auto-fill amount when invoice is selected
+  useEffect(() => {
+    if (invoiceId) {
+      const invoice = invoices.find(inv => inv.id === invoiceId);
+      if (invoice) {
+        const remaining = Number(invoice.totalAmount) - Number(invoice.amountPaid || 0);
+        setAmount(remaining > 0 ? remaining : 0);
+      }
+    }
+  }, [invoiceId, invoices]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || Number(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (maxAmount && Number(amount) > maxAmount) {
+      toast.error(`Amount cannot exceed the remaining balance of $${maxAmount.toLocaleString()}`);
+      return;
+    }
+
+    if (!file && method === PaymentMethod.TRANSFER) {
+      toast.error('Please upload the payment receipt');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+
+      // Append file first
+      if (file) {
+        formData.append('file', file);
+      }
+
+      // Then append all other fields
+      formData.append('projectId', projectId);
+      formData.append('amount', amount.toString());
+      formData.append('paymentDate', new Date(date).toISOString());
+      formData.append('paymentMethod', method);
+      formData.append('type', invoiceId ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT);
+      if (invoiceId) formData.append('invoiceId', invoiceId);
+      if (notes) formData.append('notes', notes);
+
+      console.log('Frontend FormData check:');
+      console.log('- projectId:', projectId);
+      console.log('- amount:', amount.toString());
+      console.log('- file:', file);
+
+      await PaymentsService.uploadClientPayment(formData);
+
+      toast.success('Payment submitted for review');
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Error uploading payment:', error);
+      toast.error('Failed to submit payment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Upload Payment Proof">
+      <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* Warning for Bank Transfers */}
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-bold text-amber-800 uppercase tracking-wide">
+                Important
+              </h3>
+              <div className="mt-2 text-sm text-amber-900 font-bold">
+                <p>
+                  For bank transfers, you MUST upload the official receipt shared directly from your banking app. Screenshots of messages or transaction summaries are NOT accepted.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </Dialog>
-    </Transition>
+
+        {/* Amount */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Amount Paid</label>
+          <div className="relative rounded-md shadow-sm">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <span className="text-gray-500 sm:text-sm">$</span>
+            </div>
+            <input
+              type="number"
+              step="0.01"
+              required
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-3 border"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        {/* Payment Method */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+          <PaymentMethodSelect value={method} onChange={setMethod} />
+        </div>
+
+        {/* Date */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date</label>
+          <input
+            type="date"
+            required
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+          />
+        </div>
+
+        {/* Invoice Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Link to Invoice (Optional)</label>
+          <select
+            value={invoiceId}
+            onChange={(e) => setInvoiceId(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+          >
+            <option value="">-- General Payment --</option>
+            {invoices.map(inv => (
+              <option key={inv.id} value={inv.id}>
+                {inv.invoiceNumber} - ${Number(inv.totalAmount).toLocaleString()}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* File Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Receipt File</label>
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+            className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+          />
+          <p className="mt-1 text-xs text-gray-500">Supported: PDF, JPG, PNG (Max 5MB)</p>
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+          <textarea
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+            placeholder="Additional details..."
+          />
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-w-[120px]"
+          >
+            {isSubmitting ? <ButtonLoader /> : 'Submit Payment'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

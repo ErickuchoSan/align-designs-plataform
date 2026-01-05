@@ -20,12 +20,14 @@ export default function EmailStep({ email, setEmail, onSubmit, loading, error }:
         </label>
         <input
           id="email"
+          name="email"
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="block w-full rounded-lg border border-stone-300 px-4 py-3 shadow-sm focus:border-gold-500 focus:ring-2 focus:ring-gold-500 transition-all"
           placeholder="your-email@example.com"
+          autoComplete="email"
           autoFocus
         />
       </div>

@@ -106,7 +106,11 @@
       "Bash(where.exe:*)",
       "Bash(grep:*)",
       "Bash(git mv:*)",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(PGPASSWORD=\"NolosePostgres12345!\" psql:*)",
+      "Bash(cmd /c \"taskkill /F /PID 29792\")",
+      "Bash(cmd /c \"taskkill /F /PID 30448\")",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

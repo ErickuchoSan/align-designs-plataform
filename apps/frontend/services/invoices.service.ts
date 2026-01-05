@@ -220,4 +220,9 @@ export const InvoicesService = {
         const response = await api.get<{ hasUnpaidInvoices: boolean }>(`/invoices/project/${projectId}/has-unpaid`);
         return response.data.hasUnpaidInvoices;
     },
+
+    async downloadPdf(id: string): Promise<Blob> {
+        const response = await api.get(`/invoices/${id}/pdf`, { responseType: 'blob' });
+        return response.data;
+    },
 };

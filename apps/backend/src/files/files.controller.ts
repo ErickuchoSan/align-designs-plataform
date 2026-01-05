@@ -107,6 +107,7 @@ export class FilesController {
       user.userId,
       user.role,
       uploadFileDto.stage,
+      uploadFileDto.relatedFileId,
     );
 
     // Audit log for file upload (non-blocking)
@@ -218,6 +219,7 @@ export class FilesController {
       userId: user.userId,
       hasComment: !!createCommentDto.comment,
       stage: createCommentDto.stage,
+      relatedFileId: createCommentDto.relatedFileId,
     });
 
     return this.filesService.createComment(
@@ -226,6 +228,7 @@ export class FilesController {
       user.userId,
       user.role,
       createCommentDto.stage,
+      createCommentDto.relatedFileId,
     );
   }
 

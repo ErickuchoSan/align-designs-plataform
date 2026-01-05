@@ -1,3 +1,4 @@
+
 import { Injectable, Logger } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { Invoice } from '@prisma/client';
@@ -57,7 +58,7 @@ export class InvoicePdfService {
         this.buildInvoiceDetails(doc, invoice);
         this.buildItemsTable(doc, invoice);
         this.buildTotals(doc, invoice);
-        this.buildPaymentInfo(doc);
+        this.buildPaymentInfo(doc, invoice);
         this.buildFooter(doc);
 
         // Finalize PDF
@@ -258,8 +259,8 @@ export class InvoicePdfService {
     }
   }
 
-  private buildPaymentInfo(doc: PDFKit.PDFDocument) {
-    const startY = 620;
+  private buildPaymentInfo(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+    const startY = 570; // Moved up to 570 to provide more space for footer
 
     doc
       .fontSize(11)
@@ -275,12 +276,12 @@ export class InvoicePdfService {
       .text(`Bank Transfer: ${COMPANY_INFO.name}`, 50, startY + 35)
       .text('Account Number: XXXX-XXXX-1234', 50, startY + 50)
       .text('Routing Number: 123456789', 50, startY + 65)
-      .text(`Reference: Include invoice number ${'{invoiceNumber}'} in payment reference`, 50, startY + 80);
+      .text(`Reference: Include invoice number ${invoice.invoiceNumber} in payment reference`, 50, startY + 80);
   }
 
   private buildFooter(doc: PDFKit.PDFDocument) {
     const pageHeight = doc.page.height;
-    const footerY = pageHeight - 80;
+    const footerY = pageHeight - 95; // Moved up from -80 to ensure it fits in page margins
 
     // Signature line
     doc
@@ -293,7 +294,7 @@ export class InvoicePdfService {
     doc
       .fontSize(9)
       .fillColor('#666666')
-      .font('Helvetica-Italic')
+      .font('Helvetica-Oblique')
       .text('Authorized Signature', 50, footerY - 10);
 
     // Footer text

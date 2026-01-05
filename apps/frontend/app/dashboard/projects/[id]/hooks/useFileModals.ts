@@ -9,6 +9,7 @@ export interface FileModalsState {
   showDeleteModal: boolean;
   showHistoryModal: boolean;
   showUploadVersionModal: boolean;
+  relatedFile: FileData | null; // Context for the comment (e.g. file being rejected)
   fileToEdit: FileData | null;
   fileToDelete: FileData | null;
   fileToViewHistory: FileData | null;
@@ -18,7 +19,7 @@ export interface FileModalsState {
 export interface FileModalsActions {
   openUploadModal: () => void;
   closeUploadModal: () => void;
-  openCommentModal: () => void;
+  openCommentModal: (file?: FileData) => void;
   closeCommentModal: () => void;
   openEditModal: (file: FileData) => void;
   closeEditModal: () => void;
@@ -33,37 +34,10 @@ export interface FileModalsActions {
 
 export interface UseFileModalsReturn extends FileModalsState, FileModalsActions { }
 
-/**
- * Hook to manage file-related modals state and actions
- * Extracts modal management logic from ProjectDetailsPage
- * Centralizes all modal open/close operations
- *
- * @returns Modal state and action handlers
- *
- * @example
- * function FileManager() {
- *   const {
- *     showUploadModal,
- *     openUploadModal,
- *     closeUploadModal,
- *     openEditModal,
- *     fileToEdit
- *   } = useFileModals();
- *
- *   return (
- *     <>
- *       <button onClick={openUploadModal}>Upload</button>
- *       <button onClick={() => openEditModal(file)}>Edit</button>
- *       {showUploadModal && <UploadModal onClose={closeUploadModal} />}
- *       {fileToEdit && <EditModal file={fileToEdit} />}
- *     </>
- *   );
- * }
- */
 export function useFileModals(): UseFileModalsReturn {
   // Use generic modal hooks to reduce boilerplate
   const uploadModal = useModal();
-  const commentModal = useModal();
+  const commentModal = useModalWithData<FileData>(); // Now supports data
   const editModal = useModalWithData<FileData>();
   const deleteModal = useModalWithData<FileData>();
   const historyModal = useModalWithData<FileData>();
@@ -85,6 +59,7 @@ export function useFileModals(): UseFileModalsReturn {
     showDeleteModal: deleteModal.isOpen,
     showHistoryModal: historyModal.isOpen,
     showUploadVersionModal: uploadVersionModal.isOpen,
+    relatedFile: commentModal.data,
     fileToEdit: editModal.data,
     fileToDelete: deleteModal.data,
     fileToViewHistory: historyModal.data,

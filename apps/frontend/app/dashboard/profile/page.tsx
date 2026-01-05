@@ -99,9 +99,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSuccessConfirm = () => {
+  const handleSuccessConfirm = async () => {
     setShowSuccessModal(false);
-    logout();
+    await logout();
     router.push('/login');
   };
 

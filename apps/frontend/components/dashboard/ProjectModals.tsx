@@ -221,6 +221,7 @@ function ProjectModals({
                 ...createModal.formData,
                 initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
               })}
+              onWheel={(e) => (e.target as HTMLInputElement).blur()}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               placeholder="0.00"
             />
@@ -372,6 +373,7 @@ function ProjectModals({
                 ...editModal.formData,
                 initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
               })}
+              onWheel={(e) => (e.target as HTMLInputElement).blur()}
               className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               placeholder="0.00"
             />
@@ -434,10 +436,71 @@ function ProjectModals({
         }}
         onConfirm={deleteModal.onConfirm}
         title="Delete Project"
-        message={`Are you sure you want to delete the project "${deleteModal.project?.name}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete the project "${deleteModal.project?.name}"?${(() => {
+          const project = deleteModal.project;
+          if (!project) return ' This action cannot be undone.';
+
+          const hasPayments = Number(project.amountPaid || 0) > 0;
+          const hasEmployees = project.employees && project.employees.length > 0;
+
+          if (hasPayments || hasEmployees) {
+            return '';
+          }
+          return ' This action cannot be undone.';
+        })()}`}
         confirmText="Delete"
         isLoading={deleteModal.isDeleting}
         variant="danger"
+        showDetailedWarning={(() => {
+          const project = deleteModal.project;
+          if (!project) return false;
+
+          const hasPayments = Number(project.amountPaid || 0) > 0;
+          const hasEmployees = project.employees && project.employees.length > 0;
+
+          return hasPayments || hasEmployees;
+        })()}
+        warningItems={(() => {
+          const project = deleteModal.project;
+          if (!project) return [];
+
+          const items = [];
+
+          const amountPaid = Number(project.amountPaid || 0);
+          if (amountPaid > 0) {
+            items.push({
+              label: 'Total Payments Received',
+              value: `$${amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+              icon: '💰'
+            });
+          }
+
+          const employeeCount = project.employees?.length || 0;
+          if (employeeCount > 0) {
+            items.push({
+              label: 'Assigned Employees',
+              value: employeeCount,
+              icon: '👥'
+            });
+          }
+
+          // We can assume if there are payments, there might be invoices too
+          if (amountPaid > 0) {
+            items.push({
+              label: 'Payment History',
+              value: 'All payment records',
+              icon: '📋'
+            });
+
+            items.push({
+              label: 'Invoices',
+              value: 'All invoice records',
+              icon: '🧾'
+            });
+          }
+
+          return items;
+        })()}
       />
     </>
   );
