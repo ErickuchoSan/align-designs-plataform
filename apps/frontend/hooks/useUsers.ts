@@ -2,17 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { User, CreateClientDto, CreateUserDto } from '@/types';
 import { handleApiError } from '@/lib/errors';
-import { useAutoResetMessage } from './useAutoResetMessage';
 import { usePagination } from './usePagination';
+import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  // Auto-reset success messages
-  useAutoResetMessage(success, setSuccess);
 
   // Use centralized pagination hook
   const pagination = usePagination();
@@ -26,7 +23,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     phone: '',
     role: 'CLIENT',
   });
-  const [creating, setCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Toggle status state
   const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
@@ -41,7 +38,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
   const fetchUsers = useCallback(async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const { data } = await api.get('/users', {
         params: {
           page: pagination.currentPage,
@@ -53,28 +50,30 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       pagination.setTotalPages(data.meta?.totalPages || 0);
       setError('');
     } catch (err) {
+      logger.error('Failed to fetch users', err, { page: pagination.currentPage });
       setError(handleApiError(err, 'Error loading users'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [pagination.currentPage, pagination.itemsPerPage, pagination]);
 
   const handleCreateClient = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      setCreating(true);
+      setIsCreating(true);
       setError('');
 
       try {
         await api.post('/users', formData);
         setShowCreateForm(false);
         setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
-        setSuccess(`${formData.role === 'CLIENT' ? 'Client' : 'Employee'} created successfully`);
+        toast.success(`${formData.role === 'CLIENT' ? 'Client' : 'Employee'} created successfully`);
         fetchUsers();
       } catch (err) {
+        logger.error('Failed to create user', err, { formData });
         setError(handleApiError(err, `Error creating ${formData.role === 'CLIENT' ? 'client' : 'employee'}`));
       } finally {
-        setCreating(false);
+        setIsCreating(false);
       }
     },
     [formData, fetchUsers]
@@ -93,13 +92,14 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       await api.patch(`/users/${userToToggle.id}/toggle-status`, {
         isActive: !userToToggle.isActive,
       });
-      setSuccess(
+      toast.success(
         `User ${!userToToggle.isActive ? 'activated' : 'deactivated'} successfully`
       );
       setShowToggleConfirm(false);
       setUserToToggle(null);
       fetchUsers();
     } catch (err) {
+      logger.error('Failed to toggle user status', err, { userId: userToToggle.id });
       setError(handleApiError(err, 'Error changing status'));
     } finally {
       setTogglingUserId(null);
@@ -135,11 +135,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       await api.delete(`/users/${userToDelete.id}`, {
         params: { hard: true },
       });
-      setSuccess('User permanently deleted');
+      toast.success('User permanently deleted');
       setShowDeleteConfirm(false);
       setUserToDelete(null);
       fetchUsers();
     } catch (err) {
+      logger.error('Failed to delete user', err, { userId: userToDelete.id });
       setError(handleApiError(err, 'Error deleting user'));
     } finally {
       setDeletingUserId(null);
@@ -186,10 +187,11 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
       try {
         await api.put(`/users/${userToEdit.id}`, editFormData);
-        setSuccess('User updated successfully');
+        toast.success('User updated successfully');
         closeEditModal();
         fetchUsers();
       } catch (err) {
+        logger.error('Failed to update user', err, { userId: userToEdit.id, editFormData });
         setEditError(handleApiError(err, 'Error updating user')); // Set modal error only
       } finally {
         setUpdatingUserId(null);
@@ -201,9 +203,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   return {
     // State
     users,
-    loading,
+    isLoading,
     error,
-    success,
     // Pagination (spread all pagination state and handlers)
     ...pagination,
     // Create form
@@ -211,7 +212,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     setShowCreateForm,
     formData,
     setFormData,
-    creating,
+    isCreating,
     handleCreateClient,
     // Toggle status
     togglingUserId,

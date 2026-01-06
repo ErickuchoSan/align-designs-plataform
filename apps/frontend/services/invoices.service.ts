@@ -43,46 +43,6 @@ export interface CreateInvoiceDto {
     notes?: string;
 }
 
-// Cache configuration
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
-interface CacheEntry<T> {
-    data: T;
-    timestamp: number;
-}
-
-// In-memory cache for invoice data
-const invoiceCache = new Map<string, CacheEntry<Invoice[]>>();
-
-// Helper to check if cache is valid
-function isCacheValid(entry: CacheEntry<any> | undefined): boolean {
-    if (!entry) return false;
-    return Date.now() - entry.timestamp < CACHE_TTL;
-}
-
-// Helper to get from cache
-function getFromCache(key: string): Invoice[] | null {
-    const entry = invoiceCache.get(key);
-    if (isCacheValid(entry)) {
-        return entry!.data;
-    }
-    // Clear expired cache
-    invoiceCache.delete(key);
-    return null;
-}
-
-// Helper to set cache
-function setCache(key: string, data: Invoice[]): void {
-    invoiceCache.set(key, {
-        data,
-        timestamp: Date.now(),
-    });
-}
-
-// Helper to clear cache for a project
-function clearProjectCache(projectId: string): void {
-    invoiceCache.delete(`project:${projectId}`);
-}
-
 export const InvoicesService = {
     async getAll(filters?: { projectId?: string; clientId?: string }) {
         const params = new URLSearchParams();
@@ -100,15 +60,11 @@ export const InvoicesService = {
 
     async create(data: CreateInvoiceDto) {
         const response = await api.post<Invoice>('/invoices', data);
-        // Clear cache for this project since we added a new invoice
-        clearProjectCache(data.projectId);
         return response.data;
     },
 
     async updateStatus(id: string, status: InvoiceStatus) {
         const response = await api.patch<Invoice>(`/invoices/${id}/status`, { status });
-        // Clear all project caches since we don't know which project this belongs to
-        invoiceCache.clear();
         return response.data;
     },
 
@@ -123,30 +79,15 @@ export const InvoicesService = {
     },
 
     /**
-     * Get invoices for a specific project (with caching)
+     * Get invoices for a specific project
      */
     async getByProject(projectId: string): Promise<Invoice[]> {
-        const cacheKey = `project:${projectId}`;
-
-        // Try to get from cache first
-        const cached = getFromCache(cacheKey);
-        if (cached) {
-            return cached;
-        }
-
-        // Fetch from API if not in cache or expired
         const response = await api.get<Invoice[]>(`/invoices?projectId=${projectId}`);
-        const invoices = response.data;
-
-        // Store in cache
-        setCache(cacheKey, invoices);
-
-        return invoices;
+        return response.data;
     },
 
     /**
      * Get pending invoices for a project (not paid yet)
-     * Uses cached data from getByProject
      */
     async getPendingByProject(projectId: string) {
         const invoices = await this.getByProject(projectId);
@@ -157,7 +98,6 @@ export const InvoicesService = {
 
     /**
      * Get all deadlines from invoices for a project
-     * Uses cached data from getByProject
      */
     async getDeadlinesByProject(projectId: string): Promise<Array<{ date: Date; label: string; invoiceId: string; amount: number }>> {
         const invoices = await this.getByProject(projectId);
@@ -174,7 +114,6 @@ export const InvoicesService = {
 
     /**
      * Calculate total pending amount for a project
-     * Uses cached data from getPendingByProject
      */
     async getTotalPending(projectId: string): Promise<number> {
         const invoices = await this.getPendingByProject(projectId);
@@ -186,7 +125,6 @@ export const InvoicesService = {
 
     /**
      * Calculate payment progress percentage for a project (all invoices)
-     * Uses cached data from getByProject
      */
     async getPaymentProgress(projectId: string): Promise<{ paid: number; total: number; percentage: number; pendingInvoiceCount: number }> {
         const invoices = await this.getByProject(projectId);
@@ -200,17 +138,6 @@ export const InvoicesService = {
         ).length;
 
         return { paid, total, percentage, pendingInvoiceCount };
-    },
-
-    /**
-     * Manually clear cache for a project (useful after mutations)
-     */
-    clearCache(projectId?: string) {
-        if (projectId) {
-            clearProjectCache(projectId);
-        } else {
-            invoiceCache.clear();
-        }
     },
 
     /**
