@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 import { XMarkIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { ProjectsService } from '@/services/projects.service';
+import { logger } from '@/lib/logger';
 
 interface UploadNewVersionModalProps {
     isOpen: boolean;
@@ -41,7 +42,7 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
             setFile(null);
             setNotes('');
         } catch (error) {
-            console.error('Upload failed', error);
+            logger.error('Failed to upload file version', error, { parentFileId, projectId });
             toast.error('Failed to upload new version');
         } finally {
             setIsUploading(false);

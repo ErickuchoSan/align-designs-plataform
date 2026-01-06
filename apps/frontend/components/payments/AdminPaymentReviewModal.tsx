@@ -3,6 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { toast } from 'react-hot-toast';
 import { Payment, PaymentStatus } from '@/types/payments';
 import { PaymentsService } from '@/services/payments.service';
+import { logger } from '@/lib/logger';
 
 interface AdminPaymentReviewModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function AdminPaymentReviewModal({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error approving payment:', error);
+      logger.error('Failed to approve payment', error, { paymentId: payment.id, correctedAmount });
       toast.error('Failed to approve payment');
     } finally {
       setProcessing(false);
@@ -54,7 +55,7 @@ export default function AdminPaymentReviewModal({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error rejecting payment:', error);
+      logger.error('Failed to reject payment', error, { paymentId: payment.id, rejectionReason });
       toast.error('Failed to reject payment');
     } finally {
       setProcessing(false);
