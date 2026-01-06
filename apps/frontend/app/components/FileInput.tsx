@@ -74,20 +74,20 @@ export default function FileInput({
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         <button
           type="button"
           onClick={handleButtonClick}
-          className="px-4 py-2 bg-stone-200 text-stone-800 rounded-lg hover:bg-stone-300 transition-colors text-sm font-medium border border-stone-300"
+          className="w-full px-4 py-2 text-sm font-medium text-stone-800 transition-colors bg-stone-200 border border-stone-300 rounded-lg hover:bg-stone-300 sm:w-auto"
         >
           {multiple ? 'Choose Files' : 'Choose File'}
         </button>
-        <span className="text-sm text-stone-600 truncate flex-1 block" title={fileNames || placeholder}>
+        <span className="block flex-1 text-sm truncate text-stone-600" title={fileNames || placeholder}>
           {fileNames || placeholder}
         </span>
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600">
+        <p className="mt-2 text-xs text-red-600 sm:text-sm">
           {error}
         </p>
       )}

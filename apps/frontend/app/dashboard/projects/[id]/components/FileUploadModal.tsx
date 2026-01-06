@@ -112,19 +112,19 @@ export default function FileUploadModal({
           </div>
         )}
 
-        <div className="flex gap-3 justify-end pt-4">
+        <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end sm:gap-3">
           <button
             type="button"
             onClick={handleClose}
             disabled={uploading}
-            className="px-5 py-2.5 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
+            className="w-full px-5 py-2.5 text-sm font-medium text-navy-900 transition-colors bg-stone-200 rounded-lg hover:bg-stone-300 disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={uploading || selectedFiles.length === 0}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] flex items-center justify-center"
+            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
           >
             {uploading ? <ButtonLoader /> : (selectedFiles.length > 1 ? 'Upload Files' : 'Upload File')}
           </button>

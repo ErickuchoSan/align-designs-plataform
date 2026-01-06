@@ -27,7 +27,7 @@ export default function DashboardHeader({
 
   return (
     <header className="bg-navy-900 shadow-lg">
-      <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             {showBackButton && (
@@ -42,14 +42,14 @@ export default function DashboardHeader({
                 </svg>
               </button>
             )}
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white truncate">
+            <h1 className="text-lg font-bold tracking-tight text-white truncate sm:text-xl md:text-2xl lg:text-3xl">
               {title}
             </h1>
           </div>
 
           {/* Additional content (buttons, etc.) */}
           {children && (
-            <div className="hidden lg:flex flex-1 justify-center">
+            <div className="flex-1 justify-center hidden lg:flex">
               {children}
             </div>
           )}
@@ -62,16 +62,16 @@ export default function DashboardHeader({
             <div className="relative" ref={menuRef}>
               <button
                 onClick={toggleProfileMenu}
-                className="flex items-center gap-2 sm:gap-3 rounded-lg bg-navy-800 px-2 sm:px-4 py-2 text-sm font-medium text-white hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-navy-900 transition-colors"
+                className="flex items-center px-2 py-2 text-sm font-medium text-white transition-colors bg-navy-800 rounded-lg gap-2 hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-navy-900 sm:gap-3 sm:px-4"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-gold-500 to-gold-600 rounded-full flex items-center justify-center text-navy-900 font-bold text-sm flex-shrink-0">
+                <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-navy-900">
                   {user.firstName[0]}{user.lastName[0]}
                 </div>
-                <span className="text-gold-400 hidden sm:block truncate max-w-[120px] md:max-w-[200px]">
+                <span className="hidden text-gold-400 truncate max-w-[120px] sm:block md:max-w-[200px]">
                   {user.firstName} {user.lastName}
                 </span>
                 <svg
-                  className={`w-4 h-4 text-gold-400 transition-transform flex-shrink-0 ${showProfileMenu ? 'rotate-180' : ''}`}
+                  className={`flex-shrink-0 w-4 h-4 text-gold-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

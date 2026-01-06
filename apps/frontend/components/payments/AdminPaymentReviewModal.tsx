@@ -89,7 +89,7 @@ export default function AdminPaymentReviewModal({
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
+          <div className="flex items-center justify-center min-h-full p-2 sm:p-4">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -99,8 +99,8 @@ export default function AdminPaymentReviewModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-navy-900 mb-4 flex justify-between items-center">
+              <Dialog.Panel className="w-full max-w-4xl p-4 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-xl sm:p-6 sm:rounded-2xl">
+                <Dialog.Title as="h3" className="flex items-center justify-between mb-4 text-lg font-bold leading-6 text-navy-900 sm:text-xl">
                   Review Payment
                   <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,12 +109,12 @@ export default function AdminPaymentReviewModal({
                   </button>
                 </Dialog.Title>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
                   {/* Left Column: Details & Actions */}
-                  <div className="space-y-6">
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                      <h4 className="font-semibold text-navy-900">Payment Details</h4>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="p-3 space-y-3 bg-gray-50 rounded-lg sm:p-4">
+                      <h4 className="text-sm font-semibold text-navy-900 sm:text-base">Payment Details</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm sm:gap-4">
                         <div>
                           <p className="text-gray-500">Amount</p>
                           <p className="font-bold text-lg text-green-600">
@@ -171,18 +171,19 @@ export default function AdminPaymentReviewModal({
                               </div>
                             ) : null}
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-col gap-2 sm:flex-row">
                               <button
                                 onClick={handleApprove}
                                 disabled={processing}
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                className="flex items-center justify-center flex-1 gap-2 py-2.5 font-semibold text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 disabled:opacity-50 sm:py-3"
                               >
                                 {processing ? 'Processing...' : (
                                   <>
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
-                                    {isEditingAmount ? 'Confirm with Changes' : 'Approve Payment'}
+                                    <span className="hidden sm:inline">{isEditingAmount ? 'Confirm with Changes' : 'Approve Payment'}</span>
+                                    <span className="sm:hidden">{isEditingAmount ? 'Confirm' : 'Approve'}</span>
                                   </>
                                 )}
                               </button>
@@ -191,7 +192,7 @@ export default function AdminPaymentReviewModal({
                                 <button
                                   onClick={toggleEditAmount}
                                   disabled={processing}
-                                  className="px-4 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 py-3 rounded-lg font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 tooltip-trigger"
+                                  className="flex items-center justify-center gap-2 px-3 py-2.5 font-medium text-blue-700 transition-colors bg-blue-50 border border-blue-200 rounded-lg shadow-sm sm:px-4 sm:py-3 hover:bg-blue-100 disabled:opacity-50 tooltip-trigger"
                                   title="Approve with Amount Correction"
                                 >
                                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -203,7 +204,7 @@ export default function AdminPaymentReviewModal({
                               <button
                                 onClick={() => setRejecting(true)}
                                 disabled={processing}
-                                className="bg-white border border-red-300 text-red-600 hover:bg-red-50 px-6 py-3 rounded-lg font-semibold shadow-sm transition-colors disabled:opacity-50"
+                                className="px-4 py-2.5 font-semibold text-red-600 transition-colors bg-white border border-red-300 rounded-lg shadow-sm sm:px-6 sm:py-3 hover:bg-red-50 disabled:opacity-50"
                               >
                                 Reject
                               </button>

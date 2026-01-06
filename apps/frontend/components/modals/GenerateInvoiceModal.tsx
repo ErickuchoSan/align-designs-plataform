@@ -102,14 +102,14 @@ export default function GenerateInvoiceModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/50 backdrop-blur-sm sm:p-4">
+            <div className="w-full max-w-md overflow-hidden bg-white shadow-xl rounded-xl">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50">
-                    <h3 className="text-lg font-semibold text-navy-900">Generate Invoice</h3>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-stone-50 sm:px-6 sm:py-4">
+                    <h3 className="text-base font-semibold text-navy-900 sm:text-lg">Generate Invoice</h3>
                     <button
                         onClick={onClose}
-                        className="text-stone-400 hover:text-stone-600 transition-colors"
+                        className="text-stone-400 transition-colors hover:text-stone-600"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -118,7 +118,7 @@ export default function GenerateInvoiceModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-4 space-y-4 sm:p-6">
                     {checkingUnpaid ? (
                         <div className="flex justify-center items-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800"></div>
@@ -197,18 +197,18 @@ export default function GenerateInvoiceModal({
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-3 pt-4">
+                            <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:gap-3">
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="flex-1 px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg font-medium transition-colors"
+                                    className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                    className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
                                         <>

@@ -133,11 +133,11 @@ export default function PayEmployeeModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/50 backdrop-blur-sm sm:p-4">
+            <div className="w-full max-w-lg overflow-hidden bg-white shadow-xl rounded-xl max-h-[95vh] flex flex-col sm:max-h-[90vh]">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50 flex-shrink-0">
-                    <h3 className="text-lg font-semibold text-navy-900">Record Employee Payment</h3>
+                <div className="flex items-center justify-between flex-shrink-0 px-4 py-3 border-b border-stone-200 bg-stone-50 sm:px-6 sm:py-4">
+                    <h3 className="text-base font-semibold text-navy-900 sm:text-lg">Record Employee Payment</h3>
                     <button
                         onClick={handleClose}
                         className="text-stone-400 hover:text-stone-600 transition-colors"
@@ -149,7 +149,7 @@ export default function PayEmployeeModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-grow">
+                <form onSubmit={handleSubmit} className="flex-grow p-4 space-y-4 overflow-y-auto sm:p-6">
                     {error && (
                         <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
                             {error}
@@ -230,20 +230,20 @@ export default function PayEmployeeModal({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label className="block mb-1 text-sm font-medium text-stone-700">
                                 Payment Method
                             </label>
                             <input
                                 type="text"
                                 value="Transfer"
                                 disabled
-                                className="w-full px-4 py-2 border border-stone-300 bg-stone-100 rounded-lg text-stone-500 cursor-not-allowed"
+                                className="w-full px-4 py-2 text-stone-500 border border-stone-300 rounded-lg cursor-not-allowed bg-stone-100"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label className="block mb-1 text-sm font-medium text-stone-700">
                                 Payment Date
                             </label>
                             <input
@@ -251,7 +251,7 @@ export default function PayEmployeeModal({
                                 required
                                 value={paymentDate}
                                 onChange={(e) => setPaymentDate(e.target.value)}
-                                className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                className="w-full px-4 py-2 transition-all border border-stone-300 rounded-lg outline-none focus:ring-2 focus:ring-navy-900 focus:border-transparent"
                             />
                         </div>
                     </div>
@@ -269,18 +269,18 @@ export default function PayEmployeeModal({
                         />
                     </div>
 
-                    <div className="flex gap-3 pt-4 flex-shrink-0">
+                    <div className="flex flex-col gap-2 pt-4 flex-shrink-0 sm:flex-row sm:gap-3">
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="flex-1 px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg font-medium transition-colors"
+                            className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !employeeId}
-                            className="flex-1 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>
