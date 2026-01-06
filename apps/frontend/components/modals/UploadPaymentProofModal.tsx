@@ -257,18 +257,18 @@ export default function UploadPaymentProofModal({
 
 
                     {/* Actions */}
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:gap-3">
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="flex-1 px-4 py-2 text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg font-medium transition-colors"
+                            className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !selectedInvoiceId}
-                            className="flex-1 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>

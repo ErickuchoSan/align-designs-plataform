@@ -104,18 +104,18 @@ export default function ApproveEmployeePaymentModal({
                     </div>
                 </div>
 
-                <div className="flex gap-3 justify-end bg-gray-50 px-4 py-3 sm:px-6 rounded-b-lg -mx-6 -mb-6">
+                <div className="flex flex-col gap-2 px-4 py-3 -mx-6 -mb-6 bg-gray-50 rounded-b-lg sm:flex-row sm:justify-end sm:gap-3 sm:px-6">
                     <button
                         onClick={onClose}
                         disabled={isLoading}
-                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors disabled:opacity-50"
+                        className="w-full px-4 py-2 font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 sm:w-auto"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={isLoading || !file}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
                     >
                         {isLoading ? <ButtonLoader /> : 'Approve Payment'}
                     </button>

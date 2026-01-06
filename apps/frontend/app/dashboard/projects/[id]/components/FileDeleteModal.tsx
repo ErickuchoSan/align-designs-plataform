@@ -48,18 +48,18 @@ export default function FileDeleteModal({
           )}
         </p>
 
-        <div className="flex gap-3 justify-end pt-4">
+        <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end sm:gap-3">
           <button
             onClick={onClose}
             disabled={deleting}
-            className="px-5 py-2.5 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
+            className="w-full px-5 py-2.5 text-sm font-medium text-navy-900 transition-colors bg-stone-200 rounded-lg hover:bg-stone-300 disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px] flex items-center justify-center"
+            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all bg-red-600 rounded-lg hover:bg-red-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[100px]"
           >
             {deleting ? <ButtonLoader /> : 'Delete'}
           </button>
