@@ -54,11 +54,11 @@ export default function ApproveEmployeePaymentModal({
                         </label>
                         <div
                             onClick={() => fileInputRef.current?.click()}
-                            className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-navy-500 transition-colors bg-gray-50 hover:bg-white"
+                            className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-lg cursor-pointer hover:border-navy-500 transition-colors bg-stone-50 hover:bg-white"
                         >
                             <div className="space-y-1 text-center">
                                 <svg
-                                    className="mx-auto h-12 w-12 text-gray-400"
+                                    className="mx-auto h-12 w-12 text-stone-400"
                                     stroke="currentColor"
                                     fill="none"
                                     viewBox="0 0 48 48"
@@ -71,7 +71,7 @@ export default function ApproveEmployeePaymentModal({
                                         strokeLinejoin="round"
                                     />
                                 </svg>
-                                <div className="flex text-sm text-gray-600 justify-center">
+                                <div className="flex text-sm text-stone-600 justify-center">
                                     <span className="relative cursor-pointer bg-white rounded-md font-medium text-navy-600 hover:text-navy-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-navy-500">
                                         Upload a file
                                     </span>
@@ -83,11 +83,11 @@ export default function ApproveEmployeePaymentModal({
                                         onChange={handleFileChange}
                                     />
                                 </div>
-                                <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                                <p className="text-xs text-stone-500">PNG, JPG, PDF up to 10MB</p>
                             </div>
                         </div>
                         {file && (
-                            <div className="mt-2 flex items-center justify-between p-2 bg-blue-50 rounded text-sm text-blue-700">
+                            <div className="mt-2 flex items-center justify-between p-2 bg-navy-50 rounded text-sm text-navy-700">
                                 <span className="truncate">{file.name}</span>
                                 <button
                                     onClick={(e) => {
@@ -95,7 +95,7 @@ export default function ApproveEmployeePaymentModal({
                                         setFile(null);
                                         if (fileInputRef.current) fileInputRef.current.value = '';
                                     }}
-                                    className="text-blue-500 hover:text-blue-700"
+                                    className="text-navy-500 hover:text-navy-700"
                                 >
                                     Remove
                                 </button>

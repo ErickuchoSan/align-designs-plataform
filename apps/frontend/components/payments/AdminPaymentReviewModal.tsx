@@ -102,7 +102,7 @@ export default function AdminPaymentReviewModal({
               <Dialog.Panel className="w-full max-w-4xl p-4 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-xl sm:p-6 sm:rounded-2xl">
                 <Dialog.Title as="h3" className="flex items-center justify-between mb-4 text-lg font-bold leading-6 text-navy-900 sm:text-xl">
                   Review Payment
-                  <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+                  <button onClick={onClose} className="text-stone-400 hover:text-stone-500">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -112,27 +112,27 @@ export default function AdminPaymentReviewModal({
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
                   {/* Left Column: Details & Actions */}
                   <div className="space-y-4 sm:space-y-6">
-                    <div className="p-3 space-y-3 bg-gray-50 rounded-lg sm:p-4">
+                    <div className="p-3 space-y-3 rounded-lg bg-stone-50 sm:p-4">
                       <h4 className="text-sm font-semibold text-navy-900 sm:text-base">Payment Details</h4>
                       <div className="grid grid-cols-2 gap-3 text-sm sm:gap-4">
                         <div>
-                          <p className="text-gray-500">Amount</p>
+                          <p className="text-stone-500">Amount</p>
                           <p className="font-bold text-lg text-green-600">
                             ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Date</p>
-                          <p className="font-medium text-gray-900">
+                          <p className="text-stone-500">Date</p>
+                          <p className="font-medium text-stone-900">
                             {new Date(payment.paymentDate).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Method</p>
-                          <p className="font-medium text-gray-900 capitalize">{payment.paymentMethod.replace('_', ' ')}</p>
+                          <p className="text-stone-500">Method</p>
+                          <p className="font-medium capitalize text-stone-900">{payment.paymentMethod.replace('_', ' ')}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Currently</p>
+                          <p className="text-stone-500">Currently</p>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.status === PaymentStatus.CONFIRMED ? 'bg-green-100 text-green-800' :
                             payment.status === PaymentStatus.REJECTED ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
@@ -142,9 +142,9 @@ export default function AdminPaymentReviewModal({
                         </div>
                       </div>
                       {payment.notes && (
-                        <div className="border-t border-gray-200 pt-3 mt-3">
-                          <p className="text-gray-500 mb-1">Customer Notes:</p>
-                          <p className="text-gray-700 italic">"{payment.notes}"</p>
+                        <div className="pt-3 mt-3 border-t border-stone-200">
+                          <p className="mb-1 text-stone-500">Customer Notes:</p>
+                          <p className="italic text-stone-700">"{payment.notes}"</p>
                         </div>
                       )}
                     </div>
@@ -159,7 +159,7 @@ export default function AdminPaymentReviewModal({
                                 <h5 className="mb-2 text-sm font-semibold text-navy-800">Correct Payment Amount</h5>
                                 <p className="mb-2 text-xs text-navy-600">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-gray-500 font-medium">$</span>
+                                  <span className="font-medium text-stone-500">$</span>
                                   <input
                                     type="number"
                                     value={correctedAmount}
@@ -214,7 +214,7 @@ export default function AdminPaymentReviewModal({
                               <div className="text-center">
                                 <button
                                   onClick={toggleEditAmount}
-                                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                  className="text-xs underline text-stone-500 hover:text-stone-700"
                                 >
                                   Cancel Correction
                                 </button>
@@ -234,7 +234,7 @@ export default function AdminPaymentReviewModal({
                             <div className="flex justify-end gap-2">
                               <button
                                 onClick={() => setRejecting(false)}
-                                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800"
+                                className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-800"
                               >
                                 Cancel
                               </button>
@@ -253,9 +253,9 @@ export default function AdminPaymentReviewModal({
                   </div>
 
                   {/* Right Column: Receipt Preview */}
-                  <div className="bg-gray-100 rounded-lg border border-gray-200 overflow-hidden flex flex-col h-[500px]">
-                    <div className="bg-gray-200 px-4 py-2 border-b border-gray-300 flex justify-between items-center">
-                      <span className="font-medium text-gray-700 text-sm">Receipt Preview</span>
+                  <div className="flex flex-col overflow-hidden border rounded-lg bg-stone-100 border-stone-200 h-[500px]">
+                    <div className="flex items-center justify-between px-4 py-2 border-b bg-stone-200 border-stone-300">
+                      <span className="text-sm font-medium text-stone-700">Receipt Preview</span>
                       <a
                         href={receiptUrl}
                         target="_blank"
