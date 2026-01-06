@@ -155,16 +155,16 @@ export default function AdminPaymentReviewModal({
                         {!rejecting ? (
                           <div className="space-y-3">
                             {isEditingAmount ? (
-                              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 animate-in fade-in slide-in-from-top-2">
-                                <h5 className="font-semibold text-blue-800 mb-2 text-sm">Correct Payment Amount</h5>
-                                <p className="text-xs text-blue-600 mb-2">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                              <div className="p-4 border rounded-lg bg-navy-50 border-navy-100 animate-in fade-in slide-in-from-top-2">
+                                <h5 className="mb-2 text-sm font-semibold text-navy-800">Correct Payment Amount</h5>
+                                <p className="mb-2 text-xs text-navy-600">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 <div className="flex items-center gap-2 mb-3">
                                   <span className="text-gray-500 font-medium">$</span>
                                   <input
                                     type="number"
                                     value={correctedAmount}
                                     onChange={(e) => setCorrectedAmount(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    className="block w-full rounded-md border-stone-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
                                     placeholder="0.00"
                                   />
                                 </div>
@@ -192,7 +192,7 @@ export default function AdminPaymentReviewModal({
                                 <button
                                   onClick={toggleEditAmount}
                                   disabled={processing}
-                                  className="flex items-center justify-center gap-2 px-3 py-2.5 font-medium text-blue-700 transition-colors bg-blue-50 border border-blue-200 rounded-lg shadow-sm sm:px-4 sm:py-3 hover:bg-blue-100 disabled:opacity-50 tooltip-trigger"
+                                  className="flex items-center justify-center gap-2 px-3 py-2.5 font-medium transition-colors border rounded-lg shadow-sm text-navy-700 bg-navy-50 border-navy-200 sm:px-4 sm:py-3 hover:bg-navy-100 disabled:opacity-50 tooltip-trigger"
                                   title="Approve with Amount Correction"
                                 >
                                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -260,7 +260,7 @@ export default function AdminPaymentReviewModal({
                         href={receiptUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1"
+                        className="flex items-center text-xs font-medium gap-1 text-navy-600 hover:text-navy-800"
                       >
                         Open in new tab
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

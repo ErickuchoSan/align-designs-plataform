@@ -51,9 +51,9 @@ export default function ConfirmModal({
     },
     info: {
       icon: 'ℹ️',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+      iconBg: 'bg-navy-100',
+      iconColor: 'text-navy-600',
+      button: 'bg-navy-600 hover:bg-navy-700 focus:ring-navy-500',
     },
   };
 
@@ -66,7 +66,7 @@ export default function ConfirmModal({
           <span className="text-3xl">{style.icon}</span>
         </div>
 
-        <p className={`text-sm sm:text-base text-gray-700 mb-4 break-words ${showDetailedWarning ? 'text-left' : ''}`}>{message}</p>
+        <p className={`text-sm sm:text-base text-stone-700 mb-4 break-words ${showDetailedWarning ? 'text-left' : ''}`}>{message}</p>
 
         {/* Detailed Warning Section */}
         {showDetailedWarning && warningItems.length > 0 && (
@@ -103,7 +103,7 @@ export default function ConfirmModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-5 py-2.5 text-sm font-medium transition-colors rounded-lg text-stone-800 bg-stone-200 hover:bg-stone-300 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
           >
             {cancelText}
           </button>

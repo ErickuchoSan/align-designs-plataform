@@ -50,11 +50,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
       {/* Modal - with max-height and scroll */}
       <div className={`relative bg-white rounded-lg shadow-2xl ${sizeClasses[size]} max-h-[95vh] flex flex-col animate-slideUp sm:rounded-2xl sm:max-h-[90vh]`}>
         {/* Header - fixed */}
-        <div className="flex items-center justify-between flex-shrink-0 p-4 border-b border-gray-200 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">{title}</h3>
+        <div className="flex items-center justify-between flex-shrink-0 p-4 border-b border-stone-200 sm:p-6">
+          <h3 className="text-lg font-semibold text-stone-900 sm:text-xl">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 text-gray-500 transition-colors rounded-lg hover:text-gray-700 hover:bg-gray-200"
+            className="p-1 transition-colors rounded-lg text-stone-500 hover:text-stone-700 hover:bg-stone-200"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
