@@ -6,6 +6,7 @@ import { ProjectsService } from '@/services/projects.service';
 import { toast } from 'react-hot-toast';
 import { User } from '@/types';
 import { UsersService } from '@/services/users.service';
+import { logger } from '@/lib/logger';
 
 interface ManageEmployeesModalProps {
     isOpen: boolean;
@@ -28,7 +29,7 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
             const users = await UsersService.getEmployees();
             setAvailableEmployees(users);
         } catch (error) {
-            console.error('Error loading employees:', error);
+            logger.error('Failed to load employees for assignment', error);
             toast.error('Error loading available employees');
         } finally {
             setIsLoading(false);
@@ -54,7 +55,7 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
             onSuccess();
             onClose();
         } catch (error: any) {
-            console.error('Error saving employees:', error);
+            logger.error('Failed to save employee assignments', error, { projectId, selectedIds });
             toast.error(error.response?.data?.message || 'Error updating employees');
         } finally {
             setIsSaving(false);

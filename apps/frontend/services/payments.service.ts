@@ -14,17 +14,6 @@ export class PaymentsService {
     }
 
     static async uploadClientPayment(data: FormData): Promise<Payment> {
-        // Debug: Log FormData contents
-        console.log('=== FormData being sent ===');
-        for (const [key, value] of data.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}:`, { name: value.name, size: value.size, type: value.type });
-            } else {
-                console.log(`${key}:`, value);
-            }
-        }
-        console.log('===========================');
-
         // Override default Content-Type to let browser set multipart/form-data with boundary
         const response = await api.post<Payment>(`${this.BASE_URL}/client-upload`, data, {
             headers: {

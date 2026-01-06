@@ -9,6 +9,7 @@ import { PaymentsService } from '@/services/payments.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { Invoice } from '@/types/invoice';
 import { PaymentMethod, PaymentType } from '@/types/payments';
+import { logger } from '@/lib/logger';
 
 interface ClientPaymentUploadModalProps {
   isOpen: boolean;
@@ -61,8 +62,8 @@ export default function ClientPaymentUploadModal({
       const unpaid = data.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
       setInvoices(unpaid);
     } catch (error) {
-      console.error('Error fetching invoices:', error);
-      // Silent error or toast?
+      logger.error('Failed to fetch invoices for payment modal', error);
+      // Silent error - user can proceed without invoice selection
     } finally {
       setLoadingInvoices(false);
     }
@@ -114,18 +115,15 @@ export default function ClientPaymentUploadModal({
       if (invoiceId) formData.append('invoiceId', invoiceId);
       if (notes) formData.append('notes', notes);
 
-      console.log('Frontend FormData check:');
-      console.log('- projectId:', projectId);
-      console.log('- amount:', amount.toString());
-      console.log('- file:', file);
-
       await PaymentsService.uploadClientPayment(formData);
 
       toast.success('Payment submitted for review');
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
-      console.error('Error uploading payment:', error);
+      logger.error('Failed to upload client payment', error, { projectId, amount });
+      // Error already handled by global axios interceptor in dev mode
+      // Only show user-friendly toast for production users
       toast.error('Failed to submit payment');
     } finally {
       setIsSubmitting(false);

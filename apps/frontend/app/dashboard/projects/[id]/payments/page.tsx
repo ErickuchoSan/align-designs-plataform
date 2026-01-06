@@ -15,6 +15,7 @@ import { ProjectsService } from '@/services/projects.service';
 import { Project } from '@/types';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import { logger } from '@/lib/logger';
 
 export default function ProjectPaymentsPage() {
     const params = useParams();
@@ -45,7 +46,7 @@ export default function ProjectPaymentsPage() {
             setInvoices(invoicesData);
             setProject(projectData);
         } catch (error) {
-            console.error('Error loading payments data:', error);
+            logger.error('Failed to load payments page data', error, { projectId });
             toast.error('Error loading payment information');
         } finally {
             setIsLoading(false);
@@ -89,7 +90,7 @@ export default function ProjectPaymentsPage() {
             const url = window.URL.createObjectURL(blob);
             window.open(url, '_blank');
         } catch (error) {
-            console.error('Error downloading invoice:', error);
+            logger.error('Failed to download invoice PDF', error, { invoiceId, projectId });
             toast.error('Could not download invoice. Please try again.');
         }
     };

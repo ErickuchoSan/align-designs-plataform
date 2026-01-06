@@ -8,6 +8,7 @@ import { PaymentsService } from '@/services/payments.service';
 import { UsersService } from '@/services/users.service';
 import { FilesService, FileData } from '@/services/files.service';
 import { User } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface RecordPaymentModalProps {
     isOpen: boolean;
@@ -65,7 +66,7 @@ export function RecordPaymentModal({
             const data = await UsersService.getEmployees();
             setEmployees(data);
         } catch (error) {
-            console.error('Error loading employees:', error);
+            logger.error('Failed to load employees for payment modal', error);
             toast.error('Error loading employees');
         } finally {
             setIsLoadingEmployees(false);
@@ -78,7 +79,7 @@ export function RecordPaymentModal({
             const data = await FilesService.getPendingPaymentFiles(projectId, employeeId);
             setPendingFiles(data);
         } catch (error) {
-            console.error('Error loading pending files:', error);
+            logger.error('Failed to load pending files for employee payment', error, { projectId, employeeId });
             toast.error('Error loading pending files');
         } finally {
             setIsLoadingFiles(false);
@@ -129,7 +130,7 @@ export function RecordPaymentModal({
             onSuccess();
             onClose();
         } catch (error) {
-            console.error('Error recording payment:', error);
+            logger.error('Failed to record payment', error, { projectId, type, amount });
             toast.error('Error recording payment');
         } finally {
             setIsSubmitting(false);
