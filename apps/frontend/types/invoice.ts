@@ -1,10 +1,6 @@
-export enum InvoiceStatus {
-  DRAFT = 'DRAFT',
-  SENT = 'SENT',
-  PAID = 'PAID',
-  OVERDUE = 'OVERDUE',
-  CANCELLED = 'CANCELLED',
-}
+// Import and re-export InvoiceStatus from centralized enums file
+import { InvoiceStatus } from './enums';
+export { InvoiceStatus, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from './enums';
 
 export interface Invoice {
   id: string;
@@ -32,7 +28,7 @@ export interface Invoice {
     lastName: string;
     email: string;
   };
-  payments?: any[];
+  payments?: { id: string; amount: number; paymentDate: string; paymentMethod: string; }[];
 }
 
 export interface CreateInvoiceDto {

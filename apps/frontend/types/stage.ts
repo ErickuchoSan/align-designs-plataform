@@ -2,16 +2,9 @@
  * Stage types and permissions for project file management
  */
 
-export enum Stage {
-  BRIEF_PROJECT = 'BRIEF_PROJECT',
-  FEEDBACK_CLIENT = 'FEEDBACK_CLIENT',
-  FEEDBACK_EMPLOYEE = 'FEEDBACK_EMPLOYEE',
-  REFERENCES = 'REFERENCES',
-  SUBMITTED = 'SUBMITTED',
-  ADMIN_APPROVED = 'ADMIN_APPROVED',
-  CLIENT_APPROVED = 'CLIENT_APPROVED',
-  PAYMENTS = 'PAYMENTS',
-}
+// Import and re-export Stage from centralized enums file
+import { Stage } from './enums';
+export { Stage, STAGE_LABELS, STAGE_COLORS } from './enums';
 
 export interface StagePermissions {
   canView: boolean;

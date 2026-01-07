@@ -1,10 +1,14 @@
+// Import enums from centralized enums file
+import { FeedbackStatus, FeedbackAudience } from './enums';
+export { FeedbackStatus, FeedbackAudience, FEEDBACK_STATUS_LABELS, FEEDBACK_AUDIENCE_LABELS } from './enums';
+
 export interface FeedbackCycle {
     id: string;
     projectId: string;
     employeeId: string;
     startDate: string;
     endDate?: string;
-    status: 'open' | 'submitted' | 'approved' | 'rejected';
+    status: FeedbackStatus;
     createdAt: string;
     employee: {
         id: string;
@@ -12,7 +16,7 @@ export interface FeedbackCycle {
         lastName: string;
     };
     feedback: Feedback[];
-    files: any[]; // File type
+    files: { id: string; url: string; originalName: string; mimeType: string; }[];
     timeElapsed?: {
         days: number;
         hours: number;
@@ -24,7 +28,7 @@ export interface Feedback {
     projectId: string;
     feedbackCycleId: string;
     createdBy: string;
-    targetAudience: 'client_space' | 'employee_space';
+    targetAudience: FeedbackAudience;
     content?: string;
     fileDocumentId?: string;
     sequenceInCycle: number;

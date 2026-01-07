@@ -1,9 +1,6 @@
-export enum EmployeePaymentStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-}
+// Import and re-export EmployeePaymentStatus from centralized enums file
+import { EmployeePaymentStatus } from './enums';
+export { EmployeePaymentStatus, EMPLOYEE_PAYMENT_STATUS_LABELS } from './enums';
 
 export interface EmployeePayment {
   id: string;
@@ -31,7 +28,7 @@ export interface EmployeePayment {
     id: string;
     name: string;
   };
-  receiptFile?: any;
+  receiptFile?: { id: string; url: string; originalName: string; mimeType: string; };
 }
 
 export interface CreateEmployeePaymentDto {
@@ -44,4 +41,4 @@ export interface CreateEmployeePaymentDto {
   receiptFileId?: string;
 }
 
-export interface UpdateEmployeePaymentDto extends Partial<CreateEmployeePaymentDto> {}
+export interface UpdateEmployeePaymentDto extends Partial<CreateEmployeePaymentDto> { }

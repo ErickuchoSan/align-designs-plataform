@@ -1,47 +1,5 @@
 import api from '../lib/api';
-import { Project, User } from '@/types';
-
-export enum InvoiceStatus {
-    DRAFT = 'DRAFT',
-    SENT = 'SENT',
-    PAID = 'PAID',
-    OVERDUE = 'OVERDUE',
-    CANCELLED = 'CANCELLED',
-}
-
-export interface Invoice {
-    id: string;
-    invoiceNumber: string;
-    projectId: string;
-    clientId: string;
-    issueDate: string;
-    dueDate: string;
-    paymentTermsDays: number;
-    subtotal: number;
-    taxAmount: number;
-    totalAmount: number;
-    amountPaid: number;
-    status: InvoiceStatus;
-    invoiceFileUrl?: string;
-    notes?: string;
-    sentToClientAt?: string;
-    createdAt: string;
-    updatedAt: string;
-    project?: Project;
-    client?: User;
-}
-
-export interface CreateInvoiceDto {
-    projectId: string;
-    clientId: string;
-    issueDate: string;
-    dueDate: string;
-    paymentTermsDays: number;
-    subtotal: number;
-    taxAmount?: number;
-    totalAmount: number;
-    notes?: string;
-}
+import { Invoice, InvoiceStatus, CreateInvoiceDto } from '@/types/invoice';
 
 export const InvoicesService = {
     async getAll(filters?: { projectId?: string; clientId?: string }) {

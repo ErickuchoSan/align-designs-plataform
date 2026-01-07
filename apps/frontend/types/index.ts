@@ -2,30 +2,19 @@
 // PHASE 1: WORKFLOW SYSTEM TYPES
 // ============================================================================
 
-export enum Role {
-  ADMIN = 'ADMIN',
-  CLIENT = 'CLIENT',
-  EMPLOYEE = 'EMPLOYEE', // Phase 1: Added employee role
-}
-
-export enum ProjectStatus {
-  WAITING_PAYMENT = 'WAITING_PAYMENT',
-  ACTIVE = 'ACTIVE',
-  PAUSED = 'PAUSED',
-  COMPLETED = 'COMPLETED',
-  ARCHIVED = 'ARCHIVED',
-}
-
-export enum Stage {
-  BRIEF_PROJECT = 'BRIEF_PROJECT',
-  FEEDBACK_CLIENT = 'FEEDBACK_CLIENT',
-  FEEDBACK_EMPLOYEE = 'FEEDBACK_EMPLOYEE',
-  REFERENCES = 'REFERENCES',
-  SUBMITTED = 'SUBMITTED',
-  ADMIN_APPROVED = 'ADMIN_APPROVED',
-  CLIENT_APPROVED = 'CLIENT_APPROVED',
-  PAYMENTS = 'PAYMENTS',
-}
+// Re-export enums from centralized enums file
+export {
+  Role,
+  ProjectStatus,
+  Stage,
+  FeedbackStatus,
+  FeedbackAudience,
+  ROLE_LABELS,
+  PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_COLORS,
+  STAGE_LABELS,
+  STAGE_COLORS,
+} from './enums';
 
 export interface User {
   id: string;
@@ -136,7 +125,7 @@ export interface CreateClientDto {
 }
 
 export interface CreateUserDto extends CreateClientDto {
-  role: 'CLIENT' | 'EMPLOYEE';
+  role: Role.CLIENT | Role.EMPLOYEE;
 }
 
 export interface UpdateUserDto {
@@ -200,7 +189,7 @@ export interface FeedbackCycle {
   employeeId: string;
   startDate: string;
   endDate?: string;
-  status: 'open' | 'submitted' | 'approved' | 'rejected';
+  status: FeedbackStatus;
   createdAt: string;
   project?: Project;
   employee?: User;
@@ -213,7 +202,7 @@ export interface Feedback {
   feedbackCycleId: string;
   projectId: string;
   createdBy: string;
-  targetAudience: 'client_space' | 'employee_space';
+  targetAudience: FeedbackAudience;
   fileDocumentId?: string;
   content?: string;
   sequenceInCycle: number;
@@ -223,42 +212,6 @@ export interface Feedback {
   creator?: User;
 }
 
-// Phase 1: Helper types for stage labels and colors
-export const STAGE_LABELS: Record<Stage, string> = {
-  [Stage.BRIEF_PROJECT]: 'Project Brief',
-  [Stage.FEEDBACK_CLIENT]: 'Feedback (Client)',
-  [Stage.FEEDBACK_EMPLOYEE]: 'Feedback (Employee)',
-  [Stage.REFERENCES]: 'References',
-  [Stage.SUBMITTED]: 'Submitted',
-  [Stage.ADMIN_APPROVED]: 'Approved by Admin',
-  [Stage.CLIENT_APPROVED]: 'Approved by Client',
-  [Stage.PAYMENTS]: 'Payments',
-};
-
-export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  [ProjectStatus.WAITING_PAYMENT]: 'Waiting for Payment',
-  [ProjectStatus.ACTIVE]: 'Active',
-  [ProjectStatus.PAUSED]: 'Paused',
-  [ProjectStatus.COMPLETED]: 'Completed',
-  [ProjectStatus.ARCHIVED]: 'Archived',
-};
-
-export const STAGE_COLORS: Record<Stage, string> = {
-  [Stage.BRIEF_PROJECT]: 'blue',
-  [Stage.FEEDBACK_CLIENT]: 'purple',
-  [Stage.FEEDBACK_EMPLOYEE]: 'orange',
-  [Stage.REFERENCES]: 'cyan',
-  [Stage.SUBMITTED]: 'yellow',
-  [Stage.ADMIN_APPROVED]: 'green',
-  [Stage.CLIENT_APPROVED]: 'emerald',
-  [Stage.PAYMENTS]: 'pink',
-};
-
-export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
-  [ProjectStatus.WAITING_PAYMENT]: 'yellow',
-  [ProjectStatus.ACTIVE]: 'green',
-  [ProjectStatus.PAUSED]: 'orange',
-  [ProjectStatus.COMPLETED]: 'blue',
-  [ProjectStatus.ARCHIVED]: 'gray',
-};
+// Note: STAGE_LABELS, PROJECT_STATUS_LABELS, STAGE_COLORS, and PROJECT_STATUS_COLORS
+// are now exported from ./enums.ts (see re-exports at top of file)
 
