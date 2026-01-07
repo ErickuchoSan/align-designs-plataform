@@ -1,8 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AxiosRequestConfig } from 'axios';
 import ErrorModal from './ErrorModal';
 import { errorModalManager } from '@/lib/error-modal-manager';
+
+interface ErrorObject {
+  name?: string;
+  message?: string;
+  code?: string;
+  stack?: string;
+  [key: string]: unknown;
+}
+
+interface ResponseData {
+  message?: string;
+  error?: string;
+  statusCode?: number;
+  [key: string]: unknown;
+}
 
 /**
  * Global Error Modal Component
@@ -19,10 +35,10 @@ export default function GlobalErrorModal() {
     statusCode?: number | string;
     willRedirect?: boolean;
     onClose?: () => void;
-    // New fields for dev mode
-    errorObject?: any;
-    requestConfig?: any;
-    responseData?: any;
+    // Typed fields for dev mode
+    errorObject?: ErrorObject;
+    requestConfig?: Partial<AxiosRequestConfig>;
+    responseData?: ResponseData;
     stackTrace?: string;
     errorCode?: string;
   } | null>(null);

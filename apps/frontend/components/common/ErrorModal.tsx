@@ -1,7 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
+import { AxiosRequestConfig } from 'axios';
 import { useAuthSafe } from '@/contexts/AuthContext';
+
+interface ErrorObject {
+  name?: string;
+  message?: string;
+  code?: string;
+  stack?: string;
+  [key: string]: unknown;
+}
+
+interface ResponseData {
+  message?: string;
+  error?: string;
+  statusCode?: number;
+  [key: string]: unknown;
+}
 
 interface ErrorModalProps {
   isOpen: boolean;
@@ -13,10 +29,10 @@ interface ErrorModalProps {
   statusCode?: number | string;
   onClose: () => void;
   willRedirect?: boolean;
-  // New fields for dev mode display
-  errorObject?: any;
-  requestConfig?: any;
-  responseData?: any;
+  // Typed fields for dev mode display
+  errorObject?: ErrorObject;
+  requestConfig?: Partial<AxiosRequestConfig>;
+  responseData?: ResponseData;
   stackTrace?: string;
   errorCode?: string;
 }
