@@ -4,7 +4,7 @@ import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
-interface ConfirmDialogProps {
+interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -17,12 +17,12 @@ interface ConfirmDialogProps {
 }
 
 /**
- * ConfirmDialog Component
+ * ConfirmModal Component
  *
- * Reusable confirmation dialog to replace native browser confirm() alerts
+ * Reusable confirmation modal to replace native browser confirm() alerts
  * Provides a consistent, accessible UI for confirmation prompts
  */
-export default function ConfirmDialog({
+export default function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
@@ -32,7 +32,7 @@ export default function ConfirmDialog({
   cancelText = 'Cancel',
   confirmButtonClass = 'bg-blue-600 hover:bg-blue-700',
   isLoading = false,
-}: ConfirmDialogProps) {
+}: ConfirmModalProps) {
   const handleConfirm = () => {
     onConfirm();
     onClose();

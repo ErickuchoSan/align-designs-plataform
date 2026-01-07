@@ -3,19 +3,19 @@
 import { useState, useCallback, useEffect, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Project, ProjectStatus } from '@/types';
+import { Project, ProjectStatus, ProjectEmployee, User } from '@/types';
 import { Payment } from '@/types/payments';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
 
 // Lazy load heavy modal components for better code splitting
 // These modals are only loaded when they are actually opened
-const ManageEmployeesModal = dynamic(() => import('@/components/dashboard/ManageEmployeesModal').then(mod => ({ default: mod.ManageEmployeesModal })), {
+const ManageEmployeesModal = dynamic(() => import('@/components/dashboard/ManageEmployeesModal'), {
   loading: () => null,
   ssr: false,
 });
 
-const CompletionChecklistModal = dynamic(() => import('@/components/projects/CompletionChecklistModal').then(mod => ({ default: mod.CompletionChecklistModal })), {
+const CompletionChecklistModal = dynamic(() => import('@/components/projects/CompletionChecklistModal'), {
   loading: () => null,
   ssr: false,
 });
@@ -25,13 +25,14 @@ const PaymentHistoryModal = dynamic(() => import('@/components/payments/PaymentH
   ssr: false,
 });
 
-const ConfirmDialog = dynamic(() => import('@/components/common/ConfirmDialog'), {
+const ConfirmModal = dynamic(() => import('@/components/common/ConfirmModal'), {
   loading: () => null,
   ssr: false,
 });
 import { ProjectsService } from '@/services/projects.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';
+import { handleApiError, logError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { toast } from 'react-hot-toast';
 
@@ -128,9 +129,9 @@ function ProjectWorkflowSection({
     try {
       await ProjectsService.activate(project.id);
       onUpdate();
-    } catch (err: any) {
-      logger.error('Error activating project:', err);
-      toast.error(err.response?.data?.message || 'Failed to activate project');
+    } catch (err) {
+      logError(err, 'Error activating project');
+      toast.error(handleApiError(err, 'Failed to activate project'));
     } finally {
       setProcessing(false);
     }
@@ -143,9 +144,9 @@ function ProjectWorkflowSection({
     try {
       await ProjectsService.complete(project.id);
       onUpdate();
-    } catch (err: any) {
-      logger.error('Error completing project:', err);
-      setError(err.response?.data?.message || 'Failed to complete project');
+    } catch (err) {
+      logError(err, 'Error completing project');
+      setError(handleApiError(err, 'Failed to complete project'));
     } finally {
       setProcessing(false);
     }
@@ -159,9 +160,9 @@ function ProjectWorkflowSection({
       const status = await ProjectsService.getCompletionStatus(project.id);
       setChecklistData(status);
       setShowChecklistModal(true);
-    } catch (err: any) {
-      logger.error('Error fetching completion status:', err);
-      setError(err.response?.data?.message || 'Failed to fetch project status');
+    } catch (err) {
+      logError(err, 'Error fetching completion status');
+      setError(handleApiError(err, 'Failed to fetch project status'));
     } finally {
       setChecklistLoading(false);
     }
@@ -175,9 +176,9 @@ function ProjectWorkflowSection({
       await ProjectsService.archive(project.id);
       setShowChecklistModal(false);
       onUpdate();
-    } catch (err: any) {
-      logger.error('Error archiving project:', err);
-      setError(err.response?.data?.message || 'Failed to archive project');
+    } catch (err) {
+      logError(err, 'Error archiving project');
+      setError(handleApiError(err, 'Failed to archive project'));
     } finally {
       setProcessing(false);
     }
@@ -556,7 +557,7 @@ function ProjectWorkflowSection({
 
           {project.employees && project.employees.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {project.employees.map((assignment: any) => (
+              {project.employees.filter((a): a is ProjectEmployee & { employee: User } => !!a.employee).map((assignment) => (
                 <div
                   key={assignment.employee.id}
                   className="flex items-center gap-2 px-3 py-2 bg-stone-100 rounded-lg"
@@ -600,8 +601,8 @@ function ProjectWorkflowSection({
         />
       )}
 
-      {/* Confirmation Dialogs */}
-      <ConfirmDialog
+      {/* Confirmation Modals */}
+      <ConfirmModal
         isOpen={showActivateConfirm}
         onClose={() => setShowActivateConfirm(false)}
         onConfirm={handleActivateProject}
@@ -612,7 +613,7 @@ function ProjectWorkflowSection({
         isLoading={processing}
       />
 
-      <ConfirmDialog
+      <ConfirmModal
         isOpen={showCompleteConfirm}
         onClose={() => setShowCompleteConfirm(false)}
         onConfirm={handleCompleteProject}

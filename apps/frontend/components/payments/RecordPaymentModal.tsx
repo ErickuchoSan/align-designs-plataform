@@ -19,7 +19,7 @@ interface RecordPaymentModalProps {
     defaultType?: PaymentType;
 }
 
-export function RecordPaymentModal({
+export default function RecordPaymentModal({
     isOpen,
     onClose,
     projectId,

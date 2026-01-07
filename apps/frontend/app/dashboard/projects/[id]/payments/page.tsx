@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PaymentHistoryTable from '@/components/payments/PaymentHistoryTable';
-import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
+import RecordPaymentModal from '@/components/payments/RecordPaymentModal';
 import ClientPaymentUploadModal from '@/components/payments/ClientPaymentUploadModal';
 import AdminPaymentReviewModal from '@/components/payments/AdminPaymentReviewModal';
 import { PaymentsService } from '@/services/payments.service';

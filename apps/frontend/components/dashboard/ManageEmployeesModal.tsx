@@ -12,11 +12,18 @@ interface ManageEmployeesModalProps {
     isOpen: boolean;
     onClose: () => void;
     projectId: string;
-    currentEmployees: any[]; // ProjectEmployee type
+    currentEmployees: ProjectEmployee[];
     onSuccess: () => void;
 }
 
-export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmployees, onSuccess }: ManageEmployeesModalProps) {
+interface ProjectEmployee {
+    projectId: string;
+    employeeId: string;
+    assignedAt: string;
+    employee?: User;
+}
+
+export default function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmployees, onSuccess }: ManageEmployeesModalProps) {
     const [availableEmployees, setAvailableEmployees] = useState<User[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +47,7 @@ export function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmploy
     // Fix: Extract employee IDs only when isOpen changes to avoid dependency on currentEmployees array
     useEffect(() => {
         if (isOpen) {
-            const currentIds = currentEmployees.map(e => e.employee.id);
+            const currentIds = currentEmployees.map(e => e.employee?.id).filter(Boolean) as string[];
             setSelectedIds(currentIds);
             loadEmployees();
         }

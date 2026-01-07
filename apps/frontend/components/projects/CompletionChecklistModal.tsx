@@ -21,7 +21,7 @@ interface CompletionChecklistModalProps {
     onArchive: () => void;
 }
 
-export function CompletionChecklistModal({
+export default function CompletionChecklistModal({
     isOpen,
     onClose,
     isLoading,
