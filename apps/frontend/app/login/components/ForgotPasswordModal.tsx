@@ -10,6 +10,8 @@ import { api } from '@/lib/api';
 import { handleApiError } from '@/lib/errors';
 import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
 import { OTP } from '@/lib/constants/ui.constants';
+import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -25,19 +27,16 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Reset state when modal opens/closes
   const handleClose = () => {
     setStep('email');
     setEmail('');
     setOtp('');
     setNewPassword('');
     setConfirmPassword('');
-    setSuccess(false);
-    setError('');
+    setIsSuccess(false);
     onClose();
   };
 
@@ -46,59 +45,53 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
     setEmail(initialEmail);
   }
 
-  // Step 1: Send OTP to email
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
-    // Validate email format before submitting
     if (!isValidEmail(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
+      toast.error('Please enter a valid email address');
+      setIsLoading(false);
       return;
     }
 
     try {
       await api.post('/auth/forgot-password', { email });
+      toast.success('Verification code sent to your email');
       setStep('otp');
     } catch (error) {
-      setError(handleApiError(error, 'Error sending code'));
+      logger.error('Failed to send forgot password code', error, { email });
+      toast.error(handleApiError(error, 'Error sending code'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  // Step 2: Advance to new password step (UI validation only)
   const handleOtpSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     if (otp.length !== OTP.DISPLAY_LENGTH) {
-      setError(`Code must have ${OTP.DISPLAY_LENGTH} digits`);
+      toast.error(`Code must have ${OTP.DISPLAY_LENGTH} digits`);
       return;
     }
 
-    setError('');
     setStep('password');
   };
 
-  // Step 3: Reset password with OTP
   const handlePasswordReset = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
+      toast.error('Passwords do not match');
+      setIsLoading(false);
       return;
     }
 
-    // Use unified password validation
     const validation = validatePassword(newPassword);
     if (!validation.isValid) {
-      setError(validation.error || 'Invalid password');
-      setLoading(false);
+      toast.error(validation.error || 'Invalid password');
+      setIsLoading(false);
       return;
     }
 
@@ -109,11 +102,13 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
         newPassword,
         confirmPassword,
       });
-      setSuccess(true);
+      toast.success('Password updated successfully!');
+      setIsSuccess(true);
     } catch (error) {
-      setError(handleApiError(error, 'Error resetting password'));
+      logger.error('Failed to reset password via forgot password', error, { email, hasOtp: !!otp });
+      toast.error(handleApiError(error, 'Error resetting password'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -124,14 +119,8 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       title="Recover Password"
       size="sm"
     >
-      {!success ? (
+      {!isSuccess ? (
         <>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              {error}
-            </div>
-          )}
-
           {/* Step 1: Enter Email */}
           {step === 'email' && (
             <form onSubmit={handleEmailSubmit} className="space-y-4">
@@ -155,17 +144,17 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                 <button
                   type="button"
                   onClick={handleClose}
-                  disabled={loading}
+                  disabled={isLoading}
                   className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isLoading}
                   className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center"
                 >
-                  {loading ? <ButtonLoader /> : 'Send code'}
+                  {isLoading ? <ButtonLoader /> : 'Send code'}
                 </button>
               </div>
             </form>
@@ -283,17 +272,17 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                 <button
                   type="button"
                   onClick={handleClose}
-                  disabled={loading}
+                  disabled={isLoading}
                   className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isLoading}
                   className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[140px] flex items-center justify-center"
                 >
-                  {loading ? <ButtonLoader /> : 'Change password'}
+                  {isLoading ? <ButtonLoader /> : 'Change password'}
                 </button>
               </div>
             </form>
