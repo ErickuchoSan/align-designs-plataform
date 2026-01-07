@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { handleApiError } from '@/lib/errors';
 import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
+import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 import EmailStep from './components/EmailStep';
 import PasswordStep from './components/PasswordStep';
 import OTPStep from './components/OTPStep';
@@ -18,9 +20,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, verifyOTP } = useAuth();
   const [step, setStep] = useState<LoginStep>('email');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // User data
   const [email, setEmail] = useState('');
@@ -40,19 +40,15 @@ export default function LoginPage() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess(''); // Clear success message
+    setIsLoading(true);
 
-    // Validate email format before submitting
     if (!isValidEmail(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
+      toast.error('Please enter a valid email address');
+      setIsLoading(false);
       return;
     }
 
     try {
-      // Check if user exists and their password status
       const response = await api.post<{ hasPassword: boolean; requiresPasswordSetup: boolean }>(
         '/auth/check-email',
         { email }
@@ -60,91 +56,85 @@ export default function LoginPage() {
 
       const { hasPassword, requiresPasswordSetup } = response.data;
 
-      // If user doesn't have password and doesn't require setup, user doesn't exist
       if (!hasPassword && !requiresPasswordSetup) {
-        setError('Email not found. Please check your email address.');
-        setLoading(false);
+        toast.error('Email not found. Please check your email address.');
+        setIsLoading(false);
         return;
       }
 
-      // If user requires password setup (new admin without password)
       if (requiresPasswordSetup) {
         setRequiresPasswordSetup(true);
-        // Request OTP to set password
         await api.post('/auth/otp/request', { email });
+        toast.success('Verification code sent to your email');
         setStep('otp');
         return;
       }
 
-      // If user has password, proceed to password step
       if (hasPassword) {
         setStep('password');
         return;
       }
 
-      // Fallback: proceed to password step
       setStep('password');
     } catch (error) {
-      setError(handleApiError(error, 'An error occurred. Please try again.'));
+      logger.error('Failed to check email', error, { email });
+      toast.error(handleApiError(error, 'An error occurred. Please try again.'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     try {
       await login({ email, password });
       router.push('/dashboard');
     } catch (error) {
-      setError(handleApiError(error, 'Invalid credentials'));
+      logger.error('Failed to login with password', error, { email });
+      toast.error(handleApiError(error, 'Invalid credentials'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     try {
       await verifyOTP({ email, token: otpToken });
 
       if (requiresPasswordSetup) {
-        // Redirect to set password
+        toast.success('OTP verified successfully');
         setStep('set-password');
       } else {
         router.push('/dashboard');
       }
     } catch (error) {
-      setError(handleApiError(error, 'Invalid OTP code'));
+      logger.error('Failed to verify OTP', error, { email });
+      toast.error(handleApiError(error, 'Invalid OTP code'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
+      toast.error('Passwords do not match');
+      setIsLoading(false);
       return;
     }
 
-    // Use unified password validation
     const validation = validatePassword(newPassword);
     if (!validation.isValid) {
-      setError(validation.error || 'Invalid password');
-      setLoading(false);
+      toast.error(validation.error || 'Invalid password');
+      setIsLoading(false);
       return;
     }
 
@@ -154,32 +144,32 @@ export default function LoginPage() {
         confirmPassword: confirmPassword,
       });
 
-      // Reset to login page so user can log in normally
+      toast.success('Password set successfully! Please log in with your email and password.');
       setStep('email');
       setEmail('');
       setPassword('');
       setOtpToken('');
       setNewPassword('');
       setConfirmPassword('');
-      setError('');
-      setSuccess('Password set successfully! Please log in with your email and password.');
     } catch (error) {
-      setError(handleApiError(error, 'Error setting password'));
+      logger.error('Failed to set password', error, { email });
+      toast.error(handleApiError(error, 'Error setting password'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleResendOTP = async () => {
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     try {
       await api.post('/auth/otp/request', { email });
+      toast.success('Verification code sent to your email');
     } catch (error) {
-      setError(handleApiError(error, 'Error resending code'));
+      logger.error('Failed to resend OTP', error, { email });
+      toast.error(handleApiError(error, 'Error resending code'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -188,17 +178,17 @@ export default function LoginPage() {
   };
 
   const handleLoginWithOTP = async () => {
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     try {
-      // Request OTP for the user
       await api.post('/auth/otp/request', { email });
+      toast.success('Verification code sent to your email');
       setStep('otp');
     } catch (error) {
-      setError(handleApiError(error, 'Error requesting OTP'));
+      logger.error('Failed to request OTP login', error, { email });
+      toast.error(handleApiError(error, 'Error requesting OTP'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -209,7 +199,6 @@ export default function LoginPage() {
     setOtpToken('');
     setNewPassword('');
     setConfirmPassword('');
-    setError('');
     setUserRole(null);
     setRequiresPasswordSetup(false);
   };
@@ -228,25 +217,12 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 space-y-6">
-            {success && (
-              <div className="rounded-lg bg-green-50 border border-green-200 p-4 animate-slideDown">
-                <p className="text-sm text-green-800">{success}</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4 animate-slideDown">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
-
             {step === 'email' && (
               <EmailStep
                 email={email}
                 setEmail={setEmail}
                 onSubmit={handleEmailSubmit}
-                loading={loading}
-                error={error}
+                isLoading={isLoading}
               />
             )}
 
@@ -258,8 +234,7 @@ export default function LoginPage() {
                 onSubmit={handlePasswordLogin}
                 onForgotPassword={handleForgotPassword}
                 onLoginWithOTP={handleLoginWithOTP}
-                loading={loading}
-                error={error}
+                isLoading={isLoading}
                 onBack={resetToEmail}
               />
             )}
@@ -271,8 +246,7 @@ export default function LoginPage() {
                 setOtpToken={setOtpToken}
                 onSubmit={handleVerifyOTP}
                 onResend={handleResendOTP}
-                loading={loading}
-                error={error}
+                isLoading={isLoading}
                 onBack={resetToEmail}
                 requiresPasswordSetup={requiresPasswordSetup}
               />
@@ -285,8 +259,7 @@ export default function LoginPage() {
                 confirmPassword={confirmPassword}
                 setConfirmPassword={setConfirmPassword}
                 onSubmit={handleSetPassword}
-                loading={loading}
-                error={error}
+                isLoading={isLoading}
               />
             )}
           </div>

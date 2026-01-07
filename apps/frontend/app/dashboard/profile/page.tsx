@@ -13,7 +13,7 @@ import PasswordRequirements from '@/app/components/PasswordRequirements';
 import DashboardHeader from '@/app/components/DashboardHeader';
 import { handleApiError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-import { useAutoResetMessage } from '@/hooks/useAutoResetMessage';
+import { toast } from 'react-hot-toast';
 
 export default function ProfilePage() {
   const { user, loading } = useProtectedRoute();
@@ -31,15 +31,8 @@ export default function ProfilePage() {
   const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // General state
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
   // Developer mode (only for ADMIN)
   const [isDevMode, setIsDevMode] = useState(false);
-
-  // Auto-reset success messages
-  useAutoResetMessage(success, setSuccess);
 
 
   useEffect(() => {
@@ -61,19 +54,17 @@ export default function ProfilePage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingProfile(true);
-    setError('');
-    setSuccess('');
 
     try {
       await api.put('/users/profile', profileData);
-      setSuccess('Profile updated successfully');
+      toast.success('Profile updated successfully');
       setEditingProfile(false);
 
       // Update user in context (which also updates localStorage)
       updateUser(profileData);
     } catch (err) {
       const errorMessage = handleApiError(err);
-      setError(errorMessage);
+      toast.error(errorMessage);
       logger.error('Error updating profile:', err);
     } finally {
       setSavingProfile(false);
@@ -83,16 +74,16 @@ export default function ProfilePage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setChangingPassword(true);
-    setError('');
 
     try {
       await api.post('/auth/change-password', passwordData);
+      toast.success('Password changed successfully');
       setShowPasswordModal(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowSuccessModal(true);
     } catch (err) {
       const errorMessage = handleApiError(err);
-      setError(errorMessage);
+      toast.error(errorMessage);
       logger.error('Error changing password:', err);
     } finally {
       setChangingPassword(false);
@@ -117,27 +108,7 @@ export default function ProfilePage() {
         {/* Content */}
         <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Success/Error Messages */}
-          {success && (
-            <div className="mb-6 rounded-lg bg-forest-50 border border-forest-200 p-4 animate-slideDown">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-forest-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <p className="text-sm font-medium text-forest-800">{success}</p>
-              </div>
-            </div>
-          )}
 
-          {error && (
-            <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 animate-slideDown">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <p className="text-sm font-medium text-red-800">{error}</p>
-              </div>
-            </div>
-          )}
 
           <div className="space-y-6">
             {/* Profile Info Card */}
@@ -296,7 +267,6 @@ export default function ProfilePage() {
         onClose={() => {
           setShowPasswordModal(false);
           setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-          setError('');
         }}
         title="Change Password"
         size="md"
@@ -306,11 +276,7 @@ export default function ProfilePage() {
             After changing your password, we will automatically log you out for security.
           </p>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
+
 
           <div>
             <label className="block text-sm font-medium text-navy-900 mb-2">
@@ -391,7 +357,6 @@ export default function ProfilePage() {
               onClick={() => {
                 setShowPasswordModal(false);
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                setError('');
               }}
               disabled={changingPassword}
               className="px-5 py-2.5 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"

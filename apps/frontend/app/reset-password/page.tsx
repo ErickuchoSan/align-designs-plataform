@@ -1,5 +1,4 @@
 'use client';
-import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -8,6 +7,8 @@ import Loader, { ButtonLoader } from '@/app/components/Loader';
 import PasswordInput from '@/app/components/PasswordInput';
 import PasswordRequirements from '@/app/components/PasswordRequirements';
 import { handleApiError } from '@/lib/errors';
+import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -18,13 +19,12 @@ function ResetPasswordForm() {
     newPassword: '',
     confirmPassword: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid or missing token');
+      toast.error('Invalid or missing token');
     }
   }, [token]);
 
@@ -32,8 +32,7 @@ function ResetPasswordForm() {
     e.preventDefault();
     if (!token) return;
 
-    setLoading(true);
-    setError('');
+    setIsLoading(true);
 
     try {
       await api.post('/auth/reset-password', {
@@ -41,12 +40,14 @@ function ResetPasswordForm() {
         newPassword: formData.newPassword,
         confirmPassword: formData.confirmPassword,
       });
-      setSuccess(true);
-      setTimeout(() => router.push('/login'), MESSAGE_DURATION.SUCCESS);
+      toast.success('Password reset successfully! Redirecting to login...');
+      setIsSuccess(true);
+      setTimeout(() => router.push('/login'), 2000);
     } catch (err) {
-      setError(handleApiError(err));
+      logger.error('Failed to reset password', err, { hasToken: !!token });
+      toast.error(handleApiError(err));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -60,7 +61,7 @@ function ResetPasswordForm() {
     );
   }
 
-  if (success) {
+  if (isSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full animate-scaleIn">
@@ -88,12 +89,6 @@ function ResetPasswordForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
               New Password
@@ -155,10 +150,10 @@ function ResetPasswordForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium shadow-lg flex items-center justify-center"
           >
-            {loading ? <ButtonLoader /> : 'Reset Password'}
+            {isLoading ? <ButtonLoader /> : 'Reset Password'}
           </button>
         </form>
 
