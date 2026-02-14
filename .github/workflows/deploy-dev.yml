@@ -1,0 +1,23 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Dev Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 45.55.71.127
+          username: root
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/align-designs
+            git pull origin main
+            docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+            echo "Deployed at $(date)"
