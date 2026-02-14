@@ -91,3 +91,6 @@ deploy-bundle.tar.gz
 build_log.txt
 .env.dev.corrected
 scripts/create_bundle.ps1
+
+# SSH keys
+*.key
