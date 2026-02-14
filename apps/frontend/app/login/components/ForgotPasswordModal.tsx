@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import Modal from '@/app/components/Modal';
-import { ButtonLoader } from '@/app/components/Loader';
-import EmailInput from '@/app/components/EmailInput';
-import PasswordInput from '@/app/components/PasswordInput';
-import PasswordRequirements from '@/app/components/PasswordRequirements';
-import { api } from '@/lib/api';
+import Modal from '@/components/ui/Modal';
+import { ButtonLoader } from '@/components/ui/Loader';
+import EmailInput from '@/components/ui/inputs/EmailInput';
+import PasswordInput from '@/components/ui/inputs/PasswordInput';
+import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
+import { AuthService } from '@/services/auth.service';
 import { handleApiError } from '@/lib/errors';
 import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
 import { OTP } from '@/lib/constants/ui.constants';
@@ -56,7 +56,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
     }
 
     try {
-      await api.post('/auth/forgot-password', { email });
+      await AuthService.forgotPassword(email);
       toast.success('Verification code sent to your email');
       setStep('otp');
     } catch (error) {
@@ -96,7 +96,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
     }
 
     try {
-      await api.post('/auth/reset-password', {
+      await AuthService.resetPassword({
         email,
         otp,
         newPassword,

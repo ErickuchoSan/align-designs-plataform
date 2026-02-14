@@ -9,16 +9,14 @@ import { EmployeePayment, EmployeePaymentStatus } from '@/types/employee-payment
 import { Payment } from '@/types/payments';
 import { logger } from '@/lib/logger';
 import { toast } from 'react-hot-toast';
+import { handleApiError } from '@/lib/errors';
 import { formatCurrency } from '@/lib/utils/currency.utils';
-import GenerateInvoiceModal from '@/components/modals/GenerateInvoiceModal';
-import PayEmployeeModal from '@/components/modals/PayEmployeeModal';
 import ApproveEmployeePaymentModal from '@/components/modals/ApproveEmployeePaymentModal';
-import UploadPaymentProofModal from '@/components/modals/UploadPaymentProofModal';
 import AdminPaymentReviewModal from '@/components/payments/AdminPaymentReviewModal';
 import PaymentReceiptModal from '@/components/payments/PaymentReceiptModal';
-import ConfirmModal from '@/app/components/ConfirmModal';
-import Modal from '@/app/components/Modal';
-import { ButtonLoader } from '@/app/components/Loader';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import Modal from '@/components/ui/Modal';
+import { ButtonLoader } from '@/components/ui/Loader';
 
 /**
  * Get status badge color based on invoice/payment status
@@ -80,9 +78,6 @@ function PaymentsStageContent({
   const [error, setError] = useState<string | null>(null);
 
   // Modal States
-  const [isGenerateInvoiceModalOpen, setIsGenerateInvoiceModalOpen] = useState(false);
-  const [isPayEmployeeModalOpen, setIsPayEmployeeModalOpen] = useState(false);
-  const [isUploadProofModalOpen, setIsUploadProofModalOpen] = useState(false);
   const [reviewingPayment, setReviewingPayment] = useState<Payment | null>(null);
   const [confirmApprovePayment, setConfirmApprovePayment] = useState<string | null>(null);
   const [approvingPayment, setApprovingPayment] = useState(false);
@@ -121,9 +116,9 @@ function PaymentsStageContent({
       }
     } catch (err: any) {
       logger.error('Error loading payment data:', err);
-      const msg = err.response?.data?.message || err.message || 'Failed to load payment data';
+      const msg = handleApiError(err, 'Failed to load payment data'); // Use util for consistency
       setError(msg);
-      toast.error('Failed to refresh payment data');
+      toast.error('Failed to refresh payment data'); // Keep toast simple or sync? Let's keep it simple as error is shown in UI.
     } finally {
       setLoading(false);
     }
@@ -148,7 +143,7 @@ function PaymentsStageContent({
       loadPaymentData();
     } catch (err: any) {
       logger.error('Error approving payment:', err);
-      toast.error(err.response?.data?.message || 'Failed to approve payment');
+      toast.error(handleApiError(err, 'Failed to approve payment'));
     } finally {
       setApprovingPayment(false);
     }
@@ -176,7 +171,7 @@ function PaymentsStageContent({
       loadPaymentData();
     } catch (err: any) {
       logger.error('Error rejecting payment:', err);
-      toast.error(err.response?.data?.message || 'Failed to reject payment');
+      toast.error(handleApiError(err, 'Failed to reject payment'));
     } finally {
       setRejectingPayment(false);
     }
@@ -213,7 +208,7 @@ function PaymentsStageContent({
         {userRole === 'ADMIN' && (
           <>
             <button
-              onClick={() => setIsGenerateInvoiceModalOpen(true)}
+              onClick={onGenerateInvoice}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +217,7 @@ function PaymentsStageContent({
               <span className="whitespace-nowrap">Generate Invoice</span>
             </button>
             <button
-              onClick={() => setIsPayEmployeeModalOpen(true)}
+              onClick={onPayEmployee}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +230,7 @@ function PaymentsStageContent({
 
         {userRole === 'CLIENT' && (
           <button
-            onClick={() => setIsUploadProofModalOpen(true)}
+            onClick={onUploadPaymentProof}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,36 +603,20 @@ function PaymentsStageContent({
       )}
 
       {/* Modals */}
-      <GenerateInvoiceModal
-        isOpen={isGenerateInvoiceModalOpen}
-        onClose={() => setIsGenerateInvoiceModalOpen(false)}
-        projectId={projectId}
-        onSuccess={() => {
-          loadPaymentData();
-          onRefresh?.();
-        }}
-      />
-      <PayEmployeeModal
-        isOpen={isPayEmployeeModalOpen}
-        onClose={() => setIsPayEmployeeModalOpen(false)}
-        projectId={projectId}
-        onSuccess={loadPaymentData}
-      />
-      <UploadPaymentProofModal
-        isOpen={isUploadProofModalOpen}
-        onClose={() => setIsUploadProofModalOpen(false)}
-        projectId={projectId}
-        onSuccess={loadPaymentData}
-        userId={userId}
-      />
+
       {reviewingPayment && (
         <AdminPaymentReviewModal
           isOpen={true}
           onClose={() => setReviewingPayment(null)}
           payment={reviewingPayment}
-          onSuccess={() => {
+          onSuccess={async () => {
             setReviewingPayment(null);
-            loadPaymentData();
+            // First reload payment data
+            await loadPaymentData();
+            // Then notify parent to refresh project data
+            if (onRefresh) {
+              await onRefresh();
+            }
           }}
         />
       )}

@@ -2,8 +2,8 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { PageLoader } from '@/app/components/Loader';
-import DashboardHeader from '@/app/components/DashboardHeader';
+import { PageLoader } from '@/components/ui/Loader';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 // Hooks
@@ -20,6 +20,8 @@ import AlertMessages from './components/AlertMessages';
 import FileModalsGroup from './components/FileModalsGroup';
 import TimeTrackingCharts from '@/components/dashboard/TimeTrackingCharts';
 import ProjectStagesView from '@/components/projects/ProjectStagesView';
+import PaymentModalsGroup from './components/PaymentModalsGroup';
+import { usePaymentModals } from './hooks/usePaymentModals';
 
 /**
  * Project Details Page - Refactored for better maintainability
@@ -77,6 +79,7 @@ export default function ProjectDetailsPage() {
 
   // UI state (modals)
   const modals = useFileModals();
+  const paymentModals = usePaymentModals();
   // const filters = useFileFilters(files); // Removed client-side filters
 
   // Stage selection state for upload/comment modals
@@ -247,6 +250,9 @@ export default function ProjectDetailsPage() {
                 onDelete={modals.openDeleteModal}
                 onViewHistory={modals.openHistoryModal}
                 onUploadVersion={modals.openUploadVersionModal}
+                onGenerateInvoice={paymentModals.openGenerateInvoiceModal}
+                onPayEmployee={paymentModals.openPayEmployeeModal}
+                onUploadPaymentProof={paymentModals.openUploadPaymentProofModal}
                 canDeleteFile={canDeleteFile}
                 filesLoading={filesLoading}
                 onRefresh={handleProjectUpdate}
@@ -286,6 +292,18 @@ export default function ProjectDetailsPage() {
           modals.closeUploadVersionModal();
         }}
         fileToVersion={modals.fileToVersion}
+      />
+
+      <PaymentModalsGroup
+        projectId={projectId}
+        userId={user?.id || ''}
+        showGenerateInvoiceModal={paymentModals.showGenerateInvoiceModal}
+        onCloseGenerateInvoiceModal={paymentModals.closeGenerateInvoiceModal}
+        showPayEmployeeModal={paymentModals.showPayEmployeeModal}
+        onClosePayEmployeeModal={paymentModals.closePayEmployeeModal}
+        showUploadPaymentProofModal={paymentModals.showUploadPaymentProofModal}
+        onCloseUploadPaymentProofModal={paymentModals.closeUploadPaymentProofModal}
+        onSuccess={handleProjectUpdate}
       />
     </>
   );

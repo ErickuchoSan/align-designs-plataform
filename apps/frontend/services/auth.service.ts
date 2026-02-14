@@ -16,6 +16,7 @@ export interface CheckEmailResponse {
   exists: boolean;
   isActive?: boolean;
   hasPassword?: boolean;
+  requiresPasswordSetup?: boolean;
 }
 
 export interface VerifyOtpCredentials {
@@ -53,7 +54,7 @@ export class AuthService {
     credentials: VerifyOtpCredentials
   ): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>(
-      `${this.BASE_URL}/verify-otp`,
+      `${this.BASE_URL}/otp/verify`,
       credentials
     );
 
@@ -78,7 +79,7 @@ export class AuthService {
    * Request OTP for client authentication
    */
   static async requestOtp(email: string): Promise<void> {
-    await api.post(`${this.BASE_URL}/request-otp`, { email });
+    await api.post(`${this.BASE_URL}/otp/request`, { email });
   }
 
   /**
@@ -89,11 +90,12 @@ export class AuthService {
   }
 
   /**
-   * Reset password with OTP token
+   * Reset password with Token (link) or OTP
    */
   static async resetPassword(data: {
-    email: string;
-    otp: string;
+    token?: string;
+    email?: string;
+    otp?: string;
     newPassword: string;
     confirmPassword: string;
   }): Promise<void> {
@@ -124,9 +126,15 @@ export class AuthService {
   /**
    * Logout and clear stored tokens
    */
-  static logout(): void {
-    AuthStorage.clearAuthData();
-    refreshCsrfToken(); // Refresh CSRF token after logout
+  static async logout(): Promise<void> {
+    try {
+      await api.post(`${this.BASE_URL}/logout`);
+    } catch (error) {
+      // Ignore errors during logout (e.g. if token is already invalid)
+    } finally {
+      AuthStorage.clearAuthData();
+      refreshCsrfToken(); // Refresh CSRF token after logout
+    }
   }
 
   /**

@@ -3,7 +3,7 @@
  */
 
 // Import and re-export Stage from centralized enums file
-import { Stage } from './enums';
+import { Stage, ProjectStatus, Role } from './enums';
 export { Stage, STAGE_LABELS, STAGE_COLORS } from './enums';
 
 export interface StagePermissions {
@@ -24,7 +24,7 @@ export interface StageInfo {
 export interface ProjectStagesResponse {
   projectId: string;
   projectName: string;
-  projectStatus: string;
-  userRole: string;
+  projectStatus: ProjectStatus;
+  userRole: Role;
   stages: StageInfo[];
 }

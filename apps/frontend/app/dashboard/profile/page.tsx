@@ -5,12 +5,14 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { api } from '@/lib/api';
-import Modal from '@/app/components/Modal';
-import { ButtonLoader, PageLoader } from '@/app/components/Loader';
-import PhoneInput from '@/app/components/PhoneInput';
-import PasswordInput from '@/app/components/PasswordInput';
-import PasswordRequirements from '@/app/components/PasswordRequirements';
-import DashboardHeader from '@/app/components/DashboardHeader';
+import { UsersService } from '@/services/users.service';
+import { AuthService } from '@/services/auth.service';
+import Modal from '@/components/ui/Modal';
+import { ButtonLoader, PageLoader } from '@/components/ui/Loader';
+import PhoneInput from '@/components/ui/inputs/PhoneInput';
+import PasswordInput from '@/components/ui/inputs/PasswordInput';
+import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { handleApiError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { toast } from 'react-hot-toast';
@@ -56,7 +58,7 @@ export default function ProfilePage() {
     setSavingProfile(true);
 
     try {
-      await api.put('/users/profile', profileData);
+      await UsersService.updateProfile(profileData);
       toast.success('Profile updated successfully');
       setEditingProfile(false);
 
@@ -76,7 +78,7 @@ export default function ProfilePage() {
     setChangingPassword(true);
 
     try {
-      await api.post('/auth/change-password', passwordData);
+      await AuthService.changePassword(passwordData);
       toast.success('Password changed successfully');
       setShowPasswordModal(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });

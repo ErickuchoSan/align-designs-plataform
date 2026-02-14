@@ -2,10 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import Loader, { ButtonLoader } from '@/app/components/Loader';
-import PasswordInput from '@/app/components/PasswordInput';
-import PasswordRequirements from '@/app/components/PasswordRequirements';
+import { AuthService } from '@/services/auth.service';
+import Loader, { ButtonLoader } from '@/components/ui/Loader';
+import PasswordInput from '@/components/ui/inputs/PasswordInput';
+import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
 import { handleApiError } from '@/lib/errors';
 import { toast } from 'react-hot-toast';
 import { logger } from '@/lib/logger';
@@ -35,7 +35,7 @@ function ResetPasswordForm() {
     setIsLoading(true);
 
     try {
-      await api.post('/auth/reset-password', {
+      await AuthService.resetPassword({
         token,
         newPassword: formData.newPassword,
         confirmPassword: formData.confirmPassword,
@@ -81,7 +81,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-50 to-stone-100 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full animate-slideUp">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
@@ -106,7 +106,7 @@ function ResetPasswordForm() {
               <div className="mt-3">
                 <PasswordRequirements
                   password={formData.newPassword}
-                  className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                  className="bg-navy-50 border border-navy-200 rounded-lg p-4"
                 />
               </div>
             )}
@@ -151,7 +151,7 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium shadow-lg flex items-center justify-center"
+            className="w-full bg-navy-600 text-white py-3 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium shadow-lg flex items-center justify-center"
           >
             {isLoading ? <ButtonLoader /> : 'Reset Password'}
           </button>
@@ -160,7 +160,7 @@ function ResetPasswordForm() {
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push('/login')}
-            className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+            className="text-sm text-navy-600 hover:text-navy-700 hover:underline"
           >
             Back to login
           </button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { Country } from '../utils/countries';
+import { countries as allCountries, type Country } from '../../../app/utils/countries';
 
 interface CountryCodeSelectorProps {
   value: string;
@@ -20,33 +20,22 @@ const AMERICAN_COUNTRIES = [
 // Popular countries within Americas to show first
 const POPULAR_COUNTRY_CODES = ['MX', 'US', 'CA', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
 
-// Cache for lazy-loaded countries data (18KB)
-let countriesCache: Country[] | null = null;
-
 export default function CountryCodeSelector({ value, onChange, className = '' }: CountryCodeSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [countries, setCountries] = useState<Country[]>([]);
+
+  // Filter countries statically
+  const countries = useMemo(() =>
+    allCountries.filter(c => AMERICAN_COUNTRIES.includes(c.code)),
+    []);
+
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Lazy load countries data on mount - Filter to American countries only
+  // Set initial selection
   useEffect(() => {
-    async function loadCountries() {
-      if (countriesCache) {
-        const americanCountries = countriesCache.filter(c => AMERICAN_COUNTRIES.includes(c.code));
-        setCountries(americanCountries);
-        setSelectedCountry(americanCountries.find(c => c.dialCode === value) || americanCountries[0]);
-      } else {
-        const module = await import('../utils/countries');
-        const americanCountries = module.countries.filter(c => AMERICAN_COUNTRIES.includes(c.code));
-        countriesCache = module.countries; // Cache all but only use American ones
-        setCountries(americanCountries);
-        setSelectedCountry(americanCountries.find(c => c.dialCode === value) || americanCountries[0]);
-      }
-    }
-    loadCountries();
-  }, [value]);
+    setSelectedCountry(countries.find(c => c.dialCode === value) || countries[0]);
+  }, [value, countries]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -178,9 +167,8 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
       {isOpen && (
         <div
-          className={`fixed z-[9999] w-96 bg-white border border-stone-300 rounded-lg shadow-2xl overflow-hidden transition-opacity duration-200 ${
-            dropdownPosition.openUpward ? 'animate-slide-up' : 'animate-slide-down'
-          }`}
+          className={`fixed z-[9999] w-96 bg-white border border-stone-300 rounded-lg shadow-2xl overflow-hidden transition-opacity duration-200 ${dropdownPosition.openUpward ? 'animate-slide-up' : 'animate-slide-down'
+            }`}
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -266,9 +254,8 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
                       )}
                       <button
                         onClick={() => handleSelect(country)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gold-50 transition-colors text-left border-b border-stone-100 last:border-b-0 ${
-                          selectedCountry?.code === country.code ? 'bg-gold-50' : ''
-                        }`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gold-50 transition-colors text-left border-b border-stone-100 last:border-b-0 ${selectedCountry?.code === country.code ? 'bg-gold-50' : ''
+                          }`}
                       >
                         <span className="text-2xl">{country.flag}</span>
                         <div className="flex-1 min-w-0">

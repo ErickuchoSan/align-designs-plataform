@@ -1,34 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { handleApiError } from '@/lib/errors';
-import { Project } from '@/types';
+import { Project, File, FileFilters } from '@/types';
 import { logger } from '@/lib/logger';
-
-export interface FileData {
-  id: string;
-  filename: string | null;
-  originalName: string | null;
-  sizeBytes: number | null;
-  mimeType: string | null;
-  uploadedBy: string;
-  comment?: string | null;
-  uploader: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  uploadedAt: string;
-  // Versioning & Tracking
-  versionNumber?: number;
-  versionLabel?: string;
-  isCurrentVersion?: boolean;
-  parentFileId?: string;
-  rejectionCount?: number;
-  stage?: string;
-}
 
 // Use Project type from types index
 export type ProjectData = Project;
+// Export File type alias for backward compatibility or direct usage
+export type FileData = File;
 
 export function useProjectFiles(projectId: string) {
   const [project, setProject] = useState<ProjectData | null>(null);
@@ -53,8 +32,8 @@ export function useProjectFiles(projectId: string) {
     try {
       // Parallelize API calls for better performance
       const [projectRes, typesRes] = await Promise.all([
-        api.get(`/projects/${projectId}`),
-        api.get(`/files/project/${projectId}/types`),
+        api.get<Project>(`/projects/${projectId}`),
+        api.get<string[]>(`/files/project/${projectId}/types`),
       ]);
 
       setProject(projectRes.data);
@@ -67,7 +46,7 @@ export function useProjectFiles(projectId: string) {
   const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: Partial<FileFilters> = {
         page: currentPage,
         limit: itemsPerPage,
       };
@@ -76,7 +55,7 @@ export function useProjectFiles(projectId: string) {
       if (nameFilter) params.name = nameFilter;
       if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
 
-      const { data } = await api.get(`/files/project/${projectId}`, {
+      const { data } = await api.get<{ data: File[]; meta: { total: number; totalPages: number } }>(`/files/project/${projectId}`, {
         params,
       });
       // Backend returns paginated response: { data: [...], meta: {...} }
@@ -94,7 +73,7 @@ export function useProjectFiles(projectId: string) {
   // Helper to refresh types (call after upload/delete)
   const refreshTypes = useCallback(async () => {
     try {
-      const { data } = await api.get(`/files/project/${projectId}/types`);
+      const { data } = await api.get<string[]>(`/files/project/${projectId}/types`);
       setAvailableTypes(data || []);
     } catch (e) {
       logger.error('Failed to refresh file types', e, { projectId });

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ButtonLoader } from '@/app/components/Loader';
-import Modal from '@/app/components/Modal';
+import { ButtonLoader } from '@/components/ui/Loader';
+import Modal from '@/components/ui/Modal';
 
 interface ApproveEmployeePaymentModalProps {
     isOpen: boolean;

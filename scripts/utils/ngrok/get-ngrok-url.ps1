@@ -24,7 +24,8 @@ try {
     Write-Host "URL copiada al portapapeles!" -ForegroundColor Green
     Write-Host ""
 
-} catch {
+}
+catch {
     Write-Host ""
     Write-Host "ERROR: Ngrok no esta respondiendo" -ForegroundColor Red
     Write-Host ""

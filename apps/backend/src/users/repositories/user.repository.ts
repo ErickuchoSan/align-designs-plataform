@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { User, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IUserRepository } from './user.repository.interface';
@@ -122,10 +122,71 @@ export class UserRepository implements IUserRepository {
     });
   }
 
-  async hardDelete(id: string): Promise<User> {
-    return this.prisma.user.delete({
-      where: { id },
-    });
+  async hardDelete(id: string, force: boolean = false): Promise<User> {
+    if (force) {
+      return this.prisma.$transaction(async (tx) => {
+        // 1. Delete dependent relations (Restricted ones first)
+        // Invoices (User as client)
+        await tx.invoice.deleteMany({ where: { clientId: id } });
+
+        // Payments (User as from/to)
+        await tx.payment.deleteMany({
+          where: {
+            OR: [{ fromUserId: id }, { toUserId: id }],
+          },
+        });
+
+        // Employee Payments (User as employee, creator, or approver)
+        await tx.employeePayment.deleteMany({
+          where: {
+            OR: [
+              { employeeId: id },
+              { createdBy: id },
+              { approvedBy: id },
+            ],
+          },
+        });
+
+        // Feedback (User as creator)
+        await tx.feedback.deleteMany({ where: { createdBy: id } });
+
+        // Files (User as uploader) - Note: This might leave files on disk but cleans DB
+        await tx.file.deleteMany({ where: { uploadedBy: id } });
+
+        // User's Login Data
+        await tx.passwordHistory.deleteMany({ where: { userId: id } });
+        await tx.notification.deleteMany({ where: { userId: id } });
+        await tx.otpToken.deleteMany({ where: { userId: id } });
+        await tx.auditLog.deleteMany({ where: { userId: id } });
+
+        // Projects (User as client or creator) - Client is usually Cascade, but Creator is Restrict
+        // Deleting projects where user is creator (if any)
+        await tx.project.deleteMany({ where: { createdBy: id } });
+        // Projects where user is client (will cascade from project delete usually, but doing explicit for safety)
+        const clientProjects = await tx.project.findMany({ where: { clientId: id } });
+        if (clientProjects.length > 0) {
+          await tx.project.deleteMany({ where: { clientId: id } });
+        }
+
+        // Finally delete the user
+        return tx.user.delete({
+          where: { id },
+        });
+      });
+    }
+
+    try {
+      return await this.prisma.user.delete({
+        where: { id },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2003') {
+        throw new ConflictException(
+          'Cannot delete user: This user has associated records (e.g., invoices) and cannot be permanently deleted.'
+        );
+      }
+      throw error;
+    }
   }
 
   async count(where?: Record<string, unknown>): Promise<number> {

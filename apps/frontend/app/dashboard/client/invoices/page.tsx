@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { InvoicesService, Invoice } from '@/services/invoices.service'; // We need a way to fetch "my invoices" or assume user context
+import { InvoicesService } from '@/services/invoices.service'; // We need a way to fetch "my invoices" or assume user context
+import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
@@ -10,27 +11,28 @@ import Link from 'next/link';
 // NOTE: We need to update InvoicesService to support "getMyInvoices" or assume API handles it via user session
 // For now, let's use getAll({ clientId: 'current-user-id' }) but we need current user ID. 
 // Or better, backend endpoint /invoices/my-invoices
+import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
+
 export default function ClientInvoicesPage() {
+    const { user } = useAuth();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Ideally we fetch "my" invoices. 
-        // Since we don't have getMyInvoices yet, we might need to get user ID first or add endpoint.
-        // For Phase 4 speed, let's assume we can add `getMyInvoices` to service which calls `/invoices/me` (to be implemented)
-        loadInvoices();
-    }, []);
+        if (user) {
+            loadInvoices();
+        }
+    }, [user]);
 
     async function loadInvoices() {
         try {
-            // TODO: Implement /invoices/me endpoint in backend or use user context
-            // For now, let's try to fetch all and filter client side? No, that's bad security.
-            // Let's implement fetchCurrentUserInvoices in service
-            const data = await InvoicesService.getAll(); // This is currently ADMIN only in backend controller!
-            // We need to fix backend controller to allow clients to see their own invoices.
+            // Filter by client ID if the user is a client
+            const filters = user?.role === 'CLIENT' ? { clientId: user.id } : {};
+            const data = await InvoicesService.getAll(filters);
             setInvoices(data);
         } catch (error) {
-            //   console.error('Failed to load invoices', error);
+            logger.error('Failed to load invoices', error);
         } finally {
             setLoading(false);
         }

@@ -1,4 +1,4 @@
-import { InvoiceStatus } from '@/services/invoices.service';
+import { InvoiceStatus } from '@/types/invoice';
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string; bgColor: string }> = {
     [InvoiceStatus.DRAFT]: { label: 'Draft', color: 'text-gray-700', bgColor: 'bg-gray-100' },

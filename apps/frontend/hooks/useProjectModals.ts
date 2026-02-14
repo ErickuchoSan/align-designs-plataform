@@ -76,7 +76,7 @@ export function useProjectModals() {
       name: project.name,
       description: project.description || '',
       clientId: project.client?.id || '',
-      employeeIds: project.employees?.map((e: any) => e.employee.id) || [],
+      employeeIds: project.employees?.map(e => e.employee?.id).filter(Boolean) as string[] || [],
       initialAmountRequired: project.initialAmountRequired ? Number(project.initialAmountRequired) : undefined,
       deadlineDate: project.deadlineDate || undefined,
       initialPaymentDeadline: project.initialPaymentDeadline || undefined,

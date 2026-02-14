@@ -1,35 +1,37 @@
 'use client';
 
-import { FormEvent } from 'react';
-import { ButtonLoader } from '@/app/components/Loader';
-import { api } from '@/lib/api';
-import { getErrorMessage } from '@/lib/errors';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { otpSchema, OtpFormData } from '@/lib/schemas/auth.schema';
+import { ButtonLoader } from '@/components/ui/Loader';
 
 interface OTPStepProps {
   email: string;
-  otpToken: string;
-  setOtpToken: (token: string) => void;
-  onSubmit: (e: FormEvent) => Promise<void>;
+  onSubmit: (data: OtpFormData) => Promise<void>;
   onResend: () => Promise<void>;
   loading: boolean;
-  error: string;
   onBack: () => void;
   requiresPasswordSetup?: boolean;
 }
 
 export default function OTPStep({
   email,
-  otpToken,
-  setOtpToken,
   onSubmit,
   onResend,
   loading,
-  error,
   onBack,
   requiresPasswordSetup = false
 }: OTPStepProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<OtpFormData>({
+    resolver: zodResolver(otpSchema)
+  });
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="text-sm text-navy-700 bg-gold-50 p-4 rounded-lg border border-gold-200">
         An 8-digit code has been sent to <strong>{email}</strong>
         {requiresPasswordSetup && (
@@ -45,14 +47,18 @@ export default function OTPStep({
         <input
           id="otp-token"
           type="text"
-          required
           maxLength={8}
-          value={otpToken}
-          onChange={(e) => setOtpToken(e.target.value)}
-          className="block w-full rounded-lg border border-stone-300 px-4 py-4 text-center text-3xl font-mono tracking-widest shadow-sm focus:border-gold-500 focus:ring-2 focus:ring-gold-500 transition-all"
+          {...register('otpToken')}
+          className={`block w-full rounded-lg border px-4 py-4 text-center text-3xl font-mono tracking-widest shadow-sm focus:ring-2 transition-all ${errors.otpToken
+            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+            : 'border-stone-300 focus:border-gold-500 focus:ring-gold-500'
+            }`}
           placeholder="00000000"
           autoFocus
         />
+        {errors.otpToken && (
+          <p className="mt-1 text-sm text-red-600">{errors.otpToken.message}</p>
+        )}
       </div>
       <button
         type="submit"

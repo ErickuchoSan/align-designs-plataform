@@ -1,17 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';
 import { Invoice } from '@/types/invoice';
 import { logger } from '@/lib/logger';
+import { toast } from 'react-hot-toast';
 
 interface UploadPaymentProofModalProps {
     isOpen: boolean;
     onClose: () => void;
     projectId: string;
     onSuccess: () => void;
-    userId: string; // Used to filter invoices if needed, though backend handles security
+    userId: string;
+}
+
+interface UploadPaymentProofFormValues {
+    invoiceId: string;
+    amount: string;
+    paymentDate: string;
+    paymentMethod: string;
+    referenceNumber: string;
 }
 
 export default function UploadPaymentProofModal({
@@ -21,18 +31,28 @@ export default function UploadPaymentProofModal({
     onSuccess,
     userId,
 }: UploadPaymentProofModalProps) {
-    const [loading, setLoading] = useState(false);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loadingInvoices, setLoadingInvoices] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Form State
-    const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
-    const [amountPaid, setAmountPaid] = useState('');
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
-    const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
-    const [referenceNumber, setReferenceNumber] = useState('');
     const [file, setFile] = useState<File | null>(null);
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        reset,
+        watch,
+        formState: { errors, isSubmitting }
+    } = useForm<UploadPaymentProofFormValues>({
+        defaultValues: {
+            invoiceId: '',
+            amount: '',
+            paymentDate: new Date().toISOString().split('T')[0],
+            paymentMethod: 'TRANSFER',
+            referenceNumber: ''
+        }
+    });
+
+    const selectedInvoiceId = watch('invoiceId');
 
     useEffect(() => {
         if (isOpen) {
@@ -43,15 +63,12 @@ export default function UploadPaymentProofModal({
     const fetchPendingInvoices = async () => {
         try {
             setLoadingInvoices(true);
-            // Fetch invoices for this project. 
-            // Ideally, filter for UNPAID/SENT invoices on the client side or via API parameter if available
             const allInvoices = await InvoicesService.getByProject(projectId);
-            // Filter for invoices that are not fully paid
             const pendingInvoices = allInvoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
             setInvoices(pendingInvoices);
         } catch (err) {
             logger.error('Error fetching invoices:', err);
-            setError('Failed to load pending invoices');
+            toast.error('Failed to load pending invoices');
         } finally {
             setLoadingInvoices(false);
         }
@@ -63,58 +80,46 @@ export default function UploadPaymentProofModal({
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
+    const handleInvoiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const invId = e.target.value;
+        setValue('invoiceId', invId);
 
+        const invoice = invoices.find(i => i.id === invId);
+        if (invoice) {
+            setValue('amount', (invoice.totalAmount - invoice.amountPaid).toString());
+        } else {
+            setValue('amount', '');
+        }
+    };
+
+    const onSubmit = async (data: UploadPaymentProofFormValues) => {
         try {
-            if (!selectedInvoiceId || !amountPaid || !paymentDate || !paymentMethod) {
-                throw new Error('Please fill in all required fields');
-            }
-
-            // NOTE: We need to verify if the backend endpoint supports file upload directly 
-            // or if we need to upload the file first then call the payment endpoint.
-            // Assuming a standard flow where we create a payment record.
-            // If the backend `InvoicesService` has a `recordPayment` method:
-
-            // Create FormData for upload
             const formData = new FormData();
-            formData.append('invoiceId', selectedInvoiceId);
-            formData.append('amount', amountPaid);
-            formData.append('paymentDate', new Date(paymentDate).toISOString());
-            formData.append('paymentMethod', paymentMethod);
-            if (referenceNumber) {
-                formData.append('notes', `Ref: ${referenceNumber}`);
+            formData.append('invoiceId', data.invoiceId);
+            formData.append('amount', data.amount);
+            formData.append('paymentDate', new Date(data.paymentDate).toISOString());
+            formData.append('paymentMethod', data.paymentMethod);
+            if (data.referenceNumber) {
+                formData.append('notes', `Ref: ${data.referenceNumber}`);
             }
-            // Project ID is implicit from Invoice, but API might require it or infer it.
-            // PaymentsService.uploadClientPayment likely expects file + dto fields.
 
             if (file) {
                 formData.append('file', file);
             }
 
             await PaymentsService.uploadClientPayment(formData);
-
+            toast.success('Payment proof submitted successfully');
             await onSuccess();
             handleClose();
         } catch (err: any) {
             logger.error('Error uploading payment proof:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to submit payment proof');
-        } finally {
-            setLoading(false);
+            toast.error(err.response?.data?.message || err.message || 'Failed to submit payment proof');
         }
     };
 
     const handleClose = () => {
-        // Reset form
-        setSelectedInvoiceId('');
-        setAmountPaid('');
-        setPaymentDate(new Date().toISOString().split('T')[0]);
-        setPaymentMethod('TRANSFER');
-        setReferenceNumber('');
+        reset();
         setFile(null);
-        setError(null);
         onClose();
     };
 
@@ -137,31 +142,17 @@ export default function UploadPaymentProofModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {error && (
-                        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
-                            {error}
-                        </div>
-                    )}
+                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
 
                     <div>
                         <label className="block text-sm font-medium text-stone-700 mb-1">
                             Select Invoice to Pay
                         </label>
                         <select
-                            value={selectedInvoiceId}
-                            onChange={(e) => {
-                                const invId = e.target.value;
-                                setSelectedInvoiceId(invId);
-                                // Auto-fill amount with remaining balance if selected
-                                const invoice = invoices.find(i => i.id === invId);
-                                if (invoice) {
-                                    setAmountPaid((invoice.totalAmount - invoice.amountPaid).toString());
-                                }
-                            }}
-                            required
+                            {...register('invoiceId', { required: 'Please select an invoice' })}
+                            onChange={handleInvoiceChange}
                             disabled={loadingInvoices}
-                            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all disabled:bg-stone-100"
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all disabled:bg-stone-100 ${errors.invoiceId ? 'border-red-300' : 'border-stone-300'}`}
                         >
                             <option value="">-- Select Invoice --</option>
                             {invoices.map((inv) => (
@@ -170,6 +161,7 @@ export default function UploadPaymentProofModal({
                                 </option>
                             ))}
                         </select>
+                        {errors.invoiceId && <p className="text-xs text-red-600 mt-1">{errors.invoiceId.message}</p>}
                         {loadingInvoices && <p className="text-xs text-stone-500 mt-1">Loading invoices...</p>}
                         {invoices.length === 0 && !loadingInvoices && <p className="text-xs text-orange-500 mt-1">No pending invoices found.</p>}
                     </div>
@@ -183,13 +175,12 @@ export default function UploadPaymentProofModal({
                             <input
                                 type="number"
                                 step="0.01"
-                                required
-                                value={amountPaid}
-                                onChange={(e) => setAmountPaid(e.target.value)}
-                                className="w-full pl-7 pr-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                {...register('amount', { required: 'Amount is required' })}
+                                className={`w-full pl-7 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.amount ? 'border-red-300' : 'border-stone-300'}`}
                                 placeholder="0.00"
                             />
                         </div>
+                        {errors.amount && <p className="text-xs text-red-600 mt-1">{errors.amount.message}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -198,9 +189,7 @@ export default function UploadPaymentProofModal({
                                 Payment Method
                             </label>
                             <select
-                                value={paymentMethod}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                                required
+                                {...register('paymentMethod')}
                                 className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
                             >
                                 <option value="TRANSFER">Transfer</option>
@@ -213,11 +202,10 @@ export default function UploadPaymentProofModal({
                             </label>
                             <input
                                 type="date"
-                                required
-                                value={paymentDate}
-                                onChange={(e) => setPaymentDate(e.target.value)}
-                                className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                {...register('paymentDate', { required: 'Date is required' })}
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.paymentDate ? 'border-red-300' : 'border-stone-300'}`}
                             />
+                            {errors.paymentDate && <p className="text-xs text-red-600 mt-1">{errors.paymentDate.message}</p>}
                         </div>
                     </div>
 
@@ -227,8 +215,7 @@ export default function UploadPaymentProofModal({
                         </label>
                         <input
                             type="text"
-                            value={referenceNumber}
-                            onChange={(e) => setReferenceNumber(e.target.value)}
+                            {...register('referenceNumber')}
                             className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
                             placeholder="e.g. Auth Code 12345"
                         />
@@ -267,10 +254,10 @@ export default function UploadPaymentProofModal({
                         </button>
                         <button
                             type="submit"
-                            disabled={loading || !selectedInvoiceId}
+                            disabled={isSubmitting || !selectedInvoiceId}
                             className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? (
+                            {isSubmitting ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                     <span>Uploading...</span>

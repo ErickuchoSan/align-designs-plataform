@@ -4,11 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // Correct import for App Router
 import { useParams } from 'next/navigation'; // Correct hook for App Router params
-import { InvoicesService, Invoice, InvoiceStatus } from '@/services/invoices.service';
+import { InvoicesService } from '@/services/invoices.service';
+import { Invoice, InvoiceStatus } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
 import toast from 'react-hot-toast';
+
+import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 export default function InvoiceDetailPage() {
     const params = useParams(); // returns { id: string } | null
@@ -30,8 +34,8 @@ export default function InvoiceDetailPage() {
             const data = await InvoicesService.getOne(invoiceId);
             setInvoice(data);
         } catch (error) {
-            console.error('Failed to load invoice', error);
-            toast.error('Could not load invoice details');
+            logger.error('Failed to load invoice', error);
+            toast.error(handleApiError(error, 'Could not load invoice details'));
             router.push('/dashboard/admin/invoices');
         } finally {
             setLoading(false);
@@ -45,7 +49,8 @@ export default function InvoiceDetailPage() {
             setInvoice(updated);
             toast.success(`Invoice marked as ${newStatus}`);
         } catch (error) {
-            toast.error('Failed to update status');
+            logger.error('Failed to update invoice status', error, { invoiceId: invoice.id, status: newStatus });
+            toast.error(handleApiError(error, 'Failed to update status'));
         }
     }
 

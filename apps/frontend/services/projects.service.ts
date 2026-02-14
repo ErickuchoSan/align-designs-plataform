@@ -1,6 +1,73 @@
 import { api } from '@/lib/api';
-import { Project, PaginatedProjects } from '@/types';
+import { Project, PaginatedProjects, User, ProjectStatus } from '@/types';
 import { ProjectStagesResponse } from '@/types/stage';
+
+export interface FileUploadResponse {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedBy: string;
+  versionNumber?: number;
+}
+
+export interface ProjectCompletionStatus {
+  isReady: boolean;
+  checklist: {
+    allClientPaymentsReceived: boolean;
+    allEmployeesPaid: boolean;
+    noOpenFeedback: boolean;
+    finalFilesDelivered: boolean;
+  };
+  counts: {
+    pendingInvoices: number;
+    pendingEmployeePayments: number;
+    openFeedback: number;
+  }
+}
+
+export interface ProjectDeletionCheck {
+  projectId: string;
+  projectName: string;
+  hasData: boolean;
+  details: {
+    files: boolean;
+    employees: boolean;
+    invoices: boolean;
+    payments: boolean;
+  };
+  counts: {
+    files: number;
+    employees: number;
+    invoices: number;
+    payments: number;
+  };
+  warnings: string[];
+  client: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface ProjectStatusSummary {
+  id: string;
+  name: string;
+  status: ProjectStatus;
+  startDate?: string;
+  deadlineDate?: string;
+  archivedAt?: string;
+  paymentProgress?: {
+    required: number;
+    paid: number;
+    remaining: number;
+    percentage: number;
+  };
+  employeeCount: number;
+  fileCount: number;
+  feedbackCycleCount: number;
+  canActivate: boolean;
+}
 
 /**
  * Projects Service
@@ -17,7 +84,7 @@ export class ProjectsService {
     filtersOrPage: { page?: number; limit?: number; clientId?: string } | number = 1,
     limitParam: number = 10
   ): Promise<PaginatedProjects> {
-    let params: any = {};
+    let params: Record<string, string | number | undefined> = {};
 
     if (typeof filtersOrPage === 'number') {
       params = { page: filtersOrPage, limit: limitParam };
@@ -42,15 +109,15 @@ export class ProjectsService {
   }
 
   /**
-   * Fetch a single project by ID
+   * Upload a new version of a file
    */
-  static async uploadFileVersion(parentFileId: string, file: File, notes?: string): Promise<any> {
+  static async uploadFileVersion(parentFileId: string, file: File, notes?: string): Promise<FileUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
     if (notes) {
       formData.append('comment', notes); // Reusing comment field in DTO
     }
-    const response = await api.post(`/files/${parentFileId}/version`, formData, {
+    const response = await api.post<FileUploadResponse>(`/files/${parentFileId}/version`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -138,8 +205,8 @@ export class ProjectsService {
   /**
    * Get project employees
    */
-  static async getEmployees(projectId: string): Promise<any[]> {
-    const response = await api.get(`${this.BASE_URL}/${projectId}/employees`);
+  static async getEmployees(projectId: string): Promise<User[]> {
+    const response = await api.get<User[]>(`${this.BASE_URL}/${projectId}/employees`);
     return response.data;
   }
 
@@ -195,46 +262,16 @@ export class ProjectsService {
   /**
    * Get project status summary
    */
-  static async getStatus(projectId: string): Promise<{
-    id: string;
-    name: string;
-    status: string;
-    startDate?: string;
-    deadlineDate?: string;
-    archivedAt?: string;
-    paymentProgress?: {
-      required: number;
-      paid: number;
-      remaining: number;
-      percentage: number;
-    };
-    employeeCount: number;
-    fileCount: number;
-    feedbackCycleCount: number;
-    canActivate: boolean;
-  }> {
-    const response = await api.get(`${this.BASE_URL}/${projectId}/status`);
+  static async getStatus(projectId: string): Promise<ProjectStatusSummary> {
+    const response = await api.get<ProjectStatusSummary>(`${this.BASE_URL}/${projectId}/status`);
     return response.data;
   }
 
   /**
    * Get project completion status checklist
    */
-  static async getCompletionStatus(projectId: string): Promise<{
-    isReady: boolean;
-    checklist: {
-      allClientPaymentsReceived: boolean;
-      allEmployeesPaid: boolean;
-      noOpenFeedback: boolean;
-      finalFilesDelivered: boolean;
-    };
-    counts: {
-      pendingInvoices: number;
-      pendingEmployeePayments: number;
-      openFeedback: number;
-    }
-  }> {
-    const response = await api.get(`${this.BASE_URL}/${projectId}/completion-status`);
+  static async getCompletionStatus(projectId: string): Promise<ProjectCompletionStatus> {
+    const response = await api.get<ProjectCompletionStatus>(`${this.BASE_URL}/${projectId}/completion-status`);
     return response.data;
   }
 
@@ -251,29 +288,8 @@ export class ProjectsService {
    * Check if project has data before deletion
    * Returns warnings about files, payments, invoices, and employees
    */
-  static async checkDeletionSafety(projectId: string): Promise<{
-    projectId: string;
-    projectName: string;
-    hasData: boolean;
-    details: {
-      files: boolean;
-      employees: boolean;
-      invoices: boolean;
-      payments: boolean;
-    };
-    counts: {
-      files: number;
-      employees: number;
-      invoices: number;
-      payments: number;
-    };
-    warnings: string[];
-    client: {
-      id: string;
-      name: string;
-    } | null;
-  }> {
-    const response = await api.get(`${this.BASE_URL}/${projectId}/deletion-check`);
+  static async checkDeletionSafety(projectId: string): Promise<ProjectDeletionCheck> {
+    const response = await api.get<ProjectDeletionCheck>(`${this.BASE_URL}/${projectId}/deletion-check`);
     return response.data;
   }
 }

@@ -1,12 +1,12 @@
 'use client';
 
-import Modal from '@/app/components/Modal';
-import ConfirmModal from '@/app/components/ConfirmModal';
-import Pagination from '@/app/components/Pagination';
-import { ButtonLoader, PageLoader, TableRowSkeleton } from '@/app/components/Loader';
-import PhoneInput from '@/app/components/PhoneInput';
-import EmailInput from '@/app/components/EmailInput';
-import DashboardHeader from '@/app/components/DashboardHeader';
+import Modal from '@/components/ui/Modal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import Pagination from '@/components/ui/Pagination';
+import { ButtonLoader, PageLoader, TableRowSkeleton } from '@/components/ui/Loader';
+import PhoneInput from '@/components/ui/inputs/PhoneInput';
+import EmailInput from '@/components/ui/inputs/EmailInput';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { formatDate } from '@/lib/utils/date.utils';
 import { useUsers } from '@/hooks/useUsers';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';

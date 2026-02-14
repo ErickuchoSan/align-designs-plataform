@@ -13,7 +13,7 @@ import { Invoice, InvoiceStatus } from '@/types/invoice';
 import { toast } from 'react-hot-toast';
 import { ProjectsService } from '@/services/projects.service';
 import { Project } from '@/types';
-import DashboardHeader from '@/app/components/DashboardHeader';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { logger } from '@/lib/logger';
 
@@ -161,7 +161,7 @@ export default function ProjectPaymentsPage() {
 
                                 <button
                                     onClick={() => setIsClientUploadModalOpen(true)}
-                                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
+                                    className="w-full px-4 py-3 bg-navy-600 text-white rounded-lg hover:bg-navy-700 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -360,7 +360,7 @@ export default function ProjectPaymentsPage() {
                         <div className="flex gap-3 mb-6">
                             <button
                                 onClick={() => openModal(PaymentType.INITIAL_PAYMENT)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm flex items-center gap-2"
+                                className="px-4 py-2 bg-navy-600 text-white rounded-lg hover:bg-navy-700 transition-colors font-medium shadow-sm flex items-center gap-2"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

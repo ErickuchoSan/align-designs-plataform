@@ -1,7 +1,7 @@
 'use client';
 
-import Modal from './Modal';
-import { ButtonLoader } from './Loader';
+import Modal from '../ui/Modal';
+import { ButtonLoader } from '../ui/Loader';
 
 interface WarningItem {
   label: string;
@@ -18,7 +18,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   isLoading?: boolean;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'danger' | 'warning' | 'info' | 'success';
   warningItems?: WarningItem[];
   showDetailedWarning?: boolean;
 }
@@ -54,6 +54,12 @@ export default function ConfirmModal({
       iconBg: 'bg-navy-100',
       iconColor: 'text-navy-600',
       button: 'bg-navy-600 hover:bg-navy-700 focus:ring-navy-500',
+    },
+    success: {
+      icon: '✅',
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600',
+      button: 'bg-green-600 hover:bg-green-700 focus:ring-green-500',
     },
   };
 

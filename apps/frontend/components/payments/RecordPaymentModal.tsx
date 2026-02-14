@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import Modal from '@/app/components/Modal';
+import Modal from '@/components/ui/Modal';
 import { PaymentMethod, PaymentType } from '@/types/payments';
 import { PaymentMethodSelect } from './PaymentMethodSelect';
-import { ButtonLoader } from '@/app/components/Loader';
+import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from 'react-hot-toast';
 import { PaymentsService } from '@/services/payments.service';
 import { UsersService } from '@/services/users.service';
 import { FilesService, FileData } from '@/services/files.service';
 import { User } from '@/types';
 import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 interface RecordPaymentModalProps {
     isOpen: boolean;
@@ -131,7 +132,7 @@ export default function RecordPaymentModal({
             onClose();
         } catch (error) {
             logger.error('Failed to record payment', error, { projectId, type, amount });
-            toast.error('Error recording payment');
+            toast.error(handleApiError(error, 'Error recording payment'));
         } finally {
             setIsSubmitting(false);
         }
@@ -146,10 +147,10 @@ export default function RecordPaymentModal({
                 {/* Employee Selection */}
                 {isEmployeePayment && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Employee</label>
+                        <label className="block mb-2 text-sm font-medium text-stone-700">Employee</label>
                         <select
                             required
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 border px-3"
+                            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-transparent focus:ring-2 focus:ring-navy-900 sm:text-sm"
                             value={selectedEmployeeId}
                             onChange={(e) => setSelectedEmployeeId(e.target.value)}
                             disabled={isLoadingEmployees}
@@ -164,12 +165,12 @@ export default function RecordPaymentModal({
 
                 {/* Pending Files Selection */}
                 {isEmployeePayment && selectedEmployeeId && (
-                    <div className="border rounded-md p-4 bg-gray-50">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Pending Jobs</label>
+                    <div className="p-4 border rounded-lg border-stone-200 bg-stone-50">
+                        <label className="block mb-2 text-sm font-medium text-stone-700">Pending Jobs</label>
                         {isLoadingFiles ? (
-                            <div className="text-sm text-gray-500">Loading...</div>
+                            <div className="text-sm text-stone-500">Loading...</div>
                         ) : pendingFiles.length === 0 ? (
-                            <div className="text-sm text-gray-400 italic">No approved pending jobs</div>
+                            <div className="text-sm italic text-stone-400">No approved pending jobs</div>
                         ) : (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
                                 {pendingFiles.map(f => (
@@ -179,26 +180,26 @@ export default function RecordPaymentModal({
                                             id={`file-${f.id}`}
                                             checked={selectedFileIds.includes(f.id)}
                                             onChange={() => handleFileToggle(f.id)}
-                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            className="w-4 h-4 text-navy-600 border-stone-300 rounded focus:ring-navy-500"
                                         />
-                                        <label htmlFor={`file-${f.id}`} className="ml-2 block text-sm text-gray-900 truncate">
-                                            {f.filename} <span className="text-xs text-gray-500">({new Date(f.approvedClientAt).toLocaleDateString()})</span>
+                                        <label htmlFor={`file-${f.id}`} className="block ml-2 text-sm truncate text-stone-900">
+                                            {f.filename} <span className="text-xs text-stone-500">({new Date(f.approvedClientAt).toLocaleDateString()})</span>
                                         </label>
                                     </div>
                                 ))}
                             </div>
                         )}
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="mt-2 text-xs text-stone-500">
                             Select the jobs you are paying for to calculate efficiency.
                         </p>
                     </div>
                 )}
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                    <label className="block mb-2 text-sm font-medium text-stone-700">Amount</label>
                     <div className="relative rounded-md shadow-sm">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span className="text-gray-500 sm:text-sm">$</span>
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <span className="text-stone-500 sm:text-sm">$</span>
                         </div>
                         <input
                             type="number"
@@ -207,45 +208,45 @@ export default function RecordPaymentModal({
                             required
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-3 border"
+                            className="block w-full py-2 pl-7 pr-4 transition-all border outline-none rounded-lg border-stone-300 focus:ring-2 focus:ring-navy-900 focus:border-transparent text-sm"
                             placeholder="0.00"
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <label className="block mb-2 text-sm font-medium text-stone-700">Payment Method</label>
                     <PaymentMethodSelect value={method} onChange={setMethod} />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date</label>
+                    <label className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
                     <input
                         type="date"
                         required
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 border px-3"
+                        className="block w-full px-4 py-2 transition-all border outline-none rounded-lg border-stone-300 shadow-sm focus:ring-2 focus:ring-navy-900 focus:border-transparent text-sm"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Receipt (Optional)</label>
+                    <label className="block mb-2 text-sm font-medium text-stone-700">Receipt (Optional)</label>
                     <input
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => setFile(e.target.files?.[0] || null)}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-navy-700 hover:file:bg-stone-200"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <label className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
                     <textarea
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 border px-3"
+                        className="block w-full px-4 py-2 transition-all border outline-none rounded-lg border-stone-300 focus:ring-2 focus:ring-navy-900 focus:border-transparent text-sm"
                         placeholder="Additional details..."
                     />
                 </div>
@@ -255,14 +256,14 @@ export default function RecordPaymentModal({
                         type="button"
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="mr-3 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="mr-3 px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-900"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-w-[120px]"
+                        className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-navy-900 border border-transparent rounded-lg hover:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-900 min-w-[120px]"
                     >
                         {isSubmitting ? <ButtonLoader /> : 'Record Payment'}
                     </button>

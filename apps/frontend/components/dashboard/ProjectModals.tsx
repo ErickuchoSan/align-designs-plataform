@@ -1,15 +1,15 @@
 import { useMemo, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { Project } from '@/types';
-import { ButtonLoader } from '@/app/components/Loader';
+import { ButtonLoader } from '@/components/ui/Loader';
 
 // Lazy load heavy components for better code splitting
-const Modal = dynamic(() => import('@/app/components/Modal'), {
+const Modal = dynamic(() => import('@/components/ui/Modal'), {
   loading: () => null,
   ssr: false,
 });
 
-const ConfirmModal = dynamic(() => import('@/app/components/ConfirmModal'), {
+const ConfirmModal = dynamic(() => import('@/components/modals/ConfirmModal'), {
   loading: () => null,
   ssr: false,
 });
@@ -19,7 +19,7 @@ const EmployeeSelect = dynamic(() => import('../projects/EmployeeSelect').then(m
   ssr: false,
 });
 
-const SearchableSelect = dynamic(() => import('@/app/components/SearchableSelect'), {
+const SearchableSelect = dynamic(() => import('@/components/ui/inputs/SearchableSelect'), {
   loading: () => null,
   ssr: false,
 });
@@ -124,11 +124,11 @@ function ProjectModals({
 
   // Fix: Ensure Edit Modal shows both AVAILABLE employees AND CURRENTLY ASSIGNED employees
   const editModalEmployees = useMemo(() => {
-    const currentEmployees = editModal.project?.employees?.map((e: any) => ({
-      id: e.employee.id,
-      firstName: e.employee.firstName,
-      lastName: e.employee.lastName,
-      email: e.employee.email,
+    const currentEmployees = editModal.project?.employees?.map((e) => ({
+      id: e.employee?.id || e.employeeId,
+      firstName: e.employee?.firstName || '',
+      lastName: e.employee?.lastName || '',
+      email: e.employee?.email || '',
     })) || [];
 
     // Deduplicate by ID

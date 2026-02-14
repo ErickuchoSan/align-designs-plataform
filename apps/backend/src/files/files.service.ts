@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role, Stage } from '@prisma/client';
+import { Role, Stage, NotificationType } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { FileFiltersDto } from './dto/file-filters.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
@@ -16,11 +16,10 @@ import { FileTransformerService } from './services/file-transformer.service';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import { CacheManagerService } from '../cache/services/cache-manager.service';
 import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
+import { NotificationsService } from '../notifications/notifications.service';
 
-/**
- * Main service for file operations
- * Orchestrates permissions, storage, and data transformation services
- */
+// ...
+
 @Injectable()
 export class FilesService {
   private readonly logger = new Logger(FilesService.name);
@@ -31,7 +30,82 @@ export class FilesService {
     private readonly storageCoordinator: FileStorageCoordinatorService,
     private readonly transformer: FileTransformerService,
     private readonly cacheManager: CacheManagerService,
+    private readonly notificationsService: NotificationsService,
   ) { }
+
+  private async sendProjectNotifications(
+    projectId: string,
+    uploaderId: string,
+    triggerType: 'FILE' | 'COMMENT',
+    resourceName: string | undefined, // Filename or comment preview
+  ) {
+    try {
+      // 1. Get Project Members (Client + Creator + Employees)
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        include: {
+          employees: true,
+          client: { select: { id: true, firstName: true, lastName: true } },
+          creator: { select: { id: true, firstName: true, lastName: true } },
+        }
+      });
+
+      if (!project) return;
+
+      // 2. Get Uploader Name
+      const uploader = await this.prisma.user.findUnique({
+        where: { id: uploaderId },
+        select: { firstName: true, lastName: true, role: true }
+      });
+
+      if (!uploader) return;
+
+      const uploaderName = `${uploader.firstName} ${uploader.lastName}`;
+      const title = triggerType === 'FILE' ? 'New File Uploaded' : 'New Comment';
+      const message = triggerType === 'FILE'
+        ? `${uploaderName} uploaded a new file: ${resourceName || 'Unknown file'}`
+        : `${uploaderName} commented: "${resourceName ? resourceName.substring(0, 50) + (resourceName.length > 50 ? '...' : '') : 'New comment'}"`;
+
+      const link = `/dashboard/projects/${projectId}/files`;
+
+      // 3. Define Recipients (Everyone except uploader)
+      const recipientIds = new Set<string>();
+
+      // Add Client (if not uploader)
+      if (project.clientId && project.clientId !== uploaderId) {
+        recipientIds.add(project.clientId);
+      }
+
+      // Add Creator/Admin (if not uploader)
+      if (project.createdBy && project.createdBy !== uploaderId) {
+        recipientIds.add(project.createdBy);
+      }
+
+      // Add Assigned Employees (if not uploader)
+      project.employees.forEach(assignment => {
+        if (assignment.employeeId !== uploaderId) {
+          recipientIds.add(assignment.employeeId);
+        }
+      });
+
+      // 4. Send Notifications
+      const notifications = Array.from(recipientIds).map(userId =>
+        this.notificationsService.create({
+          userId,
+          type: NotificationType.INFO,
+          title,
+          message,
+          link,
+        })
+      );
+
+      await Promise.allSettled(notifications);
+      this.logger.log(`Sent ${notifications.length} notifications for ${triggerType} in project ${projectId}`);
+
+    } catch (error) {
+      this.logger.error('Failed to send project notifications', error);
+    }
+  }
 
   async uploadFile(
     projectId: string,
@@ -67,6 +141,9 @@ export class FilesService {
     if (relatedFileId) {
       await this.handleFileRejection(relatedFileId, fileRecord.id, uploadedBy, userRole);
     }
+
+    // Send Notifications
+    await this.sendProjectNotifications(projectId, uploadedBy, 'FILE', file.originalname);
 
     // Invalidate caches
     await this.cacheManager.invalidateFileCaches(projectId, fileRecord.id);
@@ -123,6 +200,9 @@ export class FilesService {
     if (relatedFileId) {
       await this.handleFileRejection(relatedFileId, commentRecord.id, uploadedBy, userRole);
     }
+
+    // Send Notifications
+    await this.sendProjectNotifications(projectId, uploadedBy, 'COMMENT', comment);
 
     // Invalidate caches
     await this.cacheManager.invalidateFileCaches(projectId, commentRecord.id);

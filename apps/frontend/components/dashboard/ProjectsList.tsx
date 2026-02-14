@@ -1,8 +1,8 @@
 import { Project } from '@/types';
-import { ProjectCardSkeleton } from '@/app/components/Loader';
+import { ProjectCardSkeleton } from '@/components/ui/Loader';
 import ProjectCard from './ProjectCard';
 import ProjectModals from './ProjectModals';
-import Pagination from '@/app/components/Pagination';
+import Pagination from '@/components/ui/Pagination';
 import { useProjects } from '@/hooks/useProjects';
 
 interface ProjectsListProps {

@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Modal from '@/app/components/Modal';
+import Modal from '@/components/ui/Modal';
 import { PaymentMethodSelect } from './PaymentMethodSelect';
-import { ButtonLoader } from '@/app/components/Loader';
+import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from 'react-hot-toast';
 import { PaymentsService } from '@/services/payments.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { Invoice } from '@/types/invoice';
 import { PaymentMethod, PaymentType } from '@/types/payments';
 import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 interface ClientPaymentUploadModalProps {
   isOpen: boolean;
@@ -124,7 +125,7 @@ export default function ClientPaymentUploadModal({
       logger.error('Failed to upload client payment', error, { projectId, amount });
       // Error already handled by global axios interceptor in dev mode
       // Only show user-friendly toast for production users
-      toast.error('Failed to submit payment');
+      toast.error(handleApiError(error, 'Failed to submit payment'));
     } finally {
       setIsSubmitting(false);
     }
@@ -157,10 +158,10 @@ export default function ClientPaymentUploadModal({
 
         {/* Amount */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Amount Paid</label>
+          <label className="block mb-2 text-sm font-medium text-stone-700">Amount Paid</label>
           <div className="relative rounded-md shadow-sm">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <span className="text-gray-500 sm:text-sm">$</span>
+              <span className="text-stone-500 sm:text-sm">$</span>
             </div>
             <input
               type="number"
@@ -168,7 +169,7 @@ export default function ClientPaymentUploadModal({
               required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-3 border"
+              className="block w-full py-3 pl-7 pr-12 border rounded-lg border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
               placeholder="0.00"
             />
           </div>
@@ -176,29 +177,29 @@ export default function ClientPaymentUploadModal({
 
         {/* Payment Method */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+          <label className="block mb-2 text-sm font-medium text-stone-700">Payment Method</label>
           <PaymentMethodSelect value={method} onChange={setMethod} />
         </div>
 
         {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date</label>
+          <label className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
           <input
             type="date"
             required
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
           />
         </div>
 
         {/* Invoice Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Link to Invoice (Optional)</label>
+          <label className="block mb-2 text-sm font-medium text-stone-700">Link to Invoice (Optional)</label>
           <select
             value={invoiceId}
             onChange={(e) => setInvoiceId(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
           >
             <option value="">-- General Payment --</option>
             {invoices.map(inv => (
@@ -211,29 +212,29 @@ export default function ClientPaymentUploadModal({
 
         {/* File Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Receipt File</label>
+          <label className="block mb-2 text-sm font-medium text-stone-700">Receipt File</label>
           <input
             type="file"
             accept="image/*,.pdf"
             onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-            className="block w-full text-sm text-gray-500
+            className="block w-full text-sm text-stone-500
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-md file:border-0
                     file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100"
+                    file:bg-stone-50 file:text-navy-700
+                    hover:file:bg-stone-100"
           />
-          <p className="mt-1 text-xs text-gray-500">Supported: PDF, JPG, PNG (Max 5MB)</p>
+          <p className="mt-1 text-xs text-stone-500">Supported: PDF, JPG, PNG (Max 5MB)</p>
         </div>
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+          <label className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
           <textarea
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 border"
+            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
             placeholder="Additional details..."
           />
         </div>
@@ -243,14 +244,14 @@ export default function ClientPaymentUploadModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto"
+            className="w-full px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500 sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:min-w-[120px]"
+            className="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-navy-600 border border-transparent rounded-lg hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500 sm:w-auto sm:min-w-[120px]"
           >
             {isSubmitting ? <ButtonLoader /> : 'Submit Payment'}
           </button>

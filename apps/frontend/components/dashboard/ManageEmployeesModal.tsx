@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import Modal from '@/app/components/Modal';
+import Modal from '@/components/ui/Modal';
 import { EmployeeSelect } from '@/components/projects/EmployeeSelect';
-import { ButtonLoader } from '@/app/components/Loader';
+import { ButtonLoader } from '@/components/ui/Loader';
 import { ProjectsService } from '@/services/projects.service';
 import { toast } from 'react-hot-toast';
 import { User } from '@/types';
 import { UsersService } from '@/services/users.service';
 import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 interface ManageEmployeesModalProps {
     isOpen: boolean;
@@ -63,7 +64,7 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
             onClose();
         } catch (error: any) {
             logger.error('Failed to save employee assignments', error, { projectId, selectedIds });
-            toast.error(error.response?.data?.message || 'Error updating employees');
+            toast.error(handleApiError(error, 'Error updating employees'));
         } finally {
             setIsSaving(false);
         }
@@ -101,7 +102,7 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
                     <button
                         type="submit"
                         disabled={isSaving || isLoading}
-                        className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 min-w-[100px]"
+                        className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-navy-600 border border-transparent rounded-md hover:bg-navy-700 min-w-[100px]"
                     >
                         {isSaving ? <ButtonLoader /> : 'Save'}
                     </button>

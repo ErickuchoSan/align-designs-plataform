@@ -1,31 +1,39 @@
 'use client';
 
-import { FormEvent } from 'react';
-import { ButtonLoader } from '@/app/components/Loader';
-import PasswordInput from '@/app/components/PasswordInput';
-import PasswordRequirements from '@/app/components/PasswordRequirements';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { setPasswordSchema, SetPasswordFormData } from '@/lib/schemas/auth.schema';
+import { ButtonLoader } from '@/components/ui/Loader';
+import PasswordInput from '@/components/ui/inputs/PasswordInput';
+import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
 
 interface SetPasswordStepProps {
-  newPassword: string;
-  setNewPassword: (password: string) => void;
-  confirmPassword: string;
-  setConfirmPassword: (password: string) => void;
-  onSubmit: (e: FormEvent) => Promise<void>;
+  onSubmit: (data: SetPasswordFormData) => Promise<void>;
   loading: boolean;
-  error: string;
 }
 
 export default function SetPasswordStep({
-  newPassword,
-  setNewPassword,
-  confirmPassword,
-  setConfirmPassword,
   onSubmit,
-  loading,
-  error
+  loading
 }: SetPasswordStepProps) {
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors }
+  } = useForm<SetPasswordFormData>({
+    resolver: zodResolver(setPasswordSchema),
+    defaultValues: {
+      newPassword: '',
+      confirmPassword: ''
+    }
+  });
+
+  const newPassword = watch('newPassword');
+  const confirmPassword = watch('confirmPassword');
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="text-sm text-forest-800 bg-forest-50 p-4 rounded-lg border border-forest-200">
         <p className="font-medium text-forest-900 mb-1">Code verified!</p>
         <p>Please set a password to activate your account.</p>
@@ -34,13 +42,22 @@ export default function SetPasswordStep({
         <label htmlFor="new-password" className="block text-sm font-medium text-navy-900 mb-2">
           New Password
         </label>
-        <PasswordInput
-          value={newPassword}
-          onChange={(value) => setNewPassword(value)}
-          placeholder="Minimum 12 characters"
-          required
-          showStrengthIndicator={true}
+        <Controller
+          name="newPassword"
+          control={control}
+          render={({ field }) => (
+            <PasswordInput
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Minimum 12 characters"
+              required
+              showStrengthIndicator={true}
+            />
+          )}
         />
+        {errors.newPassword && (
+          <p className="mt-1 text-sm text-red-600">{errors.newPassword.message}</p>
+        )}
 
         {/* Password Requirements Checklist - shown only for new password */}
         {newPassword && (
@@ -57,20 +74,29 @@ export default function SetPasswordStep({
         <label htmlFor="confirm-password" className="block text-sm font-medium text-navy-900 mb-2">
           Confirm Password
         </label>
-        <PasswordInput
-          value={confirmPassword}
-          onChange={(value) => setConfirmPassword(value)}
-          placeholder="Repeat your password"
-          required
-          showStrengthIndicator={false}
+        <Controller
+          name="confirmPassword"
+          control={control}
+          render={({ field }) => (
+            <PasswordInput
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Repeat your password"
+              required
+              showStrengthIndicator={false}
+            />
+          )}
         />
+        {errors.confirmPassword && (
+          <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+        )}
+
         {/* Show match indicator when user starts typing confirmation */}
         {confirmPassword && (
-          <p className={`mt-2 text-sm flex items-center gap-1 ${
-            newPassword === confirmPassword
-              ? 'text-green-600'
-              : 'text-red-600'
-          }`}>
+          <p className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword
+            ? 'text-green-600'
+            : 'text-red-600'
+            }`}>
             {newPassword === confirmPassword ? (
               <>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

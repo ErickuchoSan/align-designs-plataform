@@ -1,33 +1,37 @@
 'use client';
 
-import { FormEvent } from 'react';
-import { ButtonLoader } from '@/app/components/Loader';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { passwordSchema, PasswordFormData } from '@/lib/schemas/auth.schema';
+import { ButtonLoader } from '@/components/ui/Loader';
 
 interface PasswordStepProps {
   email: string;
-  password: string;
-  setPassword: (password: string) => void;
-  onSubmit: (e: FormEvent) => Promise<void>;
+  onSubmit: (data: PasswordFormData) => Promise<void>;
   onForgotPassword: () => void;
   onLoginWithOTP: () => void;
   loading: boolean;
-  error: string;
   onBack: () => void;
 }
 
 export default function PasswordStep({
   email,
-  password,
-  setPassword,
   onSubmit,
   onForgotPassword,
   onLoginWithOTP,
   loading,
-  error,
   onBack
 }: PasswordStepProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema)
+  });
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="text-sm text-navy-700 bg-gold-50 p-4 rounded-lg border border-gold-200 animate-slideDown">
         Logging in as: <strong>{email}</strong>
       </div>
@@ -38,13 +42,17 @@ export default function PasswordStep({
         <input
           id="password"
           type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="block w-full rounded-lg border border-stone-300 px-4 py-3 shadow-sm focus:border-gold-500 focus:ring-2 focus:ring-gold-500 transition-all"
+          {...register('password')}
+          className={`block w-full rounded-lg border px-4 py-3 shadow-sm focus:ring-2 transition-all ${errors.password
+            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+            : 'border-stone-300 focus:border-gold-500 focus:ring-gold-500'
+            }`}
           placeholder="••••••••"
           autoFocus
         />
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+        )}
       </div>
       <div className="flex items-center justify-end">
         <button

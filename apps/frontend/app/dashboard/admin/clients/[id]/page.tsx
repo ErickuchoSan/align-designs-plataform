@@ -6,11 +6,12 @@ import { UsersService } from '@/services/users.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { ProjectsService } from '@/services/projects.service';
 import { User, Project } from '@/types';
-import { Invoice } from '@/services/invoices.service';
+import { Invoice } from '@/types/invoice';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 export default function ClientProfilePage() {
     const params = useParams();
@@ -46,7 +47,7 @@ export default function ClientProfilePage() {
             }
 
         } catch (error) {
-            console.error('Failed to load client data', error);
+            logger.error('Failed to load client data', error);
         } finally {
             setLoading(false);
         }

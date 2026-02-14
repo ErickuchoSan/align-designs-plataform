@@ -177,12 +177,18 @@ export class TimeTrackingService {
             select: {
                 durationDays: true,
                 approvedFileId: true,
+                cycle: {
+                    select: {
+                        status: true,
+                    }
+                }
             }
         });
 
         // Calculate cycles and rejections
+        // A rejection is when a feedback cycle has status 'rejected'
         const totalCycles = trackings.length;
-        const totalRejections = trackings.filter(t => !t.approvedFileId).length;
+        const totalRejections = trackings.filter(t => t.cycle?.status === 'rejected').length;
         const rejectionRate = totalCycles > 0 ? totalRejections / totalCycles : 0;
 
         // Calculate average cycle duration

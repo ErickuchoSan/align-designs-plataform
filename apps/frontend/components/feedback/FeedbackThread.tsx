@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Feedback, FeedbackCycle } from '@/types/feedback';
 import { FeedbackService } from '@/services/feedback.service';
-import { ButtonLoader } from '@/app/components/Loader'; // Assuming exists
+import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from 'react-hot-toast';
+import { logger } from '@/lib/logger';
 
 interface FeedbackThreadProps {
     cycle: FeedbackCycle;
@@ -29,7 +30,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
             setNewMessage('');
             onUpdate();
         } catch (error) {
-            console.error('Error sending feedback:', error);
+            logger.error('Error sending feedback:', error);
             toast.error('Error sending message');
         } finally {
             setIsSending(false);

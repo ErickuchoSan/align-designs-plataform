@@ -8,12 +8,7 @@ import { Payment } from '@/types/payments';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
 
-// Lazy load heavy modal components for better code splitting
-// These modals are only loaded when they are actually opened
-const ManageEmployeesModal = dynamic(() => import('@/components/dashboard/ManageEmployeesModal'), {
-  loading: () => null,
-  ssr: false,
-});
+import ManageEmployeesModal from '@/components/dashboard/ManageEmployeesModal';
 
 const CompletionChecklistModal = dynamic(() => import('@/components/projects/CompletionChecklistModal'), {
   loading: () => null,
@@ -25,7 +20,7 @@ const PaymentHistoryModal = dynamic(() => import('@/components/payments/PaymentH
   ssr: false,
 });
 
-const ConfirmModal = dynamic(() => import('@/components/common/ConfirmModal'), {
+const ConfirmModal = dynamic(() => import('@/components/modals/ConfirmModal'), {
   loading: () => null,
   ssr: false,
 });
@@ -34,7 +29,6 @@ import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';
 import { handleApiError, logError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-import { toast } from 'react-hot-toast';
 
 interface ProjectWorkflowSectionProps {
   project: Project;
@@ -67,7 +61,6 @@ function ProjectWorkflowSection({
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [showActivateConfirm, setShowActivateConfirm] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   // Invoice-based payment tracking
@@ -111,31 +104,16 @@ function ProjectWorkflowSection({
           .reduce((sum: number, p: Payment) => sum + Number(p.amount), 0);
         setPendingAmount(pending);
       } catch (error) {
-        console.error('Error checking pending payments:', error);
+        logger.error('Error checking pending payments:', error);
       }
     };
     checkPending();
-  }, [project.id]);
+  }, [project.id, project.amountPaid]); // Reload when payment amount changes
 
   // Admin-only state and callbacks (declared before any returns to satisfy React hooks rules)
   const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [checklistData, setChecklistData] = useState<any>(null);
   const [checklistLoading, setChecklistLoading] = useState(false);
-
-  const handleActivateProject = useCallback(async () => {
-    setProcessing(true);
-    setError('');
-
-    try {
-      await ProjectsService.activate(project.id);
-      onUpdate();
-    } catch (err) {
-      logError(err, 'Error activating project');
-      toast.error(handleApiError(err, 'Failed to activate project'));
-    } finally {
-      setProcessing(false);
-    }
-  }, [project.id, onUpdate]);
 
   const handleCompleteProject = useCallback(async () => {
     setProcessing(true);
@@ -192,7 +170,6 @@ function ProjectWorkflowSection({
     });
   };
 
-  const canActivate = project.status === ProjectStatus.WAITING_PAYMENT;
   const canComplete = project.status === ProjectStatus.ACTIVE;
   const canArchive = project.status === ProjectStatus.COMPLETED;
 
@@ -394,20 +371,11 @@ function ProjectWorkflowSection({
 
       {/* Status Actions */}
       <div className="mb-6 flex flex-wrap gap-3">
-        {canActivate && (
-          <button
-            onClick={() => setShowActivateConfirm(true)}
-            disabled={processing}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Activate Project
-          </button>
-        )}
         {canComplete && (
           <button
             onClick={() => setShowCompleteConfirm(true)}
             disabled={processing}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-navy-600 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Mark as Completed
           </button>
@@ -603,24 +571,13 @@ function ProjectWorkflowSection({
 
       {/* Confirmation Modals */}
       <ConfirmModal
-        isOpen={showActivateConfirm}
-        onClose={() => setShowActivateConfirm(false)}
-        onConfirm={handleActivateProject}
-        title="Activate Project"
-        message="Are you sure you want to activate this project? This will move it from waiting payment to active status."
-        confirmText="Activate"
-        confirmButtonClass="bg-green-600 hover:bg-green-700"
-        isLoading={processing}
-      />
-
-      <ConfirmModal
         isOpen={showCompleteConfirm}
         onClose={() => setShowCompleteConfirm(false)}
         onConfirm={handleCompleteProject}
         title="Complete Project"
         message="Are you sure you want to mark this project as completed? This indicates all work has been finished."
         confirmText="Mark as Completed"
-        confirmButtonClass="bg-blue-600 hover:bg-blue-700"
+        variant="info"
         isLoading={processing}
       />
 

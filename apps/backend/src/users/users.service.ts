@@ -300,7 +300,7 @@ export class UsersService {
   /**
    * Soft delete a user (Admin only)
    */
-  async remove(id: string, deletedBy?: string, hardDelete = false) {
+  async remove(id: string, deletedBy?: string, hardDelete = false, force = false) {
     const user = await this.prisma.user.findFirst({
       where: hardDelete ? { id } : getActiveRecordsWhereWith({ id }),
     });
@@ -316,8 +316,8 @@ export class UsersService {
 
     if (hardDelete) {
       // Hard delete: Permanently remove record
-      await this.userRepo.hardDelete(id);
-      this.logger.log(`User ${id} HARD deleted by ${deletedBy || 'system'}`);
+      await this.userRepo.hardDelete(id, force);
+      this.logger.log(`User ${id} HARD deleted by ${deletedBy || 'system'} (Force: ${force})`);
     } else {
       // Soft delete: Set deletedAt and deletedBy instead of deleting
       await this.userRepo.softDelete(id);

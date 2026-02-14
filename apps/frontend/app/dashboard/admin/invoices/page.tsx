@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { InvoicesService, Invoice } from '@/services/invoices.service';
+import { InvoicesService } from '@/services/invoices.service';
+import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
+import { logger } from '@/lib/logger';
 
 export default function InvoicesListPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -21,7 +23,7 @@ export default function InvoicesListPage() {
             const data = await InvoicesService.getAll();
             setInvoices(data);
         } catch (error) {
-            console.error('Failed to load invoices', error);
+            logger.error('Failed to load invoices', error);
         } finally {
             setLoading(false);
         }

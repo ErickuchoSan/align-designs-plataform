@@ -6,48 +6,28 @@ import { StagesService } from '@/services/stages.service';
 import { logger } from '@/lib/logger';
 import StageCard from './StageCard';
 import PaymentsStageContent from './PaymentsStageContent';
-import { PageLoader } from '@/app/components/Loader';
-import type { Project } from '@/types';
+import { PageLoader } from '@/components/ui/Loader';
+import type { Project, File } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-
-// File type compatible with both FileData and File types
-interface FileItem {
-  id: string;
-  filename: string | null;
-  originalName: string | null;
-  mimeType: string | null;
-  sizeBytes: number | null;
-  uploadedBy: string;
-  uploadedAt: string;
-  stage?: string | Stage;
-  uploader: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  comment?: string | null;
-  versionNumber?: number;
-  versionLabel?: string;
-  isCurrentVersion?: boolean;
-  parentFileId?: string;
-  rejectionCount?: number;
-}
 
 interface ProjectStagesViewProps {
   projectId: string;
   projectName: string;
   project: Project;
-  files: FileItem[];
+  files: File[];
   onOpenUploadModal: (stage: Stage) => void;
-  onOpenCommentModal: (stage: Stage, file?: FileItem) => void;
+  onOpenCommentModal: (stage: Stage, file?: File) => void;
   onDownload: (fileId: string, fileName: string) => void;
-  onEdit: (file: FileItem) => void;
-  onDelete: (file: FileItem) => void;
-  onViewHistory: (file: FileItem) => void;
-  onUploadVersion: (file: FileItem) => void;
-  canDeleteFile: (file: FileItem) => boolean;
+  onEdit: (file: File) => void;
+  onDelete: (file: File) => void;
+  onViewHistory: (file: File) => void;
+  onUploadVersion: (file: File) => void;
+  canDeleteFile: (file: File) => boolean;
   filesLoading: boolean;
   onRefresh?: () => void;
+  onGenerateInvoice?: () => void;
+  onPayEmployee?: () => void;
+  onUploadPaymentProof?: () => void;
 }
 
 /**
@@ -79,12 +59,16 @@ function ProjectStagesView({
   canDeleteFile,
   filesLoading,
   onRefresh,
+  onGenerateInvoice,
+  onPayEmployee,
+  onUploadPaymentProof,
 }: ProjectStagesViewProps) {
   const { user } = useAuth();
   const [stages, setStages] = useState<StageInfo[]>([]);
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paymentRefreshKey, setPaymentRefreshKey] = useState(0);
 
   useEffect(() => {
     loadStages();
@@ -152,6 +136,31 @@ function ProjectStagesView({
   const handleStageClick = useCallback((stage: Stage) => {
     setSelectedStage(stage);
   }, []);
+
+  // Wrapped callbacks that refresh payment data
+  const handleGenerateInvoice = useCallback(() => {
+    if (onGenerateInvoice) {
+      onGenerateInvoice();
+      // Force PaymentsStageContent to re-mount and reload data
+      setPaymentRefreshKey(prev => prev + 1);
+    }
+  }, [onGenerateInvoice]);
+
+  const handlePayEmployee = useCallback(() => {
+    if (onPayEmployee) {
+      onPayEmployee();
+      // Force PaymentsStageContent to re-mount and reload data
+      setPaymentRefreshKey(prev => prev + 1);
+    }
+  }, [onPayEmployee]);
+
+  const handleUploadPaymentProof = useCallback(() => {
+    if (onUploadPaymentProof) {
+      onUploadPaymentProof();
+      // Force PaymentsStageContent to re-mount and reload data
+      setPaymentRefreshKey(prev => prev + 1);
+    }
+  }, [onUploadPaymentProof]);
 
   // Conditional renders AFTER all hooks
   if (loading) {
@@ -281,21 +290,13 @@ function ProjectStagesView({
             {currentStage.stage === Stage.PAYMENTS ? (
               user && (
                 <PaymentsStageContent
+                  key={`payments-${project.status}-${project.amountPaid}-${paymentRefreshKey}`}
                   projectId={projectId}
                   userRole={user.role as 'ADMIN' | 'CLIENT' | 'EMPLOYEE'}
                   userId={user.id}
-                  onGenerateInvoice={() => {
-                    // TODO: Open Generate Invoice modal
-                    console.log('Generate Invoice clicked');
-                  }}
-                  onPayEmployee={() => {
-                    // TODO: Open Pay Employee modal
-                    console.log('Pay Employee clicked');
-                  }}
-                  onUploadPaymentProof={() => {
-                    // TODO: Open Upload Payment Proof modal
-                    console.log('Upload Payment Proof clicked');
-                  }}
+                  onGenerateInvoice={handleGenerateInvoice}
+                  onPayEmployee={handlePayEmployee}
+                  onUploadPaymentProof={handleUploadPaymentProof}
                   onRefresh={onRefresh}
                 />
               )

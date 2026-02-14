@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { UsersService } from '@/services/users.service';
 import { User } from '@/types';
 import { formatDate } from '@/lib/utils/date.utils';
+import { logger } from '@/lib/logger';
 
 export default function ClientsListPage() {
     const [clients, setClients] = useState<User[]>([]);
@@ -19,7 +20,7 @@ export default function ClientsListPage() {
             const data = await UsersService.getClients();
             setClients(data);
         } catch (error) {
-            console.error('Failed to load clients', error);
+            logger.error('Failed to load clients', error);
         } finally {
             setLoading(false);
         }

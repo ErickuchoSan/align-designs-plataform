@@ -1,5 +1,5 @@
-import Modal from '@/app/components/Modal';
-import { ButtonLoader } from '@/app/components/Loader';
+import Modal from '@/components/ui/Modal';
+import { ButtonLoader } from '@/components/ui/Loader';
 import type { FileData } from '../hooks/useProjectFiles';
 
 interface FileDeleteModalProps {

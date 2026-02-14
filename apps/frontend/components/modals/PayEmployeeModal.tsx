@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { EmployeePaymentsService } from '@/services/employee-payments.service';
 import { UsersService } from '@/services/users.service';
-import { User } from '@/types'; // Adjust if User type is located elsewhere
+import { User } from '@/types';
 import { logger } from '@/lib/logger';
+import { toast } from 'react-hot-toast';
 
 interface PayEmployeeModalProps {
     isOpen: boolean;
@@ -13,28 +15,46 @@ interface PayEmployeeModalProps {
     onSuccess: () => void;
 }
 
+interface PayEmployeeFormValues {
+    employeeId: string;
+    amount: string;
+    paymentDate: string;
+    paymentMethod: string;
+    description: string;
+}
+
 export default function PayEmployeeModal({
     isOpen,
     onClose,
     projectId,
     onSuccess,
 }: PayEmployeeModalProps) {
-    const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState<User[]>([]);
     const [loadingEmployees, setLoadingEmployees] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Form State
-    const [employeeId, setEmployeeId] = useState('');
-    const [amount, setAmount] = useState('');
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
-    const [paymentMethod, setPaymentMethod] = useState('TRANSFER');
-    const [description, setDescription] = useState('');
 
     // Pending Items State
     const [pendingItems, setPendingItems] = useState<any[]>([]);
     const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
     const [loadingItems, setLoadingItems] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        reset,
+        formState: { errors, isSubmitting }
+    } = useForm<PayEmployeeFormValues>({
+        defaultValues: {
+            employeeId: '',
+            amount: '',
+            paymentDate: new Date().toISOString().split('T')[0],
+            paymentMethod: 'TRANSFER',
+            description: ''
+        }
+    });
+
+    const employeeId = watch('employeeId');
 
     // Fetch employees when modal opens
     useEffect(() => {
@@ -60,7 +80,7 @@ export default function PayEmployeeModal({
             setEmployees(data);
         } catch (err) {
             logger.error('Error fetching employees:', err);
-            setError('Failed to load employee list');
+            toast.error('Failed to load employee list');
         } finally {
             setLoadingEmployees(false);
         }
@@ -73,7 +93,6 @@ export default function PayEmployeeModal({
             setPendingItems(items);
         } catch (err) {
             logger.error('Error fetching pending items:', err);
-            // Don't block payment if fetch fails, simplify let user proceed
         } finally {
             setLoadingItems(false);
         }
@@ -87,46 +106,31 @@ export default function PayEmployeeModal({
         );
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
-
+    const onSubmit = async (data: PayEmployeeFormValues) => {
         try {
-            if (!employeeId || !amount || !paymentDate || !paymentMethod) {
-                throw new Error('Please fill in all required fields');
-            }
-
             const payload = {
-                employeeId,
-                amount: Number(amount),
-                paymentMethod,
-                paymentDate: new Date(paymentDate).toISOString(),
-                description: description || undefined,
+                employeeId: data.employeeId,
+                amount: Number(data.amount),
+                paymentMethod: data.paymentMethod,
+                paymentDate: new Date(data.paymentDate).toISOString(),
+                description: data.description || undefined,
                 projectItemIds: selectedItemIds.length > 0 ? selectedItemIds : undefined,
             };
 
             await EmployeePaymentsService.create(projectId, payload);
+            toast.success('Payment recorded successfully');
             await onSuccess();
             handleClose();
         } catch (err: any) {
             logger.error('Error recording payment:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to record payment');
-        } finally {
-            setLoading(false);
+            toast.error(err.response?.data?.message || err.message || 'Failed to record payment');
         }
     };
 
     const handleClose = () => {
-        // Reset form
-        setEmployeeId('');
-        setAmount('');
-        setPaymentDate(new Date().toISOString().split('T')[0]);
-        setPaymentMethod('TRANSFER');
-        setDescription('');
+        reset();
         setPendingItems([]);
         setSelectedItemIds([]);
-        setError(null);
         onClose();
     };
 
@@ -149,23 +153,16 @@ export default function PayEmployeeModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="flex-grow p-4 space-y-4 overflow-y-auto sm:p-6">
-                    {error && (
-                        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
-                            {error}
-                        </div>
-                    )}
+                <form onSubmit={handleSubmit(onSubmit)} className="flex-grow p-4 space-y-4 overflow-y-auto sm:p-6">
 
                     <div>
                         <label className="block text-sm font-medium text-stone-700 mb-1">
                             Select Employee
                         </label>
                         <select
-                            value={employeeId}
-                            onChange={(e) => setEmployeeId(e.target.value)}
-                            required
+                            {...register('employeeId', { required: 'Please select an employee' })}
                             disabled={loadingEmployees}
-                            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all disabled:bg-stone-100"
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all disabled:bg-stone-100 ${errors.employeeId ? 'border-red-300' : 'border-stone-300'}`}
                         >
                             <option value="">-- Select Employee --</option>
                             {employees.map((emp) => (
@@ -174,6 +171,7 @@ export default function PayEmployeeModal({
                                 </option>
                             ))}
                         </select>
+                        {errors.employeeId && <p className="text-xs text-red-600 mt-1">{errors.employeeId.message}</p>}
                         {loadingEmployees && <p className="text-xs text-stone-500 mt-1">Loading employees...</p>}
                     </div>
 
@@ -221,13 +219,12 @@ export default function PayEmployeeModal({
                             <input
                                 type="number"
                                 step="0.01"
-                                required
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="w-full pl-7 pr-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                {...register('amount', { required: 'Amount is required' })}
+                                className={`w-full pl-7 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.amount ? 'border-red-300' : 'border-stone-300'}`}
                                 placeholder="0.00"
                             />
                         </div>
+                        {errors.amount && <p className="text-xs text-red-600 mt-1">{errors.amount.message}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -237,7 +234,7 @@ export default function PayEmployeeModal({
                             </label>
                             <input
                                 type="text"
-                                value="Transfer"
+                                {...register('paymentMethod')}
                                 disabled
                                 className="w-full px-4 py-2 text-stone-500 border border-stone-300 rounded-lg cursor-not-allowed bg-stone-100"
                             />
@@ -248,11 +245,10 @@ export default function PayEmployeeModal({
                             </label>
                             <input
                                 type="date"
-                                required
-                                value={paymentDate}
-                                onChange={(e) => setPaymentDate(e.target.value)}
-                                className="w-full px-4 py-2 transition-all border border-stone-300 rounded-lg outline-none focus:ring-2 focus:ring-navy-900 focus:border-transparent"
+                                {...register('paymentDate', { required: 'Date is required' })}
+                                className={`w-full px-4 py-2 transition-all border rounded-lg outline-none focus:ring-2 focus:ring-navy-900 focus:border-transparent ${errors.paymentDate ? 'border-red-300' : 'border-stone-300'}`}
                             />
+                            {errors.paymentDate && <p className="text-xs text-red-600 mt-1">{errors.paymentDate.message}</p>}
                         </div>
                     </div>
 
@@ -262,8 +258,7 @@ export default function PayEmployeeModal({
                         </label>
                         <textarea
                             rows={2}
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            {...register('description')}
                             className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
                             placeholder="e.g. Salary advance, Phase 1 Completion..."
                         />
@@ -279,10 +274,10 @@ export default function PayEmployeeModal({
                         </button>
                         <button
                             type="submit"
-                            disabled={loading || !employeeId}
+                            disabled={isSubmitting || !employeeId}
                             className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? (
+                            {isSubmitting ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                     <span>Saving...</span>

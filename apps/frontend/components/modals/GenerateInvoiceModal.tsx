@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { InvoicesService } from '@/services/invoices.service';
 import { ProjectsService } from '@/services/projects.service';
-import { CreateInvoiceDto } from '@/types/invoice'; // We might need to create this type if it doesn't exist
+import { CreateInvoiceDto } from '@/types/invoice';
 import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { toast } from 'react-hot-toast';
 
 interface GenerateInvoiceModalProps {
     isOpen: boolean;
@@ -13,23 +16,34 @@ interface GenerateInvoiceModalProps {
     onSuccess: () => void;
 }
 
+interface GenerateInvoiceFormValues {
+    amount: string;
+    dueDate: string;
+    description: string;
+}
+
 export default function GenerateInvoiceModal({
     isOpen,
     onClose,
     projectId,
     onSuccess,
 }: GenerateInvoiceModalProps) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [hasUnpaid, setHasUnpaid] = useState(false);
     const [checkingUnpaid, setCheckingUnpaid] = useState(true);
     const [clientId, setClientId] = useState<string | null>(null);
 
-    // Form State
-    const [amount, setAmount] = useState('');
-    const [dueDate, setDueDate] = useState('');
-    const [description, setDescription] = useState('');
-    const [items, setItems] = useState([{ description: '', quantity: 1, unitPrice: 0 }]);
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting }
+    } = useForm<GenerateInvoiceFormValues>({
+        defaultValues: {
+            amount: '',
+            dueDate: '',
+            description: ''
+        }
+    });
 
     // Check for unpaid invoices when modal opens
     useEffect(() => {
@@ -50,32 +64,22 @@ export default function GenerateInvoiceModal({
                 setClientId(project.clientId);
             }
         } catch (err) {
-            logger.error('Error checking project/invoices:', err);
-            setError('Failed to load project details');
+            logger.error('Failed to check unpaid invoices', err, { projectId });
+            toast.error('Failed to load project details');
         } finally {
             setCheckingUnpaid(false);
         }
     };
 
-    if (!isOpen) return null;
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
-
+    const onSubmit = async (data: GenerateInvoiceFormValues) => {
         try {
-            // Basic validation
-            if (!amount || !dueDate) {
-                throw new Error('Please fill in all required fields');
-            }
-
             if (!clientId) {
-                throw new Error('Client ID not found for this project');
+                toast.error('Client ID not found for this project');
+                return;
             }
 
             const issueDate = new Date(); // Current date as issue date
-            const due = new Date(dueDate);
+            const due = new Date(data.dueDate);
             const diffTime = Math.abs(due.getTime() - issueDate.getTime());
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -85,21 +89,27 @@ export default function GenerateInvoiceModal({
                 issueDate: issueDate.toISOString(),
                 dueDate: due.toISOString(),
                 paymentTermsDays: diffDays > 0 ? diffDays : 0,
-                subtotal: Number(amount),
-                totalAmount: Number(amount),
-                notes: description || undefined,
+                subtotal: Number(data.amount),
+                totalAmount: Number(data.amount),
+                notes: data.description || undefined,
             };
 
-            await InvoicesService.create(payload as any); // Type assertion until DTO is fully defined
+            await InvoicesService.create(payload as any);
+            toast.success('Invoice created successfully');
             await onSuccess();
-            onClose();
+            handleClose();
         } catch (err: any) {
-            logger.error('Error creating invoice:', err);
-            setError(err.message || 'Failed to create invoice');
-        } finally {
-            setLoading(false);
+            logger.error('Failed to create invoice', err, { projectId, amount: data.amount });
+            toast.error(handleApiError(err, 'Failed to create invoice'));
         }
     };
+
+    const handleClose = () => {
+        reset();
+        onClose();
+    };
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/50 backdrop-blur-sm sm:p-4">
@@ -108,7 +118,7 @@ export default function GenerateInvoiceModal({
                 <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-stone-50 sm:px-6 sm:py-4">
                     <h3 className="text-base font-semibold text-navy-900 sm:text-lg">Generate Invoice</h3>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="text-stone-400 transition-colors hover:text-stone-600"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +128,7 @@ export default function GenerateInvoiceModal({
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit} className="p-4 space-y-4 sm:p-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4 sm:p-6">
                     {checkingUnpaid ? (
                         <div className="flex justify-center items-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800"></div>
@@ -136,7 +146,7 @@ export default function GenerateInvoiceModal({
                                     </p>
                                     <button
                                         type="button"
-                                        onClick={onClose}
+                                        onClick={handleClose}
                                         className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
                                     >
                                         Close
@@ -146,12 +156,6 @@ export default function GenerateInvoiceModal({
                         </div>
                     ) : (
                         <>
-                            {error && (
-                                <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
-                                    {error}
-                                </div>
-                            )}
-
                             <div>
                                 <label className="block text-sm font-medium text-stone-700 mb-1">
                                     Total Amount (MXN)
@@ -161,13 +165,12 @@ export default function GenerateInvoiceModal({
                                     <input
                                         type="number"
                                         step="0.01"
-                                        required
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        className="w-full pl-7 pr-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                        {...register('amount', { required: 'Amount is required' })}
+                                        className={`w-full pl-7 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.amount ? 'border-red-300' : 'border-stone-300'}`}
                                         placeholder="0.00"
                                     />
                                 </div>
+                                {errors.amount && <p className="text-xs text-red-600 mt-1">{errors.amount.message}</p>}
                             </div>
 
                             <div>
@@ -176,11 +179,10 @@ export default function GenerateInvoiceModal({
                                 </label>
                                 <input
                                     type="date"
-                                    required
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                    className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                    {...register('dueDate', { required: 'Due date is required' })}
+                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.dueDate ? 'border-red-300' : 'border-stone-300'}`}
                                 />
+                                {errors.dueDate && <p className="text-xs text-red-600 mt-1">{errors.dueDate.message}</p>}
                             </div>
 
                             <div>
@@ -189,8 +191,7 @@ export default function GenerateInvoiceModal({
                                 </label>
                                 <textarea
                                     rows={3}
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
+                                    {...register('description')}
                                     className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
                                     placeholder="e.g. Web Development Phase 1..."
                                 />
@@ -200,17 +201,17 @@ export default function GenerateInvoiceModal({
                             <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:gap-3">
                                 <button
                                     type="button"
-                                    onClick={onClose}
+                                    onClick={handleClose}
                                     className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={isSubmitting}
                                     className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {loading ? (
+                                    {isSubmitting ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                             <span>Saving...</span>

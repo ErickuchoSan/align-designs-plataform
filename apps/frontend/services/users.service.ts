@@ -44,5 +44,13 @@ export class UsersService {
         const response = await api.get<User>(`${this.BASE_URL}/${id}`);
         return response.data;
     }
+
+    /**
+     * Update current user profile
+     */
+    static async updateProfile(data: { firstName: string; lastName: string; phone?: string }): Promise<User> {
+        const response = await api.put<User>(`${this.BASE_URL}/profile`, data);
+        return response.data;
+    }
 }
 

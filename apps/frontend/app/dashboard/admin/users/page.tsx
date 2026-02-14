@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Modal from '@/app/components/Modal';
-import ConfirmModal from '@/app/components/ConfirmModal';
-import Pagination from '@/app/components/Pagination';
-import { ButtonLoader, PageLoader, TableRowSkeleton } from '@/app/components/Loader';
-import PhoneInput from '@/app/components/PhoneInput';
-import EmailInput from '@/app/components/EmailInput';
-import DashboardHeader from '@/app/components/DashboardHeader';
+import Modal from '@/components/ui/Modal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import Pagination from '@/components/ui/Pagination';
+import { ButtonLoader, PageLoader, TableRowSkeleton } from '@/components/ui/Loader';
+import PhoneInput from '@/components/ui/inputs/PhoneInput';
+import EmailInput from '@/components/ui/inputs/EmailInput';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { formatDate } from '@/lib/utils/date.utils';
 import { useUsers } from '@/hooks/useUsers';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import { Role } from '@/types';
 
 type TabType = 'clients' | 'employees';
 
@@ -18,34 +19,34 @@ export default function UsersManagementPage() {
   const { isAuthenticated, isAdmin, loading } = useProtectedRoute({ requireAdmin: true });
   const usersHook = useUsers(isAuthenticated, isAdmin || false);
   const [activeTab, setActiveTab] = useState<TabType>('clients');
-  const [userRole, setUserRole] = useState<'CLIENT' | 'EMPLOYEE'>('CLIENT');
+  const [userRole, setUserRole] = useState<Role.CLIENT | Role.EMPLOYEE>(Role.CLIENT);
 
   // Memoize filtered users to avoid recalculating on every render
   // IMPORTANT: useMemo must be called before any early returns
   const filteredUsers = useMemo(
     () => usersHook.users.filter((usr) =>
-      activeTab === 'clients' ? usr.role === 'CLIENT' : usr.role === 'EMPLOYEE'
+      activeTab === 'clients' ? usr.role === Role.CLIENT : usr.role === Role.EMPLOYEE
     ),
     [usersHook.users, activeTab]
   );
 
   // Memoize user counts for tab labels to avoid filtering twice
   const clientCount = useMemo(
-    () => usersHook.users.filter(u => u.role === 'CLIENT').length,
+    () => usersHook.users.filter(u => u.role === Role.CLIENT).length,
     [usersHook.users]
   );
 
   const employeeCount = useMemo(
-    () => usersHook.users.filter(u => u.role === 'EMPLOYEE').length,
+    () => usersHook.users.filter(u => u.role === Role.EMPLOYEE).length,
     [usersHook.users]
   );
 
   // Early return AFTER all hooks have been called
-  if (loading || (usersHook.loading && usersHook.users.length === 0)) {
+  if (loading || (usersHook.isLoading && usersHook.users.length === 0)) {
     return <PageLoader text="Loading users..." />;
   }
 
-  const handleOpenCreateModal = (role: 'CLIENT' | 'EMPLOYEE') => {
+  const handleOpenCreateModal = (role: Role.CLIENT | Role.EMPLOYEE) => {
     setUserRole(role);
     usersHook.setFormData({ ...usersHook.formData, role });
     usersHook.setShowCreateForm(true);
@@ -59,31 +60,19 @@ export default function UsersManagementPage() {
           showBackButton
           backUrl="/dashboard"
         >
-          <button
-            onClick={() => handleOpenCreateModal(activeTab === 'clients' ? 'CLIENT' : 'EMPLOYEE')}
-            className="rounded-lg bg-gradient-to-r from-gold-500 to-gold-600 px-5 py-2.5 text-sm font-semibold text-navy-900 hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 shadow-lg hover:shadow-gold-300/50"
-          >
-            + New {activeTab === 'clients' ? 'Client' : 'Employee'}
-          </button>
         </DashboardHeader>
 
         {/* Content */}
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {usersHook.success && (
-            <div className="mb-6 rounded-lg bg-emerald-50 border-l-4 border-emerald-500 p-4 shadow-md animate-slideDown">
-              <p className="text-sm font-medium text-emerald-800">{usersHook.success}</p>
-            </div>
-          )}
-
           {usersHook.error && (
             <div className="mb-6 rounded-lg bg-red-50 border-l-4 border-red-500 p-4 shadow-md animate-slideDown">
               <p className="text-sm font-medium text-red-800">{usersHook.error}</p>
             </div>
           )}
 
-          {/* Tabs */}
+          {/* Tabs & Actions */}
           <div className="mb-6">
-            <div className="border-b border-stone-300">
+            <div className="flex flex-wrap items-center justify-between border-b border-stone-300">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                 <button
                   onClick={() => setActiveTab('clients')}
@@ -110,6 +99,35 @@ export default function UsersManagementPage() {
                   Employees ({employeeCount})
                 </button>
               </nav>
+
+              <div className="py-2">
+                {/* Desktop Button */}
+                <button
+                  onClick={() => handleOpenCreateModal(activeTab === 'clients' ? Role.CLIENT : Role.EMPLOYEE)}
+                  className="hidden md:flex rounded-lg bg-gradient-to-r from-gold-500 to-gold-600 px-5 py-2.5 text-sm font-semibold text-navy-900 hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 shadow-lg hover:shadow-gold-300/50"
+                >
+                  + New {activeTab === 'clients' ? 'Client' : 'Employee'}
+                </button>
+
+                {/* Mobile Icon Button */}
+                <button
+                  onClick={() => handleOpenCreateModal(activeTab === 'clients' ? Role.CLIENT : Role.EMPLOYEE)}
+                  className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gold-500 to-gold-600 text-navy-900 hover:from-gold-400 hover:to-gold-500 shadow-lg transition-transform hover:scale-105"
+                  aria-label={`New ${activeTab === 'clients' ? 'Client' : 'Employee'}`}
+                >
+                  {activeTab === 'clients' ? (
+                    /* User Icon for Clients (Simpler) */
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                  ) : (
+                    /* Briefcase/Badge Icon for Employees */
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -128,7 +146,7 @@ export default function UsersManagementPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-stone-200">
-                  {usersHook.loading && usersHook.users.length === 0 ? (
+                  {usersHook.isLoading && usersHook.users.length === 0 ? (
                     <>
                       {[1, 2, 3].map((i) => (
                         <TableRowSkeleton key={i} />
@@ -216,7 +234,7 @@ export default function UsersManagementPage() {
 
           {/* Mobile Users Cards */}
           <div className="md:hidden space-y-4 animate-slideUp">
-            {usersHook.loading && usersHook.users.length === 0 ? (
+            {usersHook.isLoading && usersHook.users.length === 0 ? (
               <>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
@@ -320,7 +338,7 @@ export default function UsersManagementPage() {
         isOpen={usersHook.showCreateForm}
         onClose={() => {
           usersHook.setShowCreateForm(false);
-          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
+          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
         }}
         title={`Create New ${userRole === 'CLIENT' ? 'Client' : 'Employee'}`}
         size="md"
@@ -390,19 +408,19 @@ export default function UsersManagementPage() {
               type="button"
               onClick={() => {
                 usersHook.setShowCreateForm(false);
-                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
+                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
               }}
-              disabled={usersHook.creating}
+              disabled={usersHook.isCreating}
               className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={usersHook.creating}
+              disabled={usersHook.isCreating}
               className="px-5 py-2.5 text-sm font-semibold text-navy-900 bg-gradient-to-r from-gold-500 to-gold-600 rounded-lg hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center shadow-lg hover:shadow-gold-300/50"
             >
-              {usersHook.creating ? <ButtonLoader /> : `Create ${userRole === 'CLIENT' ? 'Client' : 'Employee'}`}
+              {usersHook.isCreating ? <ButtonLoader /> : `Create ${userRole === 'CLIENT' ? 'Client' : 'Employee'}`}
             </button>
           </div>
         </form>
@@ -424,10 +442,24 @@ export default function UsersManagementPage() {
       <ConfirmModal
         isOpen={usersHook.showDeleteConfirm}
         onClose={usersHook.closeDeleteConfirm}
-        onConfirm={usersHook.handleDeleteUser}
+        onConfirm={() => usersHook.handleDeleteUser(false)}
         title="Delete User Permanently"
         message={`Are you sure you want to PERMANENTLY delete ${usersHook.userToDelete?.firstName} ${usersHook.userToDelete?.lastName}? This action CANNOT be undone.`}
         confirmText="Delete Permanently"
+        isLoading={usersHook.deletingUserId === usersHook.userToDelete?.id}
+        variant="danger"
+      />
+
+      {/* Force Delete Confirm Modal (Double Check) */}
+      <ConfirmModal
+        isOpen={usersHook.showForceDeleteConfirm}
+        onClose={() => {
+          usersHook.closeDeleteConfirm(); // Closes both
+        }}
+        onConfirm={() => usersHook.handleDeleteUser(true)}
+        title="Cannot Delete User (Has Records)"
+        message={`This user has associated records (e.g., Invoices, Projects). Do you want to FORCE delete EVERYTHING associated with them? This includes ALL invoices, projects, and payments. This action is IRREVERSIBLE.`}
+        confirmText="Yes, Force Delete Everything"
         isLoading={usersHook.deletingUserId === usersHook.userToDelete?.id}
         variant="danger"
       />

@@ -110,7 +110,9 @@
       "Bash(PGPASSWORD=\"NolosePostgres12345!\" psql:*)",
       "Bash(cmd /c \"taskkill /F /PID 29792\")",
       "Bash(cmd /c \"taskkill /F /PID 30448\")",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(ssh root@45.55.71.127 \"sleep 15 && docker logs backend-dev 2>&1 | tail -40\")",
+      "Bash(ssh:*)"
     ],
     "deny": [],
     "ask": []

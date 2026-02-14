@@ -1,6 +1,6 @@
 'use client';
 
-import Modal from '@/app/components/Modal';
+import Modal from '@/components/ui/Modal';
 
 interface CompletionChecklistModalProps {
     isOpen: boolean;

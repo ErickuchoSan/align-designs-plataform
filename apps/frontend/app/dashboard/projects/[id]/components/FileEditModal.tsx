@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import Modal from '@/app/components/Modal';
-import FileInput from '@/app/components/FileInput';
-import { ButtonLoader } from '@/app/components/Loader';
+import Modal from '@/components/ui/Modal';
+import FileInput from '@/components/ui/inputs/FileInput';
+import { ButtonLoader } from '@/components/ui/Loader';
 import { formatFileSize } from '@/lib/utils/file.utils';
 import type { FileData } from '../hooks/useProjectFiles';
 

@@ -335,9 +335,10 @@ api.interceptors.response.use(
     }
 
     // Handle other 4xx errors (400, 403, 404, 422, etc.) - show modal but don't redirect
+    // EXCLUDE 409 (Conflict): It is often handled by specific UI flows (e.g. Force Delete)
     if (typeof window !== 'undefined' && error.response &&
       error.response.status >= 400 && error.response.status < 500 &&
-      error.response.status !== 401 && !config?._errorShown) {
+      error.response.status !== 401 && error.response.status !== 409 && !config?._errorShown) {
 
       // Mark error as shown to prevent duplicate modals on retry
       if (config) {

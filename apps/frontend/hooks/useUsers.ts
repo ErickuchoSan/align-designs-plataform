@@ -113,35 +113,46 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
   // Delete user state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showForceDeleteConfirm, setShowForceDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const openDeleteConfirm = useCallback((user: User) => {
     setUserToDelete(user);
     setShowDeleteConfirm(true);
+    setShowForceDeleteConfirm(false);
   }, []);
 
   const closeDeleteConfirm = useCallback(() => {
     setShowDeleteConfirm(false);
+    setShowForceDeleteConfirm(false);
     setUserToDelete(null);
   }, []);
 
-  const handleDeleteUser = useCallback(async () => {
+  const handleDeleteUser = useCallback(async (force = false) => {
     if (!userToDelete) return;
 
     setDeletingUserId(userToDelete.id);
     try {
-      // Pass hard=true to permanent delete
+      // Pass hard=true to permanent delete, and force=true if confirmed
       await api.delete(`/users/${userToDelete.id}`, {
-        params: { hard: true },
+        params: { hard: true, force },
       });
       toast.success('User permanently deleted');
       setShowDeleteConfirm(false);
+      setShowForceDeleteConfirm(false);
       setUserToDelete(null);
       fetchUsers();
-    } catch (err) {
-      logger.error('Failed to delete user', err, { userId: userToDelete.id });
-      setError(handleApiError(err, 'Error deleting user'));
+    } catch (err: any) {
+      if (!force && err.response?.status === 409) {
+        // If 409 Conflict, show Force Delete Confirmation
+        setShowForceDeleteConfirm(true);
+        setShowDeleteConfirm(false); // Close normal modal, open force modal
+        // No error toast needed here, the modal explains it.
+      } else {
+        logger.error('Failed to delete user', err, { userId: userToDelete.id });
+        setError(handleApiError(err, 'Error deleting user'));
+      }
     } finally {
       setDeletingUserId(null);
     }
@@ -223,6 +234,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     closeToggleConfirm,
     // Delete
     showDeleteConfirm,
+    showForceDeleteConfirm,
     userToDelete,
     deletingUserId,
     openDeleteConfirm,

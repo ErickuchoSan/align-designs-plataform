@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { PageLoader } from '@/app/components/Loader';
-import DashboardHeader from '@/app/components/DashboardHeader';
+import { PageLoader } from '@/components/ui/Loader';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ProjectsList from '@/components/dashboard/ProjectsList';
 import { Project } from '@/types';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';

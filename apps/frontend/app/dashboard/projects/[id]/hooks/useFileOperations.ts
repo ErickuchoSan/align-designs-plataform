@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 import { handleApiError } from '@/lib/errors';
 import { MESSAGE_DURATION, FILE_UPLOAD } from '@/lib/constants/ui.constants';
 import type { FileData } from './useProjectFiles';
+import { logger } from '@/lib/logger';
 
 export function useFileOperations(
   projectId: string,
@@ -94,7 +95,7 @@ export function useFileOperations(
             });
             successCount++;
           } catch (err) {
-            console.error(`Failed to upload ${file.name}`, err);
+            logger.error(`Failed to upload ${file.name}`, err);
           }
         }
 
@@ -157,7 +158,7 @@ export function useFileOperations(
                 headers: { 'Content-Type': 'multipart/form-data' }
               });
             } catch (err) {
-              console.error(`Failed to upload file ${file.name}`, err);
+              logger.error(`Failed to upload file ${file.name}`, err);
               totalSuccess = false;
               // Continue uploading others? Yes.
             }
@@ -226,7 +227,7 @@ export function useFileOperations(
             });
             successCount++;
           } catch (error) {
-            console.error('Error updating original file:', error);
+            logger.error('Error updating original file:', error);
             hasError = true;
           }
         } else {
@@ -262,7 +263,7 @@ export function useFileOperations(
               });
               successCount++;
             } catch (err) {
-              console.error('Error uploading additional file:', err);
+              logger.error('Error uploading additional file:', err);
               hasError = true;
             }
           }

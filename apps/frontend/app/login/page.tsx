@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { api } from '@/lib/api';
+import { AuthService } from '@/services/auth.service';
 import { handleApiError } from '@/lib/errors';
-import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
 import { toast } from 'react-hot-toast';
 import { logger } from '@/lib/logger';
+import { EmailFormData, PasswordFormData, OtpFormData, SetPasswordFormData } from '@/lib/schemas/auth.schema';
 import EmailStep from './components/EmailStep';
 import PasswordStep from './components/PasswordStep';
 import OTPStep from './components/OTPStep';
@@ -18,53 +18,36 @@ type LoginStep = 'email' | 'password' | 'otp' | 'set-password';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, verifyOTP } = useAuth();
+  const { login, verifyOTP, requestOTP } = useAuth();
   const [step, setStep] = useState<LoginStep>('email');
   const [isLoading, setIsLoading] = useState(false);
 
   // User data
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [userRole, setUserRole] = useState<string | null>(null);
   const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false);
-
-  // OTP
-  const [otpToken, setOtpToken] = useState('');
-
-  // Set Password
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Forgot Password Modal
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  // We still need email state for navigation between steps
+  const [email, setEmail] = useState('');
 
-    if (!isValidEmail(email)) {
-      toast.error('Please enter a valid email address');
-      setIsLoading(false);
-      return;
-    }
+  const handleEmailSubmit = async (data: EmailFormData) => {
+    setIsLoading(true);
+    setEmail(data.email);
 
     try {
-      const response = await api.post<{ hasPassword: boolean; requiresPasswordSetup: boolean }>(
-        '/auth/check-email',
-        { email }
-      );
+      const { hasPassword, requiresPasswordSetup: reqSetup } = await AuthService.checkEmail(data.email);
 
-      const { hasPassword, requiresPasswordSetup } = response.data;
-
-      if (!hasPassword && !requiresPasswordSetup) {
+      if (!hasPassword && !reqSetup) {
         toast.error('Email not found. Please check your email address.');
         setIsLoading(false);
         return;
       }
 
-      if (requiresPasswordSetup) {
+      if (reqSetup) {
         setRequiresPasswordSetup(true);
-        await api.post('/auth/otp/request', { email });
+        await requestOTP({ email: data.email });
         toast.success('Verification code sent to your email');
         setStep('otp');
         return;
@@ -77,20 +60,18 @@ export default function LoginPage() {
 
       setStep('password');
     } catch (error) {
-      logger.error('Failed to check email', error, { email });
+      logger.error('Failed to check email', error, { email: data.email });
       toast.error(handleApiError(error, 'An error occurred. Please try again.'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handlePasswordLogin = async (data: PasswordFormData) => {
     setIsLoading(true);
 
     try {
-      await login({ email, password });
+      await login({ email, password: data.password });
       router.push('/dashboard');
     } catch (error) {
       logger.error('Failed to login with password', error, { email });
@@ -100,12 +81,11 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOTP = async (data: OtpFormData) => {
     setIsLoading(true);
 
     try {
-      await verifyOTP({ email, token: otpToken });
+      await verifyOTP({ email, token: data.otpToken });
 
       if (requiresPasswordSetup) {
         toast.success('OTP verified successfully');
@@ -121,36 +101,18 @@ export default function LoginPage() {
     }
   };
 
-  const handleSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSetPassword = async (data: SetPasswordFormData) => {
     setIsLoading(true);
 
-    if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
-      setIsLoading(false);
-      return;
-    }
-
-    const validation = validatePassword(newPassword);
-    if (!validation.isValid) {
-      toast.error(validation.error || 'Invalid password');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      await api.post('/auth/set-password', {
-        password: newPassword,
-        confirmPassword: confirmPassword,
+      await AuthService.setPassword({
+        password: data.newPassword,
+        confirmPassword: data.confirmPassword,
       });
 
       toast.success('Password set successfully! Please log in with your email and password.');
       setStep('email');
       setEmail('');
-      setPassword('');
-      setOtpToken('');
-      setNewPassword('');
-      setConfirmPassword('');
     } catch (error) {
       logger.error('Failed to set password', error, { email });
       toast.error(handleApiError(error, 'Error setting password'));
@@ -163,7 +125,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await api.post('/auth/otp/request', { email });
+      // Use requestOTP from context
+      await requestOTP({ email });
       toast.success('Verification code sent to your email');
     } catch (error) {
       logger.error('Failed to resend OTP', error, { email });
@@ -181,7 +144,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await api.post('/auth/otp/request', { email });
+      // Use requestOTP from context
+      await requestOTP({ email });
       toast.success('Verification code sent to your email');
       setStep('otp');
     } catch (error) {
@@ -195,10 +159,6 @@ export default function LoginPage() {
   const resetToEmail = () => {
     setStep('email');
     setEmail('');
-    setPassword('');
-    setOtpToken('');
-    setNewPassword('');
-    setConfirmPassword('');
     setUserRole(null);
     setRequiresPasswordSetup(false);
   };
@@ -220,21 +180,18 @@ export default function LoginPage() {
             {step === 'email' && (
               <EmailStep
                 email={email}
-                setEmail={setEmail}
                 onSubmit={handleEmailSubmit}
-                isLoading={isLoading}
+                loading={isLoading}
               />
             )}
 
             {step === 'password' && (
               <PasswordStep
                 email={email}
-                password={password}
-                setPassword={setPassword}
                 onSubmit={handlePasswordLogin}
                 onForgotPassword={handleForgotPassword}
                 onLoginWithOTP={handleLoginWithOTP}
-                isLoading={isLoading}
+                loading={isLoading}
                 onBack={resetToEmail}
               />
             )}
@@ -242,11 +199,9 @@ export default function LoginPage() {
             {step === 'otp' && (
               <OTPStep
                 email={email}
-                otpToken={otpToken}
-                setOtpToken={setOtpToken}
                 onSubmit={handleVerifyOTP}
                 onResend={handleResendOTP}
-                isLoading={isLoading}
+                loading={isLoading}
                 onBack={resetToEmail}
                 requiresPasswordSetup={requiresPasswordSetup}
               />
@@ -254,12 +209,8 @@ export default function LoginPage() {
 
             {step === 'set-password' && (
               <SetPasswordStep
-                newPassword={newPassword}
-                setNewPassword={setNewPassword}
-                confirmPassword={confirmPassword}
-                setConfirmPassword={setConfirmPassword}
                 onSubmit={handleSetPassword}
-                isLoading={isLoading}
+                loading={isLoading}
               />
             )}
           </div>

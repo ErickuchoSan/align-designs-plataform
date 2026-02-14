@@ -103,9 +103,8 @@ export default function PhoneInput({ value, onChange, className = '', required =
             value={formatPhoneNumber(phoneNumber)}
             onChange={(e) => handlePhoneChange(e.target.value)}
             placeholder={placeholder}
-            className={`w-full h-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-navy-900 placeholder:text-stone-500 ${
-              error ? 'text-red-600' : ''
-            }`}
+            className={`w-full h-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-navy-900 placeholder:text-stone-500 ${error ? 'text-red-600' : ''
+              }`}
             required={required}
           />
 

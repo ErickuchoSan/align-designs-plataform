@@ -53,7 +53,7 @@ export interface IUserRepository
   /**
    * Hard delete user (permanent)
    */
-  hardDelete(id: string): Promise<User>;
+  hardDelete(id: string, force?: boolean): Promise<User>;
 
   /**
    * Create user with specified role (CLIENT or EMPLOYEE)

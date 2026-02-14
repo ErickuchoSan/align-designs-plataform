@@ -3,7 +3,7 @@
 // ============================================================================
 
 // Re-export enums from centralized enums file
-export {
+import {
   Role,
   ProjectStatus,
   Stage,
@@ -15,6 +15,19 @@ export {
   STAGE_LABELS,
   STAGE_COLORS,
 } from './enums';
+
+export {
+  Role,
+  ProjectStatus,
+  Stage,
+  FeedbackStatus,
+  FeedbackAudience,
+  ROLE_LABELS,
+  PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_COLORS,
+  STAGE_LABELS,
+  STAGE_COLORS,
+};
 
 export interface User {
   id: string;
@@ -81,10 +94,16 @@ export interface File {
 
   // Phase 1: Workflow fields
   stage?: Stage;
+  comment?: string;
+  versionNumber?: number;
+  versionLabel?: string;
+  isCurrentVersion?: boolean;
+  parentFileId?: string;
+  rejectionCount?: number;
   feedbackCycleId?: string;
   approvedAdminAt?: string;
   approvedClientAt?: string;
-  pendingPayment: boolean;
+  pendingPayment?: boolean;
 
   // Relations
   uploader?: {
@@ -214,4 +233,11 @@ export interface Feedback {
 
 // Note: STAGE_LABELS, PROJECT_STATUS_LABELS, STAGE_COLORS, and PROJECT_STATUS_COLORS
 // are now exported from ./enums.ts (see re-exports at top of file)
+
+export interface FileFilters {
+  page: number;
+  limit: number;
+  name?: string;
+  type?: string;
+}
 

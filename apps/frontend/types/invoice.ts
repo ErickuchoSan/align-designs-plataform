@@ -27,6 +27,7 @@ export interface Invoice {
     firstName: string;
     lastName: string;
     email: string;
+    phone?: string;
   };
   payments?: { id: string; amount: number; paymentDate: string; paymentMethod: string; }[];
 }
