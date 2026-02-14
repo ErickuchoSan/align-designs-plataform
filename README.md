@@ -416,3 +416,4 @@ Para más detalles, consulta el **[README completo de documentación](./docs/REA
 
 Este es la plataforma oficial para Align Designs.
 # Auto-deploy test: vie., 13 de feb. de 2026 11:13:40 p. m.
+
