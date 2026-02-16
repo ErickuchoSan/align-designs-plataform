@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role, Stage, NotificationType } from '@prisma/client';
+import { Role, Stage } from '@prisma/client';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { FileFiltersDto } from './dto/file-filters.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
@@ -13,12 +13,10 @@ import { UserContext } from '../common/interfaces/user-context.interface';
 import { FilePermissionsService } from './services/file-permissions.service';
 import { FileStorageCoordinatorService } from './services/file-storage-coordinator.service';
 import { FileTransformerService } from './services/file-transformer.service';
+import { FileNotificationService } from './services/file-notification.service';
+import { FileMaintenanceService } from './services/file-maintenance.service';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import { CacheManagerService } from '../cache/services/cache-manager.service';
-import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
-import { NotificationsService } from '../notifications/notifications.service';
-
-// ...
 
 @Injectable()
 export class FilesService {
@@ -30,82 +28,9 @@ export class FilesService {
     private readonly storageCoordinator: FileStorageCoordinatorService,
     private readonly transformer: FileTransformerService,
     private readonly cacheManager: CacheManagerService,
-    private readonly notificationsService: NotificationsService,
+    private readonly fileNotifications: FileNotificationService,
+    private readonly fileMaintenance: FileMaintenanceService,
   ) { }
-
-  private async sendProjectNotifications(
-    projectId: string,
-    uploaderId: string,
-    triggerType: 'FILE' | 'COMMENT',
-    resourceName: string | undefined, // Filename or comment preview
-  ) {
-    try {
-      // 1. Get Project Members (Client + Creator + Employees)
-      const project = await this.prisma.project.findUnique({
-        where: { id: projectId },
-        include: {
-          employees: true,
-          client: { select: { id: true, firstName: true, lastName: true } },
-          creator: { select: { id: true, firstName: true, lastName: true } },
-        }
-      });
-
-      if (!project) return;
-
-      // 2. Get Uploader Name
-      const uploader = await this.prisma.user.findUnique({
-        where: { id: uploaderId },
-        select: { firstName: true, lastName: true, role: true }
-      });
-
-      if (!uploader) return;
-
-      const uploaderName = `${uploader.firstName} ${uploader.lastName}`;
-      const title = triggerType === 'FILE' ? 'New File Uploaded' : 'New Comment';
-      const message = triggerType === 'FILE'
-        ? `${uploaderName} uploaded a new file: ${resourceName || 'Unknown file'}`
-        : `${uploaderName} commented: "${resourceName ? resourceName.substring(0, 50) + (resourceName.length > 50 ? '...' : '') : 'New comment'}"`;
-
-      const link = `/dashboard/projects/${projectId}/files`;
-
-      // 3. Define Recipients (Everyone except uploader)
-      const recipientIds = new Set<string>();
-
-      // Add Client (if not uploader)
-      if (project.clientId && project.clientId !== uploaderId) {
-        recipientIds.add(project.clientId);
-      }
-
-      // Add Creator/Admin (if not uploader)
-      if (project.createdBy && project.createdBy !== uploaderId) {
-        recipientIds.add(project.createdBy);
-      }
-
-      // Add Assigned Employees (if not uploader)
-      project.employees.forEach(assignment => {
-        if (assignment.employeeId !== uploaderId) {
-          recipientIds.add(assignment.employeeId);
-        }
-      });
-
-      // 4. Send Notifications
-      const notifications = Array.from(recipientIds).map(userId =>
-        this.notificationsService.create({
-          userId,
-          type: NotificationType.INFO,
-          title,
-          message,
-          link,
-        })
-      );
-
-      await Promise.allSettled(notifications);
-      this.logger.log(`Sent ${notifications.length} notifications for ${triggerType} in project ${projectId}`);
-
-    } catch (error) {
-      this.logger.error('Failed to send project notifications', error);
-    }
-  }
 
   async uploadFile(
     projectId: string,
@@ -139,11 +64,21 @@ export class FilesService {
 
     // Handle Rejection Logic
     if (relatedFileId) {
-      await this.handleFileRejection(relatedFileId, fileRecord.id, uploadedBy, userRole);
+      await this.handleFileRejection(
+        relatedFileId,
+        fileRecord.id,
+        uploadedBy,
+        userRole,
+      );
     }
 
     // Send Notifications
-    await this.sendProjectNotifications(projectId, uploadedBy, 'FILE', file.originalname);
+    await this.fileNotifications.sendProjectNotifications(
+      projectId,
+      uploadedBy,
+      'FILE',
+      file.originalname,
+    );
 
     // Invalidate caches
     await this.cacheManager.invalidateFileCaches(projectId, fileRecord.id);
@@ -173,7 +108,9 @@ export class FilesService {
 
     // STRICT RULE: No standalone comments in SUBMITTED stage
     if (stage === Stage.SUBMITTED) {
-      throw new ForbiddenException('Standalone comments are not allowed in the Submitted stage. Please upload a file.');
+      throw new ForbiddenException(
+        'Standalone comments are not allowed in the Submitted stage. Please upload a file.',
+      );
     }
 
     // Save comment in database (without file)
@@ -198,11 +135,21 @@ export class FilesService {
 
     // Handle Rejection Logic
     if (relatedFileId) {
-      await this.handleFileRejection(relatedFileId, commentRecord.id, uploadedBy, userRole);
+      await this.handleFileRejection(
+        relatedFileId,
+        commentRecord.id,
+        uploadedBy,
+        userRole,
+      );
     }
 
     // Send Notifications
-    await this.sendProjectNotifications(projectId, uploadedBy, 'COMMENT', comment);
+    await this.fileNotifications.sendProjectNotifications(
+      projectId,
+      uploadedBy,
+      'COMMENT',
+      comment,
+    );
 
     // Invalidate caches
     await this.cacheManager.invalidateFileCaches(projectId, commentRecord.id);
@@ -267,11 +214,7 @@ export class FilesService {
       !fileFilters.name && (!fileFilters.type || fileFilters.type === 'all');
 
     if (shouldCache) {
-      // DISABLE CACHE TEMPORARILY: Invalidation not working for paginated lists
-      // const cacheKey = CACHE_KEYS.FILES.LIST(projectId, page, limit);
-      // const cached =
-      //   await this.cacheManager.get<PaginatedResult<FileResponse>>(cacheKey);
-      // if (cached) return cached;
+
     }
 
     // Build where clause with filters
@@ -290,7 +233,9 @@ export class FilesService {
     }
 
     // Debug input
-    this.logger.debug(`Files Filter Input - Name: "${fileFilters.name}", Type: "${fileFilters.type}"`);
+    this.logger.debug(
+      `Files Filter Input - Name: "${fileFilters.name}", Type: "${fileFilters.type}"`,
+    );
 
     // Apply type filter
     if (fileFilters.type && fileFilters.type !== 'all') {
@@ -302,14 +247,16 @@ export class FilesService {
         // We use endsWith to match the extension
         where.filename = {
           endsWith: `.${fileFilters.type}`,
-          mode: 'insensitive'
+          mode: 'insensitive',
         };
         where.storagePath = { not: null };
       }
     }
 
     // Debug logging for search/filter issues
-    this.logger.debug(`Files Filter - WHERE clause: ${JSON.stringify(where, null, 2)}`);
+    this.logger.debug(
+      `Files Filter - WHERE clause: ${JSON.stringify(where, null, 2)}`,
+    );
 
     const [total, files] = await Promise.all([
       this.prisma.file.count({ where }),
@@ -431,140 +378,13 @@ export class FilesService {
   }
 
   async verifyStorageIntegrity(userId: string, userRole: Role) {
-    // Only admins can run integrity checks
-    if (userRole !== Role.ADMIN) {
-      throw new ForbiddenException('Only administrators can verify storage integrity');
-    }
-
-    this.logger.log(`Storage integrity check initiated by user ${userId}`);
-
-    // Get all files with storage paths (not just comments)
-    const filesWithStorage = await this.prisma.file.findMany({
-      where: {
-        storagePath: { not: null },
-        deletedAt: null, // Only check active files
-      },
-      select: {
-        id: true,
-        filename: true,
-        storagePath: true,
-        projectId: true,
-        uploadedAt: true,
-      },
-    });
-
-    const totalFiles = filesWithStorage.length;
-    const orphans: Array<{
-      id: string;
-      filename: string | null;
-      storagePath: string;
-      projectId: string;
-      uploadedAt: Date;
-    }> = [];
-
-    this.logger.log(`Checking ${totalFiles} files for storage integrity...`);
-
-    // Check each file to see if it exists in MinIO
-    for (const file of filesWithStorage) {
-      if (!file.storagePath) continue;
-
-      const exists = await this.storageCoordinator.fileExistsInStorage(file.storagePath);
-
-      if (!exists) {
-        orphans.push({
-          id: file.id,
-          filename: file.filename,
-          storagePath: file.storagePath,
-          projectId: file.projectId,
-          uploadedAt: file.uploadedAt,
-        });
-        this.logger.warn(`Orphaned file found: ${file.id} (${file.filename}) - storage path: ${file.storagePath}`);
-      }
-    }
-
-    const result = {
-      totalFiles,
-      orphanedFiles: orphans.length,
-      orphans,
-      message: orphans.length === 0
-        ? 'All files are in sync with storage'
-        : `Found ${orphans.length} orphaned database records (files that exist in DB but not in MinIO)`,
-    };
-
-    this.logger.log(`Storage integrity check completed: ${orphans.length} orphaned files found out of ${totalFiles} total files`);
-
-    return result;
+    return this.fileMaintenance.verifyStorageIntegrity(userId, userRole);
   }
 
   async cleanupOrphanedFiles(userId: string, userRole: Role) {
-    // Only admins can run cleanup
-    if (userRole !== Role.ADMIN) {
-      throw new ForbiddenException('Only administrators can cleanup orphaned files');
-    }
-
-    this.logger.log(`Orphaned files cleanup initiated by user ${userId}`);
-
-    // First, verify storage integrity to find orphans
-    const integrityCheck = await this.verifyStorageIntegrity(userId, userRole);
-
-    if (integrityCheck.orphanedFiles === 0) {
-      this.logger.log('No orphaned files found to clean up');
-      return {
-        totalChecked: integrityCheck.totalFiles,
-        orphansFound: 0,
-        orphansDeleted: 0,
-        failures: 0,
-        deletedFiles: [],
-        message: 'No orphaned files found. Storage is in sync.',
-      };
-    }
-
-    // Delete orphaned files (soft delete)
-    const deletedFiles: Array<{ id: string; filename: string | null; storagePath: string }> = [];
-    let successCount = 0;
-    let failureCount = 0;
-
-    for (const orphan of integrityCheck.orphans) {
-      try {
-        // Soft delete the orphaned file record
-        await this.prisma.file.update({
-          where: { id: orphan.id },
-          data: {
-            deletedAt: new Date(),
-            deletedBy: userId,
-          },
-        });
-
-        // Invalidate cache for this file
-        await this.cacheManager.invalidateFileCaches(orphan.projectId, orphan.id);
-
-        deletedFiles.push({
-          id: orphan.id,
-          filename: orphan.filename,
-          storagePath: orphan.storagePath,
-        });
-
-        successCount++;
-        this.logger.log(`Orphaned file deleted: ${orphan.id} (${orphan.filename})`);
-      } catch (error) {
-        failureCount++;
-        this.logger.error(`Failed to delete orphaned file ${orphan.id}:`, error);
-      }
-    }
-
-    const result = {
-      totalChecked: integrityCheck.totalFiles,
-      orphansFound: integrityCheck.orphanedFiles,
-      orphansDeleted: successCount,
-      failures: failureCount,
-      deletedFiles,
-      message: `Cleanup completed: ${successCount} orphaned files deleted${failureCount > 0 ? `, ${failureCount} failures` : ''}.`,
-    };
-
-    this.logger.log(`Orphaned files cleanup completed: ${successCount} deleted, ${failureCount} failures`);
-
-    return result;
+    return this.fileMaintenance.cleanupOrphanedFiles(userId, userRole);
   }
+
   async findPendingPaymentFiles(projectId: string, employeeId?: string) {
     return this.prisma.file.findMany({
       where: {
@@ -592,7 +412,12 @@ export class FilesService {
   /**
    * Helper to handle file rejection updates
    */
-  private async handleFileRejection(targetFileId: string, feedbackFileId: string, userId: string, role: Role) {
+  private async handleFileRejection(
+    targetFileId: string,
+    feedbackFileId: string,
+    userId: string,
+    role: Role,
+  ) {
     // Only Admins (and Clients) can reject work
     if (role !== Role.ADMIN && role !== Role.CLIENT) return;
 
@@ -603,11 +428,16 @@ export class FilesService {
           rejectionCount: { increment: 1 },
           lastRejectedAt: new Date(),
           // lastRejectionFeedbackId: feedbackFileId, // FIXME: Requires valid Feedback ID, not File ID.
-        }
+        },
       });
-      this.logger.log(`File ${targetFileId} rejected by user ${userId}. Count incremented.`);
+      this.logger.log(
+        `File ${targetFileId} rejected by user ${userId}. Count incremented.`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to update rejection stats for file ${targetFileId}`, error);
+      this.logger.error(
+        `Failed to update rejection stats for file ${targetFileId}`,
+        error,
+      );
       // Non-blocking: don't fail the upload just because stat update failed
     }
   }

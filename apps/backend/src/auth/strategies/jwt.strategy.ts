@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { SecretsService } from '../../secrets/secrets.service';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
@@ -14,17 +14,9 @@ export interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private configService: ConfigService,
+    private readonly secretsService: SecretsService,
     private prisma: PrismaService,
   ) {
-    const jwtSecret = configService.get<string>('JWT_SECRET');
-
-    if (!jwtSecret) {
-      throw new Error(
-        'JWT_SECRET is not configured. Please set JWT_SECRET in your environment variables.',
-      );
-    }
-
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         // First try to extract from cookie (preferred for security)
@@ -41,7 +33,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: jwtSecret,
+      secretOrKeyProvider: async (
+        request: Request,
+        rawJwtToken: any,
+        done: (err: any, secret?: string | Buffer) => void,
+      ) => {
+        try {
+          const secret = await this.secretsService.getSecret('JWT_SECRET');
+          if (!secret) {
+            return done(new Error('JWT_SECRET not found'));
+          }
+          done(null, secret);
+        } catch (err) {
+          done(err);
+        }
+      },
       audience: 'align-designs-client',
       issuer: 'align-designs-api',
     });

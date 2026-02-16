@@ -64,7 +64,7 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'"], // Removed 'unsafe-inline' for security hardening
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", 'data:', 'https:', 'http:', minioUrl],
           connectSrc: ["'self'"],
@@ -72,6 +72,7 @@ async function bootstrap() {
           objectSrc: ["'none'"],
           mediaSrc: ["'self'", minioUrl],
           frameSrc: ["'self'", minioUrl], // Allow MinIO iframes for PDF preview
+          upgradeInsecureRequests: isProduction ? [] : null, // Force HTTPS in production
         },
       },
       // HSTS - Force HTTPS in production

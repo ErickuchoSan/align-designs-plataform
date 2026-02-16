@@ -14,6 +14,8 @@ import { FileTransformerService } from './services/file-transformer.service';
 import { FileStageService } from './services/file-stage.service';
 import { FileVersionService } from './file-version.service';
 import { FileCleanupService } from './services/file-cleanup.service';
+import { FileNotificationService } from './services/file-notification.service';
+import { FileMaintenanceService } from './services/file-maintenance.service';
 
 import { TrackingModule } from '../tracking/tracking.module';
 
@@ -27,12 +29,14 @@ import { TrackingModule } from '../tracking/tracking.module';
     FileStageService,
     FileVersionService,
     FileCleanupService,
+    FileNotificationService,
+    FileMaintenanceService,
     {
       provide: INJECTION_TOKENS.FILE_REPOSITORY,
       useClass: PrismaFileRepository,
     },
   ],
   controllers: [FilesController],
-  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService, FileVersionService, FileCleanupService],
+  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService, FileVersionService, FileCleanupService, FileNotificationService, FileMaintenanceService],
 })
 export class FilesModule { }

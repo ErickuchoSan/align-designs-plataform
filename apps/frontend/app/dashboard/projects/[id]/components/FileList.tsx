@@ -37,8 +37,8 @@ const FileRow = memo(({
   const formattedSize = useMemo(() => formatFileSize(file.sizeBytes || 0), [file.sizeBytes]);
   const fileExtension = useMemo(() => getFileExtension(file.originalName || ''), [file.originalName]);
   const uploaderName = useMemo(() =>
-    `${file.uploader.firstName} ${file.uploader.lastName}`,
-    [file.uploader.firstName, file.uploader.lastName]
+    file.uploader ? `${file.uploader.firstName} ${file.uploader.lastName}` : 'Unknown',
+    [file.uploader?.firstName, file.uploader?.lastName]
   );
 
   return (
@@ -226,7 +226,7 @@ function FileList({
           const formattedDate = formatDate(file.uploadedAt);
           const formattedSize = formatFileSize(file.sizeBytes || 0);
           const fileExtension = getFileExtension(file.originalName || '');
-          const uploaderName = `${file.uploader.firstName} ${file.uploader.lastName}`;
+          const uploaderName = file.uploader ? `${file.uploader.firstName} ${file.uploader.lastName}` : 'Unknown';
 
           return (
             <div key={file.id} className="bg-white rounded-2xl shadow-lg border border-stone-200 p-4">

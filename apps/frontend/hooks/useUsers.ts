@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { User, CreateClientDto, CreateUserDto } from '@/types';
+import { User, CreateClientDto, CreateUserDto, Role } from '@/types';
 import { handleApiError } from '@/lib/errors';
 import { usePagination } from './usePagination';
 import { toast } from 'react-hot-toast';
@@ -21,7 +21,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     firstName: '',
     lastName: '',
     phone: '',
-    role: 'CLIENT',
+    role: Role.CLIENT,
   });
   const [isCreating, setIsCreating] = useState(false);
 
@@ -66,12 +66,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       try {
         await api.post('/users', formData);
         setShowCreateForm(false);
-        setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
-        toast.success(`${formData.role === 'CLIENT' ? 'Client' : 'Employee'} created successfully`);
+        setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
+        toast.success(`${formData.role === Role.CLIENT ? 'Client' : 'Employee'} created successfully`);
         fetchUsers();
       } catch (err) {
         logger.error('Failed to create user', err, { formData });
-        setError(handleApiError(err, `Error creating ${formData.role === 'CLIENT' ? 'client' : 'employee'}`));
+        setError(handleApiError(err, `Error creating ${formData.role === Role.CLIENT ? 'client' : 'employee'}`));
       } finally {
         setIsCreating(false);
       }

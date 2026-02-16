@@ -1,13 +1,24 @@
+// Mock uuid before any imports that transitively use it
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid-1234'),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { Role, ProjectStatus, Prisma } from '@prisma/client';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { Role } from '@prisma/client';
+import { CacheManagerService } from '../cache/services/cache-manager.service';
+import { ProjectEmployeeService } from './services/project-employee.service';
+import { ProjectStatusService } from './services/project-status.service';
+import { InvoicesService } from '../invoices/invoices.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -43,9 +54,52 @@ describe('ProjectsService', () => {
     deletedBy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    status: ProjectStatus.WAITING_PAYMENT,
+    initialAmountRequired: null,
+    amountPaid: new Prisma.Decimal(0),
+    startDate: null,
+    deadlineDate: null,
+    initialPaymentDeadline: null,
+    archivedAt: null,
     client: mockUser,
     creator: { ...mockUser, role: Role.ADMIN },
     files: [],
+  };
+
+  const mockProjectRepository = {
+    create: jest.fn(),
+    findById: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
+
+  const mockUserRepository = {
+    findById: jest.fn(),
+    findByEmail: jest.fn(),
+  };
+
+  const mockCacheManagerService = {
+    get: jest.fn(),
+    set: jest.fn(),
+    invalidateProjectCaches: jest.fn(),
+  };
+
+  const mockProjectEmployeeService = {
+    validateEmployeeAvailability: jest.fn(),
+    assignEmployeesToProject: jest.fn(),
+    removeEmployeeFromProject: jest.fn(),
+  };
+
+  const mockProjectStatusService = {
+    updateStatus: jest.fn(),
+  };
+
+  const mockInvoicesService = {
+    createInvoiceForProject: jest.fn(),
+  };
+
+  const mockNotificationsService = {
+    create: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -53,21 +107,44 @@ describe('ProjectsService', () => {
       providers: [
         ProjectsService,
         {
+          provide: INJECTION_TOKENS.PROJECT_REPOSITORY,
+          useValue: mockProjectRepository,
+        },
+        {
+          provide: INJECTION_TOKENS.USER_REPOSITORY,
+          useValue: mockUserRepository,
+        },
+        {
           provide: PrismaService,
           useValue: {
             user: {
               findFirst: jest.fn(),
+              findUnique: jest.fn(),
             },
             project: {
               create: jest.fn(),
               findFirst: jest.fn(),
               findMany: jest.fn(),
+              findUnique: jest.fn(),
               update: jest.fn(),
               count: jest.fn(),
             },
             file: {
               count: jest.fn(),
               updateMany: jest.fn(),
+              groupBy: jest.fn(),
+            },
+            projectEmployee: {
+              count: jest.fn(),
+            },
+            invoice: {
+              count: jest.fn(),
+            },
+            payment: {
+              count: jest.fn(),
+            },
+            employeePayment: {
+              count: jest.fn(),
             },
             $transaction: jest.fn(),
           },
@@ -78,12 +155,35 @@ describe('ProjectsService', () => {
             deleteFile: jest.fn(),
           },
         },
+        {
+          provide: CacheManagerService,
+          useValue: mockCacheManagerService,
+        },
+        {
+          provide: ProjectEmployeeService,
+          useValue: mockProjectEmployeeService,
+        },
+        {
+          provide: ProjectStatusService,
+          useValue: mockProjectStatusService,
+        },
+        {
+          provide: InvoicesService,
+          useValue: mockInvoicesService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
+        },
       ],
     }).compile();
 
     service = module.get<ProjectsService>(ProjectsService);
     prismaService = module.get<PrismaService>(PrismaService);
     storageService = module.get<StorageService>(StorageService);
+
+    // Reset all mocks before each test
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -92,10 +192,15 @@ describe('ProjectsService', () => {
 
   describe('create', () => {
     it('should create project successfully for admin', async () => {
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(mockUser);
-      jest
-        .spyOn(prismaService.project, 'create')
-        .mockResolvedValue(mockProject);
+      // Mock userRepo.findById to return a valid client
+      mockUserRepository.findById.mockResolvedValue(mockUser);
+      // Mock projectRepo.create to return the project
+      mockProjectRepository.create.mockResolvedValue(mockProject);
+      // Mock prisma.project.findFirst for fetching with relations
+      jest.spyOn(prismaService.project, 'findFirst').mockResolvedValue({
+        ...mockProject,
+        employees: [] as any,
+      } as any);
 
       const result = await service.create(
         {
@@ -104,16 +209,15 @@ describe('ProjectsService', () => {
           clientId: 'client-123',
         },
         'admin-123',
-        Role.ADMIN,
       );
 
       expect(result).toBeDefined();
       expect(result.name).toBe('Test Project');
-      expect(prismaService.project.create).toHaveBeenCalled();
+      expect(mockProjectRepository.create).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if client does not exist', async () => {
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
+      mockUserRepository.findById.mockResolvedValue(null);
 
       await expect(
         service.create(
@@ -123,14 +227,13 @@ describe('ProjectsService', () => {
             clientId: 'non-existent',
           },
           'admin-123',
-          Role.ADMIN,
         ),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if client is not a CLIENT role', async () => {
       const adminUser = { ...mockUser, role: Role.ADMIN };
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(adminUser);
+      mockUserRepository.findById.mockResolvedValue(adminUser);
 
       await expect(
         service.create(
@@ -140,14 +243,13 @@ describe('ProjectsService', () => {
             clientId: 'admin-123',
           },
           'admin-123',
-          Role.ADMIN,
         ),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if client is deleted', async () => {
-      const deletedUser = { ...mockUser, deletedAt: new Date() };
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null); // findFirst with deletedAt filter returns null
+      // userRepo.findById returns null for deleted users
+      mockUserRepository.findById.mockResolvedValue(null);
 
       await expect(
         service.create(
@@ -157,17 +259,21 @@ describe('ProjectsService', () => {
             clientId: 'client-123',
           },
           'admin-123',
-          Role.ADMIN,
         ),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findOne', () => {
+    const mockProjectWithEmployees = {
+      ...mockProject,
+      employees: [],
+    };
+
     it('should return project for admin', async () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(mockProjectWithEmployees);
 
       const result = await service.findOne(
         'project-123',
@@ -182,7 +288,7 @@ describe('ProjectsService', () => {
     it('should return project for project client', async () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(mockProjectWithEmployees);
 
       const result = await service.findOne(
         'project-123',
@@ -204,7 +310,7 @@ describe('ProjectsService', () => {
     it('should throw ForbiddenException for client accessing other project', async () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(mockProjectWithEmployees);
 
       await expect(
         service.findOne('project-123', 'different-client', Role.CLIENT),
@@ -214,6 +320,7 @@ describe('ProjectsService', () => {
     it('should separate files and comments count correctly', async () => {
       const projectWithFiles = {
         ...mockProject,
+        employees: [],
         files: [
           {
             id: '1',
@@ -252,11 +359,16 @@ describe('ProjectsService', () => {
   });
 
   describe('update', () => {
+    const mockProjectWithEmployees = {
+      ...mockProject,
+      employees: [],
+    };
+
     it('should update project successfully for admin', async () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
-      const updatedProject = { ...mockProject, name: 'Updated Name' };
+        .mockResolvedValue(mockProjectWithEmployees);
+      const updatedProject = { ...mockProjectWithEmployees, name: 'Updated Name' };
       jest
         .spyOn(prismaService.project, 'update')
         .mockResolvedValue(updatedProject);
@@ -274,7 +386,7 @@ describe('ProjectsService', () => {
     it('should throw ForbiddenException for client updating other project', async () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(mockProjectWithEmployees);
 
       await expect(
         service.update(
@@ -289,13 +401,12 @@ describe('ProjectsService', () => {
     it('should validate new client when changing clientId', async () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(mockProjectWithEmployees);
       jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(mockUser);
       jest.spyOn(prismaService.file, 'count').mockResolvedValue(0);
       const updatedProject = {
-        ...mockProject,
+        ...mockProjectWithEmployees,
         clientId: 'new-client-123',
-        files: [],
       };
       jest
         .spyOn(prismaService.project, 'update')
@@ -318,6 +429,7 @@ describe('ProjectsService', () => {
     it('should prevent changing clientId if files exist', async () => {
       const projectWithFiles = {
         ...mockProject,
+        employees: [],
         files: [
           { id: '1', uploadedBy: 'client-123' },
           { id: '2', uploadedBy: 'client-123' },
@@ -344,21 +456,30 @@ describe('ProjectsService', () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
         .mockResolvedValue(mockProject);
+
+      const mockTx = {
+        project: {
+          update: jest.fn().mockResolvedValue({
+            ...mockProject,
+            deletedAt: new Date(),
+          }),
+        },
+        file: {
+          updateMany: jest.fn(),
+        },
+      };
+
       jest
-        .spyOn(prismaService.$transaction, 'mockImplementation' as any)
-        .mockImplementation(async (callback: any) => {
-          return callback({
-            project: {
-              update: jest.fn().mockResolvedValue({
-                ...mockProject,
-                deletedAt: new Date(),
-              }),
-            },
-            file: {
-              updateMany: jest.fn(),
-            },
-          });
-        });
+        .spyOn(prismaService, '$transaction')
+        .mockImplementation(async (callback: any) => callback(mockTx));
+
+      // Mock findUnique for post-delete notifications
+      jest
+        .spyOn(prismaService.project, 'findUnique')
+        .mockResolvedValue({
+          ...mockProject,
+          employees: [],
+        } as any);
 
       const result = await service.remove(
         'project-123',
@@ -408,6 +529,14 @@ describe('ProjectsService', () => {
         .spyOn(prismaService, '$transaction')
         .mockImplementation(async (callback: any) => callback(mockTx));
 
+      // Mock findUnique for post-delete notifications
+      jest
+        .spyOn(prismaService.project, 'findUnique')
+        .mockResolvedValue({
+          ...projectWithFiles,
+          employees: [],
+        } as any);
+
       await service.remove('project-123', 'admin-123', Role.ADMIN);
 
       expect(mockTx.file.updateMany).toHaveBeenCalledWith(
@@ -419,8 +548,14 @@ describe('ProjectsService', () => {
   });
 
   describe('findAll', () => {
+    const mockProjectWithFilesAndEmployees = {
+      ...mockProject,
+      files: [],
+      employees: [],
+    };
+
     it('should return all projects for admin', async () => {
-      const mockProjects = [mockProject];
+      const mockProjects = [mockProjectWithFilesAndEmployees];
       jest
         .spyOn(prismaService.project, 'findMany')
         .mockResolvedValue(mockProjects);
@@ -436,7 +571,7 @@ describe('ProjectsService', () => {
     });
 
     it('should return only client projects for CLIENT role', async () => {
-      const clientProjects = [mockProject];
+      const clientProjects = [mockProjectWithFilesAndEmployees];
       jest
         .spyOn(prismaService.project, 'findMany')
         .mockResolvedValue(clientProjects);
@@ -460,7 +595,7 @@ describe('ProjectsService', () => {
     it('should handle pagination correctly', async () => {
       jest
         .spyOn(prismaService.project, 'findMany')
-        .mockResolvedValue([mockProject]);
+        .mockResolvedValue([mockProjectWithFilesAndEmployees]);
       jest.spyOn(prismaService.project, 'count').mockResolvedValue(25);
 
       const result = await service.findAll('admin-123', Role.ADMIN, {

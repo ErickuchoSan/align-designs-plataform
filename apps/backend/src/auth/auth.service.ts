@@ -1,15 +1,13 @@
 import {
   Injectable,
   UnauthorizedException,
-  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDependenciesService } from './services/auth-dependencies.service';
 import { TokenService } from './services/token.service';
-import { Role } from '@prisma/client';
-import { User } from './interfaces/user.interface';
-import { MIN_RESPONSE_DELAY_MS } from '../common/constants/time.constants';
+import { OtpValidationService } from './services/otp-validation.service';
+import { PasswordManagementService } from './services/password-management.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +17,8 @@ export class AuthService {
     private prisma: PrismaService,
     private authDependencies: AuthDependenciesService,
     private tokenService: TokenService,
+    private otpValidation: OtpValidationService,
+    private passwordManagement: PasswordManagementService,
   ) { }
 
   /**
@@ -74,7 +74,21 @@ export class AuthService {
       await this.authDependencies.accountLockout.resetFailedAttempts(user);
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
-      return this.tokenService.generateToken(user);
+      const access_token = this.tokenService.generateAccessToken(user);
+      const refresh_token = await this.tokenService.generateRefreshToken(user.id);
+
+      return {
+        access_token,
+        refresh_token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phone: user.phone,
+          role: user.role,
+        },
+      };
     } catch (error) {
       this.logger.error(`Login failed for ${email}: ${(error as any).message}`, (error as any).stack);
       throw error;
@@ -83,333 +97,126 @@ export class AuthService {
 
   /**
    * Request OTP for Client or Employee
+   * Delegated to OtpValidationService
    */
   async requestOtpForClient(email: string) {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email,
-        deletedAt: null,
-      },
-    });
-
-    if (!user || (user.role !== Role.CLIENT && user.role !== Role.EMPLOYEE)) {
-      // Return generic message to prevent user enumeration
-      return {
-        message:
-          'If the email exists and is valid, you will receive an OTP code',
-        requiresPasswordSetup: false,
-      };
-    }
-
-    // We don't validate isActive here because new users will be inactive
-    // until they set their password
-
-    const token = await this.authDependencies.otp.createOtp(user.id);
-
-    // Send appropriate email based on user status
-    if (!user.passwordHash) {
-      // New user - send account verification email
-      await this.authDependencies.email.sendNewUserOtpEmail(
-        user.email,
-        token,
-        `${user.firstName} ${user.lastName}`,
-      );
-    } else {
-      // Existing user - send login OTP email
-      await this.authDependencies.email.sendOtpEmail(
-        user.email,
-        token,
-        `${user.firstName} ${user.lastName}`,
-      );
-    }
-
-    return {
-      message: 'OTP sent to email',
-      requiresPasswordSetup: !user.passwordHash,
-    };
+    return this.otpValidation.requestOtpForLogin(email);
   }
 
   /**
    * Verify OTP and generate JWT token for Client or Employee
+   * Orchestrates OtpValidationService and TokenService
    */
   async verifyOtpForClient(email: string, token: string) {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email,
-        deletedAt: null,
+    // Validate OTP and get user
+    const user = await this.otpValidation.verifyOtpForLogin(email, token);
+
+    // Generate tokens
+    const access_token = this.tokenService.generateAccessToken(user);
+    const refresh_token = await this.tokenService.generateRefreshToken(user.id);
+
+    return {
+      access_token,
+      refresh_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        role: user.role,
       },
-    });
+    };
+  }
 
-    if (!user || (user.role !== Role.CLIENT && user.role !== Role.EMPLOYEE)) {
-      this.logger.warn(`Failed OTP verification attempt for email: ${email}`);
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  /**
+   * Refresh Access Token using Refresh Token
+   */
+  async refresh(refreshToken: string) {
+    // Verify and rotate refresh token
+    const tokenRecord = await this.tokenService.verifyRefreshToken(refreshToken);
+    const newRefreshToken = await this.tokenService.rotateRefreshToken(tokenRecord.tokenHash, tokenRecord.userId);
+    const newAccessToken = this.tokenService.generateAccessToken(tokenRecord.user);
 
-    const isValid = await this.authDependencies.otp.verifyOtp(user.id, token);
-    if (!isValid) {
-      this.logger.warn(
-        `Failed OTP verification for user ${user.id} (${email}): Invalid or expired token`,
-      );
-      throw new UnauthorizedException('Invalid or expired OTP code');
-    }
-
-    this.logger.log(
-      `Successful OTP verification for user ${user.id} (${email})`,
-    );
-    return this.tokenService.generateToken(user);
+    return {
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      user: tokenRecord.user,
+    };
   }
 
   /**
    * Change password (requires current password)
+   * Delegated to PasswordManagementService
    */
   async changePassword(
     userId: string,
-    currentPassword: string,
-    newPassword: string,
-    confirmPassword: string,
+    current: string,
+    newPass: string,
+    confirmPass: string,
   ) {
-    this.authDependencies.password.validatePasswordsMatch(
-      newPassword,
-      confirmPassword,
-    );
-    this.authDependencies.password.validatePasswordFormat(newPassword);
-
-    const user = await this.prisma.user.findFirst({
-      where: {
-        id: userId,
-        deletedAt: null,
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    // Verify current password
-    if (!user.passwordHash) {
-      throw new BadRequestException(
-        'This user does not have a password configured',
-      );
-    }
-
-    const isPasswordValid =
-      await this.authDependencies.password.comparePassword(
-        currentPassword,
-        user.passwordHash,
-      );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    // Check if new password is same as current (timing-safe comparison using hashes)
-    const isSamePassword = await this.authDependencies.password.comparePassword(
-      newPassword,
-      user.passwordHash,
-    );
-    if (isSamePassword) {
-      throw new BadRequestException(
-        'New password must be different from current password',
-      );
-    }
-
-    // Update password with history tracking
-    await this.authDependencies.password.updatePassword(
+    return this.passwordManagement.changePassword(
       userId,
-      newPassword,
-      user.passwordHash,
+      current,
+      newPass,
+      confirmPass,
     );
-
-    this.logger.log(`Password changed for user ${userId}`);
-
-    return { message: 'Password updated successfully' };
   }
 
   /**
    * Request password recovery with OTP
+   * Delegated to PasswordManagementService
    */
   async forgotPassword(email: string) {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email,
-        deletedAt: null,
-      },
-    });
-
-    // Do not reveal whether the user exists for security reasons
-    if (!user) {
-      return {
-        message: 'If the email exists, you will receive a verification code',
-      };
-    }
-
-    // Generate 8-digit OTP
-    const token = await this.authDependencies.otp.createOtp(user.id);
-
-    // Send OTP via email for password recovery
-    await this.authDependencies.email.sendPasswordRecoveryOtpEmail(
-      user.email,
-      token,
-      `${user.firstName} ${user.lastName}`,
-    );
-
-    return {
-      message: 'If the email exists, you will receive a verification code',
-    };
+    return this.passwordManagement.forgotPassword(email);
   }
 
   /**
    * Reset password with OTP
+   * Delegated to PasswordManagementService
    */
   async resetPassword(
     email: string,
     otp: string,
-    newPassword: string,
-    confirmPassword: string,
+    newPass: string,
+    confirmPass: string,
   ) {
-    // Validate that passwords match
-    this.authDependencies.password.validatePasswordsMatch(
-      newPassword,
-      confirmPassword,
+    return this.passwordManagement.resetPassword(
+      email,
+      otp,
+      newPass,
+      confirmPass,
     );
-    this.authDependencies.password.validatePasswordFormat(newPassword);
-
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email,
-        deletedAt: null,
-      },
-    });
-
-    // Use generic error message to prevent user enumeration
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Verify OTP
-    const isValid = await this.authDependencies.otp.verifyOtp(user.id, otp);
-
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Update password with history tracking
-    await this.authDependencies.password.updatePassword(
-      user.id,
-      newPassword,
-      user.passwordHash ?? undefined,
-    );
-
-    this.logger.log(`Password reset for user ${user.id} via OTP`);
-
-    return { message: 'Password reset successfully' };
   }
 
   /**
    * Check if an email exists and if it has a password configured
-   *
-   * SECURITY NOTE: This endpoint always returns the same response to prevent
-   * user enumeration attacks. The response does not reveal whether an email
-   * exists in the system or its password status.
-   *
-   * Uses constant-time response to prevent timing attacks.
+   * Delegated to PasswordManagementService
    */
   async checkEmail(email: string) {
-    const startTime = Date.now();
-
-    // Query database to check if user exists and get password status
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        passwordHash: true,
-        role: true,
-      },
-    });
-
-    // Return actual user information if user exists
-    // If user doesn't exist, return generic response
-    const response = user ? {
-      hasPassword: !!user.passwordHash,
-      // Only CLIENT and EMPLOYEE need password setup flow
-      // ADMIN is always created with password via seed
-      requiresPasswordSetup: !user.passwordHash && (user.role === 'CLIENT' || user.role === 'EMPLOYEE'),
-    } : {
-      hasPassword: false,
-      requiresPasswordSetup: false,
-    };
-
-    // Add constant-time delay to prevent timing attacks
-    // This ensures all responses take approximately the same time
-    const elapsedTime = Date.now() - startTime;
-    const minimumDelay = MIN_RESPONSE_DELAY_MS;
-    const delayNeeded = Math.max(0, minimumDelay - elapsedTime);
-
-    if (delayNeeded > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayNeeded));
-    }
-
-    return response;
+    return this.passwordManagement.checkEmail(email);
   }
 
   /**
    * Set password for the first time and activate the account
+   * Delegated to PasswordManagementService
    */
-  async setPassword(userId: string, password: string, confirmPassword: string) {
-    this.authDependencies.password.validatePasswordsMatch(
-      password,
-      confirmPassword,
-    );
-    this.authDependencies.password.validatePasswordFormat(password);
-
-    const user = await this.prisma.user.findFirst({
-      where: {
-        id: userId,
-        deletedAt: null,
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    if (user.passwordHash) {
-      throw new BadRequestException(
-        'This user already has a password configured',
-      );
-    }
-
-    // Hash the password
-    const hashedPassword =
-      await this.authDependencies.password.hashPassword(password);
-
-    // Update password, activate account and verify email
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        passwordHash: hashedPassword,
-        isActive: true,
-        emailVerified: true,
-      },
-    });
-
-    this.logger.log(
-      `Password set and account activated for user ${userId} (${user.email})`,
-    );
-
-    return {
-      message: 'Password set successfully. Your account has been activated.',
-    };
+  async setPassword(userId: string, pass: string, confirm: string) {
+    return this.passwordManagement.setPassword(userId, pass, confirm);
   }
 
   /**
    * Revoke a JWT token by adding it to the blacklist
-   * Delegated to TokenService for better separation of concerns
-   * @param token - The JWT token to revoke
+   * Delegated to TokenService
    */
   async revokeToken(token: string): Promise<void> {
-    return this.tokenService.revokeToken(token);
+    return this.tokenService.revokeAccessToken(token);
+  }
+
+  /**
+   * Revoke all refresh tokens for a user
+   */
+  async revokeAllRefreshTokens(userId: string): Promise<void> {
+    return this.tokenService.revokeAllRefreshTokens(userId);
   }
 }

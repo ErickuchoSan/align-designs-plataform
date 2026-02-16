@@ -45,6 +45,7 @@ import {
   canWriteToStage,
   canDeleteFromStage,
 } from '../common/helpers/stage-permissions.helper';
+import { DEFAULT_PAYMENT_TERMS_DAYS } from '../common/constants/business.constants';
 
 /**
  * Projects Service
@@ -129,7 +130,7 @@ export class ProjectsService {
           project.id,
           project.clientId,
           Number(project.initialAmountRequired),
-          15, // Default payment terms: 15 days
+          DEFAULT_PAYMENT_TERMS_DAYS, // Default payment terms
         );
         this.logger.log(
           `Auto-generated invoice for project ${project.id} with amount ${project.initialAmountRequired}`,
@@ -200,13 +201,7 @@ export class ProjectsService {
     );
 
     // Try to get from cache first
-    // DISABLE CACHE TEMPORARILY: Cache invalidation logic is missing for lists
-    // const cached =
-    //   await this.cacheManager.get<PaginatedResult<ProjectResponse>>(cacheKey);
-    // if (cached) {
-    //   this.logger.debug(`Cache hit for projects list: ${cacheKey}`);
-    //   return cached;
-    // }
+
 
     // Build where clause based on user role
     let where: any = {
@@ -295,18 +290,7 @@ export class ProjectsService {
    */
   async findOne(id: string, userId: string, userRole: Role) {
     // Try cache first
-    // DISABLE CACHE TEMPORARILY: Cache invalidation logic is missing for lists
-    // const cacheKey = CACHE_KEYS.PROJECTS.DETAIL(id);
-    // const cached = await this.cacheManager.get(cacheKey);
-    // if (cached) {
-    //   const permissionContext = new PermissionContext(userRole);
-    //   permissionContext.verifyProjectAccess(
-    //     userId,
-    //     (cached as any).clientId,
-    //     'You do not have permission to view this project',
-    //     );
-    //   return cached;
-    // }
+
 
     this.logger.debug(`findOne called - projectId: ${id}, userId: ${userId}, userRole: ${userRole}`);
 

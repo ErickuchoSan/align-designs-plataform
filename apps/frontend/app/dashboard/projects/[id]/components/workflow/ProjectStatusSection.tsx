@@ -22,7 +22,7 @@ export function ProjectStatusSection({
 }: ProjectStatusSectionProps) {
   const canActivate = isAdmin &&
     project.status === ProjectStatus.WAITING_PAYMENT &&
-    project.amountPaid >= project.initialAmountRequired;
+    project.amountPaid >= (project.initialAmountRequired ?? 0);
 
   const canComplete = isAdmin && project.status === ProjectStatus.ACTIVE;
 

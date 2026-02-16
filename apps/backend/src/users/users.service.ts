@@ -46,22 +46,8 @@ export class UsersService {
    */
   async createClient(createClientDto: CreateClientDto, origin?: string) {
     // Check if email already exists (only check active users, not soft-deleted)
-    const existingUser = await this.userRepo.findByEmail(createClientDto.email);
-
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
-    }
-
-    // Check if phone already exists
-    if (createClientDto.phone) {
-      const existingPhone = await this.prisma.user.findFirst({
-        where: { phone: createClientDto.phone },
-      });
-
-      if (existingPhone) {
-        throw new ConflictException('Phone number already registered');
-      }
-    }
+    // Check for unique fields
+    await this.validateUniqueUserFields(createClientDto.email, createClientDto.phone);
 
     const client = await this.userRepo.create(createClientDto);
 
@@ -92,22 +78,8 @@ export class UsersService {
     origin?: string,
   ) {
     // Check if email already exists (only check active users, not soft-deleted)
-    const existingUser = await this.userRepo.findByEmail(createUserDto.email);
-
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
-    }
-
-    // Check if phone already exists
-    if (createUserDto.phone) {
-      const existingPhone = await this.prisma.user.findFirst({
-        where: { phone: createUserDto.phone },
-      });
-
-      if (existingPhone) {
-        throw new ConflictException('Phone number already registered');
-      }
-    }
+    // Check for unique fields
+    await this.validateUniqueUserFields(createUserDto.email, createUserDto.phone);
 
     const user = await this.userRepo.createWithRole(createUserDto);
 
@@ -238,19 +210,13 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Check if phone is being updated and if it's already in use by another user
+    // Check if phone is being updated and if it's already in use
     if (updateUserDto.phone && updateUserDto.phone !== user.phone) {
-      const existingUserWithPhone = await this.prisma.user.findFirst({
-        where: {
-          phone: updateUserDto.phone,
-          id: { not: id }, // Exclude current user
-          deletedAt: null,
-        },
-      });
-
-      if (existingUserWithPhone) {
-        throw new ConflictException('Phone number already registered');
-      }
+      await this.validateUniqueUserFields(
+        undefined,
+        updateUserDto.phone,
+        id
+      );
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -390,5 +356,40 @@ export class UsersService {
     );
 
     return PaginationHelper.buildPaginatedResult(employees, total, paginationDto);
+  }
+
+  /**
+   * Validate that email and phone are unique
+   * @param email Email to check
+   * @param phone Phone to check (optional)
+   * @param excludeUserId User ID to exclude from check (for updates)
+   */
+  private async validateUniqueUserFields(
+    email?: string,
+    phone?: string,
+    excludeUserId?: string,
+  ) {
+    // Check email
+    if (email) {
+      const existingUser = await this.userRepo.findByEmail(email);
+      if (existingUser && existingUser.id !== excludeUserId) {
+        throw new ConflictException('Email already registered');
+      }
+    }
+
+    // Check phone
+    if (phone) {
+      const existingPhone = await this.prisma.user.findFirst({
+        where: {
+          phone,
+          id: excludeUserId ? { not: excludeUserId } : undefined,
+          deletedAt: null,
+        },
+      });
+
+      if (existingPhone) {
+        throw new ConflictException('Phone number already registered');
+      }
+    }
   }
 }

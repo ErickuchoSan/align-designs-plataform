@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { User, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IUserRepository } from './user.repository.interface';
@@ -106,7 +106,7 @@ export class UserRepository implements IUserRepository {
   async toggleStatus(userId: string): Promise<User> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     return this.prisma.user.update({

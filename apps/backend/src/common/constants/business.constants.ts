@@ -1,0 +1,3 @@
+export const DEFAULT_PAYMENT_TERMS_DAYS = 15;
+export const FEEDBACK_CYCLE_START_HOUR = 12;
+export const TRANSACTION_MAX_RETRIES = 3;

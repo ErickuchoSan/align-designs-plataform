@@ -243,7 +243,9 @@ export default function ProjectDetailsPage() {
                 }}
                 onOpenCommentModal={(stage, file) => {
                   setSelectedStageForModal(stage);
-                  modals.openCommentModal(file);
+                  if (file) {
+                    modals.openCommentModal(file);
+                  }
                 }}
                 onDownload={handleDownload}
                 onEdit={modals.openEditModal}

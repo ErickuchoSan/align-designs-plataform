@@ -103,17 +103,17 @@ export default function ErrorModal({
       <div className={`relative bg-white rounded-xl shadow-2xl ${showTechnicalDetails ? 'max-w-4xl' : 'max-w-md'} w-full max-h-[90vh] overflow-hidden animate-slideUp`}>
         {/* Header */}
         <div className={`px-6 py-4 border-b ${statusCode === 401 || statusCode === 403 ? 'bg-red-50 border-red-200' :
-          statusCode && statusCode >= 500 ? 'bg-orange-50 border-orange-200' :
+          statusCode && Number(statusCode) >= 500 ? 'bg-orange-50 border-orange-200' :
             'bg-amber-50 border-amber-200'
           }`}>
           <div className="flex items-start gap-3">
             <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${statusCode === 401 || statusCode === 403 ? 'bg-red-100' :
-              statusCode && statusCode >= 500 ? 'bg-orange-100' :
+              statusCode && Number(statusCode) >= 500 ? 'bg-orange-100' :
                 'bg-amber-100'
               }`}>
               <svg
                 className={`w-6 h-6 ${statusCode === 401 || statusCode === 403 ? 'text-red-600' :
-                  statusCode && statusCode >= 500 ? 'text-orange-600' :
+                  statusCode && Number(statusCode) >= 500 ? 'text-orange-600' :
                     'text-amber-600'
                   }`}
                 fill="none"

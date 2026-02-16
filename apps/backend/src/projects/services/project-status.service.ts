@@ -7,6 +7,25 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ProjectStatus, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../../notifications/notifications.service';
 
+export interface ProjectStatusSummary {
+  id: string;
+  name: string;
+  status: ProjectStatus;
+  startDate: Date | null;
+  deadlineDate: Date | null;
+  archivedAt: Date | null;
+  paymentProgress: {
+    required: number;
+    paid: number;
+    remaining: number;
+    percentage: number;
+  } | null;
+  employeeCount: number;
+  fileCount: number;
+  feedbackCycleCount: number;
+  canActivate: boolean;
+}
+
 /**
  * Service for managing project status transitions
  *
@@ -343,7 +362,10 @@ export class ProjectStatusService {
    * Get project status summary
    * Useful for dashboards and status displays
    */
-  async getProjectStatusSummary(projectId: string) {
+
+
+  // ...
+  async getProjectStatusSummary(projectId: string): Promise<ProjectStatusSummary> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {

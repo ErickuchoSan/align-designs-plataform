@@ -40,7 +40,7 @@ export default function PaymentHistoryModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Payment History${projectName ? ` - ${projectName}` : ''}`}
-      size="4xl"
+      size="2xl"
     >
       {additionalHeaderContent && (
         <div className="mb-4 pb-4 border-b border-gray-100">

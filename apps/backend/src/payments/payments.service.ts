@@ -63,27 +63,31 @@ export class PaymentsService {
         await this.projectStatusService.updateProjectPayment(projectId, Number(amount));
 
         // Link related files and update TimeTracking (Phase 5: Advanced Analytics)
-        if (createPaymentDto.relatedFileIds && createPaymentDto.relatedFileIds.length > 0) {
-            // 1. Create PaymentFile links
-            await this.prisma.paymentFile.createMany({
-                data: createPaymentDto.relatedFileIds.map(fileId => ({
-                    paymentId: payment.id,
-                    fileId
-                }))
+        const relatedFileIds = createPaymentDto.relatedFileIds;
+        if (relatedFileIds && relatedFileIds.length > 0) {
+            // Execute in transaction to ensure consistency
+            await this.prisma.$transaction(async (tx) => {
+                // 1. Create PaymentFile links
+                await tx.paymentFile.createMany({
+                    data: relatedFileIds.map(fileId => ({
+                        paymentId: payment.id,
+                        fileId
+                    }))
+                });
+
+                // 2. Link Payment to TimeTracking records associated with these files
+                // Find TimeTracking records where approvedFileId is in the list
+                await tx.timeTracking.updateMany({
+                    where: {
+                        approvedFileId: { in: relatedFileIds }
+                    },
+                    data: {
+                        paymentId: payment.id
+                    }
+                });
             });
 
-            // 2. Link Payment to TimeTracking records associated with these files
-            // Find TimeTracking records where approvedFileId is in the list
-            await this.prisma.timeTracking.updateMany({
-                where: {
-                    approvedFileId: { in: createPaymentDto.relatedFileIds }
-                },
-                data: {
-                    paymentId: payment.id
-                }
-            });
-
-            this.logger.log(`Linked payment ${payment.id} to ${createPaymentDto.relatedFileIds.length} files and updated tracking.`);
+            this.logger.log(`Linked payment ${payment.id} to ${relatedFileIds.length} files and updated tracking.`);
         }
 
         // Notify

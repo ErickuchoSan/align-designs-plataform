@@ -1,7 +1,7 @@
 export { default as CompletionChecklistModal } from './CompletionChecklistModal';
 export { EmployeeSelect } from './EmployeeSelect';
 export { PaymentProgressBar } from './PaymentProgressBar';
-export { PaymentsStageContent } from './PaymentsStageContent';
-export { ProjectStagesView } from './ProjectStagesView';
+export { default as PaymentsStageContent } from './PaymentsStageContent';
+export { default as ProjectStagesView } from './ProjectStagesView';
 export { ProjectStatusBadge } from './ProjectStatusBadge';
-export { StageCard } from './StageCard';
+export { default as StageCard } from './StageCard';

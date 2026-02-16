@@ -3,9 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateEmployeePaymentDto } from './dto/create-employee-payment.dto';
 import { UpdateEmployeePaymentDto } from './dto/update-employee-payment.dto';
-import { EmployeePaymentStatus, Role } from '@prisma/client';
+import { EmployeePaymentStatus, Role, Prisma } from '@prisma/client';
 
-@Injectable()
+
+
 @Injectable()
 export class EmployeePaymentsService {
   private readonly logger = new Logger(EmployeePaymentsService.name);
@@ -66,7 +67,7 @@ export class EmployeePaymentsService {
   }
 
   async findAll(userId: string, userRole: Role, projectId?: string) {
-    const where: any = {};
+    const where: Prisma.EmployeePaymentWhereInput = {};
 
     // Privacy filters
     if (userRole === Role.EMPLOYEE) {

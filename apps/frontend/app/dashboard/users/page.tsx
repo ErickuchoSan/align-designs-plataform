@@ -10,12 +10,13 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { formatDate } from '@/lib/utils/date.utils';
 import { useUsers } from '@/hooks/useUsers';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
+import { Role } from '@/types';
 
 export default function UsersPage() {
   const { isAuthenticated, isAdmin, loading } = useProtectedRoute({ requireAdmin: true });
   const usersHook = useUsers(isAuthenticated, isAdmin || false);
 
-  if (loading || (usersHook.loading && usersHook.users.length === 0)) {
+  if (loading || (usersHook.isLoading && usersHook.users.length === 0)) {
     return <PageLoader text="Loading users..." />;
   }
 
@@ -37,11 +38,7 @@ export default function UsersPage() {
 
         {/* Content */}
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {usersHook.success && (
-            <div className="mb-6 rounded-lg bg-emerald-50 border-l-4 border-emerald-500 p-4 shadow-md animate-slideDown">
-              <p className="text-sm font-medium text-emerald-800">{usersHook.success}</p>
-            </div>
-          )}
+
 
           {usersHook.error && (
             <div className="mb-6 rounded-lg bg-red-50 border-l-4 border-red-500 p-4 shadow-md animate-slideDown">
@@ -65,7 +62,7 @@ export default function UsersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-stone-200">
-                  {usersHook.loading && usersHook.users.length === 0 ? (
+                  {usersHook.isLoading && usersHook.users.length === 0 ? (
                     <>
                       {[1, 2, 3].map((i) => (
                         <TableRowSkeleton key={i} />
@@ -156,7 +153,7 @@ export default function UsersPage() {
 
           {/* Mobile Users Cards */}
           <div className="md:hidden space-y-4 animate-slideUp">
-            {usersHook.loading && usersHook.users.length === 0 ? (
+            {usersHook.isLoading && usersHook.users.length === 0 ? (
               <>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
@@ -253,7 +250,7 @@ export default function UsersPage() {
         isOpen={usersHook.showCreateForm}
         onClose={() => {
           usersHook.setShowCreateForm(false);
-          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
+          usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
         }}
         title="Create New Client"
         size="md"
@@ -320,19 +317,19 @@ export default function UsersPage() {
               type="button"
               onClick={() => {
                 usersHook.setShowCreateForm(false);
-                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: 'CLIENT' });
+                usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
               }}
-              disabled={usersHook.creating}
+              disabled={usersHook.isCreating}
               className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={usersHook.creating}
+              disabled={usersHook.isCreating}
               className="px-5 py-2.5 text-sm font-semibold text-navy-900 bg-gradient-to-r from-gold-500 to-gold-600 rounded-lg hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center shadow-lg hover:shadow-gold-300/50"
             >
-              {usersHook.creating ? <ButtonLoader /> : 'Create Client'}
+              {usersHook.isCreating ? <ButtonLoader /> : 'Create Client'}
             </button>
           </div>
         </form>

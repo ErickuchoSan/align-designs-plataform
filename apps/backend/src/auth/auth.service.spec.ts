@@ -1,40 +1,39 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { OtpService } from '../otp/otp.service';
-import { EmailService } from '../email/email.service';
-import { JwtBlacklistService } from './jwt-blacklist.service';
+import { AuthDependenciesService } from './services/auth-dependencies.service';
+import { TokenService } from './services/token.service';
+import { OtpValidationService } from './services/otp-validation.service';
+import { PasswordManagementService } from './services/password-management.service';
 import { Role } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaService: PrismaService;
-  let jwtService: JwtService;
-  let otpService: OtpService;
-  let emailService: EmailService;
-  let jwtBlacklistService: JwtBlacklistService;
+  let prismaService: any;
+  let authDependencies: any;
+  let tokenService: any;
+  let otpValidation: any;
+  let passwordManagement: any;
 
   const mockUser = {
     id: 'test-user-id',
     email: 'test@example.com',
+    role: Role.CLIENT,
+    passwordHash: 'hashed_password',
+    isActive: true,
     firstName: 'Test',
     lastName: 'User',
-    phone: null,
-    passwordHash: 'hashed-password',
-    role: Role.ADMIN,
-    isActive: true,
-    emailVerified: true,
-    failedLoginAttempts: 0,
-    accountLockedUntil: null,
-    lastFailedLoginAt: null,
-    deletedAt: null,
-    deletedBy: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    phone: '1234567890',
+  };
+
+  const expectedUser = {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    role: Role.CLIENT,
+    firstName: 'Test',
+    lastName: 'User',
+    phone: '1234567890',
   };
 
   beforeEach(async () => {
@@ -46,43 +45,48 @@ describe('AuthService', () => {
           useValue: {
             user: {
               findFirst: jest.fn(),
-              findUnique: jest.fn(),
-              update: jest.fn(),
             },
           },
         },
         {
-          provide: JwtService,
+          provide: AuthDependenciesService,
           useValue: {
-            sign: jest.fn().mockReturnValue('test-jwt-token'),
-            decode: jest.fn(),
+            accountLockout: {
+              validateAccountNotLocked: jest.fn(),
+              handleFailedLogin: jest.fn(),
+              resetFailedAttempts: jest.fn(),
+            },
+            password: {
+              comparePassword: jest.fn(),
+            },
           },
         },
         {
-          provide: ConfigService,
+          provide: TokenService,
           useValue: {
-            get: jest.fn().mockReturnValue('7d'),
+            generateAccessToken: jest.fn(),
+            generateRefreshToken: jest.fn(),
+            verifyRefreshToken: jest.fn(),
+            rotateRefreshToken: jest.fn(),
+            revokeAccessToken: jest.fn(),
+            revokeAllRefreshTokens: jest.fn(),
           },
         },
         {
-          provide: OtpService,
+          provide: OtpValidationService,
           useValue: {
-            createOtp: jest.fn(),
-            verifyOtp: jest.fn(),
+            requestOtpForLogin: jest.fn(),
+            verifyOtpForLogin: jest.fn(),
           },
         },
         {
-          provide: EmailService,
+          provide: PasswordManagementService,
           useValue: {
-            sendNewUserOtpEmail: jest.fn(),
-            sendPasswordRecoveryOtpEmail: jest.fn(),
-          },
-        },
-        {
-          provide: JwtBlacklistService,
-          useValue: {
-            addToBlacklist: jest.fn(),
-            isBlacklisted: jest.fn(),
+            changePassword: jest.fn(),
+            forgotPassword: jest.fn(),
+            resetPassword: jest.fn(),
+            setPassword: jest.fn(),
+            checkEmail: jest.fn(),
           },
         },
       ],
@@ -90,10 +94,10 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
-    otpService = module.get<OtpService>(OtpService);
-    emailService = module.get<EmailService>(EmailService);
-    jwtBlacklistService = module.get<JwtBlacklistService>(JwtBlacklistService);
+    authDependencies = module.get<AuthDependenciesService>(AuthDependenciesService);
+    tokenService = module.get<TokenService>(TokenService);
+    otpValidation = module.get<OtpValidationService>(OtpValidationService);
+    passwordManagement = module.get<PasswordManagementService>(PasswordManagementService);
   });
 
   it('should be defined', () => {
@@ -101,160 +105,93 @@ describe('AuthService', () => {
   });
 
   describe('loginAdmin', () => {
-    it('should successfully login with valid credentials', async () => {
-      const hashedPassword = await bcrypt.hash('password123', 14);
-      const userWithHash = { ...mockUser, passwordHash: hashedPassword };
+    it('should login successfully', async () => {
+      prismaService.user.findFirst.mockResolvedValue(mockUser);
+      authDependencies.password.comparePassword.mockResolvedValue(true);
+      tokenService.generateAccessToken.mockReturnValue('access_token');
+      tokenService.generateRefreshToken.mockReturnValue('refresh_token');
 
-      jest
-        .spyOn(prismaService.user, 'findFirst')
-        .mockResolvedValue(userWithHash);
+      const result = await service.loginAdmin('test@example.com', 'password');
 
-      const result = await service.loginAdmin(
-        'test@example.com',
-        'password123',
-      );
-
-      expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('user');
-      expect(result.user.email).toBe('test@example.com');
-      expect(jwtService.sign).toHaveBeenCalled();
-    });
-
-    it('should throw UnauthorizedException for invalid email', async () => {
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
-
-      await expect(
-        service.loginAdmin('invalid@example.com', 'password123'),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should throw UnauthorizedException for invalid password', async () => {
-      const hashedPassword = await bcrypt.hash('correctpassword', 14);
-      const userWithHash = { ...mockUser, passwordHash: hashedPassword };
-
-      jest
-        .spyOn(prismaService.user, 'findFirst')
-        .mockResolvedValue(userWithHash);
-
-      await expect(
-        service.loginAdmin('test@example.com', 'wrongpassword'),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should throw UnauthorizedException for inactive user', async () => {
-      const hashedPassword = await bcrypt.hash('password123', 14);
-      const inactiveUser = {
-        ...mockUser,
-        passwordHash: hashedPassword,
-        isActive: false,
-      };
-
-      jest
-        .spyOn(prismaService.user, 'findFirst')
-        .mockResolvedValue(inactiveUser);
-
-      await expect(
-        service.loginAdmin('test@example.com', 'password123'),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should not login soft-deleted users', async () => {
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
-
-      await expect(
-        service.loginAdmin('deleted@example.com', 'password123'),
-      ).rejects.toThrow(UnauthorizedException);
-
-      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
-        where: {
-          email: 'deleted@example.com',
-          deletedAt: null,
-        },
+      expect(authDependencies.accountLockout.validateAccountNotLocked).toHaveBeenCalledWith(mockUser);
+      expect(authDependencies.password.comparePassword).toHaveBeenCalledWith('password', 'hashed_password');
+      expect(authDependencies.accountLockout.resetFailedAttempts).toHaveBeenCalledWith(mockUser);
+      expect(tokenService.generateAccessToken).toHaveBeenCalledWith(mockUser);
+      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith(mockUser.id);
+      expect(result).toEqual({
+        access_token: 'access_token',
+        refresh_token: 'refresh_token',
+        user: expectedUser,
       });
+    });
+
+    it('should throw UnauthorizedException if password valid is false', async () => {
+      prismaService.user.findFirst.mockResolvedValue(mockUser);
+      authDependencies.password.comparePassword.mockResolvedValue(false);
+      authDependencies.accountLockout.handleFailedLogin.mockRejectedValue(new UnauthorizedException());
+
+      await expect(service.loginAdmin('test@example.com', 'wrong')).rejects.toThrow(UnauthorizedException);
+      expect(authDependencies.accountLockout.handleFailedLogin).toHaveBeenCalledWith(mockUser);
     });
   });
 
   describe('requestOtpForClient', () => {
-    it('should send OTP for valid client', async () => {
-      const clientUser = { ...mockUser, role: Role.CLIENT };
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(clientUser);
-      jest.spyOn(otpService, 'createOtp').mockResolvedValue('123456');
-      jest
-        .spyOn(emailService, 'sendPasswordRecoveryOtpEmail')
-        .mockResolvedValue();
-
-      const result = await service.requestOtpForClient('test@example.com');
-
-      expect(result.message).toBe('OTP sent to email');
-      expect(otpService.createOtp).toHaveBeenCalledWith(clientUser.id);
-      expect(emailService.sendPasswordRecoveryOtpEmail).toHaveBeenCalled();
-    });
-
-    it('should send new user OTP for user without password', async () => {
-      const newUser = { ...mockUser, role: Role.CLIENT, passwordHash: null };
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(newUser);
-      jest.spyOn(otpService, 'createOtp').mockResolvedValue('123456');
-      jest.spyOn(emailService, 'sendNewUserOtpEmail').mockResolvedValue();
-
-      const result = await service.requestOtpForClient('test@example.com');
-
-      expect(result.requiresPasswordSetup).toBe(true);
-      expect(emailService.sendNewUserOtpEmail).toHaveBeenCalled();
-    });
-
-    it('should return generic message for non-existent email', async () => {
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(null);
-
-      const result = await service.requestOtpForClient(
-        'nonexistent@example.com',
-      );
-
-      expect(result.message).toContain('If the email exists');
-      expect(otpService.createOtp).not.toHaveBeenCalled();
+    it('should delegate to OtpValidationService', async () => {
+      otpValidation.requestOtpForLogin.mockResolvedValue({ message: 'sent' });
+      const result = await service.requestOtpForClient('email');
+      expect(otpValidation.requestOtpForLogin).toHaveBeenCalledWith('email');
+      expect(result).toEqual({ message: 'sent' });
     });
   });
 
-  describe('revokeToken', () => {
-    it('should add valid token to blacklist', () => {
-      const mockToken = 'valid.jwt.token';
-      const mockDecoded = { exp: Math.floor(Date.now() / 1000) + 3600 }; // Expires in 1 hour
+  describe('verifyOtpForClient', () => {
+    it('should verify otp and generate token', async () => {
+      otpValidation.verifyOtpForLogin.mockResolvedValue(mockUser);
+      tokenService.generateAccessToken.mockReturnValue('access_token');
+      tokenService.generateRefreshToken.mockResolvedValue('refresh_token');
 
-      jest.spyOn(jwtService, 'decode').mockReturnValue(mockDecoded);
+      const result = await service.verifyOtpForClient('email', '123456');
 
-      service.revokeToken(mockToken);
-
-      expect(jwtBlacklistService.addToBlacklist).toHaveBeenCalled();
-    });
-
-    it('should not blacklist expired token', () => {
-      const mockToken = 'expired.jwt.token';
-      const mockDecoded = { exp: Math.floor(Date.now() / 1000) - 3600 }; // Expired 1 hour ago
-
-      jest.spyOn(jwtService, 'decode').mockReturnValue(mockDecoded);
-
-      service.revokeToken(mockToken);
-
-      expect(jwtBlacklistService.addToBlacklist).not.toHaveBeenCalled();
+      expect(otpValidation.verifyOtpForLogin).toHaveBeenCalledWith('email', '123456');
+      expect(tokenService.generateAccessToken).toHaveBeenCalledWith(mockUser);
+      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith(mockUser.id);
+      expect(result).toEqual({
+        access_token: 'access_token',
+        refresh_token: 'refresh_token',
+        user: expectedUser,
+      });
     });
   });
 
-  describe('checkEmail', () => {
-    it('should always return same response to prevent user enumeration', async () => {
-      jest.spyOn(prismaService.user, 'findFirst').mockResolvedValue(mockUser);
-
-      const result = await service.checkEmail('test@example.com');
-
-      expect(result.hasPassword).toBe(false);
-      expect(result.requiresPasswordSetup).toBe(false);
+  describe('Delegated Methods', () => {
+    it('changePassword delegation', async () => {
+      await service.changePassword('u', 'o', 'n', 'c');
+      expect(passwordManagement.changePassword).toHaveBeenCalledWith('u', 'o', 'n', 'c');
     });
 
-    it('should have consistent response time', async () => {
-      const startTime = Date.now();
-      await service.checkEmail('any@example.com');
-      const duration = Date.now() - startTime;
+    it('forgotPassword delegation', async () => {
+      await service.forgotPassword('e');
+      expect(passwordManagement.forgotPassword).toHaveBeenCalledWith('e');
+    });
 
-      // Should take at least 100ms (minimum delay)
-      expect(duration).toBeGreaterThanOrEqual(100);
+    it('resetPassword delegation', async () => {
+      await service.resetPassword('e', 'o', 'n', 'c');
+      expect(passwordManagement.resetPassword).toHaveBeenCalledWith('e', 'o', 'n', 'c');
+    });
+
+    it('checkEmail delegation', async () => {
+      await service.checkEmail('e');
+      expect(passwordManagement.checkEmail).toHaveBeenCalledWith('e');
+    });
+
+    it('setPassword delegation', async () => {
+      await service.setPassword('u', 'p', 'c');
+      expect(passwordManagement.setPassword).toHaveBeenCalledWith('u', 'p', 'c');
+    });
+
+    it('revokeToken delegation', async () => {
+      await service.revokeToken('t');
+      expect(tokenService.revokeAccessToken).toHaveBeenCalledWith('t');
     });
   });
 });

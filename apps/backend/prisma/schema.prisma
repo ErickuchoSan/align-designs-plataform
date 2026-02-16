@@ -93,6 +93,7 @@ model User {
   employeePaymentsReceived  EmployeePayment[]   @relation("EmployeePayments") // Payments received as employee
   employeePaymentsCreated   EmployeePayment[]   @relation("CreatedEmployeePayments") // Payments created as admin
   employeePaymentsApproved  EmployeePayment[]   @relation("ApprovedEmployeePayments") // Payments approved
+  refreshTokens             RefreshToken[]
 
   @@index([email])
   @@index([role])
@@ -102,6 +103,22 @@ model User {
   @@index([email, deletedAt]) // Compound index for efficient authentication queries
   @@index([role, isActive]) // Compound index for filtering active users by role
   @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(64) // SHA-256 hash
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  revoked   Boolean  @default(false)
+  replacedByToken String? @map("replaced_by_token") @db.VarChar(64) // For rotation chain
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
 }
 
 model Project {

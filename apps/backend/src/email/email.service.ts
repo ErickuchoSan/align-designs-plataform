@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SecretsService } from '../secrets/secrets.service';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import {
@@ -23,53 +24,48 @@ export class EmailService implements OnModuleInit {
   private transporter: Transporter;
   private isHealthy: boolean = false;
 
-  constructor(private configService: ConfigService) {
-    const emailPort = this.configService.get<number>('EMAIL_PORT', 587);
-
-    // Determine secure flag based on port:
-    // - Port 465 requires secure: true (implicit TLS/SSL)
-    // - Port 587 uses secure: false with STARTTLS (opportunistic TLS)
-    // - Port 25 typically uses secure: false (may use STARTTLS)
-    const isSecure = emailPort === 465;
-
-    this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>('EMAIL_HOST'),
-      port: emailPort,
-      secure: isSecure,
-      auth: {
-        user: this.configService.get<string>('EMAIL_USER'),
-        pass: this.configService.get<string>('EMAIL_PASSWORD'),
-      },
-      // Enable STARTTLS for non-secure connections (ports 587, 25)
-      // This upgrades the connection to TLS after initial connection
-      requireTLS: !isSecure,
-      tls: {
-        // Don't fail on invalid certificates in development
-        // In production, set EMAIL_REJECT_UNAUTHORIZED=true in .env
-        rejectUnauthorized:
-          this.configService.get<string>(
-            'EMAIL_REJECT_UNAUTHORIZED',
-            'true',
-          ) === 'true',
-        // Minimum TLS version for security
-        minVersion: 'TLSv1.2',
-      },
-    });
-
-    this.logger.log(
-      `Email transport configured - Host: ${this.configService.get<string>('EMAIL_HOST')}, Port: ${emailPort}, Secure: ${isSecure}, RequireTLS: ${!isSecure}`,
-    );
-    this.logger.debug(`Email User: ${this.configService.get<string>('EMAIL_USER') ? '***SET***' : 'NOT SET'}`);
-    this.logger.debug(`Email Pass: ${this.configService.get<string>('EMAIL_PASSWORD') ? '***SET***' : 'NOT SET'}`);
-    this.logger.debug(`Email From: ${this.configService.get<string>('EMAIL_FROM')}`);
-  }
+  constructor(
+    private configService: ConfigService,
+    private secretsService: SecretsService,
+  ) { }
 
   /**
-   * Verify SMTP connection on module initialization
-   * This ensures email service is properly configured before accepting requests
+   * Initialize SMTP connection
    */
   async onModuleInit() {
     try {
+      const emailPort = this.configService.get<number>('EMAIL_PORT', 587);
+      const isSecure = emailPort === 465;
+
+      const user = await this.secretsService.getSecret('EMAIL_USER');
+      const pass = await this.secretsService.getSecret('EMAIL_PASSWORD');
+
+      this.transporter = nodemailer.createTransport({
+        host: this.configService.get<string>('EMAIL_HOST'),
+        port: emailPort,
+        secure: isSecure,
+        auth: {
+          user,
+          pass,
+        },
+        requireTLS: !isSecure,
+        tls: {
+          rejectUnauthorized:
+            this.configService.get<string>(
+              'EMAIL_REJECT_UNAUTHORIZED',
+              'true',
+            ) === 'true',
+          minVersion: 'TLSv1.2',
+        },
+      });
+
+      this.logger.log(
+        `Email transport configured - Host: ${this.configService.get<string>('EMAIL_HOST')}, Port: ${emailPort}, Secure: ${isSecure}, RequireTLS: ${!isSecure}`,
+      );
+      this.logger.debug(`Email User: ${user ? '***SET***' : 'NOT SET'}`);
+      this.logger.debug(`Email Pass: ${pass ? '***SET***' : 'NOT SET'}`);
+      this.logger.debug(`Email From: ${this.configService.get<string>('EMAIL_FROM')}`);
+
       this.logger.log('Verifying SMTP connection...');
       await this.transporter.verify();
       this.isHealthy = true;
@@ -83,12 +79,13 @@ export class EmailService implements OnModuleInit {
       this.logger.warn(
         'Please check your EMAIL_* environment variables and SMTP server availability.',
       );
-      // Throw error to fail fast - email is critical for OTP, password reset, etc.
       throw new InternalServerErrorException(
         'Failed to initialize email service. Please check SMTP configuration.',
       );
     }
   }
+
+
 
   /**
    * Check if the email service is healthy and ready to send emails
@@ -141,22 +138,7 @@ export class EmailService implements OnModuleInit {
   /**
    * Send OTP email for new user account verification and password setup
    */
-  async sendNewUserOtpEmail(
-    to: string,
-    otpCode: string,
-    userName: string,
-  ): Promise<void> {
-    return this.sendOtpEmailGeneric(
-      to,
-      otpCode,
-      userName,
-      'Account Verification',
-      'Account Verification',
-      'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:',
-      'If you did not create this account, please ignore this message.',
-      'New user OTP',
-    );
-  }
+
 
   /**
    * Send welcome email to new users
@@ -216,20 +198,45 @@ export class EmailService implements OnModuleInit {
   /**
    * Send OTP email for user login
    */
+  /**
+   * Send OTP Email (Generic wrapper for different types)
+   * types: 'new_user' | 'login' | 'password_recovery'
+   */
   async sendOtpEmail(
     to: string,
     otpCode: string,
     userName: string,
+    type: 'new_user' | 'login' | 'password_recovery' = 'login',
   ): Promise<void> {
+    let subject = 'Verification Code';
+    let title = 'Verification Code';
+    let message = 'Hello {userName},<br>Use the following code to log in:';
+    let disclaimer = 'If you did not request this code, please ignore this message.';
+    let context = 'OTP';
+
+    if (type === 'new_user') {
+      subject = 'Account Verification';
+      title = 'Account Verification';
+      message = 'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:';
+      disclaimer = 'If you did not create this account, please ignore this message.';
+      context = 'New user OTP';
+    } else if (type === 'password_recovery') {
+      subject = 'Password Recovery Code';
+      title = 'Password Recovery Code';
+      message = 'Hello {userName},<br>Use this code to reset your password:';
+      disclaimer = 'If you did not request this password reset, please ignore this message.';
+      context = 'Password recovery OTP';
+    }
+
     return this.sendOtpEmailGeneric(
       to,
       otpCode,
       userName,
-      'Verification Code',
-      'Verification Code',
-      'Hello {userName},<br>Use the following code to log in:',
-      'If you did not request this code, please ignore this message.',
-      'OTP',
+      subject,
+      title,
+      message,
+      disclaimer,
+      context,
     );
   }
 
@@ -273,22 +280,7 @@ export class EmailService implements OnModuleInit {
   /**
    * Send OTP email for password recovery
    */
-  async sendPasswordRecoveryOtpEmail(
-    to: string,
-    otpCode: string,
-    userName: string,
-  ): Promise<void> {
-    return this.sendOtpEmailGeneric(
-      to,
-      otpCode,
-      userName,
-      'Password Recovery Code',
-      'Password Recovery Code',
-      'Hello {userName},<br>Use this code to reset your password:',
-      'If you did not request this password reset, please ignore this message.',
-      'Password recovery OTP',
-    );
-  }
+
 
   /**
    * HTML template for password reset email

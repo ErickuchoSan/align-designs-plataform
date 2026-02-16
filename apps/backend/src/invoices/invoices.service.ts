@@ -6,6 +6,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InvoicePdfService } from './invoice-pdf.service';
 import { EmailService } from '../email/email.service';
+import { DEFAULT_PAYMENT_TERMS_DAYS } from '../common/constants/business.constants';
 
 @Injectable()
 export class InvoicesService {
@@ -78,8 +79,8 @@ export class InvoicesService {
             // Generate PDF
             this.logger.log(`Generating PDF for invoice ${invoiceNumber}...`);
             // Creates a copy of the invoice with status SENT for the PDF
-            const invoiceForPdf = { ...fullInvoice, status: InvoiceStatus.SENT };
-            const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoiceForPdf as any);
+            const invoiceForPdf = { ...fullInvoice, status: InvoiceStatus.SENT } as unknown as Invoice; // Cast to Invoice since structure allows it
+            const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoiceForPdf);
             this.logger.log(`PDF generated successfully. Size: ${pdfBuffer.length} bytes.`);
 
             // Send email with PDF attachment
@@ -173,7 +174,7 @@ export class InvoicesService {
         projectId: string,
         clientId: string,
         amount: number,
-        paymentTermsDays: number = 15,
+        paymentTermsDays: number = DEFAULT_PAYMENT_TERMS_DAYS,
     ): Promise<Invoice> {
         const invoiceNumber = await this.generateInvoiceNumber();
         const issueDate = new Date();

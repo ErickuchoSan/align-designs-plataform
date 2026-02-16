@@ -9,6 +9,7 @@ import {
   Res,
   Req,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
@@ -209,10 +210,13 @@ export class AuthController {
       'login',
     );
 
-    // Set JWT as httpOnly cookie for enhanced security
+    // Set access token cookie (short-lived)
     this.setAuthCookie(res, result.access_token, req);
 
-    // Return only user data (token is in httpOnly cookie, not in response body)
+    // Set refresh token cookie (long-lived)
+    this.setRefreshTokenCookie(res, result.refresh_token, req);
+
+    // Return only user data
     return { user: result.user };
   }
 
@@ -280,11 +284,49 @@ export class AuthController {
       'OTP verification',
     );
 
-    // Set JWT as httpOnly cookie for enhanced security
+    // Set access token cookie (short-lived)
     this.setAuthCookie(res, result.access_token, req);
 
-    // Return only user data (token is in httpOnly cookie, not in response body)
+    // Set refresh token cookie (long-lived)
+    this.setRefreshTokenCookie(res, result.refresh_token, req);
+
+    // Return only user data
     return { user: result.user };
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description: 'Uses httpOnly refresh token cookie to issue new access and refresh tokens',
+  })
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token found');
+    }
+
+    try {
+      const result = await this.authService.refresh(refreshToken);
+
+      // Set access token cookie (short-lived)
+      this.setAuthCookie(res, result.access_token, req);
+
+      // Set refresh token cookie (long-lived)
+      this.setRefreshTokenCookie(res, result.refresh_token, req);
+
+      return { user: result.user };
+    } catch (error) {
+      // Clear cookies if refresh fails (security)
+      this.clearAuthCookies(res, req);
+      throw error;
+    }
   }
 
   @Post('set-password')
@@ -384,11 +426,14 @@ export class AuthController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    // Extract token from request to revoke it
+    // Revoke access token
     const token = this.extractTokenFromRequest(req);
     if (token) {
       await this.authService.revokeToken(token);
     }
+
+    // Revoke all refresh tokens for user (security best practice)
+    await this.authService.revokeAllRefreshTokens(user.userId);
 
     // Audit log for logout (non-blocking)
     await safeAuditLog(
@@ -404,33 +449,80 @@ export class AuthController {
       'logout',
     );
 
-    // Clear the access_token cookie with matching settings
-    // Use the same Origin/Referer/Host detection logic as setAuthCookie
-    const isProduction = process.env.NODE_ENV === 'production';
-    let isHttps = false;
-    const origin = req.headers.origin as string | undefined;
-    const referer = req.headers.referer as string | undefined;
-    const host = req.headers.host as string | undefined;
+    // Clear cookies
+    this.clearAuthCookies(res, req);
 
-    if (origin) {
-      isHttps = origin.startsWith('https://');
-    } else if (referer) {
-      isHttps = referer.startsWith('https://');
-    } else if (host) {
-      isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+    return { message: 'Logged out successfully' };
+  }
+
+  /**
+   * Helper to set refresh token cookie
+   */
+  private setRefreshTokenCookie(res: Response, token: string, req?: Request): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Determine if request is actually over HTTPS (reusing logic from setAuthCookie)
+    let isHttps = false;
+    if (req) {
+      const origin = req.headers.origin as string | undefined;
+      const referer = req.headers.referer as string | undefined;
+      const host = req.headers.host as string | undefined;
+
+      if (origin) {
+        isHttps = origin.startsWith('https://');
+      } else if (referer) {
+        isHttps = referer.startsWith('https://');
+      } else if (host) {
+        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+      }
     }
 
     const useSecureCookie = isHttps || isProduction;
     const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
 
-    res.clearCookie('access_token', {
+    res.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: useSecureCookie,
+      sameSite: sameSite as 'strict' | 'lax' | 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/api/v1/auth', // Restrict to auth endpoints (login, refresh, logout)
+    });
+  }
+
+  /**
+   * Helper to clear auth cookies
+   */
+  private clearAuthCookies(res: Response, req?: Request): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Determine if request is actually over HTTPS
+    let isHttps = false;
+    if (req) {
+      const origin = req.headers.origin as string | undefined;
+      const referer = req.headers.referer as string | undefined;
+      const host = req.headers.host as string | undefined;
+
+      if (origin) {
+        isHttps = origin.startsWith('https://');
+      } else if (referer) {
+        isHttps = referer.startsWith('https://');
+      } else if (host) {
+        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+      }
+    }
+
+    const useSecureCookie = isHttps || isProduction;
+    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+
+    const cookieOptions = {
       httpOnly: true,
       secure: useSecureCookie,
       sameSite: sameSite as 'strict' | 'lax' | 'none',
       path: '/',
-    });
+    };
 
-    return { message: 'Logged out successfully' };
+    res.clearCookie('access_token', cookieOptions);
+    res.clearCookie('refresh_token', { ...cookieOptions, path: '/api/v1/auth' });
   }
 
   /**

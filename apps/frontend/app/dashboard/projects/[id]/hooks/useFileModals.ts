@@ -19,7 +19,7 @@ export interface FileModalsState {
 export interface FileModalsActions {
   openUploadModal: () => void;
   closeUploadModal: () => void;
-  openCommentModal: (file?: FileData) => void;
+  openCommentModal: (file: FileData) => void;
   closeCommentModal: () => void;
   openEditModal: (file: FileData) => void;
   closeEditModal: () => void;
