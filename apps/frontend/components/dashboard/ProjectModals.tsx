@@ -1,29 +1,7 @@
-import { useMemo, memo } from 'react';
-import dynamic from 'next/dynamic';
+import { memo } from 'react';
 import { Project } from '@/types';
-import { ButtonLoader } from '@/components/ui/Loader';
-import { PROJECT_THEMES, type ProjectTheme } from '@/lib/styles';
-
-// Lazy load heavy components for better code splitting
-const Modal = dynamic(() => import('@/components/ui/Modal'), {
-  loading: () => null,
-  ssr: false,
-});
-
-const ConfirmModal = dynamic(() => import('@/components/modals/ConfirmModal'), {
-  loading: () => null,
-  ssr: false,
-});
-
-const EmployeeSelect = dynamic(() => import('../projects/EmployeeSelect').then(mod => ({ default: mod.EmployeeSelect })), {
-  loading: () => null,
-  ssr: false,
-});
-
-const SearchableSelect = dynamic(() => import('@/components/ui/inputs/SearchableSelect'), {
-  loading: () => null,
-  ssr: false,
-});
+import { type ProjectTheme } from '@/lib/styles';
+import { CreateProjectModal, EditProjectModal, DeleteProjectModal } from './project-modals';
 
 interface Client {
   id: string;
@@ -36,30 +14,23 @@ interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
-  // Phase 1: Workflow fields
   employeeIds?: string[];
   initialAmountRequired?: number;
-  deadlineDate?: string; // Project completion deadline
-  initialPaymentDeadline?: string; // Deadline for initial payment
+  deadlineDate?: string;
+  initialPaymentDeadline?: string;
 }
 
-/**
- * State and actions for the Create Project modal
- */
 interface CreateModalState {
   isOpen: boolean;
   formData: ProjectFormData;
   isSubmitting: boolean;
   clients: Client[];
-  employees: Client[]; // Phase 1: Employee list
+  employees: Client[];
   onClose: () => void;
   onFormChange: (data: ProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-/**
- * State and actions for the Edit Project modal
- */
 interface EditModalState {
   isConfirmOpen: boolean;
   isEditOpen: boolean;
@@ -75,9 +46,6 @@ interface EditModalState {
   onConfirm: () => void;
 }
 
-/**
- * State and actions for the Delete Project modal
- */
 interface DeleteModalState {
   isOpen: boolean;
   project: Project | null;
@@ -87,10 +55,6 @@ interface DeleteModalState {
   onConfirm: () => void;
 }
 
-/**
- * Props for ProjectModals component
- * Grouped by modal type to reduce prop drilling
- */
 interface ProjectModalsProps {
   createModal: CreateModalState;
   editModal: EditModalState;
@@ -104,393 +68,48 @@ function ProjectModals({
   deleteModal,
   theme = 'navy',
 }: ProjectModalsProps) {
-  // Use centralized theme styles (SSOT)
-  const styles = PROJECT_THEMES[theme];
-
-  // Fix: Ensure Edit Modal shows both AVAILABLE employees AND CURRENTLY ASSIGNED employees
-  const editModalEmployees = useMemo(() => {
-    const currentEmployees = editModal.project?.employees?.map((e) => ({
-      id: e.employee?.id || e.employeeId,
-      firstName: e.employee?.firstName || '',
-      lastName: e.employee?.lastName || '',
-      email: e.employee?.email || '',
-    })) || [];
-
-    // Deduplicate by ID
-    const employeeMap = new Map();
-
-    // First add available employees
-    createModal.employees.forEach(emp => employeeMap.set(emp.id, emp));
-
-    // Then ensure current employees are included (overwriting if needed, though they shouldn't overlap usually)
-    currentEmployees.forEach(emp => employeeMap.set(emp.id, emp));
-
-    return Array.from(employeeMap.values());
-  }, [createModal.employees, editModal.project]);
-
   return (
     <>
-      {/* Create Project Modal */}
-      <Modal
+      <CreateProjectModal
         isOpen={createModal.isOpen}
+        formData={createModal.formData}
+        isSubmitting={createModal.isSubmitting}
+        clients={createModal.clients}
+        employees={createModal.employees}
         onClose={createModal.onClose}
-        title={'Create New Project'}
-      >
-        <form onSubmit={createModal.onSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="create-name" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Project Name *
-            </label>
-            <input
-              id="create-name"
-              type="text"
-              required
-              value={createModal.formData.name}
-              onChange={(e) => createModal.onFormChange({ ...createModal.formData, name: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
-              placeholder="e.g., Logo Design"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="create-description" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Description
-            </label>
-            <textarea
-              id="create-description"
-              rows={4}
-              value={createModal.formData.description}
-              onChange={(e) => createModal.onFormChange({ ...createModal.formData, description: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all resize-none ${styles.input}`}
-              placeholder={'Describe the project...'}
-            />
-          </div>
-
-          <div>
-            <SearchableSelect
-              id="create-client"
-              label="Client"
-              required
-              value={createModal.formData.clientId}
-              onChange={(value) => createModal.onFormChange({ ...createModal.formData, clientId: value })}
-              options={createModal.clients.map((client) => ({
-                id: client.id,
-                name: `${client.firstName} ${client.lastName}`,
-                description: client.email,
-              }))}
-              placeholder="Search for a client..."
-            />
-          </div>
-
-          {/* Phase 1: Workflow fields */}
-          <div>
-            <EmployeeSelect
-              employees={createModal.employees}
-              selectedIds={createModal.formData.employeeIds || []}
-              onChange={(employeeIds) => createModal.onFormChange({ ...createModal.formData, employeeIds })}
-              disabled={createModal.isSubmitting}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="create-amount" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Initial Amount Required
-            </label>
-            <input
-              id="create-amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={createModal.formData.initialAmountRequired || ''}
-              onChange={(e) => createModal.onFormChange({
-                ...createModal.formData,
-                initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
-              })}
-              onWheel={(e) => (e.target as HTMLInputElement).blur()}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="create-payment-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
-                Initial Payment Deadline
-              </label>
-              <input
-                id="create-payment-deadline"
-                type="date"
-                value={createModal.formData.initialPaymentDeadline || ''}
-                onChange={(e) => createModal.onFormChange({ ...createModal.formData, initialPaymentDeadline: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="create-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
-                Project Completion Deadline
-              </label>
-              <input
-                id="create-deadline"
-                type="date"
-                value={createModal.formData.deadlineDate || ''}
-                onChange={(e) => createModal.onFormChange({ ...createModal.formData, deadlineDate: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
-            <button
-              type="button"
-              onClick={createModal.onClose}
-              disabled={createModal.isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium ${styles.cancelButton} rounded-lg transition-colors disabled:opacity-50`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={createModal.isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium text-white ${styles.primaryButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
-            >
-              {createModal.isSubmitting ? <ButtonLoader /> : ('Create Project')}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Edit Confirmation Modal */}
-      <ConfirmModal
-        isOpen={editModal.isConfirmOpen}
-        onClose={() => {
-          editModal.onConfirmClose(false);
-          editModal.onProjectChange(null);
-        }}
-        onConfirm={editModal.onConfirm}
-        title="Confirm Edit"
-        message={`Are you sure you want to edit the project "${editModal.project?.name}"?`}
-        confirmText={'Edit'}
-        variant="warning"
+        onFormChange={createModal.onFormChange}
+        onSubmit={createModal.onSubmit}
+        theme={theme}
       />
 
-      {/* Edit Project Modal */}
-      <Modal
-        isOpen={editModal.isEditOpen}
-        onClose={editModal.onEditClose}
-        title={'Edit Project'}
-      >
-        <form onSubmit={editModal.onSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="edit-name" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Project Name *
-            </label>
-            <input
-              id="edit-name"
-              type="text"
-              required
-              value={editModal.formData.name}
-              onChange={(e) => editModal.onFormChange({ ...editModal.formData, name: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
-              placeholder={'e.g., Logo Design'}
-            />
-          </div>
+      <EditProjectModal
+        isConfirmOpen={editModal.isConfirmOpen}
+        isEditOpen={editModal.isEditOpen}
+        project={editModal.project}
+        formData={editModal.formData}
+        isSubmitting={editModal.isSubmitting}
+        canChangeClient={editModal.canChangeClient}
+        clients={createModal.clients}
+        employees={createModal.employees}
+        onConfirmClose={editModal.onConfirmClose}
+        onEditClose={editModal.onEditClose}
+        onProjectChange={editModal.onProjectChange}
+        onFormChange={editModal.onFormChange}
+        onSubmit={editModal.onSubmit}
+        onConfirm={editModal.onConfirm}
+        theme={theme}
+      />
 
-          <div>
-            <label htmlFor="edit-description" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Description
-            </label>
-            <textarea
-              id="edit-description"
-              rows={4}
-              value={editModal.formData.description}
-              onChange={(e) => editModal.onFormChange({ ...editModal.formData, description: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all resize-none ${styles.input}`}
-              placeholder={'Describe the project...'}
-            />
-          </div>
-
-          <div>
-            <SearchableSelect
-              id="edit-client"
-              label="Client"
-              required
-              value={editModal.formData.clientId}
-              onChange={(value) => editModal.onFormChange({ ...editModal.formData, clientId: value })}
-              disabled={!editModal.canChangeClient}
-              options={createModal.clients.map((client) => ({
-                id: client.id,
-                name: `${client.firstName} ${client.lastName}`,
-                description: client.email,
-              }))}
-              placeholder="Search for a client..."
-            />
-            {!editModal.canChangeClient && (
-              <p className="mt-2 text-sm text-amber-600 flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                Client cannot be changed: current client has uploaded files or comments
-              </p>
-            )}
-          </div>
-
-          <div>
-            <EmployeeSelect
-              employees={editModalEmployees}
-              selectedIds={editModal.formData.employeeIds || []}
-              onChange={(employeeIds) => editModal.onFormChange({ ...editModal.formData, employeeIds })}
-              disabled={editModal.isSubmitting}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="edit-amount" className={`block text-sm font-medium ${styles.label} mb-2`}>
-              Initial Amount Required
-            </label>
-            <input
-              id="edit-amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={editModal.formData.initialAmountRequired || ''}
-              onChange={(e) => editModal.onFormChange({
-                ...editModal.formData,
-                initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
-              })}
-              onWheel={(e) => (e.target as HTMLInputElement).blur()}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="edit-payment-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
-                Initial Payment Deadline
-              </label>
-              <input
-                id="edit-payment-deadline"
-                type="date"
-                value={editModal.formData.initialPaymentDeadline || ''}
-                onChange={(e) => editModal.onFormChange({ ...editModal.formData, initialPaymentDeadline: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="edit-deadline" className={`block text-sm font-medium ${styles.label} mb-2`}>
-                Project Completion Deadline
-              </label>
-              <input
-                id="edit-deadline"
-                type="date"
-                value={editModal.formData.deadlineDate || ''}
-                onChange={(e) => editModal.onFormChange({ ...editModal.formData, deadlineDate: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
-            <button
-              type="button"
-              onClick={editModal.onEditClose}
-              disabled={editModal.isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium ${styles.cancelButton} rounded-lg transition-colors disabled:opacity-50`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={editModal.isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium text-white ${styles.editButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
-            >
-              {editModal.isSubmitting ? <ButtonLoader /> : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
+      <DeleteProjectModal
         isOpen={deleteModal.isOpen}
-        onClose={() => {
-          deleteModal.onClose(false);
-          deleteModal.onProjectChange(null);
-        }}
+        project={deleteModal.project}
+        isDeleting={deleteModal.isDeleting}
+        onClose={deleteModal.onClose}
+        onProjectChange={deleteModal.onProjectChange}
         onConfirm={deleteModal.onConfirm}
-        title="Delete Project"
-        message={`Are you sure you want to delete the project "${deleteModal.project?.name}"?${(() => {
-          const project = deleteModal.project;
-          if (!project) return ' This action cannot be undone.';
-
-          const hasPayments = Number(project.amountPaid || 0) > 0;
-          const hasEmployees = project.employees && project.employees.length > 0;
-
-          if (hasPayments || hasEmployees) {
-            return '';
-          }
-          return ' This action cannot be undone.';
-        })()}`}
-        confirmText="Delete"
-        isLoading={deleteModal.isDeleting}
-        variant="danger"
-        showDetailedWarning={(() => {
-          const project = deleteModal.project;
-          if (!project) return false;
-
-          const hasPayments = Number(project.amountPaid || 0) > 0;
-          const hasEmployees = project.employees && project.employees.length > 0;
-
-          return hasPayments || hasEmployees;
-        })()}
-        warningItems={(() => {
-          const project = deleteModal.project;
-          if (!project) return [];
-
-          const items = [];
-
-          const amountPaid = Number(project.amountPaid || 0);
-          if (amountPaid > 0) {
-            items.push({
-              label: 'Total Payments Received',
-              value: `$${amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-              icon: '💰'
-            });
-          }
-
-          const employeeCount = project.employees?.length || 0;
-          if (employeeCount > 0) {
-            items.push({
-              label: 'Assigned Employees',
-              value: employeeCount,
-              icon: '👥'
-            });
-          }
-
-          // We can assume if there are payments, there might be invoices too
-          if (amountPaid > 0) {
-            items.push({
-              label: 'Payment History',
-              value: 'All payment records',
-              icon: '📋'
-            });
-
-            items.push({
-              label: 'Invoices',
-              value: 'All invoice records',
-              icon: '🧾'
-            });
-          }
-
-          return items;
-        })()}
       />
     </>
   );
 }
 
-// Memoize component to prevent unnecessary re-renders of large modal components
-// Only re-renders when modal states or theme change
 export default memo(ProjectModals);
