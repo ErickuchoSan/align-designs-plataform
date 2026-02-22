@@ -31,8 +31,8 @@ export function FormField({
       )}
       {children}
       {error && (
-        <p className={FORM_ERROR}>
-          <ErrorCircleIcon size="sm" />
+        <p className={FORM_ERROR} role="alert" aria-live="polite">
+          <ErrorCircleIcon size="sm" aria-hidden="true" />
           {error}
         </p>
       )}
