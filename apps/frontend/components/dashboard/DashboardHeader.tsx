@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfileMenu } from './hooks/useProfileMenu';
 
 import NotificationBell from '@/components/notifications/NotificationBell';
+import SkipLinks from '@/components/common/SkipLinks';
 
 interface DashboardHeaderProps {
   title: string;
@@ -26,7 +27,9 @@ export default function DashboardHeader({
   if (!user) return null;
 
   return (
-    <header className="bg-navy-900 shadow-lg">
+    <>
+      <SkipLinks />
+      <header id="navigation" className="bg-navy-900 shadow-lg">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -37,7 +40,7 @@ export default function DashboardHeader({
                 title="Back"
                 aria-label="Go back to previous page"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
@@ -75,6 +78,7 @@ export default function DashboardHeader({
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -87,7 +91,7 @@ export default function DashboardHeader({
                     href="/dashboard/profile"
                     className="flex items-center gap-3 px-4 py-3 text-sm text-navy-900 hover:bg-stone-50 transition-colors"
                   >
-                    <svg className="w-5 h-5 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     <span className="font-medium">My Profile</span>
@@ -101,7 +105,7 @@ export default function DashboardHeader({
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                     <span className="font-medium">Log out</span>
@@ -113,5 +117,6 @@ export default function DashboardHeader({
         </div>
       </div>
     </header>
+    </>
   );
 }

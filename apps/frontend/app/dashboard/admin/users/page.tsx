@@ -64,7 +64,7 @@ export default function UsersManagementPage() {
         </DashboardHeader>
 
         {/* Content */}
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {usersHook.error && (
             <div className="mb-6 rounded-lg bg-red-50 border-l-4 border-red-500 p-4 shadow-md animate-slideDown">
               <p className="text-sm font-medium text-red-800">{usersHook.error}</p>
