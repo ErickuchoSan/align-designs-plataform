@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { InvoiceStatus } from '@/types/invoice';
 import { Badge } from '@/components/ui/Badge';
 import type { BadgeColor } from '@/lib/styles';
@@ -14,8 +15,8 @@ interface InvoiceStatusBadgeProps {
   status: InvoiceStatus;
 }
 
-export default function InvoiceStatusBadge({ status }: InvoiceStatusBadgeProps) {
+export default memo(function InvoiceStatusBadge({ status }: InvoiceStatusBadgeProps) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG[InvoiceStatus.DRAFT];
 
   return <Badge color={config.color}>{config.label}</Badge>;
-}
+});
