@@ -7,8 +7,8 @@ import Loader, { ButtonLoader } from '@/components/ui/Loader';
 import PasswordInput from '@/components/ui/inputs/PasswordInput';
 import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
 import { handleApiError } from '@/lib/errors';
-import { toast } from 'react-hot-toast';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -44,8 +44,7 @@ function ResetPasswordForm() {
       setIsSuccess(true);
       setTimeout(() => router.push('/login'), 2000);
     } catch (err) {
-      logger.error('Failed to reset password', err, { hasToken: !!token });
-      toast.error(handleApiError(err));
+      toast.error(handleApiError(err, 'Failed to reset password'));
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +66,7 @@ function ResetPasswordForm() {
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full animate-scaleIn">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckIcon className="w-8 h-8 text-green-600" />
             </div>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Password updated!</h2>
@@ -131,16 +128,12 @@ function ResetPasswordForm() {
                 }`}>
                 {formData.newPassword === formData.confirmPassword ? (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <CheckIcon size="md" />
                     Passwords match
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <CloseIcon size="md" />
                     Passwords do not match
                   </>
                 )}

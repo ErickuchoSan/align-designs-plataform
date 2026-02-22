@@ -6,9 +6,9 @@ import { FeedbackTimeline } from '@/components/feedback/FeedbackTimeline';
 import { FeedbackThread } from '@/components/feedback/FeedbackThread';
 import { FeedbackService } from '@/services/feedback.service';
 import { FeedbackCycle } from '@/types/feedback';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
+import { handleApiError } from '@/lib/errors';
 import { useAuth } from '@/contexts/AuthContext';
-import { logger } from '@/lib/logger';
 
 export default function ProjectFeedbackPage() {
     const params = useParams();
@@ -30,8 +30,7 @@ export default function ProjectFeedbackPage() {
                 setSelectedCycleId(data[0].id);
             }
         } catch (error) {
-            logger.error('Error loading feedback:', error);
-            toast.error('Error loading feedback');
+            toast.error(handleApiError(error, 'Error loading feedback'));
         } finally {
             setIsLoading(false);
         }
@@ -43,7 +42,7 @@ export default function ProjectFeedbackPage() {
             const data = await FeedbackService.getProjectCycles(projectId);
             setCycles(data);
         } catch (error) {
-            logger.error('Error refreshing feedback data', error);
+            // Silent refresh - don't show error toast for background refreshes
         }
     };
 

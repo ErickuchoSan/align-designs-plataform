@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import { Payment, PaymentStatus } from '@/types/payments';
 import { PaymentsService } from '@/services/payments.service';
-import { logger } from '@/lib/logger';
 import Modal from '@/components/ui/Modal';
+import { useAsyncOperation } from '@/hooks';
+import { CheckIcon } from '@/components/ui/icons';
+import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE } from '@/lib/styles';
 
 interface AdminPaymentReviewModalProps {
   isOpen: boolean;
@@ -18,7 +20,8 @@ export default function AdminPaymentReviewModal({
   payment,
   onSuccess,
 }: AdminPaymentReviewModalProps) {
-  const [processing, setProcessing] = useState(false);
+  // DRY: Use useAsyncOperation for approve/reject handling
+  const { loading: processing, execute } = useAsyncOperation();
   const [rejecting, setRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isEditingAmount, setIsEditingAmount] = useState(false);
@@ -27,19 +30,18 @@ export default function AdminPaymentReviewModal({
   if (!payment) return null;
 
   const handleApprove = async () => {
-    setProcessing(true);
-    try {
-      const finalAmount = isEditingAmount && correctedAmount ? Number(correctedAmount) : undefined;
-      await PaymentsService.approve(payment.id, finalAmount);
-      toast.success('Payment approved successfully');
-      onSuccess?.();
-      onClose();
-    } catch (error) {
-      logger.error('Failed to approve payment', error, { paymentId: payment.id, correctedAmount });
-      toast.error('Failed to approve payment');
-    } finally {
-      setProcessing(false);
-    }
+    const finalAmount = isEditingAmount && correctedAmount ? Number(correctedAmount) : undefined;
+    await execute(
+      () => PaymentsService.approve(payment.id, finalAmount),
+      {
+        successMessage: 'Payment approved successfully',
+        errorMessagePrefix: 'Failed to approve payment',
+        onSuccess: () => {
+          onSuccess?.();
+          onClose();
+        },
+      }
+    );
   };
 
   const handleReject = async () => {
@@ -48,18 +50,17 @@ export default function AdminPaymentReviewModal({
       return;
     }
 
-    setProcessing(true);
-    try {
-      await PaymentsService.reject(payment.id, rejectionReason);
-      toast.success('Payment rejected');
-      onSuccess?.();
-      onClose();
-    } catch (error) {
-      logger.error('Failed to reject payment', error, { paymentId: payment.id, rejectionReason });
-      toast.error('Failed to reject payment');
-    } finally {
-      setProcessing(false);
-    }
+    await execute(
+      () => PaymentsService.reject(payment.id, rejectionReason),
+      {
+        successMessage: 'Payment rejected',
+        errorMessagePrefix: 'Failed to reject payment',
+        onSuccess: () => {
+          onSuccess?.();
+          onClose();
+        },
+      }
+    );
   };
 
   const toggleEditAmount = () => {
@@ -131,7 +132,7 @@ export default function AdminPaymentReviewModal({
                           type="number"
                           value={correctedAmount}
                           onChange={(e) => setCorrectedAmount(e.target.value)}
-                          className="block w-full rounded-md border-stone-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+                          className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                           placeholder="0.00"
                         />
                       </div>
@@ -146,9 +147,7 @@ export default function AdminPaymentReviewModal({
                     >
                       {processing ? 'Processing...' : (
                         <>
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <CheckIcon size="md" />
                           <span className="hidden sm:inline">{isEditingAmount ? 'Confirm with Changes' : 'Approve Payment'}</span>
                           <span className="sm:hidden">{isEditingAmount ? 'Confirm' : 'Approve'}</span>
                         </>
@@ -160,9 +159,9 @@ export default function AdminPaymentReviewModal({
                         onClick={toggleEditAmount}
                         disabled={processing}
                         className="flex items-center justify-center gap-2 px-3 py-2.5 font-medium transition-colors border rounded-lg shadow-sm text-navy-700 bg-navy-50 border-navy-200 sm:px-4 sm:py-3 hover:bg-navy-100 disabled:opacity-50 tooltip-trigger"
-                        title="Approve with Amount Correction"
+                        aria-label="Edit payment amount before approval"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
@@ -195,7 +194,7 @@ export default function AdminPaymentReviewModal({
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
                     placeholder="Please explain why this payment is being rejected..."
-                    className="w-full rounded-md border-red-200 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm mb-3"
+                    className={cn(TEXTAREA_BASE, 'border-red-200 focus:ring-red-500 focus:border-red-500 mb-3')}
                     rows={3}
                   />
                   <div className="flex justify-end gap-2">
@@ -228,9 +227,10 @@ export default function AdminPaymentReviewModal({
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-xs font-medium gap-1 text-navy-600 hover:text-navy-800"
+              aria-label="Open receipt in new tab"
             >
               Open in new tab
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>

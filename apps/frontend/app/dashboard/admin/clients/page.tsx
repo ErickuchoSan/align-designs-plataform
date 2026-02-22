@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { UsersService } from '@/services/users.service';
 import { User } from '@/types';
 import { formatDate } from '@/lib/utils/date.utils';
-import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 
 export default function ClientsListPage() {
     const [clients, setClients] = useState<User[]>([]);
@@ -20,7 +21,7 @@ export default function ClientsListPage() {
             const data = await UsersService.getClients();
             setClients(data);
         } catch (error) {
-            logger.error('Failed to load clients', error);
+            toast.error(handleApiError(error, 'Failed to load clients'));
         } finally {
             setLoading(false);
         }

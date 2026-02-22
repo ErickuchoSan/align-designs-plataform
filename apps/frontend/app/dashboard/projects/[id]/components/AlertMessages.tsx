@@ -1,3 +1,5 @@
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
+
 interface AlertMessagesProps {
   success?: string;
   error?: string;
@@ -15,9 +17,7 @@ export default function AlertMessages({ success, error }: AlertMessagesProps) {
       {success && (
         <div className="mb-6 rounded-lg bg-forest-50 border border-forest-200 p-4 animate-slideDown">
           <div className="flex items-center">
-            <svg className="w-5 h-5 text-forest-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <CheckIcon className="text-forest-600 mr-3" size="md" />
             <p className="text-sm font-medium text-forest-800">{success}</p>
           </div>
         </div>
@@ -26,9 +26,7 @@ export default function AlertMessages({ success, error }: AlertMessagesProps) {
       {error && (
         <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 animate-slideDown">
           <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon className="text-red-600 mr-3" size="md" />
             <p className="text-sm font-medium text-red-800">{error}</p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, memo } from 'react';
+import { cn, INPUT_BASE, INPUT_VARIANTS, CHECKBOX_BASE } from '@/lib/styles';
 
 export interface Employee {
   id: string;
@@ -96,7 +97,7 @@ function EmployeeSelect({
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         disabled={disabled}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'disabled:bg-gray-100 disabled:cursor-not-allowed')}
       />
 
       {/* Employee list */}
@@ -120,7 +121,7 @@ function EmployeeSelect({
                     checked={isSelected}
                     onChange={() => handleToggle(employee.id)}
                     disabled={disabled}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:cursor-not-allowed"
+                    className={cn(CHECKBOX_BASE, 'disabled:cursor-not-allowed')}
                   />
                   <div className="ml-3 flex-1">
                     <div className="text-sm font-medium text-gray-900">

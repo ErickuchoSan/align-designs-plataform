@@ -12,7 +12,8 @@ import Link from 'next/link';
 // For now, let's use getAll({ clientId: 'current-user-id' }) but we need current user ID. 
 // Or better, backend endpoint /invoices/my-invoices
 import { useAuth } from '@/contexts/AuthContext';
-import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 
 export default function ClientInvoicesPage() {
     const { user } = useAuth();
@@ -32,7 +33,7 @@ export default function ClientInvoicesPage() {
             const data = await InvoicesService.getAll(filters);
             setInvoices(data);
         } catch (error) {
-            logger.error('Failed to load invoices', error);
+            toast.error(handleApiError(error, 'Failed to load invoices'));
         } finally {
             setLoading(false);
         }

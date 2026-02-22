@@ -1,9 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { api } from '@/lib/api';
 import { handleApiError } from '@/lib/errors';
 import { MESSAGE_DURATION, FILE_UPLOAD } from '@/lib/constants/ui.constants';
+import { FilesService } from '@/services/files.service';
 import type { FileData } from './useProjectFiles';
-import { logger } from '@/lib/logger';
 
 export function useFileOperations(
   projectId: string,
@@ -74,18 +73,14 @@ export function useFileOperations(
 
         for (let i = 0; i < totalFiles; i++) {
           const file = files[i];
-          const fileComment = i === 0 ? comment : ''; // Attach comment to first file only (or all? usually first)
-
-          const formData = new FormData();
-          formData.append('file', file);
-          if (fileComment) formData.append('comment', fileComment);
-          if (stage) formData.append('stage', stage);
+          const fileComment = i === 0 ? comment : '';
 
           try {
-            await api.post(`/files/${projectId}/upload`, formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
+            await FilesService.upload(projectId, {
+              file,
+              comment: fileComment || undefined,
+              stage,
               onUploadProgress: (progressEvent) => {
-                // Approximate progress for current file in total context
                 if (progressEvent.total) {
                   const filePercent = (progressEvent.loaded / progressEvent.total) * 100;
                   const totalPercent = ((i * 100) + filePercent) / totalFiles;
@@ -94,8 +89,8 @@ export function useFileOperations(
               },
             });
             successCount++;
-          } catch (err) {
-            logger.error(`Failed to upload ${file.name}`, err);
+          } catch {
+            // Silent error - batch upload continues with other files
           }
         }
 
@@ -135,32 +130,17 @@ export function useFileOperations(
 
           for (let i = 0; i < files.length; i++) {
             const file = files[i];
-
-            // Only attach the full comment to the first file to avoid duplication
-            // For others, we could leave empty or add a reference
             const fileComment = i === 0 ? comment : '';
 
-            // Re-use internal file upload logic manually to avoid state conflicts if we called handleFileUpload
-            const formData = new FormData();
-            formData.append('file', file);
-            if (fileComment) {
-              formData.append('comment', fileComment);
-            }
-            if (stage) {
-              formData.append('stage', stage);
-            }
-            if (relatedFileId) {
-              formData.append('relatedFileId', relatedFileId);
-            }
-
             try {
-              await api.post(`/files/${projectId}/upload`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+              await FilesService.upload(projectId, {
+                file,
+                comment: fileComment || undefined,
+                stage,
+                relatedFileId,
               });
-            } catch (err) {
-              logger.error(`Failed to upload file ${file.name}`, err);
+            } catch {
               totalSuccess = false;
-              // Continue uploading others? Yes.
             }
           }
 
@@ -176,11 +156,7 @@ export function useFileOperations(
 
         } else {
           // CASE B: Text only comment
-          await api.post(`/files/${projectId}/comment`, {
-            comment: comment,
-            stage: stage,
-            relatedFileId: relatedFileId,
-          });
+          await FilesService.createComment(projectId, comment, stage, relatedFileId);
 
           onSuccessRef.current('Comment created successfully');
           await onRefreshRef.current();
@@ -206,32 +182,21 @@ export function useFileOperations(
 
       try {
         // 1. Update the existing file (PATCH) - optionally replacing content with first file
-        const updateFormData = new FormData();
-
-        // Always send comment if changed (or even if not, to ensure sync? logic says if changed)
-        if (editComment !== fileToEdit.comment) {
-          updateFormData.append('comment', editComment);
-        }
-
-        const primaryFile = editFiles.length > 0 ? editFiles[0] : null;
-
-        if (primaryFile) {
-          updateFormData.append('file', primaryFile);
-        }
+        const primaryFile = editFiles.length > 0 ? editFiles[0] : undefined;
+        const commentChanged = editComment !== fileToEdit.comment;
 
         // Only call patch if there's something to update
-        if (editComment !== fileToEdit.comment || primaryFile) {
+        if (commentChanged || primaryFile) {
           try {
-            await api.patch(`/files/${fileToEdit.id}`, updateFormData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
+            await FilesService.update(fileToEdit.id, {
+              comment: commentChanged ? editComment : undefined,
+              file: primaryFile,
             });
             successCount++;
-          } catch (error) {
-            logger.error('Error updating original file:', error);
+          } catch {
             hasError = true;
           }
         } else {
-          // Nothing to update on primary file
           successCount++;
         }
 
@@ -239,31 +204,14 @@ export function useFileOperations(
         if (editFiles.length > 1) {
           const additionalFiles = editFiles.slice(1);
           for (const file of additionalFiles) {
-            const formData = new FormData();
-            formData.append('file', file);
-            // Should we attach the same comment? 
-            // Context implicitly implies these are related. 
-            // But usually "Edit" comment applies to the Main file. 
-            // Let's add the comment to new files too if it exists, or leave blank?
-            // User said "recuerda que al editar me permite subir mas de un archivo... o sin archivos pero si con comentarios..."
-            // Safest is maybe NO comment on extras unless user specified?
-            // Or maybe the SAME comment? 
-            // Let's assume SAME comment for now as they are a "batch" logically.
-            if (editComment) {
-              formData.append('comment', editComment);
-            }
-            // Important: Use the same STAGE as the original file
-            if (fileToEdit.stage) {
-              formData.append('stage', fileToEdit.stage);
-            }
-
             try {
-              await api.post(`/files/${projectId}/upload`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+              await FilesService.upload(projectId, {
+                file,
+                comment: editComment || undefined,
+                stage: fileToEdit.stage,
               });
               successCount++;
-            } catch (err) {
-              logger.error('Error uploading additional file:', err);
+            } catch {
               hasError = true;
             }
           }
@@ -292,17 +240,14 @@ export function useFileOperations(
   const handleDownload = useCallback(
     async (fileId: string, fileName: string) => {
       try {
-        // Step 1: Get presigned download URL from backend
-        const response = await api.get(`/files/${fileId}/download`);
-        const { downloadUrl } = response.data;
+        const downloadUrl = await FilesService.getDownloadUrl(fileId);
 
         if (!downloadUrl) {
           onErrorRef.current('No download URL available for this file');
           return;
         }
 
-        // Step 2: Download file directly from MinIO using presigned URL
-        // This bypasses CORS and uses the presigned URL's authentication
+        // Download file directly using presigned URL
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.setAttribute('download', fileName);
@@ -325,7 +270,7 @@ export function useFileOperations(
       setDeleting(true);
 
       try {
-        await api.delete(`/files/${fileToDelete.id}`);
+        await FilesService.delete(fileToDelete.id);
         onSuccessRef.current('File deleted successfully');
         await onRefreshRef.current();
 

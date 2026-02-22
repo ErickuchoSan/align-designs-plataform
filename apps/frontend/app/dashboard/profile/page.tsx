@@ -14,8 +14,9 @@ import PasswordInput from '@/components/ui/inputs/PasswordInput';
 import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { handleApiError } from '@/lib/errors';
-import { logger } from '@/lib/logger';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
+import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 
 export default function ProfilePage() {
   const { user, loading } = useProtectedRoute();
@@ -65,9 +66,7 @@ export default function ProfilePage() {
       // Update user in context (which also updates localStorage)
       updateUser(profileData);
     } catch (err) {
-      const errorMessage = handleApiError(err);
-      toast.error(errorMessage);
-      logger.error('Error updating profile:', err);
+      toast.error(handleApiError(err, 'Error updating profile'));
     } finally {
       setSavingProfile(false);
     }
@@ -84,9 +83,7 @@ export default function ProfilePage() {
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowSuccessModal(true);
     } catch (err) {
-      const errorMessage = handleApiError(err);
-      toast.error(errorMessage);
-      logger.error('Error changing password:', err);
+      toast.error(handleApiError(err, 'Error changing password'));
     } finally {
       setChangingPassword(false);
     }
@@ -168,7 +165,7 @@ export default function ProfilePage() {
                         required
                         value={profileData.firstName}
                         onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                        className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                       />
                     </div>
                     <div>
@@ -178,7 +175,7 @@ export default function ProfilePage() {
                         required
                         value={profileData.lastName}
                         onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                        className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                        className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                       />
                     </div>
                   </div>
@@ -289,7 +286,7 @@ export default function ProfilePage() {
               required
               value={passwordData.currentPassword}
               onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+              className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
               placeholder="Your current password"
             />
           </div>
@@ -336,16 +333,12 @@ export default function ProfilePage() {
                 }`}>
                 {passwordData.newPassword === passwordData.confirmPassword ? (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <CheckIcon size="md" />
                     Passwords match
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <CloseIcon size="md" />
                     Passwords do not match
                   </>
                 )}
@@ -385,9 +378,7 @@ export default function ProfilePage() {
       >
         <div className="text-center py-4">
           <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-forest-100 mb-4">
-            <svg className="h-8 w-8 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <CheckIcon className="w-8 h-8 text-forest-600" />
           </div>
           <h3 className="text-lg font-semibold text-navy-900 mb-2">
             Password updated successfully

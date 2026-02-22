@@ -11,7 +11,8 @@ import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import Link from 'next/link';
-import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 
 export default function ClientProfilePage() {
     const params = useParams();
@@ -47,7 +48,7 @@ export default function ClientProfilePage() {
             }
 
         } catch (error) {
-            logger.error('Failed to load client data', error);
+            toast.error(handleApiError(error, 'Failed to load client data'));
         } finally {
             setLoading(false);
         }

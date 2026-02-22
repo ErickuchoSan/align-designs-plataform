@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';
 import { Invoice } from '@/types/invoice';
-import { logger } from '@/lib/logger';
-import { toast } from 'react-hot-toast';
+import { handleApiError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
+import { CloseIcon } from '@/components/ui/icons';
+import { useFetchOnOpen } from '@/hooks';
+import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { cn, INPUT_BASE, INPUT_VARIANTS, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 interface UploadPaymentProofModalProps {
     isOpen: boolean;
@@ -31,8 +35,6 @@ export default function UploadPaymentProofModal({
     onSuccess,
     userId,
 }: UploadPaymentProofModalProps) {
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [loadingInvoices, setLoadingInvoices] = useState(false);
     const [file, setFile] = useState<File | null>(null);
 
     const {
@@ -46,7 +48,7 @@ export default function UploadPaymentProofModal({
         defaultValues: {
             invoiceId: '',
             amount: '',
-            paymentDate: new Date().toISOString().split('T')[0],
+            paymentDate: getTodayDateString(),
             paymentMethod: 'TRANSFER',
             referenceNumber: ''
         }
@@ -54,25 +56,15 @@ export default function UploadPaymentProofModal({
 
     const selectedInvoiceId = watch('invoiceId');
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchPendingInvoices();
-        }
-    }, [isOpen]);
-
-    const fetchPendingInvoices = async () => {
-        try {
-            setLoadingInvoices(true);
+    // DRY: Fetch invoices when modal opens
+    const { data: invoices, loading: loadingInvoices } = useFetchOnOpen<Invoice[]>(
+        isOpen,
+        async () => {
             const allInvoices = await InvoicesService.getByProject(projectId);
-            const pendingInvoices = allInvoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
-            setInvoices(pendingInvoices);
-        } catch (err) {
-            logger.error('Error fetching invoices:', err);
-            toast.error('Failed to load pending invoices');
-        } finally {
-            setLoadingInvoices(false);
-        }
-    };
+            return allInvoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
+        },
+        { deps: [projectId], initialData: [], errorPrefix: 'Failed to load invoices' }
+    );
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -84,7 +76,7 @@ export default function UploadPaymentProofModal({
         const invId = e.target.value;
         setValue('invoiceId', invId);
 
-        const invoice = invoices.find(i => i.id === invId);
+        const invoice = (invoices ?? []).find(i => i.id === invId);
         if (invoice) {
             setValue('amount', (invoice.totalAmount - invoice.amountPaid).toString());
         } else {
@@ -111,9 +103,8 @@ export default function UploadPaymentProofModal({
             toast.success('Payment proof submitted successfully');
             await onSuccess();
             handleClose();
-        } catch (err: any) {
-            logger.error('Error uploading payment proof:', err);
-            toast.error(err.response?.data?.message || err.message || 'Failed to submit payment proof');
+        } catch (err) {
+            toast.error(handleApiError(err, 'Failed to submit payment proof'));
         }
     };
 
@@ -135,9 +126,7 @@ export default function UploadPaymentProofModal({
                         onClick={handleClose}
                         className="text-stone-400 hover:text-stone-600 transition-colors"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <CloseIcon size="md" />
                     </button>
                 </div>
 
@@ -152,10 +141,10 @@ export default function UploadPaymentProofModal({
                             {...register('invoiceId', { required: 'Please select an invoice' })}
                             onChange={handleInvoiceChange}
                             disabled={loadingInvoices}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all disabled:bg-stone-100 ${errors.invoiceId ? 'border-red-300' : 'border-stone-300'}`}
+                            className={cn(INPUT_BASE, errors.invoiceId ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'disabled:bg-stone-100')}
                         >
                             <option value="">-- Select Invoice --</option>
-                            {invoices.map((inv) => (
+                            {(invoices ?? []).map((inv) => (
                                 <option key={inv.id} value={inv.id}>
                                     #{inv.invoiceNumber} - Total: ${inv.totalAmount} (Due: ${inv.totalAmount - inv.amountPaid})
                                 </option>
@@ -163,7 +152,7 @@ export default function UploadPaymentProofModal({
                         </select>
                         {errors.invoiceId && <p className="text-xs text-red-600 mt-1">{errors.invoiceId.message}</p>}
                         {loadingInvoices && <p className="text-xs text-stone-500 mt-1">Loading invoices...</p>}
-                        {invoices.length === 0 && !loadingInvoices && <p className="text-xs text-orange-500 mt-1">No pending invoices found.</p>}
+                        {(invoices ?? []).length === 0 && !loadingInvoices && <p className="text-xs text-orange-500 mt-1">No pending invoices found.</p>}
                     </div>
 
                     <div>
@@ -176,7 +165,7 @@ export default function UploadPaymentProofModal({
                                 type="number"
                                 step="0.01"
                                 {...register('amount', { required: 'Amount is required' })}
-                                className={`w-full pl-7 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.amount ? 'border-red-300' : 'border-stone-300'}`}
+                                className={cn(INPUT_BASE, errors.amount ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'pl-7')}
                                 placeholder="0.00"
                             />
                         </div>
@@ -190,7 +179,7 @@ export default function UploadPaymentProofModal({
                             </label>
                             <select
                                 {...register('paymentMethod')}
-                                className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                                className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                             >
                                 <option value="TRANSFER">Transfer</option>
                                 <option value="CHECK">Check</option>
@@ -203,7 +192,7 @@ export default function UploadPaymentProofModal({
                             <input
                                 type="date"
                                 {...register('paymentDate', { required: 'Date is required' })}
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all ${errors.paymentDate ? 'border-red-300' : 'border-stone-300'}`}
+                                className={cn(INPUT_BASE, errors.paymentDate ? INPUT_VARIANTS.error : INPUT_VARIANTS.default)}
                             />
                             {errors.paymentDate && <p className="text-xs text-red-600 mt-1">{errors.paymentDate.message}</p>}
                         </div>
@@ -216,7 +205,7 @@ export default function UploadPaymentProofModal({
                         <input
                             type="text"
                             {...register('referenceNumber')}
-                            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all"
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                             placeholder="e.g. Auth Code 12345"
                         />
                     </div>
@@ -248,14 +237,14 @@ export default function UploadPaymentProofModal({
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
+                            className={cn(BUTTON_BASE, BUTTON_VARIANTS.secondary, BUTTON_SIZES.md, 'flex-1')}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting || !selectedInvoiceId}
-                            className="flex items-center justify-center flex-1 gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-900 rounded-lg hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md, 'flex-1 gap-2')}
                         >
                             {isSubmitting ? (
                                 <>

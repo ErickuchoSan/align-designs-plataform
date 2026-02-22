@@ -112,7 +112,13 @@
       "Bash(cmd /c \"taskkill /F /PID 30448\")",
       "Bash(timeout:*)",
       "Bash(ssh root@45.55.71.127 \"sleep 15 && docker logs backend-dev 2>&1 | tail -40\")",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(ssh root@45.55.71.127 \"docker restart frontend-dev && sleep 5 && docker logs frontend-dev --tail 10\")",
+      "Bash(ssh root@45.55.71.127 'cat > /tmp/create_admin.sql << ''''EOF''''\nINSERT INTO users \\(\n  id,\n  email,\n  first_name,\n  last_name,\n  password_hash,\n  role,\n  is_active,\n  email_verified,\n  created_at,\n  updated_at\n\\) VALUES \\(\n  gen_random_uuid\\(\\),\n  ''''alfonso@aligndesignsllc.com'''',\n  ''''Alfonso'''',\n  ''''Admin'''',\n  ''''$2b$10$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.q7URQXOhVJO.3O'''',\n  ''''ADMIN'''',\n  true,\n  true,\n  NOW\\(\\),\n  NOW\\(\\)\n\\);\nEOF')",
+      "Bash(pnpm add:*)",
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -Include *.tsx,*.ts | ForEach-Object { \\(Get-Content $_FullName\\) -replace \"\"import \\\\{ toast \\\\} from ''react-hot-toast'';\"\", \"\"import { toast } from ''@/lib/toast'';\"\" | Set-Content $_FullName }\")"
     ],
     "deny": [],
     "ask": []

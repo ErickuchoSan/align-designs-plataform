@@ -1,13 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import { EmployeeSelect } from '@/components/projects/EmployeeSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
 import { ProjectsService } from '@/services/projects.service';
-import { toast } from 'react-hot-toast';
 import { User } from '@/types';
 import { UsersService } from '@/services/users.service';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/errors';
+import { useFetchOnOpen, useAsyncOperation } from '@/hooks';
 
 interface ManageEmployeesModalProps {
     isOpen: boolean;
@@ -25,49 +23,39 @@ interface ProjectEmployee {
 }
 
 export default function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmployees, onSuccess }: ManageEmployeesModalProps) {
-    const [availableEmployees, setAvailableEmployees] = useState<User[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
 
-    // Memoize loadEmployees to prevent recreation on every render
-    const loadEmployees = useCallback(async () => {
-        try {
-            setIsLoading(true);
-            const users = await UsersService.getEmployees();
-            setAvailableEmployees(users);
-        } catch (error) {
-            logger.error('Failed to load employees for assignment', error);
-            toast.error('Error loading available employees');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+    // DRY: Use useFetchOnOpen for automatic fetch when modal opens
+    const { data: availableEmployees, loading: isLoading } = useFetchOnOpen<User[]>(
+        isOpen,
+        () => UsersService.getEmployees(),
+        { initialData: [], errorPrefix: 'Error loading available employees' }
+    );
+
+    // DRY: Use useAsyncOperation for save handling
+    const { loading: isSaving, execute } = useAsyncOperation();
 
     // Initialize selected IDs from current employees when modal opens
-    // Fix: Extract employee IDs only when isOpen changes to avoid dependency on currentEmployees array
     useEffect(() => {
         if (isOpen) {
             const currentIds = currentEmployees.map(e => e.employee?.id).filter(Boolean) as string[];
             setSelectedIds(currentIds);
-            loadEmployees();
         }
-    }, [isOpen, loadEmployees]); // Removed currentEmployees from deps to prevent unnecessary effects
+    }, [isOpen, currentEmployees]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-        try {
-            await ProjectsService.assignEmployees(projectId, selectedIds);
-            toast.success('Employees updated successfully');
-            onSuccess();
-            onClose();
-        } catch (error: any) {
-            logger.error('Failed to save employee assignments', error, { projectId, selectedIds });
-            toast.error(handleApiError(error, 'Error updating employees'));
-        } finally {
-            setIsSaving(false);
-        }
+        await execute(
+            () => ProjectsService.assignEmployees(projectId, selectedIds),
+            {
+                successMessage: 'Employees updated successfully',
+                errorMessagePrefix: 'Error updating employees',
+                onSuccess: () => {
+                    onSuccess();
+                    onClose();
+                },
+            }
+        );
     };
 
     return (
@@ -83,7 +71,7 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
                         <div className="py-4 text-center text-gray-400">Loading employees...</div>
                     ) : (
                         <EmployeeSelect
-                            employees={availableEmployees}
+                            employees={availableEmployees ?? []}
                             selectedIds={selectedIds}
                             onChange={setSelectedIds}
                         />

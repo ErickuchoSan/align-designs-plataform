@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { useState, useCallback } from 'react';
 import { handleApiError } from '@/lib/errors';
 import { Project, File, FileFilters } from '@/types';
-import { logger } from '@/lib/logger';
+import { ProjectsService } from '@/services/projects.service';
+import { FilesService } from '@/services/files.service';
 
 // Use Project type from types index
 export type ProjectData = Project;
@@ -30,14 +30,14 @@ export function useProjectFiles(projectId: string) {
 
   const fetchProjectDetails = useCallback(async () => {
     try {
-      // Parallelize API calls for better performance
-      const [projectRes, typesRes] = await Promise.all([
-        api.get<Project>(`/projects/${projectId}`),
-        api.get<string[]>(`/files/project/${projectId}/types`),
+      // Parallelize service calls for better performance
+      const [project, types] = await Promise.all([
+        ProjectsService.getById(projectId),
+        FilesService.getProjectFileTypes(projectId),
       ]);
 
-      setProject(projectRes.data);
-      setAvailableTypes(typesRes.data || []);
+      setProject(project);
+      setAvailableTypes(types || []);
     } catch (error) {
       setError(handleApiError(error, 'Error loading project'));
     }
@@ -55,16 +55,13 @@ export function useProjectFiles(projectId: string) {
       if (nameFilter) params.name = nameFilter;
       if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
 
-      const { data } = await api.get<{ data: File[]; meta: { total: number; totalPages: number } }>(`/files/project/${projectId}`, {
-        params,
-      });
-      // Backend returns paginated response: { data: [...], meta: {...} }
-      setFiles(data.data || []);
-      setTotalItems(data.meta?.total || 0);
-      setTotalPages(data.meta?.totalPages || 0);
+      const result = await FilesService.getProjectFiles(projectId, params);
+      setFiles(result.data || []);
+      setTotalItems(result.meta?.total || 0);
+      setTotalPages(result.meta?.totalPages || 0);
     } catch (error) {
       setError(handleApiError(error, 'Error loading files'));
-      setFiles([]); // Reset to empty array on error
+      setFiles([]);
     } finally {
       setLoading(false);
     }
@@ -73,10 +70,10 @@ export function useProjectFiles(projectId: string) {
   // Helper to refresh types (call after upload/delete)
   const refreshTypes = useCallback(async () => {
     try {
-      const { data } = await api.get<string[]>(`/files/project/${projectId}/types`);
-      setAvailableTypes(data || []);
-    } catch (e) {
-      logger.error('Failed to refresh file types', e, { projectId });
+      const types = await FilesService.getProjectFileTypes(projectId);
+      setAvailableTypes(types || []);
+    } catch {
+      // Silent error - file types refresh is non-critical
     }
   }, [projectId]);
 

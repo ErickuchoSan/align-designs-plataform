@@ -1,5 +1,5 @@
 import api from '../lib/api';
-import { User } from '../types';
+import { User, Role, CreateUserDto } from '../types';
 
 interface PaginatedResult<T> {
     data: T[];
@@ -13,8 +13,22 @@ interface PaginatedResult<T> {
     };
 }
 
+export interface GetUsersParams {
+    page?: number;
+    limit?: number;
+    role?: Role;
+}
+
 export class UsersService {
     private static readonly BASE_URL = '/users';
+
+    /**
+     * Get all users with pagination
+     */
+    static async getAll(params: GetUsersParams = {}): Promise<PaginatedResult<User>> {
+        const response = await api.get<PaginatedResult<User>>(this.BASE_URL, { params });
+        return response.data;
+    }
 
     /**
      * Get all users with role EMPLOYEE
@@ -34,8 +48,6 @@ export class UsersService {
     }
 
     static async getClients(): Promise<User[]> {
-        // Assuming backend supports /users?role=CLIENT or we need to add a specific endpoint
-        // Start with generic /users if filter is supported, or /users/clients
         const response = await api.get<PaginatedResult<User>>(`${this.BASE_URL}?role=CLIENT`);
         return response.data.data;
     }
@@ -46,11 +58,41 @@ export class UsersService {
     }
 
     /**
+     * Create a new user
+     */
+    static async create(data: CreateUserDto): Promise<User> {
+        const response = await api.post<User>(this.BASE_URL, data);
+        return response.data;
+    }
+
+    /**
+     * Update a user by ID
+     */
+    static async update(id: string, data: Partial<User>): Promise<User> {
+        const response = await api.put<User>(`${this.BASE_URL}/${id}`, data);
+        return response.data;
+    }
+
+    /**
      * Update current user profile
      */
     static async updateProfile(data: { firstName: string; lastName: string; phone?: string }): Promise<User> {
         const response = await api.put<User>(`${this.BASE_URL}/profile`, data);
         return response.data;
+    }
+
+    /**
+     * Toggle user active status
+     */
+    static async toggleStatus(id: string, isActive: boolean): Promise<void> {
+        await api.patch(`${this.BASE_URL}/${id}/toggle-status`, { isActive });
+    }
+
+    /**
+     * Delete a user (hard delete with optional force)
+     */
+    static async delete(id: string, options: { hard?: boolean; force?: boolean } = {}): Promise<void> {
+        await api.delete(`${this.BASE_URL}/${id}`, { params: options });
     }
 }
 

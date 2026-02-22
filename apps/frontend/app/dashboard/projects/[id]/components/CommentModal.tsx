@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import { ButtonLoader } from '@/components/ui/Loader';
+import { cn, TEXTAREA_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 interface CommentModalProps {
   show: boolean;
@@ -57,7 +58,7 @@ export default function CommentModal({
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="Write your feedback..."
             rows={4}
-            className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent resize-none text-navy-900 placeholder:text-stone-700"
+            className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
           />
         </div>
 

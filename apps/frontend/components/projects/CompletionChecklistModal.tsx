@@ -1,6 +1,7 @@
 'use client';
 
 import Modal from '@/components/ui/Modal';
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 
 interface CompletionChecklistModalProps {
     isOpen: boolean;
@@ -44,9 +45,7 @@ export default function CompletionChecklistModal({
                         <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isReady ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'
                             }`}>
                             {isReady ? (
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
+                                <CheckIcon size="xs" />
                             ) : (
                                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01" />
@@ -160,17 +159,13 @@ function StatusIcon({ success }: { success: boolean }) {
     if (success) {
         return (
             <div className="mt-0.5 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
+                <CheckIcon size="xs" />
             </div>
         );
     }
     return (
         <div className="mt-0.5 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon size="xs" />
         </div>
     );
 }

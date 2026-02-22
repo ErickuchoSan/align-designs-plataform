@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { countries as allCountries, type Country } from '../../../app/utils/countries';
+import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
+import { ChevronDownIcon, CloseIcon, SearchIcon, SpinnerIcon } from '@/components/ui/icons';
+import { useClickOutside } from '@/hooks';
 
 interface CountryCodeSelectorProps {
   value: string;
@@ -37,17 +40,13 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
     setSelectedCountry(countries.find(c => c.dialCode === value) || countries[0]);
   }, [value, countries]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setSearchTerm('');
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+  // Close dropdown on click outside
+  const handleClickOutside = useCallback(() => {
+    setIsOpen(false);
+    setSearchTerm('');
   }, []);
+
+  useClickOutside(dropdownRef, handleClickOutside, isOpen);
 
   // Intelligent search with prioritization
   const filteredCountries = useMemo(() => {
@@ -143,7 +142,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between gap-2 px-4 py-3 border border-stone-300 rounded-lg bg-white hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all ${className}`}
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'flex items-center justify-between gap-2 bg-white hover:bg-stone-50', className)}
       >
         <div className="flex items-center gap-2">
           {selectedCountry ? (
@@ -155,14 +154,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
             <span className="text-sm text-gray-400">Loading...</span>
           )}
         </div>
-        <svg
-          className={`w-4 h-4 text-navy-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDownIcon className={cn('text-navy-600 transition-transform', isOpen && 'rotate-180')} size="md" />
       </button>
 
       {isOpen && (
@@ -178,20 +170,13 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
           {/* Search Input */}
           <div className="p-3 border-b border-stone-200 bg-stone-50">
             <div className="relative">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size="md" />
               <input
                 type="text"
                 placeholder="Search country or dial code..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 text-sm text-navy-900 placeholder:text-stone-500"
+                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'pl-10 pr-3 py-2.5 text-sm text-navy-900 placeholder:text-stone-500')}
                 autoFocus
               />
               {searchTerm && (
@@ -199,9 +184,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
                   onClick={() => setSearchTerm('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <CloseIcon size="md" />
                 </button>
               )}
             </div>
@@ -223,19 +206,14 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
           <div className="max-h-80 overflow-y-auto">
             {countries.length === 0 ? (
               <div className="p-6 text-center">
-                <div className="mx-auto w-12 h-12 mb-3">
-                  <svg className="animate-spin text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                <div className="mx-auto w-12 h-12 mb-3 flex items-center justify-center">
+                  <SpinnerIcon className="w-8 h-8 text-gold-600" />
                 </div>
                 <p className="text-sm font-medium text-stone-600">Loading countries...</p>
               </div>
             ) : filteredCountries.length === 0 ? (
               <div className="p-6 text-center">
-                <svg className="mx-auto w-12 h-12 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <SearchIcon className="mx-auto w-12 h-12 text-stone-300 mb-3" />
                 <p className="text-sm font-medium text-stone-600">No countries found</p>
                 <p className="text-xs text-stone-500 mt-1">Try searching with a different term</p>
               </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState, memo, useMemo } from 'react';
 import { TrackingService, ProjectTrackingStats } from '@/services/tracking.service';
-import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 interface TimeTrackingChartsProps {
     projectId: string;
@@ -27,8 +27,7 @@ function TimeTrackingCharts({ projectId }: TimeTrackingChartsProps) {
                 const data = await TrackingService.getProjectStats(projectId);
                 setStats(data);
             } catch (err) {
-                logger.error('Failed to load tracking stats', err, { projectId });
-                setError('Could not load time tracking data');
+                setError(handleApiError(err, 'Could not load time tracking data'));
             } finally {
                 setLoading(false);
             }

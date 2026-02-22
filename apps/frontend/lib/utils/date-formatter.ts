@@ -110,6 +110,14 @@ export function formatDateForInput(dateString: string | Date): string {
 }
 
 /**
+ * Get today's date formatted for input[type="date"] (YYYY-MM-DD)
+ * DRY: Replaces repeated `new Date().toISOString().split('T')[0]` pattern
+ */
+export function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
  * Get formatted deadline status text
  */
 export function getDeadlineStatus(dateString: string | Date): {

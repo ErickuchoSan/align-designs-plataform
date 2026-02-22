@@ -10,12 +10,12 @@ import { PaymentsService } from '@/services/payments.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { Payment, PaymentType } from '@/types/payments';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
+import { handleApiError } from '@/lib/errors';
 import { ProjectsService } from '@/services/projects.service';
 import { Project } from '@/types';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import { logger } from '@/lib/logger';
 
 export default function ProjectPaymentsPage() {
     const params = useParams();
@@ -46,8 +46,7 @@ export default function ProjectPaymentsPage() {
             setInvoices(invoicesData);
             setProject(projectData);
         } catch (error) {
-            logger.error('Failed to load payments page data', error, { projectId });
-            toast.error('Error loading payment information');
+            toast.error(handleApiError(error, 'Error loading payment information'));
         } finally {
             setIsLoading(false);
         }
@@ -90,8 +89,7 @@ export default function ProjectPaymentsPage() {
             const url = window.URL.createObjectURL(blob);
             window.open(url, '_blank');
         } catch (error) {
-            logger.error('Failed to download invoice PDF', error, { invoiceId, projectId });
-            toast.error('Could not download invoice. Please try again.');
+            toast.error(handleApiError(error, 'Could not download invoice'));
         }
     };
 

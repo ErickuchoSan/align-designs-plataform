@@ -1,8 +1,6 @@
 import { useState, useCallback } from 'react';
-import { api } from '@/lib/api';
 import { handleApiError } from '@/lib/errors';
-import { MESSAGE_DURATION } from '@/lib/constants/ui.constants';
-import { logger } from '@/lib/logger';
+import { ProjectsService } from '@/services/projects.service';
 
 interface ProjectFormData {
   name: string;
@@ -33,14 +31,12 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (formData: ProjectFormData) => {
       try {
         setCreating(true);
-        logger.debug('Creating project', { formData });
-        await api.post('/projects', formData);
+        await ProjectsService.create(formData);
         onSuccess?.('Project created successfully');
         refetchProjects?.();
         return true;
       } catch (err) {
         const errorMsg = handleApiError(err, 'Failed to create project');
-        logger.error('Failed to create project', err, { formData });
         onError?.(errorMsg);
         return false;
       } finally {
@@ -54,7 +50,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (projectId: string, formData: ProjectFormData) => {
       try {
         setEditing(true);
-        await api.patch(`/projects/${projectId}`, formData);
+        await ProjectsService.update(projectId, formData);
         onSuccess?.('Project updated successfully');
         refetchProjects?.();
         return true;
@@ -73,7 +69,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
     async (projectId: string) => {
       try {
         setDeleting(true);
-        await api.delete(`/projects/${projectId}`);
+        await ProjectsService.delete(projectId);
         onSuccess?.('Project deleted successfully');
         refetchProjects?.();
         return true;

@@ -1,9 +1,11 @@
 'use client';
 
-import { useRef, useEffect, useCallback, memo } from 'react';
+import { useRef, useCallback, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useClickOutside } from '@/hooks';
 import { formatDistanceToNow } from 'date-fns';
+import { CheckIcon } from '@/components/ui/icons';
 
 function NotificationBell() {
     const {
@@ -19,15 +21,7 @@ function NotificationBell() {
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close on click outside
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [setIsOpen]);
+    useClickOutside(menuRef, () => setIsOpen(false), isOpen);
 
     const handleNotificationClick = useCallback(async (notification: Notification) => {
         if (!notification.isRead) {
@@ -44,32 +38,30 @@ function NotificationBell() {
         switch (type) {
             case 'SUCCESS':
                 return (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600" aria-hidden="true">
+                        <CheckIcon size="sm" />
                     </div>
                 );
             case 'WARNING':
                 return (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center" aria-hidden="true">
+                        <svg className="w-4 h-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
                 );
             case 'ERROR':
                 return (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center" aria-hidden="true">
+                        <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                 );
             default: // INFO
                 return (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center" aria-hidden="true">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -81,28 +73,35 @@ function NotificationBell() {
         <div className="relative mr-4" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-gold-400 hover:text-white transition-colors focus:outline-none"
+                className="relative p-2 text-gold-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 focus:ring-offset-navy-900 rounded-lg"
+                aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+                aria-expanded={isOpen}
+                aria-haspopup="true"
             >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-navy-900 animate-pulse">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-navy-900 animate-pulse" aria-hidden="true">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
             </button>
 
             {isOpen && (
-                <div className="fixed sm:absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 mx-2 sm:mx-0 sm:w-80 md:w-96 rounded-lg bg-white shadow-xl border border-stone-200 z-50 animate-slideDown overflow-hidden">
+                <div
+                    className="fixed sm:absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 mx-2 sm:mx-0 sm:w-80 md:w-96 rounded-lg bg-white shadow-xl border border-stone-200 z-50 animate-slideDown overflow-hidden"
+                    role="menu"
+                    aria-labelledby="notifications-heading"
+                >
                     <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-stone-100 bg-stone-50">
-                        <h3 className="font-semibold text-navy-900 text-sm sm:text-base">
+                        <h3 id="notifications-heading" className="font-semibold text-navy-900 text-sm sm:text-base">
                             Notifications {unreadCount > 0 && <span className="text-xs sm:text-sm font-normal text-stone-500">({unreadCount})</span>}
                         </h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllAsRead}
-                                className="text-[10px] sm:text-xs text-gold-600 hover:text-gold-700 font-medium whitespace-nowrap"
+                                className="text-[10px] sm:text-xs text-gold-600 hover:text-gold-700 font-medium whitespace-nowrap focus:outline-none focus:underline"
                             >
                                 Mark all read
                             </button>
@@ -110,8 +109,7 @@ function NotificationBell() {
                     </div>
 
                     {/* Optimized scrolling container - uses native browser virtualization with max-height */}
-                    {/* For 100+ notifications, browser handles virtual scrolling efficiently */}
-                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
+                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto" role="list">
                         {notifications.length === 0 ? (
                             <div className="px-4 py-8 text-center text-stone-500 text-sm">
                                 No notifications yet.
@@ -119,31 +117,32 @@ function NotificationBell() {
                         ) : (
                             <ul className="divide-y divide-stone-100">
                                 {notifications.map((notification) => (
-                                    <li
-                                        key={notification.id}
-                                        onClick={() => handleNotificationClick(notification)}
-                                        className={`px-3 sm:px-4 py-3 hover:bg-stone-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50/50' : ''
-                                            }`}
-                                    >
-                                        <div className="flex gap-2 sm:gap-3">
-                                            {getIcon(notification.type)}
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`text-xs sm:text-sm font-medium line-clamp-2 ${!notification.isRead ? 'text-navy-900' : 'text-stone-600'}`}>
-                                                    {notification.title}
-                                                </p>
-                                                <p className="text-[11px] sm:text-xs text-stone-500 mt-1 line-clamp-2">
-                                                    {notification.message}
-                                                </p>
-                                                <p className="text-[10px] text-stone-400 mt-1">
-                                                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                                                </p>
-                                            </div>
-                                            {!notification.isRead && (
-                                                <div className="flex-shrink-0 self-center">
-                                                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                    <li key={notification.id} role="listitem">
+                                        <button
+                                            onClick={() => handleNotificationClick(notification)}
+                                            className={`w-full text-left px-3 sm:px-4 py-3 hover:bg-stone-50 transition-colors focus:outline-none focus:bg-stone-100 ${!notification.isRead ? 'bg-blue-50/50' : ''}`}
+                                            aria-label={`${notification.title}. ${notification.message}. ${formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}${!notification.isRead ? '. Unread' : ''}`}
+                                        >
+                                            <div className="flex gap-2 sm:gap-3">
+                                                {getIcon(notification.type)}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-xs sm:text-sm font-medium line-clamp-2 ${!notification.isRead ? 'text-navy-900' : 'text-stone-600'}`}>
+                                                        {notification.title}
+                                                    </p>
+                                                    <p className="text-[11px] sm:text-xs text-stone-500 mt-1 line-clamp-2">
+                                                        {notification.message}
+                                                    </p>
+                                                    <p className="text-[10px] text-stone-400 mt-1">
+                                                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                                                    </p>
                                                 </div>
-                                            )}
-                                        </div>
+                                                {!notification.isRead && (
+                                                    <div className="flex-shrink-0 self-center" aria-hidden="true">
+                                                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
                                     </li>
                                 ))}
                             </ul>

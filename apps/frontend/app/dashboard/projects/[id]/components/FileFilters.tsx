@@ -1,3 +1,5 @@
+import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
+
 interface FileFiltersProps {
   nameFilter: string;
   setNameFilter: (value: string) => void;
@@ -20,12 +22,12 @@ export default function FileFilters({
         placeholder="Search by name..."
         value={nameFilter}
         onChange={(e) => setNameFilter(e.target.value)}
-        className="px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent text-navy-900 placeholder:text-stone-700"
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900 placeholder:text-stone-700')}
       />
       <select
         value={typeFilter}
         onChange={(e) => setTypeFilter(e.target.value)}
-        className="px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent text-navy-900"
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900')}
       >
         <option value="all">All types</option>
         <option value="comments">Comments only</option>

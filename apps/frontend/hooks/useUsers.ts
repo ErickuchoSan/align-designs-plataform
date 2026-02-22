@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
 import { User, CreateClientDto, CreateUserDto, Role } from '@/types';
 import { handleApiError } from '@/lib/errors';
 import { usePagination } from './usePagination';
-import { toast } from 'react-hot-toast';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
+import { UsersService } from '@/services/users.service';
 
 export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const [users, setUsers] = useState<User[]>([]);
@@ -39,18 +38,15 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get('/users', {
-        params: {
-          page: pagination.currentPage,
-          limit: pagination.itemsPerPage,
-        },
+      const result = await UsersService.getAll({
+        page: pagination.currentPage,
+        limit: pagination.itemsPerPage,
       });
-      setUsers(data.data || []);
-      pagination.setTotalItems(data.meta?.total || 0);
-      pagination.setTotalPages(data.meta?.totalPages || 0);
+      setUsers(result.data || []);
+      pagination.setTotalItems(result.meta?.total || 0);
+      pagination.setTotalPages(result.meta?.totalPages || 0);
       setError('');
     } catch (err) {
-      logger.error('Failed to fetch users', err, { page: pagination.currentPage });
       setError(handleApiError(err, 'Error loading users'));
     } finally {
       setIsLoading(false);
@@ -64,13 +60,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       setError('');
 
       try {
-        await api.post('/users', formData);
+        await UsersService.create(formData);
         setShowCreateForm(false);
         setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
         toast.success(`${formData.role === Role.CLIENT ? 'Client' : 'Employee'} created successfully`);
         fetchUsers();
       } catch (err) {
-        logger.error('Failed to create user', err, { formData });
         setError(handleApiError(err, `Error creating ${formData.role === Role.CLIENT ? 'client' : 'employee'}`));
       } finally {
         setIsCreating(false);
@@ -89,9 +84,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
     setTogglingUserId(userToToggle.id);
     try {
-      await api.patch(`/users/${userToToggle.id}/toggle-status`, {
-        isActive: !userToToggle.isActive,
-      });
+      await UsersService.toggleStatus(userToToggle.id, !userToToggle.isActive);
       toast.success(
         `User ${!userToToggle.isActive ? 'activated' : 'deactivated'} successfully`
       );
@@ -99,7 +92,6 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       setUserToToggle(null);
       fetchUsers();
     } catch (err) {
-      logger.error('Failed to toggle user status', err, { userId: userToToggle.id });
       setError(handleApiError(err, 'Error changing status'));
     } finally {
       setTogglingUserId(null);
@@ -134,10 +126,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
 
     setDeletingUserId(userToDelete.id);
     try {
-      // Pass hard=true to permanent delete, and force=true if confirmed
-      await api.delete(`/users/${userToDelete.id}`, {
-        params: { hard: true, force },
-      });
+      await UsersService.delete(userToDelete.id, { hard: true, force });
       toast.success('User permanently deleted');
       setShowDeleteConfirm(false);
       setShowForceDeleteConfirm(false);
@@ -147,10 +136,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       if (!force && err.response?.status === 409) {
         // If 409 Conflict, show Force Delete Confirmation
         setShowForceDeleteConfirm(true);
-        setShowDeleteConfirm(false); // Close normal modal, open force modal
-        // No error toast needed here, the modal explains it.
+        setShowDeleteConfirm(false);
       } else {
-        logger.error('Failed to delete user', err, { userId: userToDelete.id });
         setError(handleApiError(err, 'Error deleting user'));
       }
     } finally {
@@ -194,16 +181,15 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       if (!userToEdit) return;
 
       setUpdatingUserId(userToEdit.id);
-      setEditError(''); // Clear modal error
+      setEditError('');
 
       try {
-        await api.put(`/users/${userToEdit.id}`, editFormData);
+        await UsersService.update(userToEdit.id, editFormData);
         toast.success('User updated successfully');
         closeEditModal();
         fetchUsers();
       } catch (err) {
-        logger.error('Failed to update user', err, { userId: userToEdit.id, editFormData });
-        setEditError(handleApiError(err, 'Error updating user')); // Set modal error only
+        setEditError(handleApiError(err, 'Error updating user'));
       } finally {
         setUpdatingUserId(null);
       }

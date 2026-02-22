@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { cn, MODAL_CONTAINER, MODAL_CONTENT, MODAL_SIZES, MODAL_HEADER, MODAL_TITLE, MODAL_BODY } from '@/lib/styles';
+import { CloseIcon } from './icons';
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,66 +10,133 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  footer?: React.ReactNode;
 }
 
-export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
-  // Combined effect for body overflow and escape key handling
+// Selectors for focusable elements within the modal
+const FOCUSABLE_SELECTORS = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'a[href]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Get all focusable elements within the modal
+  const getFocusableElements = useCallback(() => {
+    if (!modalRef.current) return [];
+    return Array.from(modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS));
+  }, []);
+
+  // Focus trap: cycle focus within modal
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+
+    if (e.key !== 'Tab') return;
+
+    const focusableElements = getFocusableElements();
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Shift+Tab on first element: go to last
+    if (e.shiftKey && document.activeElement === firstElement) {
+      e.preventDefault();
+      lastElement.focus();
+    }
+    // Tab on last element: go to first
+    else if (!e.shiftKey && document.activeElement === lastElement) {
+      e.preventDefault();
+      firstElement.focus();
+    }
+  }, [getFocusableElements, onClose]);
+
+  // Combined effect for body overflow, focus management, and keyboard handling
   useEffect(() => {
     if (!isOpen) return;
+
+    // Store currently focused element to restore later
+    previousActiveElement.current = document.activeElement as HTMLElement;
 
     // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
 
-    // Handle escape key to close modal
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEscape);
+    // Focus the first focusable element after modal opens
+    requestAnimationFrame(() => {
+      const focusableElements = getFocusableElements();
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      } else {
+        // If no focusable elements, focus the modal container
+        modalRef.current?.focus();
+      }
+    });
 
-    // Cleanup: restore scroll and remove event listener
+    // Add keyboard listener for focus trap
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup: restore scroll, focus, and remove event listener
     return () => {
       document.body.style.overflow = 'unset';
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
+
+      // Restore focus to previously focused element
+      if (previousActiveElement.current && previousActiveElement.current.focus) {
+        previousActiveElement.current.focus();
+      }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, getFocusableElements, handleKeyDown]);
 
   if (!isOpen) return null;
 
-  const sizeClasses = {
-    sm: 'w-full max-w-md',
-    md: 'w-full max-w-lg',
-    lg: 'w-full max-w-2xl',
-    xl: 'w-full max-w-4xl',
-    '2xl': 'w-full max-w-6xl',
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
+    <div
+      className={cn(MODAL_CONTAINER, 'animate-fadeIn')}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       {/* Backdrop - Using opacity instead of blur for better performance */}
       <div
         className="absolute inset-0 transition-opacity bg-black/60"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal - with max-height and scroll */}
-      <div className={`relative bg-white rounded-lg shadow-2xl ${sizeClasses[size]} max-h-[95vh] flex flex-col animate-slideUp sm:rounded-2xl sm:max-h-[90vh]`}>
+      <div
+        ref={modalRef}
+        className={cn(MODAL_CONTENT, MODAL_SIZES[size], 'animate-slideUp')}
+        tabIndex={-1}
+      >
         {/* Header - fixed */}
-        <div className="flex items-center justify-between flex-shrink-0 p-4 border-b border-stone-200 sm:p-6">
-          <h3 className="text-lg font-semibold text-stone-900 sm:text-xl">{title}</h3>
+        <div className={MODAL_HEADER}>
+          <h3 id="modal-title" className={MODAL_TITLE}>{title}</h3>
           <button
             onClick={onClose}
             className="p-1 transition-colors rounded-lg text-stone-500 hover:text-stone-700 hover:bg-stone-200"
+            aria-label="Close dialog"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon size="lg" aria-hidden="true" />
           </button>
         </div>
 
         {/* Content - scrollable */}
-        <div className="flex-grow p-4 overflow-y-auto sm:p-6">
-          {children}
-        </div>
+        <div className={MODAL_BODY}>{children}</div>
+
+        {/* Footer - optional */}
+        {footer && (
+          <div className="flex-shrink-0 p-4 border-t border-stone-200 sm:p-6">{footer}</div>
+        )}
       </div>
     </div>
   );

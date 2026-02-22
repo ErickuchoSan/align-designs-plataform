@@ -7,8 +7,7 @@ import { PaymentsService } from '@/services/payments.service';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
 import { EmployeePayment, EmployeePaymentStatus } from '@/types/employee-payment';
 import { Payment } from '@/types/payments';
-import { logger } from '@/lib/logger';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import ApproveEmployeePaymentModal from '@/components/modals/ApproveEmployeePaymentModal';
@@ -17,6 +16,8 @@ import PaymentReceiptModal from '@/components/payments/PaymentReceiptModal';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import Modal from '@/components/ui/Modal';
 import { ButtonLoader } from '@/components/ui/Loader';
+import { CheckIcon, CloseIcon, CheckCircleIcon } from '@/components/ui/icons';
+import { cn, TEXTAREA_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 /**
  * Get status badge color based on invoice/payment status
@@ -114,11 +115,9 @@ function PaymentsStageContent({
         );
         setClientPayments(clientPays);
       }
-    } catch (err: any) {
-      logger.error('Error loading payment data:', err);
-      const msg = handleApiError(err, 'Failed to load payment data'); // Use util for consistency
+    } catch (err) {
+      const msg = handleApiError(err, 'Failed to load payment data');
       setError(msg);
-      toast.error('Failed to refresh payment data'); // Keep toast simple or sync? Let's keep it simple as error is shown in UI.
     } finally {
       setLoading(false);
     }
@@ -141,8 +140,7 @@ function PaymentsStageContent({
       toast.success('Payment approved successfully');
       setConfirmApprovePayment(null);
       loadPaymentData();
-    } catch (err: any) {
-      logger.error('Error approving payment:', err);
+    } catch (err) {
       toast.error(handleApiError(err, 'Failed to approve payment'));
     } finally {
       setApprovingPayment(false);
@@ -169,8 +167,7 @@ function PaymentsStageContent({
       setRejectingPaymentId(null);
       setRejectionReason('');
       loadPaymentData();
-    } catch (err: any) {
-      logger.error('Error rejecting payment:', err);
+    } catch (err) {
       toast.error(handleApiError(err, 'Failed to reject payment'));
     } finally {
       setRejectingPayment(false);
@@ -211,7 +208,7 @@ function PaymentsStageContent({
               onClick={onGenerateInvoice}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span className="whitespace-nowrap">Generate Invoice</span>
@@ -220,7 +217,7 @@ function PaymentsStageContent({
               onClick={onPayEmployee}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="whitespace-nowrap">Pay Employee</span>
@@ -233,7 +230,7 @@ function PaymentsStageContent({
             onClick={onUploadPaymentProof}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
             <span className="whitespace-nowrap">Upload Payment Proof</span>
@@ -251,7 +248,7 @@ function PaymentsStageContent({
 
           {invoices.length === 0 ? (
             <div className="text-center py-8">
-              <svg className="w-16 h-16 mx-auto text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-16 h-16 mx-auto text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <p className="text-stone-600">No invoices yet</p>
@@ -307,9 +304,9 @@ function PaymentsStageContent({
                                 }
                               }}
                               className="inline-flex p-1.5 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
-                              title="View Invoice"
+                              aria-label={`View invoice ${invoice.invoiceNumber}`}
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
@@ -358,7 +355,7 @@ function PaymentsStageContent({
                       }}
                       className="w-full flex items-center justify-center gap-2 px-4 py-2 text-stone-600 hover:text-navy-600 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
@@ -423,9 +420,9 @@ function PaymentsStageContent({
                         setViewingPayment(payment);
                       }}
                       className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
-                      title="View Receipt"
+                      aria-label="View payment receipt"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
@@ -450,9 +447,7 @@ function PaymentsStageContent({
 
           {clientPayments.filter(p => p.status === 'PENDING_APPROVAL').length === 0 ? (
             <div className="text-center py-8">
-              <svg className="w-16 h-16 mx-auto text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <CheckCircleIcon className="w-16 h-16 mx-auto text-stone-300 mb-3" />
               <p className="text-stone-600">No payments pending approval</p>
               <p className="text-sm text-stone-500 mt-2">
                 All client payments have been reviewed
@@ -494,9 +489,7 @@ function PaymentsStageContent({
                         onClick={() => setReviewingPayment(payment)}
                         className="px-4 py-2 bg-navy-600 hover:bg-navy-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <CheckCircleIcon size="md" />
                         Review Payment
                       </button>
                     </div>
@@ -519,7 +512,7 @@ function PaymentsStageContent({
 
           {employeePayments.length === 0 ? (
             <div className="text-center py-8">
-              <svg className="w-16 h-16 mx-auto text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-16 h-16 mx-auto text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-stone-600">No payments yet</p>
@@ -562,9 +555,9 @@ function PaymentsStageContent({
                       <button
                         onClick={() => setViewingPayment(payment)}
                         className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
-                        title="View Receipt"
+                        aria-label="View payment receipt"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
@@ -577,20 +570,16 @@ function PaymentsStageContent({
                         <button
                           onClick={() => handleApprovePayment(payment.id)}
                           className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Approve Payment"
+                          aria-label="Approve payment"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <CheckIcon size="md" aria-hidden="true" />
                         </button>
                         <button
                           onClick={() => handleRejectPayment(payment.id)}
                           className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Reject Payment"
+                          aria-label="Reject payment"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <CloseIcon size="md" aria-hidden="true" />
                         </button>
                       </>
                     )}
@@ -644,7 +633,7 @@ function PaymentsStageContent({
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className={cn(TEXTAREA_BASE, 'focus:ring-red-500 focus:border-red-500')}
               rows={4}
               placeholder="Enter rejection reason..."
               autoFocus

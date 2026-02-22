@@ -8,10 +8,11 @@ import { createInvoiceSchema, CreateInvoiceFormData } from '@/lib/schemas/invoic
 import { InvoicesService } from '@/services/invoices.service';
 import { ProjectsService } from '@/services/projects.service';
 import { Project, User } from '@/types';
-import toast from 'react-hot-toast';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
 import { ButtonLoader } from '@/components/ui/Loader';
+import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 export default function CreateInvoicePage() {
     const router = useRouter();
@@ -29,7 +30,7 @@ export default function CreateInvoicePage() {
         defaultValues: {
             projectId: '',
             clientId: '',
-            issueDate: new Date().toISOString().split('T')[0],
+            issueDate: getTodayDateString(),
             paymentTermsDays: 15,
             subtotal: 0,
             taxRate: 0,
@@ -78,8 +79,7 @@ export default function CreateInvoicePage() {
             const response = await ProjectsService.getAll({ limit: 100 });
             setProjects(response.projects);
         } catch (error) {
-            logger.error("Failed loading projects", error);
-            toast.error("Failed to load projects");
+            toast.error(handleApiError(error, 'Failed to load projects'));
         } finally {
             setLoadingProjects(false);
         }
@@ -110,7 +110,6 @@ export default function CreateInvoicePage() {
             toast.success('Invoice created successfully');
             router.push('/dashboard/admin/invoices');
         } catch (error) {
-            logger.error('Failed to create invoice', error);
             toast.error(handleApiError(error, 'Failed to create invoice'));
         }
     };
@@ -130,7 +129,7 @@ export default function CreateInvoicePage() {
                     <label className="block text-sm font-medium text-gray-700">Project</label>
                     <select
                         {...register('projectId')}
-                        className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-navy-500 focus:border-navy-500 sm:text-sm rounded-md ${errors.projectId ? 'border-red-300' : ''}`}
+                        className={cn(INPUT_BASE, errors.projectId ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'mt-1')}
                     >
                         <option value="">Select a project...</option>
                         {projects.map((p) => (
@@ -148,7 +147,7 @@ export default function CreateInvoicePage() {
                         <input
                             type="date"
                             {...register('issueDate')}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-navy-500 focus:border-navy-500 sm:text-sm"
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1')}
                         />
                         {errors.issueDate && <p className="mt-1 text-sm text-red-600">{errors.issueDate.message}</p>}
                     </div>
@@ -157,7 +156,7 @@ export default function CreateInvoicePage() {
                         <input
                             type="number"
                             {...register('paymentTermsDays', { valueAsNumber: true })}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-navy-500 focus:border-navy-500 sm:text-sm"
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1')}
                             min="0"
                         />
                         {errors.paymentTermsDays && <p className="mt-1 text-sm text-red-600">{errors.paymentTermsDays.message}</p>}
@@ -168,7 +167,7 @@ export default function CreateInvoicePage() {
                             type="date"
                             value={dueDate}
                             readOnly
-                            className="mt-1 block w-full bg-gray-50 border-gray-300 rounded-md shadow-sm text-gray-500 sm:text-sm"
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1 bg-gray-50 text-gray-500')}
                         />
                     </div>
                 </div>
@@ -182,7 +181,7 @@ export default function CreateInvoicePage() {
                                 type="number"
                                 step="0.01"
                                 {...register('subtotal', { valueAsNumber: true })}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-navy-500 focus:border-navy-500 sm:text-sm"
+                                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1')}
                             />
                             {errors.subtotal && <p className="mt-1 text-sm text-red-600">{errors.subtotal.message}</p>}
                         </div>
@@ -192,7 +191,7 @@ export default function CreateInvoicePage() {
                                 type="number"
                                 step="0.1"
                                 {...register('taxRate', { valueAsNumber: true })}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-navy-500 focus:border-navy-500 sm:text-sm"
+                                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1')}
                             />
                             {errors.taxRate && <p className="mt-1 text-sm text-red-600">{errors.taxRate.message}</p>}
                         </div>
@@ -210,7 +209,7 @@ export default function CreateInvoicePage() {
                     <textarea
                         rows={3}
                         {...register('notes')}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-navy-500 focus:border-navy-500 sm:text-sm"
+                        className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default, 'mt-1')}
                     />
                 </div>
 
@@ -218,14 +217,14 @@ export default function CreateInvoicePage() {
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500"
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'border border-gray-300 shadow-sm')}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="bg-navy-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500 disabled:opacity-50 min-w-[140px]"
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md, 'bg-navy-600 hover:bg-navy-700 shadow-sm')}
                     >
                         {isSubmitting ? <ButtonLoader /> : 'Create Invoice'}
                     </button>

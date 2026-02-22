@@ -1,16 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
+import { NotificationsService, Notification } from '@/services/notifications.service';
 
-export interface Notification {
-    id: string;
-    type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
-    title: string;
-    message: string;
-    link?: string;
-    isRead: boolean;
-    createdAt: string;
-}
+export type { Notification } from '@/services/notifications.service';
 
 export function useNotifications() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -20,15 +11,14 @@ export function useNotifications() {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const response = await api.get('/notifications');
-            const loadedNotifications = response.data;
+            const loadedNotifications = await NotificationsService.getAll();
             setNotifications(loadedNotifications);
 
             // Calculate unread count directly from the list to ensure sync
-            const count = loadedNotifications.filter((n: Notification) => !n.isRead).length;
+            const count = loadedNotifications.filter((n) => !n.isRead).length;
             setUnreadCount(count);
-        } catch (error) {
-            logger.error('Failed to fetch notifications', error);
+        } catch {
+            // Silent error - notifications are non-critical
         } finally {
             setLoading(false);
         }
@@ -36,23 +26,23 @@ export function useNotifications() {
 
     const markAsRead = async (id: string) => {
         try {
-            await api.put(`/notifications/${id}/read`);
+            await NotificationsService.markAsRead(id);
             setNotifications(prev =>
                 prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (error) {
-            logger.error('Failed to mark notification as read', error, { notificationId: id });
+        } catch {
+            // Silent error - marking as read is non-critical
         }
     };
 
     const markAllAsRead = async () => {
         try {
-            await api.put('/notifications/read-all');
+            await NotificationsService.markAllAsRead();
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
-        } catch (error) {
-            logger.error('Failed to mark all notifications as read', error);
+        } catch {
+            // Silent error - marking as read is non-critical
         }
     };
 

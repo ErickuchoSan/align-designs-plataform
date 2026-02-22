@@ -3,12 +3,13 @@
 import { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import { StageInfo, Stage } from '@/types/stage';
 import { StagesService } from '@/services/stages.service';
-import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 import StageCard from './StageCard';
 import PaymentsStageContent from './PaymentsStageContent';
 import { PageLoader } from '@/components/ui/Loader';
 import type { Project, File } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 
 interface ProjectStagesViewProps {
   projectId: string;
@@ -95,9 +96,8 @@ function ProjectStagesView({
           stageWithFiles?.stage || response.stages[0].stage
         );
       }
-    } catch (err: any) {
-      logger.error('Error loading stages:', err);
-      setError(err.response?.data?.message || 'Failed to load stages');
+    } catch (err) {
+      setError(handleApiError(err, 'Failed to load stages'));
     } finally {
       setLoading(false);
     }
@@ -391,9 +391,7 @@ function ProjectStagesView({
                               className="p-2 text-stone-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                               title="Approve (Move to Admin Approved)"
                             >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
+                              <CheckIcon size="md" />
                             </button>
                           )}
 
@@ -415,9 +413,7 @@ function ProjectStagesView({
                                 <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
                               </svg>
                             ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
+                              <CloseIcon size="md" />
                             )}
                           </button>
                         </>

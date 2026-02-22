@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
 import { Project } from '@/types';
 import { UsersService } from '@/services/users.service';
 import { useProjectsList } from './useProjectsList';
@@ -55,11 +53,10 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
 
   const fetchClients = async () => {
     try {
-      const { data } = await api.get('/users');
-      const clientUsers = data.data.filter((u: { role: string }) => u.role === 'CLIENT');
+      const clientUsers = await UsersService.getClients();
       setClients(clientUsers);
-    } catch (err) {
-      logger.error('Error loading clients:', err);
+    } catch {
+      // Silent error - client loading is non-critical for project display
     }
   };
 
@@ -69,11 +66,8 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       const availableEmployees = await UsersService.getAvailableEmployees();
       setEmployees(availableEmployees);
 
-      if (availableEmployees.length === 0) {
-        logger.warn('No available employees found - all employees are assigned to active projects');
-      }
     } catch (err) {
-      logger.error('Error loading available employees:', err);
+      // Silent error - employee loading is non-critical for project display
     }
   };
 

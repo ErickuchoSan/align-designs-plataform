@@ -9,10 +9,9 @@ import { Invoice, InvoiceStatus } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
-import toast from 'react-hot-toast';
-
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
+import { cn, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 export default function InvoiceDetailPage() {
     const params = useParams(); // returns { id: string } | null
@@ -34,7 +33,6 @@ export default function InvoiceDetailPage() {
             const data = await InvoicesService.getOne(invoiceId);
             setInvoice(data);
         } catch (error) {
-            logger.error('Failed to load invoice', error);
             toast.error(handleApiError(error, 'Could not load invoice details'));
             router.push('/dashboard/admin/invoices');
         } finally {
@@ -49,7 +47,6 @@ export default function InvoiceDetailPage() {
             setInvoice(updated);
             toast.success(`Invoice marked as ${newStatus}`);
         } catch (error) {
-            logger.error('Failed to update invoice status', error, { invoiceId: invoice.id, status: newStatus });
             toast.error(handleApiError(error, 'Failed to update status'));
         }
     }
@@ -72,7 +69,7 @@ export default function InvoiceDetailPage() {
                     {invoice.status === InvoiceStatus.DRAFT && (
                         <button
                             onClick={() => handleStatusChange(InvoiceStatus.SENT)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className={cn(BUTTON_BASE, BUTTON_SIZES.md, 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 shadow-sm')}
                         >
                             Mark as Sent
                         </button>
@@ -80,14 +77,14 @@ export default function InvoiceDetailPage() {
                     {invoice.status === InvoiceStatus.SENT && (
                         <button
                             onClick={() => handleStatusChange(InvoiceStatus.PAID)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            className={cn(BUTTON_BASE, BUTTON_SIZES.md, 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 shadow-sm')}
                         >
                             Mark as Paid
                         </button>
                     )}
                     <button
                         onClick={() => window.print()}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500"
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'border border-gray-300 shadow-sm')}
                     >
                         Print / Download PDF
                     </button>

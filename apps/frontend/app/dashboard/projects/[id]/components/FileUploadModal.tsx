@@ -3,6 +3,8 @@ import Modal from '@/components/ui/Modal';
 import FileInput from '@/components/ui/inputs/FileInput';
 import { ButtonLoader } from '@/components/ui/Loader';
 import { formatFileSize } from '@/lib/utils/file.utils';
+import { cn, TEXTAREA_BASE, INPUT_VARIANTS } from '@/lib/styles';
+import { CloseIcon } from '@/components/ui/icons';
 
 interface FileUploadModalProps {
   show: boolean;
@@ -52,9 +54,7 @@ export default function FileUploadModal({
         {error && (
           <div className="rounded-lg bg-red-50 border border-red-200 p-4">
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <CloseIcon className="w-5 h-5 text-red-600 mr-3" />
               <p className="text-sm font-medium text-red-800">{error}</p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function FileUploadModal({
             onChange={(e) => setUploadComment(e.target.value)}
             placeholder="Add a comment about this file..."
             rows={3}
-            className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent resize-none text-navy-900 placeholder:text-stone-700"
+            className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
           />
         </div>
 

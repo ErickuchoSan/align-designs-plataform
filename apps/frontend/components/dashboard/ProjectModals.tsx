@@ -2,6 +2,7 @@ import { useMemo, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { Project } from '@/types';
 import { ButtonLoader } from '@/components/ui/Loader';
+import { PROJECT_THEMES, type ProjectTheme } from '@/lib/styles';
 
 // Lazy load heavy components for better code splitting
 const Modal = dynamic(() => import('@/components/ui/Modal'), {
@@ -94,7 +95,7 @@ interface ProjectModalsProps {
   createModal: CreateModalState;
   editModal: EditModalState;
   deleteModal: DeleteModalState;
-  theme?: 'navy' | 'blue';
+  theme?: ProjectTheme;
 }
 
 function ProjectModals({
@@ -103,24 +104,8 @@ function ProjectModals({
   deleteModal,
   theme = 'navy',
 }: ProjectModalsProps) {
-  const themeStyles = useMemo(() => ({
-    navy: {
-      input: 'text-navy-900 placeholder:text-stone-700',
-      label: 'text-navy-900',
-      cancelButton: 'text-navy-900 bg-stone-200 hover:bg-stone-300',
-      createButton: 'bg-navy-800 hover:bg-navy-700',
-      editButton: 'bg-gold-600 hover:bg-gold-500',
-    },
-    blue: {
-      input: 'text-gray-900 placeholder:text-gray-700',
-      label: 'text-gray-700',
-      cancelButton: 'text-gray-800 bg-gray-200 hover:bg-gray-300',
-      createButton: 'bg-gradient-to-r from-blue-600 to-indigo-600',
-      editButton: 'bg-gradient-to-r from-yellow-600 to-orange-600',
-    },
-  }), [theme]);
-
-  const styles = themeStyles[theme];
+  // Use centralized theme styles (SSOT)
+  const styles = PROJECT_THEMES[theme];
 
   // Fix: Ensure Edit Modal shows both AVAILABLE employees AND CURRENTLY ASSIGNED employees
   const editModalEmployees = useMemo(() => {
@@ -149,7 +134,7 @@ function ProjectModals({
       <Modal
         isOpen={createModal.isOpen}
         onClose={createModal.onClose}
-        title={theme === 'navy' ? 'Create New Project' : 'Create New Project'}
+        title={'Create New Project'}
       >
         <form onSubmit={createModal.onSubmit} className="space-y-5">
           <div>
@@ -162,7 +147,7 @@ function ProjectModals({
               required
               value={createModal.formData.name}
               onChange={(e) => createModal.onFormChange({ ...createModal.formData, name: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
               placeholder="e.g., Logo Design"
             />
           </div>
@@ -176,8 +161,8 @@ function ProjectModals({
               rows={4}
               value={createModal.formData.description}
               onChange={(e) => createModal.onFormChange({ ...createModal.formData, description: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Describe the project...' : 'Describe the project...'}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all resize-none ${styles.input}`}
+              placeholder={'Describe the project...'}
             />
           </div>
 
@@ -222,7 +207,7 @@ function ProjectModals({
                 initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
               })}
               onWheel={(e) => (e.target as HTMLInputElement).blur()}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               placeholder="0.00"
             />
           </div>
@@ -237,7 +222,7 @@ function ProjectModals({
                 type="date"
                 value={createModal.formData.initialPaymentDeadline || ''}
                 onChange={(e) => createModal.onFormChange({ ...createModal.formData, initialPaymentDeadline: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
               />
             </div>
 
@@ -250,7 +235,7 @@ function ProjectModals({
                 type="date"
                 value={createModal.formData.deadlineDate || ''}
                 onChange={(e) => createModal.onFormChange({ ...createModal.formData, deadlineDate: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
               />
             </div>
           </div>
@@ -267,9 +252,9 @@ function ProjectModals({
             <button
               type="submit"
               disabled={createModal.isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium text-white ${styles.createButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
+              className={`px-5 py-2.5 text-sm font-medium text-white ${styles.primaryButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
             >
-              {createModal.isSubmitting ? <ButtonLoader /> : (theme === 'navy' ? 'Create Project' : 'Create Project')}
+              {createModal.isSubmitting ? <ButtonLoader /> : ('Create Project')}
             </button>
           </div>
         </form>
@@ -285,7 +270,7 @@ function ProjectModals({
         onConfirm={editModal.onConfirm}
         title="Confirm Edit"
         message={`Are you sure you want to edit the project "${editModal.project?.name}"?`}
-        confirmText={theme === 'navy' ? 'Edit' : 'Edit'}
+        confirmText={'Edit'}
         variant="warning"
       />
 
@@ -293,7 +278,7 @@ function ProjectModals({
       <Modal
         isOpen={editModal.isEditOpen}
         onClose={editModal.onEditClose}
-        title={theme === 'navy' ? 'Edit Project' : 'Edit Project'}
+        title={'Edit Project'}
       >
         <form onSubmit={editModal.onSubmit} className="space-y-5">
           <div>
@@ -306,8 +291,8 @@ function ProjectModals({
               required
               value={editModal.formData.name}
               onChange={(e) => editModal.onFormChange({ ...editModal.formData, name: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
-              placeholder={theme === 'navy' ? 'e.g., Logo Design' : 'e.g., Logo Design'}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
+              placeholder={'e.g., Logo Design'}
             />
           </div>
 
@@ -320,8 +305,8 @@ function ProjectModals({
               rows={4}
               value={editModal.formData.description}
               onChange={(e) => editModal.onFormChange({ ...editModal.formData, description: e.target.value })}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all resize-none ${styles.input}`}
-              placeholder={theme === 'navy' ? 'Describe the project...' : 'Describe the project...'}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all resize-none ${styles.input}`}
+              placeholder={'Describe the project...'}
             />
           </div>
 
@@ -374,7 +359,7 @@ function ProjectModals({
                 initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined
               })}
               onWheel={(e) => (e.target as HTMLInputElement).blur()}
-              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+              className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
               placeholder="0.00"
             />
           </div>
@@ -389,7 +374,7 @@ function ProjectModals({
                 type="date"
                 value={editModal.formData.initialPaymentDeadline || ''}
                 onChange={(e) => editModal.onFormChange({ ...editModal.formData, initialPaymentDeadline: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
               />
             </div>
 
@@ -402,7 +387,7 @@ function ProjectModals({
                 type="date"
                 value={editModal.formData.deadlineDate || ''}
                 onChange={(e) => editModal.onFormChange({ ...editModal.formData, deadlineDate: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-${theme === 'navy' ? 'gold' : 'blue'}-500 focus:border-transparent transition-all ${styles.input}`}
+                className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input}`}
               />
             </div>
           </div>

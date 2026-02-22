@@ -11,6 +11,7 @@ import { formatDate } from '@/lib/utils/date.utils';
 import { useUsers } from '@/hooks/useUsers';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { Role } from '@/types';
+import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 export default function UsersPage() {
   const { isAuthenticated, isAdmin, loading } = useProtectedRoute({ requireAdmin: true });
@@ -274,7 +275,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   usersHook.setFormData({ ...usersHook.formData, firstName: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all text-navy-900 placeholder:text-stone-700"
+                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900')}
               />
             </div>
             <div>
@@ -288,7 +289,7 @@ export default function UsersPage() {
                 onChange={(e) =>
                   usersHook.setFormData({ ...usersHook.formData, lastName: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all text-navy-900 placeholder:text-stone-700"
+                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900')}
               />
             </div>
           </div>

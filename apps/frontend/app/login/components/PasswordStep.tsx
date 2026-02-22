@@ -3,7 +3,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordSchema, PasswordFormData } from '@/lib/schemas/auth.schema';
-import { ButtonLoader } from '@/components/ui/Loader';
+import LoadingButton from '@/components/ui/LoadingButton';
+import { cn, INPUT_BASE, INPUT_VARIANTS, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 interface PasswordStepProps {
   email: string;
@@ -43,10 +44,11 @@ export default function PasswordStep({
           id="password"
           type="password"
           {...register('password')}
-          className={`block w-full rounded-lg border px-4 py-3 shadow-sm focus:ring-2 transition-all ${errors.password
-            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-            : 'border-stone-300 focus:border-gold-500 focus:ring-gold-500'
-            }`}
+          className={cn(
+            INPUT_BASE,
+            'shadow-sm',
+            errors.password ? INPUT_VARIANTS.error : INPUT_VARIANTS.default
+          )}
           placeholder="••••••••"
           autoFocus
         />
@@ -63,13 +65,9 @@ export default function PasswordStep({
           Forgot your password?
         </button>
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-navy-800 px-4 py-3 text-white font-medium hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all transform hover:scale-105 disabled:transform-none flex items-center justify-center"
-      >
-        {loading ? <ButtonLoader /> : 'Sign In'}
-      </button>
+      <LoadingButton type="submit" isLoading={loading} variant="primary" size="lg" fullWidth>
+        Sign In
+      </LoadingButton>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-stone-300"></div>
@@ -82,7 +80,7 @@ export default function PasswordStep({
         type="button"
         onClick={onLoginWithOTP}
         disabled={loading}
-        className="w-full rounded-lg border-2 border-navy-800 px-4 py-3 text-navy-800 font-medium hover:bg-navy-50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 disabled:transform-none"
+        className={cn(BUTTON_BASE, BUTTON_VARIANTS.outline, BUTTON_SIZES.lg, 'w-full')}
       >
         Login with OTP
       </button>

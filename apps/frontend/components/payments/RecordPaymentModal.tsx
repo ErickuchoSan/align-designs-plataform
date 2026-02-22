@@ -3,13 +3,14 @@ import Modal from '@/components/ui/Modal';
 import { PaymentMethod, PaymentType } from '@/types/payments';
 import { PaymentMethodSelect } from './PaymentMethodSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import { PaymentsService } from '@/services/payments.service';
 import { UsersService } from '@/services/users.service';
 import { FilesService, FileData } from '@/services/files.service';
 import { User } from '@/types';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/errors';
+import { useFetchOnOpen, useFetch, useAsyncOperation } from '@/hooks';
+import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES, CHECKBOX_BASE } from '@/lib/styles';
 
 interface RecordPaymentModalProps {
     isOpen: boolean;
@@ -31,61 +32,44 @@ export default function RecordPaymentModal({
     const [amount, setAmount] = useState<number | string>(initialAmount || '');
     const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.TRANSFER);
     const [type, setType] = useState<PaymentType>(defaultType);
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(getTodayDateString());
     const [notes, setNotes] = useState('');
     const [file, setFile] = useState<File | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // DRY: Use useAsyncOperation for submit handling
+    const { loading: isSubmitting, execute } = useAsyncOperation();
 
     // Employee Payment State
-    const [employees, setEmployees] = useState<User[]>([]);
     const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
-    const [pendingFiles, setPendingFiles] = useState<FileData[]>([]);
     const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-    const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
-    const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
+    const isEmployeePaymentMode = isOpen && defaultType === PaymentType.EMPLOYEE_PAYMENT;
+
+    // DRY: Fetch employees when modal opens for employee payment
+    const { data: employees, loading: isLoadingEmployees } = useFetchOnOpen<User[]>(
+        isEmployeePaymentMode,
+        () => UsersService.getEmployees(),
+        { initialData: [], errorPrefix: 'Failed to load employees' }
+    );
+
+    // DRY: Fetch pending files when employee is selected
+    const { data: pendingFiles, loading: isLoadingFiles } = useFetch<FileData[]>(
+        () => FilesService.getPendingPaymentFiles(projectId, selectedEmployeeId),
+        {
+            immediate: false,
+            enabled: !!selectedEmployeeId,
+            deps: [selectedEmployeeId, projectId],
+            initialData: [],
+            errorPrefix: 'Failed to load pending files'
+        }
+    );
+
+    // Reset type when modal opens
     useEffect(() => {
         if (isOpen) {
             setType(defaultType);
-            if (defaultType === PaymentType.EMPLOYEE_PAYMENT) {
-                loadEmployees();
-            }
         }
     }, [isOpen, defaultType]);
-
-    useEffect(() => {
-        if (selectedEmployeeId) {
-            loadPendingFiles(selectedEmployeeId);
-        } else {
-            setPendingFiles([]);
-        }
-    }, [selectedEmployeeId]);
-
-    const loadEmployees = async () => {
-        setIsLoadingEmployees(true);
-        try {
-            const data = await UsersService.getEmployees();
-            setEmployees(data);
-        } catch (error) {
-            logger.error('Failed to load employees for payment modal', error);
-            toast.error('Error loading employees');
-        } finally {
-            setIsLoadingEmployees(false);
-        }
-    };
-
-    const loadPendingFiles = async (employeeId: string) => {
-        setIsLoadingFiles(true);
-        try {
-            const data = await FilesService.getPendingPaymentFiles(projectId, employeeId);
-            setPendingFiles(data);
-        } catch (error) {
-            logger.error('Failed to load pending files for employee payment', error, { projectId, employeeId });
-            toast.error('Error loading pending files');
-        } finally {
-            setIsLoadingFiles(false);
-        }
-    };
 
     const handleFileToggle = (fileId: string) => {
         setSelectedFileIds(prev =>
@@ -107,35 +91,37 @@ export default function RecordPaymentModal({
             return;
         }
 
-        setIsSubmitting(true);
-        try {
-            const formData = new FormData();
-            formData.append('projectId', projectId);
-            formData.append('amount', amount.toString());
-            formData.append('paymentMethod', method);
-            formData.append('paymentDate', date);
-            formData.append('type', type);
-            if (notes) formData.append('notes', notes);
-            if (file) formData.append('receiptFile', file);
+        // DRY: Use execute() for automatic loading state and error handling
+        await execute(
+            async () => {
+                const formData = new FormData();
+                formData.append('projectId', projectId);
+                formData.append('amount', amount.toString());
+                formData.append('paymentMethod', method);
+                formData.append('paymentDate', date);
+                formData.append('type', type);
+                if (notes) formData.append('notes', notes);
+                if (file) formData.append('receiptFile', file);
 
-            if (type === PaymentType.EMPLOYEE_PAYMENT) {
-                formData.append('toUserId', selectedEmployeeId);
-                selectedFileIds.forEach(id => formData.append('relatedFileIds[]', id));
+                if (type === PaymentType.EMPLOYEE_PAYMENT) {
+                    formData.append('toUserId', selectedEmployeeId);
+                    selectedFileIds.forEach(id => formData.append('relatedFileIds[]', id));
+                }
+
+                // Since FormData handling of arrays varies, let's try appending each.
+                selectedFileIds.forEach(id => formData.append('relatedFileIds', id));
+
+                await PaymentsService.create(formData);
+            },
+            {
+                successMessage: 'Payment recorded successfully',
+                errorMessagePrefix: 'Error recording payment',
+                onSuccess: () => {
+                    onSuccess();
+                    onClose();
+                },
             }
-
-            // Since FormData handling of arrays varies, let's try appending each.
-            selectedFileIds.forEach(id => formData.append('relatedFileIds', id));
-
-            await PaymentsService.create(formData);
-            toast.success('Payment recorded successfully');
-            onSuccess();
-            onClose();
-        } catch (error) {
-            logger.error('Failed to record payment', error, { projectId, type, amount });
-            toast.error(handleApiError(error, 'Error recording payment'));
-        } finally {
-            setIsSubmitting(false);
-        }
+        );
     };
 
     const isEmployeePayment = type === PaymentType.EMPLOYEE_PAYMENT;
@@ -150,13 +136,13 @@ export default function RecordPaymentModal({
                         <label className="block mb-2 text-sm font-medium text-stone-700">Employee</label>
                         <select
                             required
-                            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-transparent focus:ring-2 focus:ring-navy-900 sm:text-sm"
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                             value={selectedEmployeeId}
                             onChange={(e) => setSelectedEmployeeId(e.target.value)}
                             disabled={isLoadingEmployees}
                         >
                             <option value="">Select Employee...</option>
-                            {employees.map(emp => (
+                            {(employees ?? []).map(emp => (
                                 <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
                             ))}
                         </select>
@@ -169,18 +155,18 @@ export default function RecordPaymentModal({
                         <label className="block mb-2 text-sm font-medium text-stone-700">Pending Jobs</label>
                         {isLoadingFiles ? (
                             <div className="text-sm text-stone-500">Loading...</div>
-                        ) : pendingFiles.length === 0 ? (
+                        ) : (pendingFiles ?? []).length === 0 ? (
                             <div className="text-sm italic text-stone-400">No approved pending jobs</div>
                         ) : (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
-                                {pendingFiles.map(f => (
+                                {(pendingFiles ?? []).map(f => (
                                     <div key={f.id} className="flex items-center">
                                         <input
                                             type="checkbox"
                                             id={`file-${f.id}`}
                                             checked={selectedFileIds.includes(f.id)}
                                             onChange={() => handleFileToggle(f.id)}
-                                            className="w-4 h-4 text-navy-600 border-stone-300 rounded focus:ring-navy-500"
+                                            className={CHECKBOX_BASE}
                                         />
                                         <label htmlFor={`file-${f.id}`} className="block ml-2 text-sm truncate text-stone-900">
                                             {f.filename} <span className="text-xs text-stone-500">({new Date(f.approvedClientAt).toLocaleDateString()})</span>
@@ -208,7 +194,7 @@ export default function RecordPaymentModal({
                             required
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            className="block w-full py-2 pl-7 pr-4 transition-all border outline-none rounded-lg border-stone-300 focus:ring-2 focus:ring-navy-900 focus:border-transparent text-sm"
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'pl-7 pr-4')}
                             placeholder="0.00"
                         />
                     </div>
@@ -226,7 +212,7 @@ export default function RecordPaymentModal({
                         required
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="block w-full px-4 py-2 transition-all border outline-none rounded-lg border-stone-300 shadow-sm focus:ring-2 focus:ring-navy-900 focus:border-transparent text-sm"
+                        className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                     />
                 </div>
 
@@ -246,7 +232,7 @@ export default function RecordPaymentModal({
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="block w-full px-4 py-2 transition-all border outline-none rounded-lg border-stone-300 focus:ring-2 focus:ring-navy-900 focus:border-transparent text-sm"
+                        className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
                         placeholder="Additional details..."
                     />
                 </div>
@@ -256,14 +242,14 @@ export default function RecordPaymentModal({
                         type="button"
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="mr-3 px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-900"
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'mr-3 border border-stone-300')}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-navy-900 border border-transparent rounded-lg hover:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-900 min-w-[120px]"
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}
                     >
                         {isSubmitting ? <ButtonLoader /> : 'Record Payment'}
                     </button>

@@ -1,11 +1,14 @@
 import { useState, useCallback, useRef } from 'react';
 import { handleApiError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 
 export interface AsyncOperationOptions {
-  /** Success message to display */
+  /** Success message to display (shows toast if provided) */
   successMessage?: string;
-  /** Error message prefix (full message will be: prefix + actual error) */
+  /** Error message prefix (shows toast with: prefix + actual error) */
   errorMessagePrefix?: string;
+  /** Whether to show toast notifications (default: true) */
+  showToast?: boolean;
   /** Callback to execute on success */
   onSuccess?: (data?: any) => void | Promise<void>;
   /** Callback to execute on error */
@@ -103,6 +106,7 @@ export function useAsyncOperation(): UseAsyncOperationReturn {
         onError,
         autoClearSuccess = true,
         successClearDelay = 3000,
+        showToast = true,
       } = options;
 
       try {
@@ -115,6 +119,11 @@ export function useAsyncOperation(): UseAsyncOperationReturn {
         // Set success message if provided
         if (successMessage) {
           setSuccess(successMessage);
+
+          // Show toast notification
+          if (showToast) {
+            toast.success(successMessage);
+          }
 
           // Auto-clear success message after delay
           if (autoClearSuccess) {
@@ -137,6 +146,11 @@ export function useAsyncOperation(): UseAsyncOperationReturn {
       } catch (err) {
         const errorMessage = handleApiError(err, errorMessagePrefix);
         setError(errorMessage);
+
+        // Show toast notification
+        if (showToast && errorMessage) {
+          toast.error(errorMessage);
+        }
 
         // Execute error callback
         if (onError) {

@@ -8,7 +8,8 @@ import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
-import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 
 export default function InvoicesListPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -23,7 +24,7 @@ export default function InvoicesListPage() {
             const data = await InvoicesService.getAll();
             setInvoices(data);
         } catch (error) {
-            logger.error('Failed to load invoices', error);
+            toast.error(handleApiError(error, 'Failed to load invoices'));
         } finally {
             setLoading(false);
         }

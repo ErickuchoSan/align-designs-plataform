@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import { ArrowUpTrayIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import { ProjectsService } from '@/services/projects.service';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/errors';
+import { useAsyncOperation } from '@/hooks';
+import { cn, TEXTAREA_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 interface UploadNewVersionModalProps {
     isOpen: boolean;
@@ -17,7 +17,9 @@ interface UploadNewVersionModalProps {
 export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, projectId, onSuccess }: UploadNewVersionModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [notes, setNotes] = useState('');
-    const [isUploading, setIsUploading] = useState(false);
+
+    // DRY: Use useAsyncOperation for upload handling
+    const { loading: isUploading, execute } = useAsyncOperation();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -31,22 +33,20 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
             return;
         }
 
-        setIsUploading(true);
-        try {
-            // Assuming wrapper in generic API or specialized service method
-            // We might need to add uploadVersion method to ProjectsService or FilesService (frontend)
-            await ProjectsService.uploadFileVersion(parentFileId, file, notes);
-            toast.success('New version uploaded successfully');
-            onSuccess();
-            onClose();
-            setFile(null);
-            setNotes('');
-        } catch (error) {
-            logger.error('Failed to upload file version', error, { parentFileId, projectId });
-            toast.error(handleApiError(error, 'Failed to upload new version'));
-        } finally {
-            setIsUploading(false);
-        }
+        // DRY: Use execute() for automatic loading state and error handling
+        await execute(
+            () => ProjectsService.uploadFileVersion(parentFileId, file, notes),
+            {
+                successMessage: 'New version uploaded successfully',
+                errorMessagePrefix: 'Failed to upload new version',
+                onSuccess: () => {
+                    onSuccess();
+                    onClose();
+                    setFile(null);
+                    setNotes('');
+                },
+            }
+        );
     };
 
     return (
@@ -77,7 +77,7 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
                     <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
                         rows={3}
                         placeholder="What changed in this version?"
                     />

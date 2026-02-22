@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthService } from '@/services/auth.service';
 import { handleApiError } from '@/lib/errors';
-import { toast } from 'react-hot-toast';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
 import { EmailFormData, PasswordFormData, OtpFormData, SetPasswordFormData } from '@/lib/schemas/auth.schema';
 import EmailStep from './components/EmailStep';
 import PasswordStep from './components/PasswordStep';
@@ -60,7 +59,6 @@ export default function LoginPage() {
 
       setStep('password');
     } catch (error) {
-      logger.error('Failed to check email', error, { email: data.email });
       toast.error(handleApiError(error, 'An error occurred. Please try again.'));
     } finally {
       setIsLoading(false);
@@ -74,7 +72,6 @@ export default function LoginPage() {
       await login({ email, password: data.password });
       router.push('/dashboard');
     } catch (error) {
-      logger.error('Failed to login with password', error, { email });
       toast.error(handleApiError(error, 'Invalid credentials'));
     } finally {
       setIsLoading(false);
@@ -94,7 +91,6 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (error) {
-      logger.error('Failed to verify OTP', error, { email });
       toast.error(handleApiError(error, 'Invalid OTP code'));
     } finally {
       setIsLoading(false);
@@ -114,7 +110,6 @@ export default function LoginPage() {
       setStep('email');
       setEmail('');
     } catch (error) {
-      logger.error('Failed to set password', error, { email });
       toast.error(handleApiError(error, 'Error setting password'));
     } finally {
       setIsLoading(false);
@@ -129,7 +124,6 @@ export default function LoginPage() {
       await requestOTP({ email });
       toast.success('Verification code sent to your email');
     } catch (error) {
-      logger.error('Failed to resend OTP', error, { email });
       toast.error(handleApiError(error, 'Error resending code'));
     } finally {
       setIsLoading(false);
@@ -149,7 +143,6 @@ export default function LoginPage() {
       toast.success('Verification code sent to your email');
       setStep('otp');
     } catch (error) {
-      logger.error('Failed to request OTP login', error, { email });
       toast.error(handleApiError(error, 'Error requesting OTP'));
     } finally {
       setIsLoading(false);

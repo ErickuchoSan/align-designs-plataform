@@ -3,9 +3,10 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { setPasswordSchema, SetPasswordFormData } from '@/lib/schemas/auth.schema';
-import { ButtonLoader } from '@/components/ui/Loader';
+import LoadingButton from '@/components/ui/LoadingButton';
 import PasswordInput from '@/components/ui/inputs/PasswordInput';
 import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 
 interface SetPasswordStepProps {
   onSubmit: (data: SetPasswordFormData) => Promise<void>;
@@ -93,22 +94,17 @@ export default function SetPasswordStep({
 
         {/* Show match indicator when user starts typing confirmation */}
         {confirmPassword && (
-          <p className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword
-            ? 'text-green-600'
-            : 'text-red-600'
-            }`}>
+          <p
+            className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword ? 'text-green-600' : 'text-red-600'}`}
+          >
             {newPassword === confirmPassword ? (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <CheckIcon size="md" />
                 Passwords match
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <CloseIcon size="md" />
                 Passwords do not match
               </>
             )}
@@ -116,13 +112,9 @@ export default function SetPasswordStep({
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-navy-800 px-4 py-3 text-white font-medium hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all transform hover:scale-105 disabled:transform-none flex items-center justify-center"
-      >
-        {loading ? <ButtonLoader /> : 'Set password'}
-      </button>
+      <LoadingButton type="submit" isLoading={loading} variant="primary" size="lg" fullWidth>
+        Set password
+      </LoadingButton>
     </form>
   );
 }

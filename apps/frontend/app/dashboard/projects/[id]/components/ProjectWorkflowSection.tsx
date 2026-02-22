@@ -28,7 +28,6 @@ import { ProjectsService } from '@/services/projects.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';
 import { handleApiError, logError } from '@/lib/errors';
-import { logger } from '@/lib/logger';
 
 interface ProjectWorkflowSectionProps {
   project: Project;
@@ -82,7 +81,7 @@ function ProjectWorkflowSection({
         setInvoiceDeadlines(deadlines);
         setPaymentProgress(progress);
       } catch (err) {
-        logger.error('Error loading invoice data:', err);
+        // Silent error - invoice data loading is non-critical
       } finally {
         setLoadingInvoices(false);
       }
@@ -104,7 +103,7 @@ function ProjectWorkflowSection({
           .reduce((sum: number, p: Payment) => sum + Number(p.amount), 0);
         setPendingAmount(pending);
       } catch (error) {
-        logger.error('Error checking pending payments:', error);
+        // Silent error - pending payments check is non-critical
       }
     };
     checkPending();

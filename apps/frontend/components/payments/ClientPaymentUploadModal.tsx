@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import { PaymentMethodSelect } from './PaymentMethodSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import { PaymentsService } from '@/services/payments.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { Invoice } from '@/types/invoice';
 import { PaymentMethod, PaymentType } from '@/types/payments';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/errors';
+import { useFetchOnOpen, useAsyncOperation } from '@/hooks';
+import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 interface ClientPaymentUploadModalProps {
   isOpen: boolean;
@@ -31,48 +32,41 @@ export default function ClientPaymentUploadModal({
 }: ClientPaymentUploadModalProps) {
   const [amount, setAmount] = useState<number | string>('');
   const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.TRANSFER);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(getTodayDateString());
   const [notes, setNotes] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [invoiceId, setInvoiceId] = useState<string>('');
 
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loadingInvoices, setLoadingInvoices] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // DRY: Use useAsyncOperation for submit handling
+  const { loading: isSubmitting, execute } = useAsyncOperation();
 
+  // DRY: Use useFetchOnOpen for automatic fetch when modal opens
+  const { data: invoices, loading: loadingInvoices } = useFetchOnOpen<Invoice[]>(
+    isOpen,
+    async () => {
+      const data = await InvoicesService.getByProject(projectId);
+      return data.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
+    },
+    { deps: [projectId], initialData: [], errorPrefix: 'Failed to fetch invoices' }
+  );
+
+  // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setAmount(suggestedAmount || '');
-      fetchInvoices();
     } else {
-      // Reset form
       setAmount('');
       setMethod(PaymentMethod.TRANSFER);
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(getTodayDateString());
       setNotes('');
       setFile(null);
       setInvoiceId('');
     }
-  }, [isOpen, suggestedAmount, projectId]);
-
-  const fetchInvoices = async () => {
-    try {
-      setLoadingInvoices(true);
-      const data = await InvoicesService.getByProject(projectId);
-      // Filter unpaid or partially paid invoices
-      const unpaid = data.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
-      setInvoices(unpaid);
-    } catch (error) {
-      logger.error('Failed to fetch invoices for payment modal', error);
-      // Silent error - user can proceed without invoice selection
-    } finally {
-      setLoadingInvoices(false);
-    }
-  };
+  }, [isOpen, suggestedAmount]);
 
   // Auto-fill amount when invoice is selected
   useEffect(() => {
-    if (invoiceId) {
+    if (invoiceId && invoices) {
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
         const remaining = Number(invoice.totalAmount) - Number(invoice.amountPaid || 0);
@@ -98,37 +92,34 @@ export default function ClientPaymentUploadModal({
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      const formData = new FormData();
+    // DRY: Use execute() for automatic loading state and error handling
+    await execute(
+      async () => {
+        const formData = new FormData();
 
-      // Append file first
-      if (file) {
-        formData.append('file', file);
+        if (file) {
+          formData.append('file', file);
+        }
+
+        formData.append('projectId', projectId);
+        formData.append('amount', amount.toString());
+        formData.append('paymentDate', new Date(date).toISOString());
+        formData.append('paymentMethod', method);
+        formData.append('type', invoiceId ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT);
+        if (invoiceId) formData.append('invoiceId', invoiceId);
+        if (notes) formData.append('notes', notes);
+
+        await PaymentsService.uploadClientPayment(formData);
+      },
+      {
+        successMessage: 'Payment submitted for review',
+        errorMessagePrefix: 'Failed to submit payment',
+        onSuccess: () => {
+          if (onSuccess) onSuccess();
+          onClose();
+        },
       }
-
-      // Then append all other fields
-      formData.append('projectId', projectId);
-      formData.append('amount', amount.toString());
-      formData.append('paymentDate', new Date(date).toISOString());
-      formData.append('paymentMethod', method);
-      formData.append('type', invoiceId ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT);
-      if (invoiceId) formData.append('invoiceId', invoiceId);
-      if (notes) formData.append('notes', notes);
-
-      await PaymentsService.uploadClientPayment(formData);
-
-      toast.success('Payment submitted for review');
-      if (onSuccess) onSuccess();
-      onClose();
-    } catch (error) {
-      logger.error('Failed to upload client payment', error, { projectId, amount });
-      // Error already handled by global axios interceptor in dev mode
-      // Only show user-friendly toast for production users
-      toast.error(handleApiError(error, 'Failed to submit payment'));
-    } finally {
-      setIsSubmitting(false);
-    }
+    );
   };
 
   return (
@@ -169,7 +160,7 @@ export default function ClientPaymentUploadModal({
               required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="block w-full py-3 pl-7 pr-12 border rounded-lg border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+              className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'pl-7 pr-12 py-3')}
               placeholder="0.00"
             />
           </div>
@@ -189,7 +180,7 @@ export default function ClientPaymentUploadModal({
             required
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+            className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
           />
         </div>
 
@@ -199,10 +190,10 @@ export default function ClientPaymentUploadModal({
           <select
             value={invoiceId}
             onChange={(e) => setInvoiceId(e.target.value)}
-            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+            className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
           >
             <option value="">-- General Payment --</option>
-            {invoices.map(inv => (
+            {(invoices ?? []).map(inv => (
               <option key={inv.id} value={inv.id}>
                 {inv.invoiceNumber} - ${Number(inv.totalAmount).toLocaleString()}
               </option>
@@ -234,7 +225,7 @@ export default function ClientPaymentUploadModal({
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="block w-full px-3 py-2 border rounded-lg shadow-sm border-stone-300 focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+            className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
             placeholder="Additional details..."
           />
         </div>
@@ -244,14 +235,14 @@ export default function ClientPaymentUploadModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="w-full px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500 sm:w-auto"
+            className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'w-full border border-stone-300 sm:w-auto')}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-navy-600 border border-transparent rounded-lg hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-500 sm:w-auto sm:min-w-[120px]"
+            className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md, 'w-full sm:w-auto')}
           >
             {isSubmitting ? <ButtonLoader /> : 'Submit Payment'}
           </button>

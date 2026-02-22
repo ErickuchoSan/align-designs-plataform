@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import Modal from '@/components/ui/Modal';
-import { ButtonLoader } from '@/components/ui/Loader';
+import LoadingButton from '@/components/ui/LoadingButton';
 import EmailInput from '@/components/ui/inputs/EmailInput';
 import PasswordInput from '@/components/ui/inputs/PasswordInput';
 import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
@@ -10,8 +10,9 @@ import { AuthService } from '@/services/auth.service';
 import { handleApiError } from '@/lib/errors';
 import { isValidEmail, validatePassword } from '@/lib/utils/validation.utils';
 import { OTP } from '@/lib/constants/ui.constants';
-import { toast } from 'react-hot-toast';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
+import { cn, INPUT_BASE, INPUT_VARIANTS, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
+import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 
 interface ForgotPasswordModalProps {
   show: boolean;
@@ -60,7 +61,6 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       toast.success('Verification code sent to your email');
       setStep('otp');
     } catch (error) {
-      logger.error('Failed to send forgot password code', error, { email });
       toast.error(handleApiError(error, 'Error sending code'));
     } finally {
       setIsLoading(false);
@@ -105,7 +105,6 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       toast.success('Password updated successfully!');
       setIsSuccess(true);
     } catch (error) {
-      logger.error('Failed to reset password via forgot password', error, { email, hasOtp: !!otp });
       toast.error(handleApiError(error, 'Error resetting password'));
     } finally {
       setIsLoading(false);
@@ -145,17 +144,13 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                   type="button"
                   onClick={handleClose}
                   disabled={isLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={cn(BUTTON_BASE, BUTTON_VARIANTS.secondary, BUTTON_SIZES.md)}
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center"
-                >
-                  {isLoading ? <ButtonLoader /> : 'Send code'}
-                </button>
+                <LoadingButton type="submit" isLoading={isLoading} variant="primary" size="md">
+                  Send code
+                </LoadingButton>
               </div>
             </form>
           )}
@@ -178,7 +173,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                   maxLength={8}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-4 py-4 text-center text-3xl font-mono tracking-widest border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all"
+                  className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'py-4 text-center text-3xl font-mono tracking-widest')}
                   placeholder="00000000"
                   autoFocus
                 />
@@ -188,14 +183,11 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                 <button
                   type="button"
                   onClick={() => setStep('email')}
-                  className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors"
+                  className={cn(BUTTON_BASE, BUTTON_VARIANTS.secondary, BUTTON_SIZES.md)}
                 >
                   Change email
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
-                >
+                <button type="submit" className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}>
                   Continue
                 </button>
               </div>
@@ -245,22 +237,17 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                 />
                 {/* Show match indicator when user starts typing confirmation */}
                 {confirmPassword && (
-                  <p className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword
-                    ? 'text-green-600'
-                    : 'text-red-600'
-                    }`}>
+                  <p
+                    className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword ? 'text-green-600' : 'text-red-600'}`}
+                  >
                     {newPassword === confirmPassword ? (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <CheckIcon size="md" />
                         Passwords match
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <CloseIcon size="md" />
                         Passwords do not match
                       </>
                     )}
@@ -273,17 +260,13 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                   type="button"
                   onClick={handleClose}
                   disabled={isLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={cn(BUTTON_BASE, BUTTON_VARIANTS.secondary, BUTTON_SIZES.md)}
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[140px] flex items-center justify-center"
-                >
-                  {isLoading ? <ButtonLoader /> : 'Change password'}
-                </button>
+                <LoadingButton type="submit" isLoading={isLoading} variant="primary" size="md">
+                  Change password
+                </LoadingButton>
               </div>
             </form>
           )}
@@ -291,18 +274,13 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       ) : (
         <div className="text-center py-4">
           <div className="mx-auto w-16 h-16 bg-forest-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <CheckIcon size="lg" className="w-8 h-8 text-forest-600" />
           </div>
           <h3 className="text-lg font-semibold text-navy-900 mb-2">Password updated!</h3>
           <p className="text-sm text-stone-700 mb-6">
             Your password has been reset successfully. You can now log in with your new password.
           </p>
-          <button
-            onClick={handleClose}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105"
-          >
+          <button onClick={handleClose} className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}>
             Got it
           </button>
         </div>

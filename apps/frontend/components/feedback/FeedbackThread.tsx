@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Feedback, FeedbackCycle } from '@/types/feedback';
 import { FeedbackService } from '@/services/feedback.service';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { toast } from 'react-hot-toast';
-import { logger } from '@/lib/logger';
+import { toast } from '@/lib/toast';
+import { handleApiError } from '@/lib/errors';
+import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 interface FeedbackThreadProps {
     cycle: FeedbackCycle;
@@ -30,8 +31,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
             setNewMessage('');
             onUpdate();
         } catch (error) {
-            logger.error('Error sending feedback:', error);
-            toast.error('Error sending message');
+            toast.error(handleApiError(error, 'Error sending message'));
         } finally {
             setIsSending(false);
         }
@@ -67,7 +67,7 @@ export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThrea
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Write a comment..."
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'flex-1')}
                         disabled={cycle.status !== 'open' || isSending}
                     />
                     <button

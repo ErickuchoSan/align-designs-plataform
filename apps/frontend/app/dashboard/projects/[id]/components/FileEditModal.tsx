@@ -4,6 +4,7 @@ import FileInput from '@/components/ui/inputs/FileInput';
 import { ButtonLoader } from '@/components/ui/Loader';
 import { formatFileSize } from '@/lib/utils/file.utils';
 import type { FileData } from '../hooks/useProjectFiles';
+import { cn, TEXTAREA_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 interface FileEditModalProps {
   show: boolean;
@@ -63,7 +64,7 @@ export default function FileEditModal({
             onChange={(e) => setEditComment(e.target.value)}
             placeholder="Write a comment..."
             rows={3}
-            className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent resize-none text-navy-900 placeholder:text-stone-700"
+            className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
           />
           <p className="mt-1 text-xs text-stone-700">
             Leave empty to remove the comment

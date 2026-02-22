@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
 import { Project } from '@/types';
-import { logger } from '@/lib/logger';
 import { usePagination } from './usePagination';
+import { ProjectsService } from '@/services/projects.service';
 
 /**
  * Hook for managing projects list, fetching, and pagination
@@ -18,18 +17,15 @@ export function useProjectsList(isAuthenticated: boolean) {
   const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/projects', {
-        params: {
-          page: pagination.currentPage,
-          limit: pagination.itemsPerPage,
-        },
+      const result = await ProjectsService.getAll({
+        page: pagination.currentPage,
+        limit: pagination.itemsPerPage,
       });
-      setProjects(data.data || []);
-      pagination.setTotalItems(data.meta?.total || 0);
-      pagination.setTotalPages(data.meta?.totalPages || 0);
+      setProjects(result.projects || []);
+      pagination.setTotalItems(result.total || 0);
+      pagination.setTotalPages(result.totalPages || 0);
       setError('');
-    } catch (err) {
-      logger.error('Error fetching projects:', err);
+    } catch {
       setError('Failed to load projects');
     } finally {
       setLoading(false);
