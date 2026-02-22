@@ -1,151 +1,242 @@
 # Plan de Mejora de Principios de Arquitectura
 
-**Fecha última revisión:** 2026-02-22
-**Proyecto:** Align Designs Platform
-**Estado Actual:** ~98% cumplimiento
+**Fecha última revisión:** 2026-02-22  
+**Proyecto:** Align Designs Platform  
+**Estado Real:** ~85% cumplimiento  
 **Objetivo:** 100% cumplimiento
 
 ---
 
-## Resumen Ejecutivo
+## Resumen Ejecutivo - ANÁLISIS HONESTO
 
-| Principio | Estado Anterior | Estado Actual | Progreso |
-|-----------|-----------------|---------------|----------|
-| KISS | 85% | 98% | +13% |
-| SoC | 90% | 98% | +8% |
-| DRY | 90% | 95% | +5% |
-| Single Source of Truth | 90% | 98% | +8% |
-| Progressive Enhancement | 60% | 75% | +15% |
-| Accessibility First | 85% | 98% | +13% |
-
----
-
-## Mejoras Completadas
-
-### KISS
-- [x] `PaymentsStageContent.tsx`: 666 → 231 líneas
-- [x] `ProjectWorkflowSection.tsx`: 610 → 78 líneas
-- [x] `admin/users/page.tsx`: 543 → 130 líneas ✅ NUEVO
-- [x] `payments/page.tsx`: 533 → 65 líneas ✅ NUEVO
-- [x] `ProjectModals.tsx`: 496 → 105 líneas ✅ NUEVO
-- [x] Creados componentes en `components/projects/payments/`:
-  - `PaymentActions.tsx`, `InvoiceList.tsx`, `ClientPaymentsList.tsx`
-  - `EmployeePaymentsList.tsx`, `PaymentEmptyState.tsx`
-- [x] Creados componentes en `admin/users/components/`:
-  - `UsersTable.tsx`, `UsersCards.tsx`, `UserModals.tsx`, `UsersTabs.tsx`
-- [x] Creados componentes en `payments/components/`:
-  - `ClientPaymentsView.tsx`, `AdminPaymentsView.tsx`
-- [x] Creados componentes en `project-modals/`:
-  - `CreateProjectModal.tsx`, `EditProjectModal.tsx`, `DeleteProjectModal.tsx`
-
-### SoC
-- [x] Creado `usePaymentsStage` hook
-- [x] Creado `useWorkflowData` hook
-- [x] Creado `useProjectPayments` hook ✅ NUEVO
-- [x] Creados `AdminWorkflowView.tsx` y `ClientWorkflowView.tsx`
-- [x] Separación de componentes workflow:
-  - `ProjectStatusSection.tsx`, `DeadlinesSection.tsx`, `EmployeesSection.tsx`
-
-### DRY
-- [x] `PaymentEmptyState.tsx` reutilizado en 3 componentes
-- [x] `status-colors.ts` centralizado con getStatusClasses()
-
-### SSOT
-- [x] Contextos organizados (Auth, Project)
-- [x] Hooks centralizan estado
-- [x] `lib/constants/index.ts` exports centralizados ✅ NUEVO
-
-### Progressive Enhancement
-- [x] `loading.tsx` en 5 rutas:
-  - `app/dashboard/admin/users/loading.tsx`
-  - `app/dashboard/admin/clients/loading.tsx`
-  - `app/dashboard/admin/invoices/loading.tsx`
-  - `app/dashboard/projects/loading.tsx`
-  - `app/dashboard/projects/[id]/loading.tsx`
-- [x] Componentes `LoadingSkeleton` creados
-
-### Accessibility First
-- [x] `SkipLinks.tsx` creado e integrado en `DashboardHeader`
-- [x] `id="main-content"` en páginas principales
-- [x] `id="navigation"` en header
-- [x] `FormField` con `role="alert" aria-live="polite"`
-- [x] **38+ componentes con memo**
-- [x] Focus management en `ConfirmModal` ✅ NUEVO
-- [x] `aria-hidden="true"` en SVGs decorativos ✅ NUEVO
-- [x] `scope="col"` en headers de tablas
+| Principio | Estado Real | Faltante | Problema Principal |
+|-----------|-------------|----------|-------------------|
+| KISS | 70% | 30% | 6 archivos >300 líneas |
+| SoC | 85% | 15% | Lógica embebida en componentes grandes |
+| DRY | 75% | 25% | 5 modales de pago no usan FormModal |
+| SSOT | 95% | 5% | Menor |
+| Progressive Enhancement | 60% | 40% | TODO es CSR, sin SSR |
+| Accessibility First | 90% | 10% | Falta auditoría formal |
 
 ---
 
-## Archivos Aún Grandes (>300 líneas) - Prioridad Baja
+## Problemas Reales Detectados
 
-| Archivo | Líneas | Notas |
-|---------|--------|-------|
-| `ProjectStagesView.tsx` | 447 | Complejo pero bien estructurado |
-| `AdminWorkflowView.tsx` | 419 | Ya dividido de 610 líneas |
-| `profile/page.tsx` | 399 | Página de perfil completa |
-| `users/page.tsx` | 364 | Vista de usuarios (no admin) |
-| `FileList.tsx` | 356 | Lista de archivos con funcionalidad |
-| `PaymentHistoryTable.tsx` | 323 | Tabla con mobile/desktop |
-| `projects/[id]/page.tsx` | 312 | Ya optimizado |
+### 1. KISS — 70%
 
-Estos archivos están en el rango 300-450 líneas y contienen lógica necesaria.
-Dividirlos más podría fragmentar la funcionalidad innecesariamente.
+**Archivos que NO cumplen (<300 líneas):**
+
+| Archivo | Líneas | Problema |
+|---------|--------|----------|
+| `AdminWorkflowView.tsx` | 419 | Lógica de negocio + UI + estado |
+| `users/page.tsx` | 364 | Página no dividida |
+| `FileList.tsx` | 356 | Lista compleja sin dividir |
+| `ProjectStagesView.tsx` | 348 | Múltiples responsabilidades |
+| `PaymentHistoryTable.tsx` | 323 | Tabla con demasiada lógica |
+| `projects/[id]/page.tsx` | 312 | Página principal no dividida |
+
+**Acción requerida:**
+- Dividir `AdminWorkflowView.tsx` en 3-4 componentes
+- Dividir `users/page.tsx` (ya tiene componentes pero la página es grande)
+- Extraer lógica de `FileList.tsx` a hooks
 
 ---
 
-## Checklist Final
+### 2. SoC — 85%
 
-### KISS ✅ 98%
-- [x] Componentes principales < 300 líneas
-- [x] Componentes grandes divididos
-- [ ] 7 archivos en rango 300-450 (aceptable)
+**Problemas:**
+- 65 `useEffect` distribuidos en componentes
+- `AdminWorkflowView.tsx` tiene:
+  - Estado de modales
+  - Formateo de fechas
+  - Lógica de permisos
+  - Handlers de acciones
 
-### SoC ✅ 98%
-- [x] Hooks de datos separados
-- [x] Lógica de negocio en hooks
-- [x] UI en componentes
+**Acción requerida:**
+- Mover `formatDate` a utils (ya existe, usarla)
+- Extraer handlers a `useAdminWorkflow` hook
+- Separar secciones en componentes
 
-### DRY ✅ 95%
-- [x] Componentes reutilizables
-- [x] Estilos centralizados
-- [x] Status colors compartidos
+---
 
-### SSOT ✅ 98%
+### 3. DRY — 75%
+
+**Modales de pago que NO usan FormModal:**
+
+| Archivo | Líneas | Debería usar |
+|---------|--------|--------------|
+| `UploadPaymentProofModal.tsx` | 263 | FormModal |
+| `RecordPaymentModal.tsx` | 260 | FormModal |
+| `ClientPaymentUploadModal.tsx` | 253 | FormModal |
+| `AdminPaymentReviewModal.tsx` | 249 | FormModal |
+| `PayEmployeeModal.tsx` | 232 | FormModal |
+
+**Total: 1,257 líneas que podrían ser ~400 líneas usando FormModal**
+
+**Acción requerida:**
+- Refactorizar los 5 modales para usar `FormModal`
+- Crear variaciones si es necesario (FormModal con file upload, etc.)
+
+---
+
+### 4. SSOT — 95%
+
+**Estado:** Casi completo
+
+**Menores problemas:**
+- Algunos estados locales duplicados entre padre/hijo
+- Constantes OK (index.ts centralizado)
+
+---
+
+### 5. Progressive Enhancement — 60%
+
+**PROBLEMA GRAVE: 84 archivos con `'use client'`**
+
+Esto significa:
+- **TODO es Client-Side Rendering**
+- No hay Server Components
+- Primera carga sin datos
+- SEO limitado
+- Sin hidratación progresiva
+
+**Acción requerida (compleja):**
+
+Páginas que deberían ser SSR:
+```
+app/dashboard/admin/clients/page.tsx
+app/dashboard/admin/invoices/page.tsx
+app/dashboard/admin/users/page.tsx
+app/dashboard/projects/page.tsx
+app/dashboard/projects/[id]/page.tsx
+```
+
+**Estrategia:**
+```typescript
+// ANTES (CSR)
+'use client';
+export default function UsersPage() {
+  const { users } = useUsers(); // fetch en cliente
+  return <UsersTable users={users} />;
+}
+
+// DESPUÉS (SSR + Client)
+// page.tsx (Server Component)
+import { UsersClient } from './components/UsersClient';
+import { UsersService } from '@/services/users.service';
+
+export default async function UsersPage() {
+  const initialUsers = await UsersService.getAll();
+  return <UsersClient initialUsers={initialUsers} />;
+}
+
+// components/UsersClient.tsx (Client Component)
+'use client';
+export function UsersClient({ initialUsers }) {
+  // Solo interactividad
+}
+```
+
+---
+
+### 6. Accessibility First — 90%
+
+**Completado:**
+- [x] SkipLinks
+- [x] FormField con useId
+- [x] DataTable con teclado
+- [x] aria-live en errores
+- [x] scope="col" en tablas
+
+**Falta:**
+- [ ] Auditoría formal con axe DevTools
+- [ ] Focus management en modales específicos
+- [ ] Verificar contraste WCAG AA
+
+---
+
+## Plan Real para 100%
+
+### Fase 1: KISS (Semana 1-2)
+- [ ] Dividir `AdminWorkflowView.tsx` (419 → ~150)
+- [ ] Dividir `FileList.tsx` (356 → ~150)
+- [ ] Dividir `ProjectStagesView.tsx` (348 → ~150)
+
+### Fase 2: DRY (Semana 3)
+- [ ] Refactorizar `UploadPaymentProofModal` con FormModal
+- [ ] Refactorizar `RecordPaymentModal` con FormModal
+- [ ] Refactorizar `ClientPaymentUploadModal` con FormModal
+- [ ] Refactorizar `AdminPaymentReviewModal` con FormModal
+- [ ] Refactorizar `PayEmployeeModal` con FormModal
+
+### Fase 3: SoC (Semana 4)
+- [ ] Crear `useAdminWorkflow` hook
+- [ ] Crear `useFileList` hook
+- [ ] Mover funciones de formato a utils
+
+### Fase 4: Progressive Enhancement (Semana 5-6)
+- [ ] SSR en `/admin/clients`
+- [ ] SSR en `/admin/invoices`
+- [ ] SSR en `/admin/users`
+- [ ] SSR en `/projects`
+
+### Fase 5: A11y (Semana 7)
+- [ ] Auditoría con axe DevTools
+- [ ] Corregir problemas encontrados
+
+---
+
+## Checklist Real
+
+### KISS 70%
+- [ ] AdminWorkflowView < 300 líneas
+- [ ] users/page < 300 líneas
+- [ ] FileList < 300 líneas
+- [ ] ProjectStagesView < 300 líneas
+- [ ] PaymentHistoryTable < 300 líneas
+- [ ] projects/[id]/page < 300 líneas
+
+### SoC 85%
+- [ ] useAdminWorkflow hook
+- [ ] useFileList hook
+- [ ] Funciones de formato en utils
+
+### DRY 75%
+- [ ] UploadPaymentProofModal usa FormModal
+- [ ] RecordPaymentModal usa FormModal
+- [ ] ClientPaymentUploadModal usa FormModal
+- [ ] AdminPaymentReviewModal usa FormModal
+- [ ] PayEmployeeModal usa FormModal
+
+### SSOT 95%
 - [x] Contextos por dominio
-- [x] Constants exportados centralmente
-- [x] Hooks como SSOT de estado
+- [x] constants/index.ts
+- [ ] Sin estado duplicado
 
-### Progressive Enhancement ✅ 75%
-- [x] Loading states con skeletons
-- [x] Graceful degradation
-- [ ] SSR en páginas de listado (futuro)
+### Progressive Enhancement 60%
+- [ ] SSR en admin/clients
+- [ ] SSR en admin/invoices
+- [ ] SSR en admin/users
+- [ ] SSR en projects
+- [ ] Server Components
 
-### Accessibility First ✅ 98%
-- [x] SkipLinks implementado
-- [x] Focus management en modales
-- [x] ARIA attributes completos
-- [x] Semantic HTML (scope, headers)
-- [ ] Auditoría WCAG AA completa (futuro)
-
----
-
-## Commits de Esta Sesión
-
-```
-a65a953 refactor: split ProjectModals.tsx for KISS compliance (496 → 105 lines)
-7918895 refactor: split large components for KISS compliance (92% → 96%)
-1c5e48a feat(a11y): integrate SkipLinks and add ARIA attributes for 100% accessibility
-bd19d47 fix: add table header scope and aria-hidden to admin users page
-ea62211 feat: improve accessibility and centralize status colors
-1c64f8c refactor: split ProjectWorkflowSection into smaller components
-b65112d refactor: apply KISS, SoC, PE, and A11y principles
-```
+### Accessibility First 90%
+- [x] SkipLinks
+- [x] FormField useId
+- [x] DataTable teclado
+- [ ] Auditoría axe DevTools
+- [ ] WCAG AA verificado
 
 ---
 
-**Progreso Total: 92% → 98%**
+## Conclusión
 
-Los 2% restantes corresponden a:
-- SSR en páginas de listado (complejidad alta, beneficio moderado)
-- Auditoría WCAG AA formal (requiere herramientas externas)
-- Dividir archivos 300-450 líneas (beneficio marginal)
+**Estado real: ~85%**
+
+Los principales problemas son:
+1. **6 archivos >300 líneas** (KISS)
+2. **5 modales sin FormModal** (DRY) - 1,257 líneas desperdiciadas
+3. **Todo es CSR** (Progressive Enhancement) - 84 archivos 'use client'
+4. **Falta auditoría formal** (A11y)
+
+El documento anterior era optimista. Este es el estado real.
