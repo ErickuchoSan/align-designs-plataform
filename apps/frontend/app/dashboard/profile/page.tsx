@@ -1,92 +1,29 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import { api } from '@/lib/api';
-import { UsersService } from '@/services/users.service';
-import { AuthService } from '@/services/auth.service';
-import Modal from '@/components/ui/Modal';
-import { ButtonLoader, PageLoader } from '@/components/ui/Loader';
-import PhoneInput from '@/components/ui/inputs/PhoneInput';
-import PasswordInput from '@/components/ui/inputs/PasswordInput';
-import PasswordRequirements from '@/components/ui/inputs/PasswordRequirements';
+import { PageLoader } from '@/components/ui/Loader';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
-import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
-import { CheckIcon, CloseIcon } from '@/components/ui/icons';
+import {
+  ProfileInfoCard,
+  SecurityCard,
+  DeveloperSettingsCard,
+  ChangePasswordModal,
+  PasswordSuccessModal,
+} from './components';
 
 export default function ProfilePage() {
   const { user, loading } = useProtectedRoute();
   const { logout, updateUser } = useAuth();
   const router = useRouter();
 
-  // Edit profile state
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [profileData, setProfileData] = useState({ firstName: '', lastName: '', phone: '' });
-  const [savingProfile, setSavingProfile] = useState(false);
-
-  // Change password state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [changingPassword, setChangingPassword] = useState(false);
 
-  // Developer mode (only for ADMIN)
-  const [isDevMode, setIsDevMode] = useState(false);
-
-
-  useEffect(() => {
-    if (user) {
-      setProfileData({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone || '',
-      });
-
-      // Load dev mode preference (only for ADMIN)
-      if (user.role === 'ADMIN') {
-        const savedDevMode = localStorage.getItem('devMode') === 'true';
-        setIsDevMode(savedDevMode);
-      }
-    }
-  }, [user]);
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingProfile(true);
-
-    try {
-      await UsersService.updateProfile(profileData);
-      toast.success('Profile updated successfully');
-      setEditingProfile(false);
-
-      // Update user in context (which also updates localStorage)
-      updateUser(profileData);
-    } catch (err) {
-      toast.error(handleApiError(err, 'Error updating profile'));
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChangingPassword(true);
-
-    try {
-      await AuthService.changePassword(passwordData);
-      toast.success('Password changed successfully');
-      setShowPasswordModal(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setShowSuccessModal(true);
-    } catch (err) {
-      toast.error(handleApiError(err, 'Error changing password'));
-    } finally {
-      setChangingPassword(false);
-    }
+  const handlePasswordChangeSuccess = () => {
+    setShowSuccessModal(true);
   };
 
   const handleSuccessConfirm = async () => {
@@ -104,296 +41,22 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-stone-50">
         <DashboardHeader title="My Profile" showBackButton backUrl="/dashboard" />
 
-        {/* Content */}
         <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Success/Error Messages */}
-
-
           <div className="space-y-6">
-            {/* Profile Info Card */}
-            <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-navy-900">Personal Information</h2>
-                {/* Only ADMIN can edit their own profile */}
-                {!editingProfile && user.role === 'ADMIN' && (
-                  <button
-                    onClick={() => setEditingProfile(true)}
-                    className="text-navy-700 hover:text-navy-900 font-medium hover:underline"
-                  >
-                    Edit
-                  </button>
-                )}
-              </div>
-
-              {!editingProfile ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-1">First Name</label>
-                      <p className="text-lg text-navy-900 font-medium">{user.firstName}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-1">Last Name</label>
-                      <p className="text-lg text-navy-900 font-medium">{user.lastName}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
-                    <p className="text-lg text-navy-900 font-medium">{user.email}</p>
-                  </div>
-                  <div>
-                    <label className="block text sm font-medium text-stone-700 mb-1">Phone</label>
-                    <p className="text-lg text-navy-900 font-medium">{user.phone || 'Not specified'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">Role</label>
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${user.role === 'ADMIN'
-                      ? 'bg-gold-100 text-gold-800'
-                      : 'bg-navy-100 text-navy-800'
-                      }`}>
-                      {user.role === 'ADMIN' ? 'Administrator' : 'Client'}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSaveProfile} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-navy-900 mb-2">First Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={profileData.firstName}
-                        onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                        className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-navy-900 mb-2">Last Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={profileData.lastName}
-                        onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                        className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-navy-900 mb-2">Phone</label>
-                    <PhoneInput
-                      value={profileData.phone}
-                      onChange={(phone) => setProfileData({ ...profileData, phone })}
-                      placeholder="Phone number"
-                    />
-                  </div>
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingProfile(false);
-                        setProfileData({
-                          firstName: user.firstName,
-                          lastName: user.lastName,
-                          phone: user.phone || '',
-                        });
-                      }}
-                      disabled={savingProfile}
-                      className="flex-1 px-5 py-3 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={savingProfile}
-                      className="flex-1 px-5 py-3 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      {savingProfile ? <ButtonLoader /> : 'Save changes'}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-
-            {/* Change Password Card */}
-            <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
-              <h2 className="text-2xl font-bold text-navy-900 mb-4">Security</h2>
-              <p className="text-stone-700 mb-6">Manage your password and keep your account secure</p>
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="px-6 py-3 text-sm font-medium text-white bg-gold-600 rounded-lg hover:bg-gold-500 transition-all hover:shadow-lg"
-              >
-                Change Password
-              </button>
-            </div>
-
-            {/* Developer Mode Card - Only for ADMIN */}
-            {user.role === 'ADMIN' && (
-              <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
-                <h2 className="text-2xl font-bold text-navy-900 mb-4">Developer Settings</h2>
-                <p className="text-stone-700 mb-6">
-                  Enable detailed error messages for debugging. This will show technical details instead of user-friendly messages.
-                </p>
-                <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200">
-                  <div>
-                    <h3 className="text-sm font-semibold text-navy-900">Developer Mode</h3>
-                    <p className="text-xs text-stone-600 mt-1">Show technical error details</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const newDevMode = !isDevMode;
-                      setIsDevMode(newDevMode);
-                      localStorage.setItem('devMode', newDevMode ? 'true' : 'false');
-                    }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 ${isDevMode ? 'bg-gold-600' : 'bg-stone-300'
-                      }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDevMode ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
+            <ProfileInfoCard user={user} onUpdateUser={updateUser} />
+            <SecurityCard onChangePassword={() => setShowPasswordModal(true)} />
+            <DeveloperSettingsCard isAdmin={user.role === 'ADMIN'} />
           </div>
         </main>
       </div>
 
-      {/* Change Password Modal */}
-      <Modal
+      <ChangePasswordModal
         isOpen={showPasswordModal}
-        onClose={() => {
-          setShowPasswordModal(false);
-          setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        }}
-        title="Change Password"
-        size="md"
-      >
-        <form onSubmit={handleChangePassword} className="space-y-4">
-          <p className="text-sm text-stone-700 mb-4">
-            After changing your password, we will automatically log you out for security.
-          </p>
+        onClose={() => setShowPasswordModal(false)}
+        onSuccess={handlePasswordChangeSuccess}
+      />
 
-
-
-          <div>
-            <label className="block text-sm font-medium text-navy-900 mb-2">
-              Current Password
-            </label>
-            <input
-              type="password"
-              required
-              value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-              className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
-              placeholder="Your current password"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-navy-900 mb-2">
-              New Password
-            </label>
-            <PasswordInput
-              value={passwordData.newPassword}
-              onChange={(newPassword) => setPasswordData({ ...passwordData, newPassword })}
-              placeholder="New password"
-              required
-              showStrengthIndicator={true}
-            />
-
-            {/* Password Requirements Checklist - shown only for new password */}
-            {passwordData.newPassword && (
-              <div className="mt-3">
-                <PasswordRequirements
-                  password={passwordData.newPassword}
-                  className="bg-stone-50 border border-stone-200 rounded-lg p-4"
-                />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-navy-900 mb-2">
-              Confirm New Password
-            </label>
-            <PasswordInput
-              value={passwordData.confirmPassword}
-              onChange={(confirmPassword) => setPasswordData({ ...passwordData, confirmPassword })}
-              placeholder="Confirm new password"
-              required
-              showStrengthIndicator={false}
-            />
-            {/* Show match indicator when user starts typing confirmation */}
-            {passwordData.confirmPassword && (
-              <p className={`mt-2 text-sm flex items-center gap-1 ${passwordData.newPassword === passwordData.confirmPassword
-                ? 'text-green-600'
-                : 'text-red-600'
-                }`}>
-                {passwordData.newPassword === passwordData.confirmPassword ? (
-                  <>
-                    <CheckIcon size="md" />
-                    Passwords match
-                  </>
-                ) : (
-                  <>
-                    <CloseIcon size="md" />
-                    Passwords do not match
-                  </>
-                )}
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
-            <button
-              type="button"
-              onClick={() => {
-                setShowPasswordModal(false);
-                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-              }}
-              disabled={changingPassword}
-              className="px-5 py-2.5 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={changingPassword}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-gold-600 rounded-lg hover:bg-gold-500 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] flex items-center justify-center"
-            >
-              {changingPassword ? <ButtonLoader /> : 'Change Password'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Success Confirmation Modal */}
-      <Modal
-        isOpen={showSuccessModal}
-        onClose={() => { }} // Prevent closing without confirming
-        title="Password Updated"
-        size="sm"
-      >
-        <div className="text-center py-4">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-forest-100 mb-4">
-            <CheckIcon className="w-8 h-8 text-forest-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-navy-900 mb-2">
-            Password updated successfully
-          </h3>
-          <p className="text-sm text-stone-700 mb-6">
-            For security, we will log you out. You will need to log in again with your new password.
-          </p>
-          <button
-            onClick={handleSuccessConfirm}
-            className="w-full px-5 py-3 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg transition-all"
-          >
-            Accept
-          </button>
-        </div>
-      </Modal>
+      <PasswordSuccessModal isOpen={showSuccessModal} onConfirm={handleSuccessConfirm} />
     </>
   );
 }
