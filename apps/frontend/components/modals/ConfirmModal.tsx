@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { ButtonLoader } from '../ui/Loader';
 
@@ -65,6 +66,19 @@ export default function ConfirmModal({
 
   const style = variantStyles[variant];
 
+  // Focus management: focus the cancel button when modal opens (safer default)
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isOpen && cancelButtonRef.current) {
+      // Small delay to ensure modal animation completes
+      const timer = setTimeout(() => {
+        cancelButtonRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size={showDetailedWarning ? "md" : "sm"}>
       <div className={showDetailedWarning ? "" : "text-center"}>
@@ -107,6 +121,7 @@ export default function ConfirmModal({
 
         <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end">
           <button
+            ref={cancelButtonRef}
             onClick={onClose}
             disabled={isLoading}
             className="w-full px-5 py-2.5 text-sm font-medium transition-colors rounded-lg text-stone-800 bg-stone-200 hover:bg-stone-300 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
