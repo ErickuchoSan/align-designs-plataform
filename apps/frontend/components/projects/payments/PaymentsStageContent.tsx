@@ -15,6 +15,7 @@ import PaymentActions from './PaymentActions';
 import InvoiceList from './InvoiceList';
 import ClientPaymentsList, { PendingPaymentsList } from './ClientPaymentsList';
 import EmployeePaymentsList from './EmployeePaymentsList';
+import InvoicePreviewModal from './InvoicePreviewModal';
 
 interface PaymentsStageContentProps {
   projectId: string;
@@ -54,6 +55,7 @@ function PaymentsStageContent({
   const [rejectingPaymentId, setRejectingPaymentId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [viewingPayment, setViewingPayment] = useState<Payment | EmployeePayment | null>(null);
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
 
   // Handlers
   const handleConfirmApprove = async (file: File) => {
@@ -113,6 +115,7 @@ function PaymentsStageContent({
         onGenerateInvoice={onGenerateInvoice}
         onPayEmployee={onPayEmployee}
         onUploadPaymentProof={onUploadPaymentProof}
+        onPreviewInvoice={() => setShowInvoicePreview(true)}
       />
 
       {/* Client Invoices Section */}
@@ -224,6 +227,12 @@ function PaymentsStageContent({
           </div>
         </Modal>
       )}
+
+      {/* Invoice Preview Modal - Admin Only */}
+      <InvoicePreviewModal
+        isOpen={showInvoicePreview}
+        onClose={() => setShowInvoicePreview(false)}
+      />
     </div>
   );
 }

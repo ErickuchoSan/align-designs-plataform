@@ -7,6 +7,7 @@ interface PaymentActionsProps {
   onGenerateInvoice?: () => void;
   onPayEmployee?: () => void;
   onUploadPaymentProof?: () => void;
+  onPreviewInvoice?: () => void;
 }
 
 function PaymentActions({
@@ -14,6 +15,7 @@ function PaymentActions({
   onGenerateInvoice,
   onPayEmployee,
   onUploadPaymentProof,
+  onPreviewInvoice,
 }: PaymentActionsProps) {
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -58,6 +60,33 @@ function PaymentActions({
               />
             </svg>
             <span className="whitespace-nowrap">Pay Employee</span>
+          </button>
+          <button
+            onClick={onPreviewInvoice}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+            title="Preview how invoices look (Admin only)"
+          >
+            <svg
+              className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            <span className="whitespace-nowrap">Preview Invoice</span>
           </button>
         </>
       )}
