@@ -1,8 +1,10 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
+import { InvoicesService } from '@/services/invoices.service';
 import { toast } from '@/lib/toast';
+import { handleApiError } from '@/lib/errors';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import PaymentEmptyState from './PaymentEmptyState';
 
@@ -39,11 +41,18 @@ interface InvoiceListProps {
 }
 
 function InvoiceList({ invoices, isAdmin }: InvoiceListProps) {
-  const handleViewInvoice = (invoice: Invoice) => {
-    if (invoice.invoiceFileUrl) {
-      window.open(invoice.invoiceFileUrl, '_blank');
-    } else {
-      toast.error('Invoice file not available');
+  const [loadingInvoiceId, setLoadingInvoiceId] = useState<string | null>(null);
+
+  const handleViewInvoice = async (invoice: Invoice) => {
+    setLoadingInvoiceId(invoice.id);
+    try {
+      const blob = await InvoicesService.downloadPdf(invoice.id);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      toast.error(handleApiError(error, 'Could not load invoice PDF'));
+    } finally {
+      setLoadingInvoiceId(null);
     }
   };
 
@@ -108,13 +117,21 @@ function InvoiceList({ invoices, isAdmin }: InvoiceListProps) {
                   <td className="px-4 py-3 whitespace-nowrap text-center">
                     <button
                       onClick={() => handleViewInvoice(invoice)}
-                      className="inline-flex p-1.5 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+                      disabled={loadingInvoiceId === invoice.id}
+                      className="inline-flex p-1.5 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait"
                       aria-label={`View invoice ${invoice.invoiceNumber}`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
+                      {loadingInvoiceId === invoice.id ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
                     </button>
                   </td>
                 </tr>
@@ -153,13 +170,26 @@ function InvoiceList({ invoices, isAdmin }: InvoiceListProps) {
             </div>
             <button
               onClick={() => handleViewInvoice(invoice)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-stone-600 hover:text-navy-600 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200"
+              disabled={loadingInvoiceId === invoice.id}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-stone-600 hover:text-navy-600 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200 disabled:opacity-50 disabled:cursor-wait"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              View Invoice
+              {loadingInvoiceId === invoice.id ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  View Invoice
+                </>
+              )}
             </button>
           </div>
         ))}
