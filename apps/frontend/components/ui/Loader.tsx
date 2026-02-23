@@ -1,6 +1,6 @@
 interface LoaderProps {
-  size?: 'sm' | 'md' | 'lg';
-  color?: 'blue' | 'white' | 'gray';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  color?: 'blue' | 'white' | 'gray' | 'navy';
   text?: string;
 }
 
@@ -9,12 +9,14 @@ export default function Loader({ size = 'md', color = 'blue', text }: LoaderProp
     sm: 'w-5 h-5 border-2',
     md: 'w-8 h-8 border-3',
     lg: 'w-12 h-12 border-4',
+    xl: 'w-10 h-10 border-2',
   };
 
   const colorClasses = {
     blue: 'border-blue-600 border-t-transparent',
     white: 'border-white border-t-transparent',
     gray: 'border-gray-600 border-t-transparent',
+    navy: 'border-navy-900 border-t-transparent',
   };
 
   return (
@@ -35,6 +37,18 @@ export function PageLoader({ text = 'Loading...' }: { text?: string }) {
 
 export function ButtonLoader() {
   return <Loader size="sm" color="white" />;
+}
+
+/**
+ * Inline spinner for content areas - uses navy color by default
+ * Use this instead of duplicating spinner styles
+ */
+export function InlineSpinner({ label = 'Loading' }: { label?: string }) {
+  return (
+    <div className="flex items-center justify-center py-12" role="status" aria-label={label}>
+      <Loader size="xl" color="navy" />
+    </div>
+  );
 }
 
 export function ProjectCardSkeleton() {

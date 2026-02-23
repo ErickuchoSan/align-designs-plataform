@@ -6,6 +6,7 @@ import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from 'react-hot-toast';
 import GlobalErrorModal from "@/components/common/GlobalErrorModal";
+import SkipLinks from "@/components/common/SkipLinks";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <ErrorBoundary>
+          <SkipLinks />
           <OfflineIndicator />
           <GlobalErrorModal />
           <AuthProvider>
