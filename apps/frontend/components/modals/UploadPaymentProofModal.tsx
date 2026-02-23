@@ -157,7 +157,7 @@ export default function UploadPaymentProofModal({
 
                     <div>
                         <label className="block text-sm font-medium text-stone-700 mb-1">
-                            Amount Paid (MXN)
+                            Amount Paid (USD)
                         </label>
                         <div className="relative">
                             <span className="absolute left-3 top-2 text-stone-500">$</span>

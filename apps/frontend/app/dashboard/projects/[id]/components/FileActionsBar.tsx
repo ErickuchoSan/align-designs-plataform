@@ -60,8 +60,8 @@ export default function FileActionsBar({
                     🔒 Project Waiting for Payment
                   </h3>
                   <p className="mt-1 text-sm text-yellow-700">
-                    This project will be activated once the client pays the initial amount of <strong>${Number(project.initialAmountRequired).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>.
-                    Currently paid: <strong>${Number(project.amountPaid).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>
+                    This project will be activated once the client pays the initial amount of <strong>${Number(project.initialAmountRequired).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>.
+                    Currently paid: <strong>${Number(project.amountPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
                   </p>
                 </>
               )}

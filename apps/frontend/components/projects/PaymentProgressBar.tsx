@@ -28,17 +28,17 @@ export function PaymentProgressBar({ required, paid, pendingAmount = 0, classNam
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:text-sm text-xs">
         <div className="flex flex-col">
           <span className="text-stone-600">
-            Pagado: <span className="font-semibold text-navy-900">${effectivePaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+            Paid: <span className="font-semibold text-navy-900">${effectivePaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </span>
           {effectivePending > 0 && (
             <span className="text-amber-600 font-medium">
-              (+${effectivePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })} en revisión)
+              (+${effectivePending.toLocaleString('en-US', { minimumFractionDigits: 2 })} pending review)
             </span>
           )}
         </div>
         <div className="text-left sm:text-right">
           <span className="text-stone-600 block">
-            Requerido: <span className="font-semibold text-navy-900">${required.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+            Required: <span className="font-semibold text-navy-900">${required.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </span>
         </div>
       </div>
@@ -65,15 +65,15 @@ export function PaymentProgressBar({ required, paid, pendingAmount = 0, classNam
 
       <div className="flex justify-between text-xs text-gray-500">
         <div className="flex gap-2">
-          <span>{Math.round(paidPercentage + pendingPercentage)}% completado</span>
+          <span>{Math.round(paidPercentage + pendingPercentage)}% complete</span>
         </div>
 
-        {!isFullyCovered && <span>Restante: ${remaining.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>}
+        {!isFullyCovered && <span>Remaining: ${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>}
 
         {isPaidComplete ? (
-          <span className="text-green-600 font-medium">✓ Completado</span>
+          <span className="text-green-600 font-medium">✓ Complete</span>
         ) : isFullyCovered ? (
-          <span className="text-amber-600 font-medium">⏳ Esperando Aprobación</span>
+          <span className="text-amber-600 font-medium">⏳ Pending Approval</span>
         ) : null}
       </div>
     </div>

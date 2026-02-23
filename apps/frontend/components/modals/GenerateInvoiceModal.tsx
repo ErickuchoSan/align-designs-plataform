@@ -131,7 +131,7 @@ export default function GenerateInvoiceModal({
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className={FORM_LABEL}>Total Amount (MXN)</label>
+            <label className={FORM_LABEL}>Total Amount (USD)</label>
             <div className="relative">
               <span className="absolute left-3 top-2 text-stone-500">$</span>
               <input

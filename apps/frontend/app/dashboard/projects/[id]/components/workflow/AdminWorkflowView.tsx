@@ -78,7 +78,7 @@ function AdminWorkflowView({
   const [showChecklistModal, setShowChecklistModal] = useState(false);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-MX', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -221,7 +221,7 @@ const PaymentSection = memo(function PaymentSection({
   const router = useRouter();
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-MX', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

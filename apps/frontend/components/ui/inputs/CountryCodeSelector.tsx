@@ -20,8 +20,8 @@ const AMERICAN_COUNTRIES = [
   'CU', 'DO', 'HT', 'JM', 'TT', 'BB', 'BS', 'AG', 'DM', 'GD', 'KN', 'LC', 'VC', // Caribbean
 ];
 
-// Popular countries within Americas to show first
-const POPULAR_COUNTRY_CODES = ['MX', 'US', 'CA', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
+// Popular countries within Americas to show first (US first for US-based clients)
+const POPULAR_COUNTRY_CODES = ['US', 'CA', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
 
 export default function CountryCodeSelector({ value, onChange, className = '' }: CountryCodeSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);

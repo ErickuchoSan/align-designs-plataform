@@ -24,8 +24,8 @@ function getFormatter(currency: string, locale: string = 'en-US'): Intl.NumberFo
 /**
  * Format a number or string as currency with caching
  * @param amount - Number or string to format
- * @param currency - Currency code (USD, MXN, etc.)
- * @param locale - Locale string (en-US, es-MX, etc.)
+ * @param currency - Currency code (USD by default)
+ * @param locale - Locale string (en-US by default)
  */
 export const formatCurrency = (amount: number | string, currency: string = 'USD', locale: string = 'en-US'): string => {
     const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -33,8 +33,8 @@ export const formatCurrency = (amount: number | string, currency: string = 'USD'
 };
 
 /**
- * Format as Mexican Pesos (convenience function)
+ * Format as US Dollars (convenience function)
  */
-export const formatMXN = (amount: number | string): string => {
-    return formatCurrency(amount, 'MXN', 'es-MX');
+export const formatUSD = (amount: number | string): string => {
+    return formatCurrency(amount, 'USD', 'en-US');
 };
