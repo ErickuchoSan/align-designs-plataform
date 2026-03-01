@@ -10,7 +10,7 @@ COPY pnpm-lock.yaml package.json ./
 COPY prisma ./prisma/
 
 # Install dependencies including dev dependencies for build
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 COPY . .
 
@@ -31,7 +31,7 @@ WORKDIR /usr/src/app
 COPY pnpm-lock.yaml package.json ./
 
 # Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod
 
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/prisma ./prisma
