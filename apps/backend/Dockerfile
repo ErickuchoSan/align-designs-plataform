@@ -45,6 +45,9 @@ WORKDIR /app/apps/backend
 COPY --from=builder /app/apps/backend/dist ./dist
 COPY --from=builder /app/apps/backend/prisma ./prisma
 
+# Generate Prisma Client in production stage
+RUN pnpm prisma:generate
+
 EXPOSE 3001
 
 CMD ["pnpm", "start:prod"]
