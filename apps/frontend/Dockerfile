@@ -6,12 +6,17 @@ RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 
 WORKDIR /app
 
-COPY pnpm-lock.yaml package.json ./
+# Copy workspace config and lock file from monorepo root
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/frontend/package.json ./apps/frontend/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --filter frontend
 
-COPY . .
+# Copy frontend source
+COPY apps/frontend ./apps/frontend
+
+WORKDIR /app/apps/frontend
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -30,9 +35,9 @@ RUN adduser --system --uid 1001 nextjs
 
 # Copy standalone build
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/static ./apps/frontend/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/public ./apps/frontend/public
 
 USER nextjs
 
@@ -41,4 +46,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/frontend/server.js"]

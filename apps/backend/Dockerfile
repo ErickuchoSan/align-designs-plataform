@@ -4,15 +4,20 @@ FROM node:18-alpine AS builder
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY pnpm-lock.yaml package.json ./
-COPY prisma ./prisma/
+# Copy workspace config and lock file from monorepo root
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/backend/package.json ./apps/backend/
+COPY apps/backend/prisma ./apps/backend/prisma/
 
 # Install dependencies including dev dependencies for build
-RUN pnpm install
+RUN pnpm install --filter backend
 
-COPY . .
+# Copy backend source
+COPY apps/backend ./apps/backend
+
+WORKDIR /app/apps/backend
 
 # Generate Prisma Client
 RUN pnpm prisma:generate
@@ -26,15 +31,19 @@ FROM node:18-alpine
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY pnpm-lock.yaml package.json ./
+# Copy workspace config and lock file
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/backend/package.json ./apps/backend/
 
 # Install only production dependencies
-RUN pnpm install --prod
+RUN pnpm install --prod --filter backend
 
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/prisma ./prisma
+WORKDIR /app/apps/backend
+
+COPY --from=builder /app/apps/backend/dist ./dist
+COPY --from=builder /app/apps/backend/prisma ./prisma
 
 EXPOSE 3001
 
