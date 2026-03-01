@@ -5,13 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SecretsService } from '../secrets/secrets.service';
-import * as nodemailer from 'nodemailer';
-import { Transporter } from 'nodemailer';
-import {
-  EMAIL_STYLES,
-  EMAIL_CONTENT,
-} from './templates/email-styles.constants';
+import { Resend } from 'resend';
 import {
   getBaseEmailTemplate,
   getOtpCodeHtml,
@@ -21,71 +15,49 @@ import {
 @Injectable()
 export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: Transporter;
+  private resend: Resend;
   private isHealthy: boolean = false;
+  private emailFrom: string;
 
-  constructor(
-    private configService: ConfigService,
-    private secretsService: SecretsService,
-  ) { }
+  constructor(private configService: ConfigService) {}
 
   /**
-   * Initialize SMTP connection
+   * Initialize Resend client
    */
   async onModuleInit() {
     try {
-      const emailPort = this.configService.get<number>('EMAIL_PORT', 587);
-      const isSecure = emailPort === 465;
+      const apiKey = this.configService.get<string>('RESEND_API_KEY');
+      this.emailFrom = this.configService.get<string>('EMAIL_FROM', 'Align Designs <onboarding@resend.dev>');
 
-      const user = await this.secretsService.getSecret('EMAIL_USER');
-      const pass = await this.secretsService.getSecret('EMAIL_PASSWORD');
+      if (!apiKey) {
+        throw new Error('RESEND_API_KEY is not configured');
+      }
 
-      this.transporter = nodemailer.createTransport({
-        host: this.configService.get<string>('EMAIL_HOST'),
-        port: emailPort,
-        secure: isSecure,
-        auth: {
-          user,
-          pass,
-        },
-        requireTLS: !isSecure,
-        tls: {
-          rejectUnauthorized:
-            this.configService.get<string>(
-              'EMAIL_REJECT_UNAUTHORIZED',
-              'true',
-            ) === 'true',
-          minVersion: 'TLSv1.2',
-        },
-      });
+      this.resend = new Resend(apiKey);
 
-      this.logger.log(
-        `Email transport configured - Host: ${this.configService.get<string>('EMAIL_HOST')}, Port: ${emailPort}, Secure: ${isSecure}, RequireTLS: ${!isSecure}`,
-      );
-      this.logger.debug(`Email User: ${user ? '***SET***' : 'NOT SET'}`);
-      this.logger.debug(`Email Pass: ${pass ? '***SET***' : 'NOT SET'}`);
-      this.logger.debug(`Email From: ${this.configService.get<string>('EMAIL_FROM')}`);
+      this.logger.log(`Email service configured with Resend API`);
+      this.logger.debug(`Email From: ${this.emailFrom}`);
 
-      this.logger.log('Verifying SMTP connection...');
-      await this.transporter.verify();
-      this.isHealthy = true;
-      this.logger.log('✓ SMTP connection verified successfully');
+      // Test the connection by checking if API key is valid format
+      if (apiKey.startsWith('re_')) {
+        this.isHealthy = true;
+        this.logger.log('✓ Resend API configured successfully');
+      } else {
+        throw new Error('Invalid Resend API key format');
+      }
     } catch (error) {
       this.isHealthy = false;
       this.logger.error(
-        '✗ SMTP connection verification failed. Email functionality may not work properly.',
+        '✗ Resend configuration failed. Email functionality may not work properly.',
         error,
       );
       this.logger.warn(
-        'Please check your EMAIL_* environment variables and SMTP server availability.',
+        'Please check your RESEND_API_KEY environment variable.',
       );
-      throw new InternalServerErrorException(
-        'Failed to initialize email service. Please check SMTP configuration.',
-      );
+      // Don't throw - allow app to start without email
+      this.logger.warn('Application will start but email sending will be disabled.');
     }
   }
-
-
 
   /**
    * Check if the email service is healthy and ready to send emails
@@ -95,8 +67,51 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Generic method to send emails via Resend
+   */
+  private async sendEmail(
+    to: string,
+    subject: string,
+    html: string,
+    attachments?: Array<{ filename: string; content: Buffer }>,
+  ): Promise<void> {
+    if (!this.isHealthy) {
+      this.logger.warn(`Email not sent (service not configured): ${subject} to ${to}`);
+      return;
+    }
+
+    try {
+      const emailOptions: any = {
+        from: this.emailFrom,
+        to,
+        subject,
+        html,
+      };
+
+      if (attachments && attachments.length > 0) {
+        emailOptions.attachments = attachments.map((att) => ({
+          filename: att.filename,
+          content: att.content,
+        }));
+      }
+
+      const { data, error } = await this.resend.emails.send(emailOptions);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      this.logger.log(`Email sent successfully to ${to} (ID: ${data?.id})`);
+    } catch (error) {
+      this.logger.error(`Failed to send email to ${to}:`, error);
+      throw new InternalServerErrorException(
+        'Failed to send email. Please try again later.',
+      );
+    }
+  }
+
+  /**
    * Generic method to send OTP emails
-   * Consolidates duplicate code for different OTP email types
    */
   private async sendOtpEmailGeneric(
     to: string,
@@ -108,37 +123,23 @@ export class EmailService implements OnModuleInit {
     warningMessage: string,
     logPrefix: string,
   ): Promise<void> {
+    const html = getBaseEmailTemplate({
+      title,
+      userName,
+      preMessage,
+      bodyContent: getOtpCodeHtml(otpCode),
+      postMessage: 'This code will expire in <strong>10 minutes</strong>.',
+      warningMessage,
+    });
+
     try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      const mailOptions = {
-        from: emailFrom,
-        to: to,
-        subject: `${subject} - Align Designs`,
-        html: getBaseEmailTemplate({
-          title,
-          userName,
-          preMessage,
-          bodyContent: getOtpCodeHtml(otpCode),
-          postMessage: 'This code will expire in <strong>10 minutes</strong>.',
-          warningMessage,
-        }),
-      };
-
-      await this.transporter.sendMail(mailOptions);
+      await this.sendEmail(to, `${subject} - Align Designs`, html);
       this.logger.log(`${logPrefix} email sent successfully to ${to}`);
     } catch (error) {
       this.logger.error(`Failed to send ${logPrefix} email to ${to}:`, error);
-      throw new InternalServerErrorException(
-        'Failed to send email. Please verify your email configuration.',
-      );
+      throw error;
     }
   }
-
-  /**
-   * Send OTP email for new user account verification and password setup
-   */
-
 
   /**
    * Send welcome email to new users
@@ -148,46 +149,37 @@ export class EmailService implements OnModuleInit {
     userName: string,
     origin: string,
   ): Promise<void> {
+    if (!origin) {
+      this.logger.error('sendWelcomeEmail called without origin - cannot send email with incorrect link');
+      return;
+    }
+
+    const loginUrl = `${origin}/login`;
+
+    const html = getBaseEmailTemplate({
+      title: 'Welcome to Align Designs!',
+      userName,
+      preMessage: 'Your account has been successfully created.',
+      bodyContent: `
+        <p>You can now log in to the platform using your email address: <strong>${to}</strong></p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${loginUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Log In Now</a>
+        </div>
+        <p><strong>To set your password:</strong></p>
+        <ol>
+          <li>Go to the login page.</li>
+          <li>Enter your email and click "Continue".</li>
+          <li>You will receive a verification code via email.</li>
+          <li>Enter the verification code.</li>
+          <li>Create your secure password.</li>
+        </ol>
+      `,
+      postMessage: 'We are excited to have you on board!',
+      warningMessage: '',
+    });
+
     try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      // origin is required to ensure the login link is correct for the user's context
-      if (!origin) {
-        this.logger.error('sendWelcomeEmail called without origin - cannot send email with incorrect link');
-        return; // Silently fail to avoid blocking user creation
-      }
-
-      // Construct the full login URL using the provided origin
-      const loginUrl = `${origin}/login`;
-
-      const mailOptions = {
-        from: emailFrom,
-        to: to,
-        subject: 'Welcome to Align Designs Platform',
-        html: getBaseEmailTemplate({
-          title: 'Welcome to Align Designs!',
-          userName,
-          preMessage: 'Your account has been successfully created.',
-          bodyContent: `
-            <p>You can now log in to the platform using your email address: <strong>${to}</strong></p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${loginUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Log In Now</a>
-            </div>
-            <p><strong>To set your password:</strong></p>
-            <ol>
-              <li>Go to the login page.</li>
-              <li>Enter your email and click "Continue".</li>
-              <li>You will receive a verification code via email.</li>
-              <li>Enter the verification code.</li>
-              <li>Create your secure password.</li>
-            </ol>
-          `,
-          postMessage: 'We are excited to have you on board!',
-          warningMessage: '',
-        }),
-      };
-
-      await this.transporter.sendMail(mailOptions);
+      await this.sendEmail(to, 'Welcome to Align Designs Platform', html);
       this.logger.log(`Welcome email sent successfully to ${to}`);
     } catch (error) {
       this.logger.error(`Failed to send welcome email to ${to}:`, error);
@@ -196,11 +188,7 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
-   * Send OTP email for user login
-   */
-  /**
    * Send OTP Email (Generic wrapper for different types)
-   * types: 'new_user' | 'login' | 'password_recovery'
    */
   async sendOtpEmail(
     to: string,
@@ -249,38 +237,17 @@ export class EmailService implements OnModuleInit {
     userName: string,
     origin: string,
   ): Promise<void> {
-    try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      // origin is required to ensure the reset link is correct for the user's context
-      if (!origin) {
-        this.logger.error('sendPasswordResetEmail called without origin - cannot send email with incorrect link');
-        throw new InternalServerErrorException('Origin is required to send password reset email.');
-      }
-
-      const resetLink = `${origin}/reset-password?token=${resetToken}`;
-
-      const mailOptions = {
-        from: emailFrom,
-        to: to,
-        subject: 'Password Recovery - Align Designs',
-        html: this.getPasswordResetEmailTemplate(resetLink, userName),
-      };
-
-      await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Password reset email sent successfully to ${to}`);
-    } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${to}:`, error);
-      throw new InternalServerErrorException(
-        'Failed to send email. Please verify your email configuration.',
-      );
+    if (!origin) {
+      this.logger.error('sendPasswordResetEmail called without origin - cannot send email with incorrect link');
+      throw new InternalServerErrorException('Origin is required to send password reset email.');
     }
+
+    const resetLink = `${origin}/reset-password?token=${resetToken}`;
+    const html = this.getPasswordResetEmailTemplate(resetLink, userName);
+
+    await this.sendEmail(to, 'Password Recovery - Align Designs', html);
+    this.logger.log(`Password reset email sent successfully to ${to}`);
   }
-
-  /**
-   * Send OTP email for password recovery
-   */
-
 
   /**
    * HTML template for password reset email
@@ -327,9 +294,6 @@ export class EmailService implements OnModuleInit {
             font-weight: 600;
             margin: 30px 0;
           }
-          .button:hover {
-            background-color: #1d4ed8;
-          }
           .message {
             color: #6b7280;
             margin: 20px 0;
@@ -372,7 +336,7 @@ export class EmailService implements OnModuleInit {
           </p>
 
           <p class="warning">
-            ⚠️ If you did not request this change, please ignore this message and your password will remain unchanged.
+            If you did not request this change, please ignore this message and your password will remain unchanged.
           </p>
 
           <div class="link-text">
@@ -401,30 +365,21 @@ export class EmailService implements OnModuleInit {
     actionLink?: string,
     actionText?: string,
   ): Promise<void> {
+    const html = getBaseEmailTemplate({
+      title,
+      userName: 'User',
+      preMessage: message,
+      bodyContent: actionLink ? `<div style="text-align: center; margin: 30px 0;"><a href="${actionLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">${actionText || 'View Details'}</a></div>` : '',
+      postMessage: '',
+      warningMessage: '',
+    });
+
     try {
-      const emailFrom = this.configService.get<string>('EMAIL_FROM');
-
-      const html = getBaseEmailTemplate({
-        title,
-        userName: 'User', // Generic greeting or we could pass it
-        preMessage: message,
-        bodyContent: actionLink ? `<div style="text-align: center; margin: 30px 0;"><a href="${actionLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">${actionText || 'View Details'}</a></div>` : '',
-        postMessage: '',
-        warningMessage: '',
-      });
-
-      const mailOptions = {
-        from: emailFrom,
-        to,
-        subject: `${subject} - Align Designs`,
-        html,
-      };
-
-      await this.transporter.sendMail(mailOptions);
+      await this.sendEmail(to, `${subject} - Align Designs`, html);
       this.logger.log(`Notification email sent successfully to ${to}`);
     } catch (error) {
       this.logger.error(`Failed to send notification email to ${to}:`, error);
-      // Don't throw error to avoid breaking the main flow if email fails
+      // Don't throw to avoid breaking the main flow
     }
   }
 
@@ -439,125 +394,95 @@ export class EmailService implements OnModuleInit {
     dueDate: Date,
     pdfBuffer: Buffer,
   ): Promise<void> {
-    try {
-      const formattedAmount = amount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      });
+    const formattedAmount = amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
 
-      const formattedDueDate = dueDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+    const formattedDueDate = dueDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
-      const emailContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">Align Designs</h1>
-            <p style="color: #d4af37; margin: 10px 0 0 0; font-size: 14px;">Professional Design Solutions</p>
-          </div>
-
-          <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e0e0e0; border-top: none;">
-            <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 24px;">New Invoice</h2>
-
-            <p style="color: #333333; font-size: 16px; line-height: 1.6;">
-              Dear ${escapeHtml(clientName)},
-            </p>
-
-            <p style="color: #333333; font-size: 16px; line-height: 1.6;">
-              Thank you for choosing Align Designs! We've generated a new invoice for your project.
-            </p>
-
-            <div style="background: #f8f9fa; border-left: 4px solid #d4af37; padding: 20px; margin: 30px 0; border-radius: 4px;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">Invoice Number:</td>
-                  <td style="padding: 8px 0; color: #1e3a5f; font-weight: bold; font-size: 14px; text-align: right;">${escapeHtml(invoiceNumber)}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">Amount Due:</td>
-                  <td style="padding: 8px 0; color: #1e3a5f; font-weight: bold; font-size: 18px; text-align: right;">${formattedAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">Due Date:</td>
-                  <td style="padding: 8px 0; color: #dc3545; font-weight: bold; font-size: 14px; text-align: right;">${formattedDueDate}</td>
-                </tr>
-              </table>
-            </div>
-
-            <p style="color: #333333; font-size: 16px; line-height: 1.6;">
-              Please find your detailed invoice attached to this email as a PDF document. You can view, download, and print it for your records.
-            </p>
-
-            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin: 20px 0;">
-              <p style="color: #856404; margin: 0; font-size: 14px;">
-                <strong>⚠️ Payment Instructions:</strong><br>
-                Please include your invoice number <strong>${escapeHtml(invoiceNumber)}</strong> in the payment reference.
-              </p>
-            </div>
-
-            <p style="color: #666666; font-size: 14px; line-height: 1.6; margin-top: 30px;">
-              If you have any questions about this invoice, please don't hesitate to contact us at
-              <a href="mailto:invoices@aligndesigns.com" style="color: #d4af37; text-decoration: none;">invoices@aligndesigns.com</a>
-              or call us at <strong>+1 (415) 555-0123</strong>.
-            </p>
-
-            <p style="color: #333333; font-size: 16px; line-height: 1.6; margin-top: 30px;">
-              Thank you for your business!
-            </p>
-
-            <p style="color: #666666; font-size: 14px;">
-              Best regards,<br>
-              <strong style="color: #1e3a5f;">The Align Designs Team</strong>
-            </p>
-          </div>
-
-          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0; border-top: none;">
-            <p style="color: #999999; font-size: 12px; margin: 0;">
-              Align Designs | 1234 Creative Avenue, Suite 500, San Francisco, CA 94102
-            </p>
-            <p style="color: #999999; font-size: 12px; margin: 5px 0 0 0;">
-              <a href="https://www.aligndesigns.com" style="color: #d4af37; text-decoration: none;">www.aligndesigns.com</a>
-            </p>
-          </div>
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">Align Designs</h1>
+          <p style="color: #d4af37; margin: 10px 0 0 0; font-size: 14px;">Professional Design Solutions</p>
         </div>
-      `;
 
-      await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_FROM'),
-        to,
-        subject: `Invoice ${invoiceNumber} from Align Designs - ${formattedAmount} Due`,
-        html: emailContent,
-        attachments: [
-          {
-            filename: `Invoice-${invoiceNumber}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          },
-        ],
-      });
+        <div style="background: #ffffff; padding: 40px 30px; border: 1px solid #e0e0e0; border-top: none;">
+          <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 24px;">New Invoice</h2>
 
-      this.logger.log(`Invoice email sent successfully to ${to}`);
-    } catch (error) {
-      this.logger.error(`Failed to send invoice email to ${to} (Attempted to send PDF: ${pdfBuffer ? 'Yes' : 'No'}, Size: ${pdfBuffer?.length} bytes):`, error);
-      if (error && typeof error === 'object') {
-        this.logger.error('Error details:', JSON.stringify(error, null, 2));
-      }
-      throw new InternalServerErrorException('Failed to send invoice email');
-    }
+          <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+            Dear ${escapeHtml(clientName)},
+          </p>
+
+          <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+            Thank you for choosing Align Designs! We've generated a new invoice for your project.
+          </p>
+
+          <div style="background: #f8f9fa; border-left: 4px solid #d4af37; padding: 20px; margin: 30px 0; border-radius: 4px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #666666; font-size: 14px;">Invoice Number:</td>
+                <td style="padding: 8px 0; color: #1e3a5f; font-weight: bold; font-size: 14px; text-align: right;">${escapeHtml(invoiceNumber)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666666; font-size: 14px;">Amount Due:</td>
+                <td style="padding: 8px 0; color: #1e3a5f; font-weight: bold; font-size: 18px; text-align: right;">${formattedAmount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666666; font-size: 14px;">Due Date:</td>
+                <td style="padding: 8px 0; color: #dc3545; font-weight: bold; font-size: 14px; text-align: right;">${formattedDueDate}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+            Please find your detailed invoice attached to this email as a PDF document.
+          </p>
+
+          <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin: 20px 0;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              <strong>Payment Instructions:</strong><br>
+              Please include your invoice number <strong>${escapeHtml(invoiceNumber)}</strong> in the payment reference.
+            </p>
+          </div>
+
+          <p style="color: #333333; font-size: 16px; line-height: 1.6; margin-top: 30px;">
+            Thank you for your business!
+          </p>
+
+          <p style="color: #666666; font-size: 14px;">
+            Best regards,<br>
+            <strong style="color: #1e3a5f;">The Align Designs Team</strong>
+          </p>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0; border-top: none;">
+          <p style="color: #999999; font-size: 12px; margin: 0;">
+            Align Designs | Professional Design Solutions
+          </p>
+        </div>
+      </div>
+    `;
+
+    await this.sendEmail(
+      to,
+      `Invoice ${invoiceNumber} from Align Designs - ${formattedAmount} Due`,
+      emailContent,
+      [{ filename: `Invoice-${invoiceNumber}.pdf`, content: pdfBuffer }],
+    );
+
+    this.logger.log(`Invoice email sent successfully to ${to}`);
   }
 
   /**
    * Check if email service is healthy
    */
   async checkHealth(): Promise<boolean> {
-    try {
-      await this.transporter.verify();
-      return true;
-    } catch (error) {
-      this.logger.error('Email service health check failed', error);
-      return false;
-    }
+    return this.isHealthy;
   }
 }
