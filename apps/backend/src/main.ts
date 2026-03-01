@@ -11,6 +11,7 @@ import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.f
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { validateEnvironmentVariables } from './common/config/env-validator';
+import { isProduction } from './common/utils/request.utils';
 
 // Handle BigInt serialization
 (BigInt.prototype as any).toJSON = function () {
@@ -49,7 +50,7 @@ async function bootstrap() {
   app.use(compression());
 
   // Enable Helmet security headers
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProd = isProduction();
 
   // Get MinIO endpoint for CSP configuration
   const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
@@ -72,11 +73,11 @@ async function bootstrap() {
           objectSrc: ["'none'"],
           mediaSrc: ["'self'", minioUrl],
           frameSrc: ["'self'", minioUrl], // Allow MinIO iframes for PDF preview
-          upgradeInsecureRequests: isProduction ? [] : null, // Force HTTPS in production
+          upgradeInsecureRequests: isProd ? [] : null, // Force HTTPS in production
         },
       },
       // HSTS - Force HTTPS in production
-      strictTransportSecurity: isProduction
+      strictTransportSecurity: isProd
         ? {
           maxAge: 31536000, // 1 year in seconds
           includeSubDomains: true,
@@ -123,12 +124,10 @@ async function bootstrap() {
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      const isProduction = process.env.NODE_ENV === 'production';
-
       // Allow requests with no origin (like mobile apps or curl requests)
       // Only in development. In production, require origin header.
       if (!origin) {
-        if (isProduction) {
+        if (isProd) {
           logger.warn('CORS blocked: Missing origin header in production');
           callback(new Error('Origin header required'));
           return;

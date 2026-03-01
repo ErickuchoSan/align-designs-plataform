@@ -1,35 +1,41 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { UserPayload } from '../auth/interfaces/user.interface';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Notifications')
 @Controller('notifications')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class NotificationsController {
     constructor(private readonly notificationsService: NotificationsService) { }
 
     @Get()
     @ApiOperation({ summary: 'Get my notifications' })
-    findAll(@Request() req: any) {
-        return this.notificationsService.findAllByUser(req.user.id);
+    findAll(@CurrentUser() user: UserPayload) {
+        return this.notificationsService.findAllByUser(user.userId);
     }
 
     @Get('unread-count')
     @ApiOperation({ summary: 'Get unread count' })
-    getUnreadCount(@Request() req: any) {
-        return this.notificationsService.getUnreadCount(req.user.id);
+    getUnreadCount(@CurrentUser() user: UserPayload) {
+        return this.notificationsService.getUnreadCount(user.userId);
     }
 
     @Put(':id/read')
     @ApiOperation({ summary: 'Mark notification as read' })
-    markAsRead(@Request() req: any, @Param('id') id: string) {
-        return this.notificationsService.markAsRead(id, req.user.id);
+    markAsRead(
+        @CurrentUser() user: UserPayload,
+        @Param('id', ParseUUIDPipe) id: string,
+    ) {
+        return this.notificationsService.markAsRead(id, user.userId);
     }
 
     @Put('read-all')
     @ApiOperation({ summary: 'Mark all as read' })
-    markAllAsRead(@Request() req: any) {
-        return this.notificationsService.markAllAsRead(req.user.id);
+    markAllAsRead(@CurrentUser() user: UserPayload) {
+        return this.notificationsService.markAllAsRead(user.userId);
     }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards, Res, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards, UseInterceptors, Res, StreamableFile, ForbiddenException, ParseUUIDPipe } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { Role, InvoiceStatus } from '@prisma/client';
 import { InvoicePdfService } from './invoice-pdf.service';
+import { IdempotencyInterceptor } from '../common/interceptors/idempotency.interceptor';
 import type { Response } from 'express';
 
 @Controller('invoices')
@@ -20,18 +21,18 @@ export class InvoicesController {
 
     @Post()
     @Roles(Role.ADMIN)
+    @UseInterceptors(IdempotencyInterceptor)
     create(@Body() createInvoiceDto: CreateInvoiceDto) {
         return this.invoicesService.create(createInvoiceDto);
     }
 
     @Post(':id/resend')
     @Roles(Role.ADMIN)
-    async resendEmail(@Param('id') id: string) {
+    async resendEmail(@Param('id', ParseUUIDPipe) id: string) {
         await this.invoicesService.resendInvoiceEmail(id);
         return { message: 'Invoice email queued for sending' };
     }
 
-    @Get()
     @Get()
     findAll(
         @CurrentUser() user: UserPayload,
@@ -51,30 +52,48 @@ export class InvoicesController {
 
     @Get('project/:projectId/has-unpaid')
     @Roles(Role.ADMIN)
-    async checkUnpaidInvoices(@Param('projectId') projectId: string) {
+    async checkUnpaidInvoices(@Param('projectId', ParseUUIDPipe) projectId: string) {
         const hasUnpaid = await this.invoicesService.hasUnpaidInvoices(projectId);
         return { hasUnpaidInvoices: hasUnpaid };
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        // TODO: Add ownership check for clients
-        return this.invoicesService.findOne(id);
+    async findOne(
+        @Param('id', ParseUUIDPipe) id: string,
+        @CurrentUser() user: UserPayload,
+    ) {
+        const invoice = await this.invoicesService.findOne(id);
+
+        // Ownership check: Clients can only view their own invoices
+        if (user.role === Role.CLIENT && invoice.clientId !== user.userId) {
+            throw new ForbiddenException('You do not have access to this invoice');
+        }
+
+        return invoice;
     }
 
     @Patch(':id/status')
     @Roles(Role.ADMIN)
-    updateStatus(@Param('id') id: string, @Body('status') status: InvoiceStatus) {
+    updateStatus(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body('status') status: InvoiceStatus,
+    ) {
         return this.invoicesService.updateStatus(id, status);
     }
 
     @Get(':id/pdf')
     async getInvoicePdf(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
+        @CurrentUser() user: UserPayload,
         @Res({ passthrough: true }) res: Response,
     ) {
         // Get invoice with all relations
         const invoice = await this.invoicesService.findOne(id);
+
+        // Ownership check: Clients can only view their own invoice PDFs
+        if (user.role === Role.CLIENT && invoice.clientId !== user.userId) {
+            throw new ForbiddenException('You do not have access to this invoice');
+        }
 
         // Generate PDF
         const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoice);

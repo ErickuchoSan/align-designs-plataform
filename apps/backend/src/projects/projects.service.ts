@@ -33,6 +33,7 @@ import {
 } from './constants/project-selects';
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
+import { ProjectLifecycleService } from './services/project-lifecycle.service';
 import { InvoicesService } from '../invoices/invoices.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@prisma/client';
@@ -81,6 +82,7 @@ export class ProjectsService {
     private readonly cacheManager: CacheManagerService,
     private readonly projectEmployeeService: ProjectEmployeeService,
     private readonly projectStatusService: ProjectStatusService,
+    private readonly projectLifecycleService: ProjectLifecycleService,
     @Inject(forwardRef(() => InvoicesService))
     private readonly invoicesService: InvoicesService,
     private readonly notificationsService: NotificationsService,
@@ -479,191 +481,17 @@ export class ProjectsService {
   }
 
   /**
-   * Soft delete a project and all associated files
+   * Soft delete a project - delegates to ProjectLifecycleService
    */
   async remove(id: string, userId: string, userRole: Role) {
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id,
-        deletedAt: null, // Only allow deleting non-deleted projects
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
-    // Client can only delete their own projects
-    const permissionContext = new PermissionContext(userRole);
-    permissionContext.verifyProjectAccess(
-      userId,
-      project.clientId,
-      'You do not have permission to delete this project',
-    );
-
-    // Soft delete the project and its files with automatic retry on deadlocks
-    await executeTransactionWithRetry(
-      this.prisma,
-      async (tx) => {
-        // Soft delete all files in the project
-        await tx.file.updateMany({
-          where: { projectId: id, deletedAt: null },
-          data: {
-            deletedAt: new Date(),
-            deletedBy: userId,
-          },
-        });
-
-        // Soft delete the project
-        await tx.project.update({
-          where: { id },
-          data: {
-            deletedAt: new Date(),
-            deletedBy: userId,
-          },
-        });
-      },
-      {
-        maxRetries: 3, // Retry up to 3 times on transient errors
-        timeout: TRANSACTION_TIMEOUT_MS, // 30 seconds timeout for projects with many files
-      },
-    );
-
-    // Get project data before deletion for notifications
-    const projectWithData = await this.prisma.project.findUnique({
-      where: { id },
-      include: {
-        client: {
-          select: { id: true, firstName: true, lastName: true, email: true },
-        },
-        employees: {
-          include: {
-            employee: {
-              select: { id: true, firstName: true, lastName: true, email: true },
-            },
-          },
-        },
-      },
-    });
-
-    // Invalidate caches
-    await this.cacheManager.invalidateProjectCaches(id);
-
-    // Send notifications to client and employees
-    if (projectWithData) {
-      const notifications = [];
-
-      // Notify client
-      if (projectWithData.clientId) {
-        notifications.push(
-          this.notificationsService.create({
-            userId: projectWithData.clientId,
-            type: NotificationType.WARNING,
-            title: 'Project Deleted',
-            message: `Project "${project.name}" has been deleted.`,
-            link: '/dashboard/projects',
-          }),
-        );
-      }
-
-      // Notify employees
-      if (projectWithData.employees && projectWithData.employees.length > 0) {
-        for (const assignment of projectWithData.employees) {
-          notifications.push(
-            this.notificationsService.create({
-              userId: assignment.employee.id,
-              type: NotificationType.WARNING,
-              title: 'Project Deleted',
-              message: `Project "${project.name}" has been deleted.`,
-              link: '/dashboard/projects',
-            }),
-          );
-        }
-      }
-
-      // Send all notifications in parallel
-      await Promise.allSettled(notifications);
-    }
-
-    this.logger.log(`Project ${id} soft deleted by user ${userId}`);
-    return { message: 'Project deleted successfully' };
+    return this.projectLifecycleService.softDelete(id, userId, userRole);
   }
 
   /**
-   * Check project deletion safety
-   * Returns information about project data to warn admin before deletion
+   * Check project deletion safety - delegates to ProjectLifecycleService
    */
   async checkProjectDeletionSafety(projectId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId, deletedAt: null },
-    });
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
-    // Count files, employees, invoices and payments
-    const [filesCount, employeesCount, invoicesCount, paymentsCount, client] = await Promise.all([
-      this.prisma.file.count({
-        where: { projectId, deletedAt: null },
-      }),
-      this.prisma.projectEmployee.count({
-        where: { projectId },
-      }),
-      this.prisma.invoice.count({
-        where: { projectId, status: { not: 'CANCELLED' } },
-      }),
-      this.prisma.payment.count({
-        where: { projectId },
-      }),
-      this.prisma.user.findUnique({
-        where: { id: project.clientId },
-        select: { id: true, firstName: true, lastName: true },
-      }),
-    ]);
-
-    const hasData = {
-      files: filesCount > 0,
-      employees: employeesCount > 0,
-      invoices: invoicesCount > 0,
-      payments: paymentsCount > 0,
-    };
-
-    const hasAnyData = Object.values(hasData).some((v) => v);
-
-    const warnings = [];
-    if (hasData.files) {
-      warnings.push(`${filesCount} uploaded file${filesCount > 1 ? 's' : ''}`);
-    }
-    if (hasData.payments) {
-      warnings.push(`${paymentsCount} payment record${paymentsCount > 1 ? 's' : ''}`);
-    }
-    if (hasData.invoices) {
-      warnings.push(`${invoicesCount} invoice${invoicesCount > 1 ? 's' : ''}`);
-    }
-    if (hasData.employees) {
-      warnings.push(`${employeesCount} assigned employee${employeesCount > 1 ? 's' : ''}`);
-    }
-
-    return {
-      projectId,
-      projectName: project.name,
-      hasData: hasAnyData,
-      details: hasData,
-      counts: {
-        files: filesCount,
-        employees: employeesCount,
-        invoices: invoicesCount,
-        payments: paymentsCount,
-      },
-      warnings,
-      client: client
-        ? {
-          id: client.id,
-          name: `${client.firstName} ${client.lastName}`,
-        }
-        : null,
-    };
+    return this.projectLifecycleService.checkDeletionSafety(projectId);
   }
 
   /**

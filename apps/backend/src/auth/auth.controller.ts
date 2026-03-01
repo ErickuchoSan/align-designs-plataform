@@ -32,6 +32,7 @@ import { RATE_LIMIT_AUTH } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
 import { COOKIE_MAX_AGE_ONE_DAY } from '../common/constants/time.constants';
+import { getCookieSecurityConfig } from '../common/utils/request.utils';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -45,46 +46,20 @@ export class AuthController {
 
   /**
    * Set authentication cookie with secure settings
-   * Centralizes cookie configuration to follow DRY principle
-   * Uses Origin/Referer/Host detection to determine secure flag (same as CSRF middleware)
+   * Uses centralized cookie security configuration
    */
   private setAuthCookie(res: Response, token: string, req?: Request): void {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    // Determine if request is actually over HTTPS
-    // Priority: Origin header > Referer header > Host check for ngrok
-    // This matches the CSRF middleware logic
-    let isHttps = false;
-    if (req) {
-      const origin = req.headers.origin as string | undefined;
-      const referer = req.headers.referer as string | undefined;
-      const host = req.headers.host as string | undefined;
-
-      if (origin) {
-        isHttps = origin.startsWith('https://');
-      } else if (referer) {
-        isHttps = referer.startsWith('https://');
-      } else if (host) {
-        // ngrok domains always use HTTPS, local domains use HTTP
-        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
-      }
-    }
-
-    const useSecureCookie = isHttps || isProduction;
-
-    // When secure is true (HTTPS), we can use sameSite: 'none' for cross-origin
-    // When secure is false (HTTP), we must use 'lax' or 'strict'
-    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+    const config = getCookieSecurityConfig(req);
 
     const cookieOptions = {
       httpOnly: true,
-      secure: useSecureCookie,
-      sameSite: sameSite as 'strict' | 'lax' | 'none',
+      secure: config.useSecureCookie,
+      sameSite: config.sameSite,
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
       path: '/',
     };
 
-    this.logger.debug(`Auth Cookie Settings: secure=${useSecureCookie}, sameSite=${sameSite}, isHttps=${isHttps}, host=${req?.headers.host || 'unknown'}`);
+    this.logger.debug(`Auth Cookie Settings: secure=${config.useSecureCookie}, sameSite=${config.sameSite}, isHttps=${config.isHttps}, host=${req?.headers.host || 'unknown'}`);
 
     res.cookie('access_token', token, cookieOptions as any);
   }
@@ -459,31 +434,12 @@ export class AuthController {
    * Helper to set refresh token cookie
    */
   private setRefreshTokenCookie(res: Response, token: string, req?: Request): void {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    // Determine if request is actually over HTTPS (reusing logic from setAuthCookie)
-    let isHttps = false;
-    if (req) {
-      const origin = req.headers.origin as string | undefined;
-      const referer = req.headers.referer as string | undefined;
-      const host = req.headers.host as string | undefined;
-
-      if (origin) {
-        isHttps = origin.startsWith('https://');
-      } else if (referer) {
-        isHttps = referer.startsWith('https://');
-      } else if (host) {
-        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
-      }
-    }
-
-    const useSecureCookie = isHttps || isProduction;
-    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+    const config = getCookieSecurityConfig(req);
 
     res.cookie('refresh_token', token, {
       httpOnly: true,
-      secure: useSecureCookie,
-      sameSite: sameSite as 'strict' | 'lax' | 'none',
+      secure: config.useSecureCookie,
+      sameSite: config.sameSite,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/api/v1/auth', // Restrict to auth endpoints (login, refresh, logout)
     });
@@ -493,31 +449,12 @@ export class AuthController {
    * Helper to clear auth cookies
    */
   private clearAuthCookies(res: Response, req?: Request): void {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    // Determine if request is actually over HTTPS
-    let isHttps = false;
-    if (req) {
-      const origin = req.headers.origin as string | undefined;
-      const referer = req.headers.referer as string | undefined;
-      const host = req.headers.host as string | undefined;
-
-      if (origin) {
-        isHttps = origin.startsWith('https://');
-      } else if (referer) {
-        isHttps = referer.startsWith('https://');
-      } else if (host) {
-        isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
-      }
-    }
-
-    const useSecureCookie = isHttps || isProduction;
-    const sameSite = useSecureCookie ? 'none' : (isProduction ? 'strict' : 'lax');
+    const config = getCookieSecurityConfig(req);
 
     const cookieOptions = {
       httpOnly: true,
-      secure: useSecureCookie,
-      sameSite: sameSite as 'strict' | 'lax' | 'none',
+      secure: config.useSecureCookie,
+      sameSite: config.sameSite,
       path: '/',
     };
 

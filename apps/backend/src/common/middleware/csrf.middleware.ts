@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import type { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
 import { COOKIE_MAX_AGE_ONE_DAY } from '../constants/time.constants';
+import { getCookieSecurityConfig } from '../utils/request.utils';
 
 @Injectable()
 export class CsrfMiddleware implements NestMiddleware {
@@ -135,46 +136,22 @@ export class CsrfMiddleware implements NestMiddleware {
     const secret = crypto.randomBytes(32).toString('hex');
     const token = this.generateToken(secret);
 
-    // Get sameSite setting from config (default: 'lax' for better compatibility)
+    // Get cookie security config from centralized utility
+    const config = getCookieSecurityConfig(req);
+
+    // Allow override from env for CSRF-specific sameSite setting
     const allowNgrok = process.env.ALLOW_NGROK === 'true';
-    const sameSite = this.configService.get<string>('CSRF_SAME_SITE', allowNgrok ? 'none' : 'lax');
-    const validSameSite = ['strict', 'lax', 'none'].includes(sameSite)
-      ? (sameSite as 'strict' | 'lax' | 'none')
-      : 'lax';
+    const configSameSite = this.configService.get<string>('CSRF_SAME_SITE');
+    const sameSite = configSameSite && ['strict', 'lax', 'none'].includes(configSameSite)
+      ? (configSameSite as 'strict' | 'lax' | 'none')
+      : (allowNgrok ? 'none' : config.sameSite);
 
-    // Determine if request is actually over HTTPS
-    // Priority: Origin header > Referer header > Host check for ngrok > req.secure
-    // Note: X-Forwarded-Proto is unreliable when ngrok routes through nginx
-    const origin = req.headers.origin as string | undefined;
-    const referer = req.headers.referer as string | undefined;
-    const host = req.headers.host as string | undefined;
-
-    // Use origin/referer to determine protocol - this is the most reliable source
-    // because it reflects what the browser actually used
-    let isHttps = false;
-    if (origin) {
-      isHttps = origin.startsWith('https://');
-    } else if (referer) {
-      isHttps = referer.startsWith('https://');
-    } else if (host) {
-      // ngrok domains always use HTTPS, local domains use HTTP
-      isHttps = host.includes('.ngrok') || host.includes('.ngrok-free.dev');
-    } else {
-      isHttps = req.secure;
-    }
-
-    // Only set Secure flag if actually using HTTPS
-    // This allows HTTP (nginx local) and HTTPS (ngrok) to coexist
-    const isProduction = process.env.NODE_ENV === 'production';
-    const useSecureCookie = isHttps || isProduction;
-
-    // DEBUG: Log cookie settings
-    this.logger.debug(`CSRF Cookie Settings: secure=${useSecureCookie}, sameSite=${validSameSite}, isHttps=${isHttps}, origin=${origin || 'not set'}, host=${host || 'not set'}`);
+    this.logger.debug(`CSRF Cookie Settings: secure=${config.useSecureCookie}, sameSite=${sameSite}, isHttps=${config.isHttps}, host=${req.headers.host || 'not set'}`);
 
     res.cookie(this.csrfTokenCookie, secret, {
       httpOnly: true,
-      secure: useSecureCookie,
-      sameSite: validSameSite,
+      secure: config.useSecureCookie,
+      sameSite,
       maxAge: COOKIE_MAX_AGE_ONE_DAY,
     });
 

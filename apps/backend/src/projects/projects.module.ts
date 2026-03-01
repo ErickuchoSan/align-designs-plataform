@@ -11,6 +11,7 @@ import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
 // Phase 1: Workflow services
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
+import { ProjectLifecycleService } from './services/project-lifecycle.service';
 // Phase 2: Invoice auto-generation
 import { InvoicesModule } from '../invoices/invoices.module';
 
@@ -32,6 +33,7 @@ import { InvoicesModule } from '../invoices/invoices.module';
     // Phase 1: Workflow services
     ProjectEmployeeService,
     ProjectStatusService,
+    ProjectLifecycleService,
   ],
   controllers: [ProjectsController],
   exports: [
@@ -40,6 +42,7 @@ import { InvoicesModule } from '../invoices/invoices.module';
     // Phase 1: Export workflow services for use in other modules
     ProjectEmployeeService,
     ProjectStatusService,
+    ProjectLifecycleService,
   ],
 })
 export class ProjectsModule {}

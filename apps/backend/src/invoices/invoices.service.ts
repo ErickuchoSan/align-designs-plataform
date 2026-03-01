@@ -154,6 +154,19 @@ export class InvoicesService {
         return this.transformInvoiceDecimals(invoice) as Invoice;
     }
 
+    /**
+     * Get project ID by invoice ID
+     * Used to resolve projectId when only invoiceId is provided
+     * Follows Law of Demeter - controllers should not access Prisma directly
+     */
+    async getProjectIdByInvoiceId(invoiceId: string): Promise<string | null> {
+        const invoice = await this.prisma.invoice.findUnique({
+            where: { id: invoiceId },
+            select: { projectId: true },
+        });
+        return invoice?.projectId ?? null;
+    }
+
     async updateStatus(id: string, status: InvoiceStatus): Promise<Invoice> {
         const data: any = { status };
         if (status === InvoiceStatus.SENT) {

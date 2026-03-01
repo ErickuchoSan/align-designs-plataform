@@ -5,6 +5,7 @@ import { ProjectStatusService } from '../projects/services/project-status.servic
 import { Payment, PaymentStatus, PaymentType, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { StorageService } from '../storage/storage.service';
+import { PaymentApprovalService } from './services/payment-approval.service';
 
 @Injectable()
 export class PaymentsService {
@@ -15,6 +16,7 @@ export class PaymentsService {
         private readonly projectStatusService: ProjectStatusService,
         private readonly notificationsService: NotificationsService,
         private readonly storageService: StorageService,
+        private readonly paymentApprovalService: PaymentApprovalService,
     ) { }
 
     async create(createPaymentDto: RecordPaymentDto, receiptFileUrl?: string): Promise<Payment> {
@@ -271,213 +273,25 @@ export class PaymentsService {
     }
 
     /**
-     * Admin approves payment
-     * Can optionally correct the amount
-     * Updates project amountPaid
-     * Notifies client
+     * Admin approves payment - delegates to PaymentApprovalService
      */
     async approvePayment(
         paymentId: string,
         adminId: string,
         correctedAmount?: number,
     ): Promise<Payment> {
-        const payment = await this.prisma.payment.findUnique({
-            where: { id: paymentId },
-            include: {
-                project: {
-                    select: {
-                        id: true,
-                        name: true,
-                        clientId: true,
-                    },
-                },
-                fromUser: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-            },
-        });
-
-        if (!payment) {
-            throw new NotFoundException(`Payment ${paymentId} not found`);
-        }
-
-        if (payment.status !== PaymentStatus.PENDING_APPROVAL) {
-            throw new BadRequestException(
-                `Payment is not pending approval. Current status: ${payment.status}`,
-            );
-        }
-
-        const finalAmount = correctedAmount !== undefined ? correctedAmount : Number(payment.amount);
-        const wasAmountCorrected = correctedAmount !== undefined && correctedAmount !== Number(payment.amount);
-
-        // Update payment status
-        const updatedPayment = await this.prisma.payment.update({
-            where: { id: paymentId },
-            data: {
-                status: PaymentStatus.CONFIRMED,
-                amount: finalAmount,
-                reviewedBy: adminId,
-                reviewedAt: new Date(),
-            },
-            include: {
-                fromUser: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-                project: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
-        });
-
-        this.logger.log(
-            `Payment ${paymentId} approved by admin ${adminId}. Amount: ${finalAmount}${wasAmountCorrected ? ' (corrected from ' + payment.amount + ')' : ''}`,
-        );
-
-        // Update project amountPaid
-        await this.projectStatusService.updateProjectPayment(payment.project.id, finalAmount);
-
-        // If payment is associated with an invoice, update the invoice
-        if (payment.invoiceId) {
-            const invoice = await this.prisma.invoice.findUnique({
-                where: { id: payment.invoiceId },
-            });
-
-            if (invoice) {
-                const newAmountPaid = Number(invoice.amountPaid) + finalAmount;
-                const totalAmount = Number(invoice.totalAmount);
-
-                // Determine new status
-                let newStatus = invoice.status;
-                if (newAmountPaid >= totalAmount) {
-                    newStatus = 'PAID';
-                } else if (newAmountPaid > 0) {
-                    newStatus = 'PARTIALLY_PAID';
-                }
-
-                await this.prisma.invoice.update({
-                    where: { id: payment.invoiceId },
-                    data: {
-                        amountPaid: newAmountPaid,
-                        status: newStatus,
-                    },
-                });
-
-                this.logger.log(
-                    `Updated invoice ${payment.invoiceId} amountPaid to ${newAmountPaid}, status: ${newStatus}`,
-                );
-            }
-        }
-
-        // Notify client
-        if (payment.fromUser) {
-            const notificationMessage = wasAmountCorrected
-                ? `Su comprobante de pago ha sido aprobado. El monto fue ajustado a $${finalAmount.toFixed(2)} (monto original: $${Number(payment.amount).toFixed(2)}). El pago ha sido registrado.`
-                : `Su comprobante de pago de $${finalAmount.toFixed(2)} ha sido aprobado y registrado exitosamente.`;
-
-            await this.notificationsService.create({
-                userId: payment.fromUser.id,
-                type: NotificationType.SUCCESS,
-                title: 'Pago Aprobado',
-                message: notificationMessage,
-                link: `/dashboard/projects/${payment.project.id}?tab=payments`,
-            });
-        }
-
-        return updatedPayment;
+        return this.paymentApprovalService.approvePayment(paymentId, adminId, correctedAmount);
     }
 
     /**
-     * Admin rejects payment
-     * Requires rejection reason
-     * Notifies client to re-upload
+     * Admin rejects payment - delegates to PaymentApprovalService
      */
     async rejectPayment(
         paymentId: string,
         adminId: string,
         rejectionReason: string,
     ): Promise<Payment> {
-        const payment = await this.prisma.payment.findUnique({
-            where: { id: paymentId },
-            include: {
-                project: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-                fromUser: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-            },
-        });
-
-        if (!payment) {
-            throw new NotFoundException(`Payment ${paymentId} not found`);
-        }
-
-        if (payment.status !== PaymentStatus.PENDING_APPROVAL) {
-            throw new BadRequestException(
-                `Payment is not pending approval. Current status: ${payment.status}`,
-            );
-        }
-
-        // Update payment status
-        const updatedPayment = await this.prisma.payment.update({
-            where: { id: paymentId },
-            data: {
-                status: PaymentStatus.REJECTED,
-                reviewedBy: adminId,
-                reviewedAt: new Date(),
-                rejectionReason,
-            },
-            include: {
-                fromUser: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-                project: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
-        });
-
-        this.logger.log(
-            `Payment ${paymentId} rejected by admin ${adminId}. Reason: ${rejectionReason}`,
-        );
-
-        // Notify client
-        if (payment.fromUser) {
-            await this.notificationsService.create({
-                userId: payment.fromUser.id,
-                type: NotificationType.WARNING,
-                title: 'Comprobante Rechazado',
-                message: `Su comprobante de pago para ${payment.project.name} ha sido rechazado. Motivo: ${rejectionReason}. Por favor, suba un nuevo comprobante.`,
-                link: `/dashboard/projects/${payment.project.id}?tab=payments`,
-            });
-        }
-
-        return updatedPayment;
+        return this.paymentApprovalService.rejectPayment(paymentId, adminId, rejectionReason);
     }
 
     /**
