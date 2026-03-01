@@ -32,6 +32,8 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_USE_SSL: false
       MINIO_BUCKET: ${MINIO_BUCKET}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
     depends_on:
       - postgres-dev
       - minio-dev

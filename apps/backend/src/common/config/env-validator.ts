@@ -25,11 +25,8 @@ interface RequiredEnvVars {
   MINIO_BUCKET: string;
   MINIO_USE_SSL: string;
 
-  // Email
-  EMAIL_HOST: string;
-  EMAIL_PORT: string;
-  EMAIL_USER: string;
-  EMAIL_PASSWORD: string;
+  // Email (Resend API)
+  RESEND_API_KEY: string;
   EMAIL_FROM: string;
 
   // Application
@@ -55,10 +52,7 @@ export function validateEnvironmentVariables(): void {
     'MINIO_SECRET_KEY',
     'MINIO_BUCKET',
     'MINIO_USE_SSL',
-    'EMAIL_HOST',
-    'EMAIL_PORT',
-    'EMAIL_USER',
-    'EMAIL_PASSWORD',
+    'RESEND_API_KEY',
     'EMAIL_FROM',
     'NODE_ENV',
     'PORT',
@@ -108,7 +102,6 @@ export function validateEnvironmentVariables(): void {
   validatePort();
   validateNodeEnv();
   validateMinioPort();
-  validateEmailPort();
 
   logger.log('✓ All environment variables validated successfully');
 }
@@ -165,16 +158,5 @@ function validateMinioPort(): void {
 
   if (isNaN(port) || port < 1 || port > 65535) {
     throw new Error('MINIO_PORT must be a valid number between 1 and 65535');
-  }
-}
-
-/**
- * Validates EMAIL_PORT is a valid number
- */
-function validateEmailPort(): void {
-  const port = parseInt(process.env.EMAIL_PORT!, 10);
-
-  if (isNaN(port) || port < 1 || port > 65535) {
-    throw new Error('EMAIL_PORT must be a valid number between 1 and 65535');
   }
 }
