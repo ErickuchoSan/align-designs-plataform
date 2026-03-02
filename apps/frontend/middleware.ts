@@ -36,10 +36,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for auth token in cookies (if using HttpOnly cookies)
-  // For now, we check if there's any auth indicator
-  const authToken = request.cookies.get('auth_token')?.value;
-  const hasAuth = !!authToken;
+  // Check for auth token in cookies (HttpOnly cookies set by backend)
+  const accessToken = request.cookies.get('access_token')?.value;
+  const hasAuth = !!accessToken;
 
   // Protected routes - redirect to login if not authenticated
   const isProtectedRoute = protectedRoutes.some((route) =>
