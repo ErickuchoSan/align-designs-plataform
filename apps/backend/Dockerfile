@@ -1,5 +1,5 @@
 # Development Dockerfile - single stage with all dependencies
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
