@@ -289,11 +289,16 @@ export class FeedbackService {
   /**
    * Approve feedback cycle
    * Called when admin approves employee's submission
+   * Also moves all linked files from SUBMITTED to ADMIN_APPROVED
    */
   async approveFeedbackCycle(cycleId: string): Promise<any> {
     const cycle = await this.prisma.feedbackCycle.findUnique({
       where: { id: cycleId },
-      select: { status: true },
+      select: {
+        status: true,
+        projectId: true,
+        employeeId: true,
+      },
     });
 
     if (!cycle) {
@@ -306,24 +311,66 @@ export class FeedbackService {
       );
     }
 
-    const updatedCycle = await this.prisma.feedbackCycle.update({
-      where: { id: cycleId },
-      data: {
-        status: 'approved',
-        endDate: new Date(), // Mark end time
+    // Get all files linked to this cycle that are in SUBMITTED stage
+    const submittedFiles = await this.prisma.file.findMany({
+      where: {
+        feedbackCycleId: cycleId,
+        stage: 'SUBMITTED',
+        storagePath: { not: null }, // Only actual files, not comments
+        deletedAt: null,
       },
-      include: {
-        employee: true,
-        project: true,
-        feedback: {
-          include: {
-            creator: true,
-          },
-        },
-      },
+      select: { id: true },
     });
 
-    this.logger.log(`Feedback cycle ${cycleId} approved`);
+    // Validate that there's at least one file to approve
+    if (submittedFiles.length === 0) {
+      throw new BadRequestException(
+        'Cannot approve cycle: No files found in SUBMITTED stage. Ensure employee has uploaded deliverables.',
+      );
+    }
+
+    // Use transaction to update cycle and files atomically
+    const updatedCycle = await this.prisma.$transaction(async (tx) => {
+      // Update all linked files to ADMIN_APPROVED
+      await tx.file.updateMany({
+        where: {
+          feedbackCycleId: cycleId,
+          stage: 'SUBMITTED',
+          storagePath: { not: null },
+          deletedAt: null,
+        },
+        data: {
+          stage: 'ADMIN_APPROVED',
+          approvedAdminAt: new Date(),
+        },
+      });
+
+      // Update cycle status
+      return tx.feedbackCycle.update({
+        where: { id: cycleId },
+        data: {
+          status: 'approved',
+          endDate: new Date(),
+        },
+        include: {
+          employee: true,
+          project: true,
+          feedback: {
+            include: {
+              creator: true,
+            },
+          },
+          files: {
+            where: { deletedAt: null },
+            select: { id: true, stage: true },
+          },
+        },
+      });
+    });
+
+    this.logger.log(
+      `Feedback cycle ${cycleId} approved. ${submittedFiles.length} file(s) moved to ADMIN_APPROVED`,
+    );
 
     // Notify Employee
     await this.sendFeedbackNotification(
@@ -334,14 +381,26 @@ export class FeedbackService {
       updatedCycle.projectId,
     );
 
+    // Notify Client about new deliverable ready for review
+    if (updatedCycle.project.clientId) {
+      await this.sendFeedbackNotification(
+        updatedCycle.project.clientId,
+        NotificationType.INFO,
+        'New Deliverable Ready',
+        `A deliverable is ready for your review in ${updatedCycle.project.name}.`,
+        updatedCycle.projectId,
+      );
+    }
+
     return updatedCycle;
   }
 
   /**
    * Reject feedback cycle
    * Employee can submit again
+   * Also increments rejection count on linked files
    */
-  async rejectFeedbackCycle(cycleId: string): Promise<any> {
+  async rejectFeedbackCycle(cycleId: string, rejectionReason?: string): Promise<any> {
     const cycle = await this.prisma.feedbackCycle.findUnique({
       where: { id: cycleId },
       select: { status: true },
@@ -357,31 +416,55 @@ export class FeedbackService {
       );
     }
 
-    const updatedCycle = await this.prisma.feedbackCycle.update({
-      where: { id: cycleId },
-      data: {
-        status: 'open', // Return to open so employee can submit again
-      },
-      include: {
-        employee: true,
-        project: true,
-      },
+    // Use transaction to update cycle and files atomically
+    const updatedCycle = await this.prisma.$transaction(async (tx) => {
+      // Increment rejection count on submitted files
+      await tx.file.updateMany({
+        where: {
+          feedbackCycleId: cycleId,
+          stage: 'SUBMITTED',
+          deletedAt: null,
+        },
+        data: {
+          rejectionCount: { increment: 1 },
+          lastRejectedAt: new Date(),
+        },
+      });
+
+      // Update cycle status back to open
+      return tx.feedbackCycle.update({
+        where: { id: cycleId },
+        data: {
+          status: 'open', // Return to open so employee can submit again
+        },
+        include: {
+          employee: true,
+          project: true,
+        },
+      });
     });
 
     this.logger.log(
-      `Feedback cycle ${cycleId} rejected - returned to open status`,
+      `Feedback cycle ${cycleId} rejected - returned to open status. Reason: ${rejectionReason || 'Not specified'}`,
     );
 
     // Notify Employee
+    const message = rejectionReason
+      ? `Your deliverable in ${updatedCycle.project.name} requires changes: ${rejectionReason}`
+      : `Your deliverable in ${updatedCycle.project.name} requires changes.`;
+
     await this.sendFeedbackNotification(
       updatedCycle.employeeId,
       NotificationType.WARNING,
       'Deliverable Rejected',
-      `Your deliverable in ${updatedCycle.project.name} requires changes.`,
+      message,
       updatedCycle.projectId,
     );
 
-    return updatedCycle;
+    return {
+      ...updatedCycle,
+      rejectionReason,
+    };
   }
 
   /**

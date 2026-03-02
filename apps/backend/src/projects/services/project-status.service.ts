@@ -4,7 +4,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ProjectStatus, NotificationType } from '@prisma/client';
+import { ProjectStatus, NotificationType, Stage } from '@prisma/client';
 import { NotificationsService } from '../../notifications/notifications.service';
 
 export interface ProjectStatusSummary {
@@ -45,11 +45,14 @@ export class ProjectStatusService {
    * Check if project can be activated
    * Requirements:
    * - Must be in WAITING_PAYMENT status
+   * - Must have at least one employee assigned
+   * - Must have Project Brief defined (at least one file in BRIEF_PROJECT stage)
    * - If initialAmountRequired is set, amountPaid must be >= initialAmountRequired
    */
   async canActivateProject(projectId: string): Promise<{
     canActivate: boolean;
     reason?: string;
+    missingRequirements?: string[];
     paymentProgress?: {
       required: number;
       paid: number;
@@ -78,14 +81,46 @@ export class ProjectStatusService {
       };
     }
 
-    // If no initial amount is set (null), prevent activation to ensure payment terms are defined
+    // Collect all missing requirements
+    const missingRequirements: string[] = [];
+
+    // Check #1: Employee assignment
+    const employeeCount = await this.prisma.projectEmployee.count({
+      where: { projectId },
+    });
+
+    if (employeeCount === 0) {
+      missingRequirements.push('No employee assigned. Please assign at least one employee to the project.');
+    }
+
+    // Check #2: Project Brief (at least one file in BRIEF_PROJECT stage)
+    const briefFileCount = await this.prisma.file.count({
+      where: {
+        projectId,
+        stage: Stage.BRIEF_PROJECT,
+        deletedAt: null,
+      },
+    });
+
+    if (briefFileCount === 0) {
+      missingRequirements.push('No Project Brief. Please upload at least one file to the Brief stage.');
+    }
+
+    // Check #3: Payment amount configured
     if (project.initialAmountRequired === null) {
+      missingRequirements.push('Payment amount not configured. Please edit project to set an Initial Amount (use 0 for free projects).');
+    }
+
+    // If there are missing requirements, return early
+    if (missingRequirements.length > 0) {
       return {
         canActivate: false,
-        reason: 'Payment amount not configured. Please edit project to set an Initial Amount (use 0 for free projects).',
+        reason: missingRequirements.join(' '),
+        missingRequirements,
       };
     }
 
+    // Check #4: Payment completion
     const required = Number(project.initialAmountRequired);
     const paid = Number(project.amountPaid || 0);
     const remaining = required - paid;
@@ -98,6 +133,7 @@ export class ProjectStatusService {
       return {
         canActivate: false,
         reason: `Initial payment not complete. Received $${paid.toFixed(2)} of $${required.toFixed(2)} required.`,
+        missingRequirements: [`Initial payment not complete. Received $${paid.toFixed(2)} of $${required.toFixed(2)} required.`],
         paymentProgress: {
           required,
           paid,

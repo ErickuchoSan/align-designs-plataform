@@ -223,13 +223,57 @@ export class FilesService {
       deletedAt: null,
     };
 
+    // Apply role-based stage visibility restrictions
+    if (userContext.role === Role.CLIENT) {
+      // Clients can see: BRIEF_PROJECT, FEEDBACK_CLIENT, REFERENCES, ADMIN_APPROVED, CLIENT_APPROVED, PAYMENTS
+      // They should NOT see: FEEDBACK_EMPLOYEE (private feedback for employees), SUBMITTED (employee work in progress)
+      where.stage = {
+        in: [
+          Stage.BRIEF_PROJECT,
+          Stage.FEEDBACK_CLIENT,
+          Stage.REFERENCES,
+          Stage.ADMIN_APPROVED,
+          Stage.CLIENT_APPROVED,
+          Stage.PAYMENTS,
+        ],
+      };
+    } else if (userContext.role === Role.EMPLOYEE) {
+      // Employees can see: BRIEF_PROJECT, FEEDBACK_EMPLOYEE, REFERENCES, SUBMITTED (their own), ADMIN_APPROVED (their own)
+      // They should NOT see: FEEDBACK_CLIENT (private for clients), PAYMENTS, CLIENT_APPROVED
+      // For SUBMITTED and ADMIN_APPROVED, only show files they uploaded
+      where.OR = [
+        {
+          stage: {
+            in: [Stage.BRIEF_PROJECT, Stage.FEEDBACK_EMPLOYEE, Stage.REFERENCES],
+          },
+        },
+        {
+          stage: { in: [Stage.SUBMITTED, Stage.ADMIN_APPROVED] },
+          uploadedBy: userContext.userId,
+        },
+      ];
+    }
+    // ADMIN: No stage restrictions
+
     // Apply name filter (case-insensitive partial match)
     if (fileFilters.name) {
-      where.OR = [
+      // Combine with existing OR if role-based filter already set one
+      const nameFilter = [
         { filename: { contains: fileFilters.name, mode: 'insensitive' } },
         { originalName: { contains: fileFilters.name, mode: 'insensitive' } },
         { comment: { contains: fileFilters.name, mode: 'insensitive' } },
       ];
+
+      if (where.OR) {
+        // If role-based OR exists, we need to combine with AND
+        where.AND = [
+          { OR: where.OR },
+          { OR: nameFilter },
+        ];
+        delete where.OR;
+      } else {
+        where.OR = nameFilter;
+      }
     }
 
     // Debug input
@@ -270,6 +314,7 @@ export class FilesService {
               firstName: true,
               lastName: true,
               role: true,
+              deletedAt: true, // Include to handle deleted users in transformer
             },
           },
         },

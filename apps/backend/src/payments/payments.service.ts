@@ -22,6 +22,11 @@ export class PaymentsService {
     async create(createPaymentDto: RecordPaymentDto, receiptFileUrl?: string): Promise<Payment> {
         const { projectId, amount, ...rest } = createPaymentDto;
 
+        // Validate payment amount
+        if (amount <= 0) {
+            throw new BadRequestException('Payment amount must be greater than zero');
+        }
+
         // Verify project exists
         const project = await this.prisma.project.findUnique({
             where: { id: projectId },
@@ -189,6 +194,11 @@ export class PaymentsService {
         userId: string,
     ): Promise<Payment> {
         const { projectId, amount, ...rest } = createPaymentDto;
+
+        // Validate payment amount
+        if (amount <= 0) {
+            throw new BadRequestException('Payment amount must be greater than zero');
+        }
 
         // Verify project exists and user is the client
         const project = await this.prisma.project.findUnique({

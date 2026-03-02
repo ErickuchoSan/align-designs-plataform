@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role } from '@prisma/client';
-import { PermissionContext } from '../../common/strategies/permission.strategy';
 
 /**
  * Service responsible for file and project permission verification
@@ -38,15 +37,44 @@ export class FilePermissionsService {
       throw new NotFoundException('Project not found');
     }
 
-    // Verify permissions: client can only access their own projects
-    const permissionContext = new PermissionContext(userRole);
-    permissionContext.verifyProjectAccess(
-      userId,
-      project.clientId,
+    // ADMIN: Full access to all projects
+    if (userRole === Role.ADMIN) {
+      return project;
+    }
+
+    // CLIENT: Can only access their own projects
+    if (userRole === Role.CLIENT) {
+      if (project.clientId !== userId) {
+        throw new ForbiddenException(
+          errorMessage || 'You do not have access to this project',
+        );
+      }
+      return project;
+    }
+
+    // EMPLOYEE: Must be assigned to the project
+    if (userRole === Role.EMPLOYEE) {
+      const assignment = await this.prisma.projectEmployee.findUnique({
+        where: {
+          projectId_employeeId: {
+            projectId,
+            employeeId: userId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        throw new ForbiddenException(
+          errorMessage || 'You are not assigned to this project',
+        );
+      }
+      return project;
+    }
+
+    // Default: deny access for unknown roles
+    throw new ForbiddenException(
       errorMessage || 'You do not have access to this project',
     );
-
-    return project;
   }
 
   /**
@@ -86,9 +114,33 @@ export class FilePermissionsService {
       if (file.project.clientId !== userId) {
         throw new ForbiddenException('You do not have access to this project');
       }
+      return file;
     }
 
-    return file;
+    // Employee can only modify their own entries in projects they're assigned to
+    if (userRole === Role.EMPLOYEE) {
+      // First verify project assignment
+      const assignment = await this.prisma.projectEmployee.findUnique({
+        where: {
+          projectId_employeeId: {
+            projectId: file.projectId,
+            employeeId: userId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        throw new ForbiddenException('You are not assigned to this project');
+      }
+
+      // Then verify ownership
+      if (file.uploadedBy !== userId) {
+        throw new ForbiddenException('You can only edit your own entries');
+      }
+      return file;
+    }
+
+    throw new ForbiddenException('You do not have permission to edit this entry');
   }
 
   /**
@@ -115,15 +167,37 @@ export class FilePermissionsService {
       throw new NotFoundException('Entry not found');
     }
 
-    // Verify permissions
-    const permissionContext = new PermissionContext(userRole);
-    permissionContext.verifyProjectAccess(
-      userId,
-      file.project.clientId,
-      'You do not have access to this entry',
-    );
+    // Admin can view any file
+    if (userRole === Role.ADMIN) {
+      return file;
+    }
 
-    return file;
+    // Client can only view files in their own projects
+    if (userRole === Role.CLIENT) {
+      if (file.project.clientId !== userId) {
+        throw new ForbiddenException('You do not have access to this entry');
+      }
+      return file;
+    }
+
+    // Employee can only view files in projects they're assigned to
+    if (userRole === Role.EMPLOYEE) {
+      const assignment = await this.prisma.projectEmployee.findUnique({
+        where: {
+          projectId_employeeId: {
+            projectId: file.projectId,
+            employeeId: userId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        throw new ForbiddenException('You are not assigned to this project');
+      }
+      return file;
+    }
+
+    throw new ForbiddenException('You do not have access to this entry');
   }
 
   /**
@@ -165,8 +239,34 @@ export class FilePermissionsService {
       if (file.project.clientId !== userId) {
         throw new ForbiddenException('You do not have access to this project');
       }
+      return file;
     }
 
-    return file;
+    // Employee can only delete entries they created in projects they're assigned to
+    if (userRole === Role.EMPLOYEE) {
+      // First verify project assignment
+      const assignment = await this.prisma.projectEmployee.findUnique({
+        where: {
+          projectId_employeeId: {
+            projectId: file.projectId,
+            employeeId: userId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        throw new ForbiddenException('You are not assigned to this project');
+      }
+
+      // Then verify ownership
+      if (file.uploadedBy !== userId) {
+        throw new ForbiddenException(
+          'You can only delete entries you created yourself',
+        );
+      }
+      return file;
+    }
+
+    throw new ForbiddenException('You do not have permission to delete this entry');
   }
 }

@@ -29,6 +29,8 @@ export class PaymentApprovalService {
      * Can optionally correct the amount
      * Updates project amountPaid
      * Notifies client
+     *
+     * Uses atomic transaction to ensure data consistency
      */
     async approvePayment(
         paymentId: string,
@@ -43,6 +45,7 @@ export class PaymentApprovalService {
                         id: true,
                         name: true,
                         clientId: true,
+                        amountPaid: true,
                     },
                 },
                 fromUser: {
@@ -50,6 +53,14 @@ export class PaymentApprovalService {
                         id: true,
                         firstName: true,
                         lastName: true,
+                    },
+                },
+                invoice: {
+                    select: {
+                        id: true,
+                        totalAmount: true,
+                        amountPaid: true,
+                        status: true,
                     },
                 },
             },
@@ -68,45 +79,103 @@ export class PaymentApprovalService {
         const finalAmount = correctedAmount !== undefined ? correctedAmount : Number(payment.amount);
         const wasAmountCorrected = correctedAmount !== undefined && correctedAmount !== Number(payment.amount);
 
-        // Update payment status
-        const updatedPayment = await this.prisma.payment.update({
-            where: { id: paymentId },
-            data: {
-                status: PaymentStatus.CONFIRMED,
-                amount: finalAmount,
-                reviewedBy: adminId,
-                reviewedAt: new Date(),
-            },
-            include: {
-                fromUser: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
+        // Validate amount
+        if (finalAmount <= 0) {
+            throw new BadRequestException('Payment amount must be greater than zero');
+        }
+
+        // Check for overpayment on invoice
+        let overpaymentWarning: string | null = null;
+        if (payment.invoice) {
+            const invoiceTotal = Number(payment.invoice.totalAmount);
+            const invoicePaid = Number(payment.invoice.amountPaid);
+            const newTotal = invoicePaid + finalAmount;
+
+            if (newTotal > invoiceTotal) {
+                const overpayment = newTotal - invoiceTotal;
+                overpaymentWarning = `Overpayment of $${overpayment.toFixed(2)} detected. Invoice total: $${invoiceTotal.toFixed(2)}, Already paid: $${invoicePaid.toFixed(2)}, This payment: $${finalAmount.toFixed(2)}`;
+                this.logger.warn(`Payment ${paymentId}: ${overpaymentWarning}`);
+            }
+        }
+
+        // Use transaction to ensure atomicity
+        const result = await this.prisma.$transaction(async (tx) => {
+            // 1. Update payment status
+            const updatedPayment = await tx.payment.update({
+                where: { id: paymentId },
+                data: {
+                    status: PaymentStatus.CONFIRMED,
+                    amount: finalAmount,
+                    reviewedBy: adminId,
+                    reviewedAt: new Date(),
+                },
+                include: {
+                    fromUser: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                        },
+                    },
+                    project: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
                     },
                 },
-                project: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
+            });
+
+            // 2. Update project amountPaid
+            const newProjectTotal = Number(payment.project.amountPaid) + finalAmount;
+            await tx.project.update({
+                where: { id: payment.project.id },
+                data: {
+                    amountPaid: newProjectTotal,
                 },
-            },
+            });
+
+            // 3. Update invoice if linked
+            if (payment.invoiceId && payment.invoice) {
+                const newInvoiceAmountPaid = Number(payment.invoice.amountPaid) + finalAmount;
+                const invoiceTotal = Number(payment.invoice.totalAmount);
+
+                let newInvoiceStatus = payment.invoice.status;
+                if (newInvoiceAmountPaid >= invoiceTotal) {
+                    newInvoiceStatus = 'PAID';
+                } else if (newInvoiceAmountPaid > 0) {
+                    newInvoiceStatus = 'PARTIALLY_PAID';
+                }
+
+                await tx.invoice.update({
+                    where: { id: payment.invoiceId },
+                    data: {
+                        amountPaid: newInvoiceAmountPaid,
+                        status: newInvoiceStatus,
+                    },
+                });
+            }
+
+            return updatedPayment;
         });
 
         this.logger.log(
             `Payment ${paymentId} approved by admin ${adminId}. Amount: ${finalAmount}${wasAmountCorrected ? ' (corrected from ' + payment.amount + ')' : ''}`,
         );
 
-        // Update project amountPaid
-        await this.projectStatusService.updateProjectPayment(payment.project.id, finalAmount);
-
-        // If payment is associated with an invoice, update the invoice
-        if (payment.invoiceId) {
-            await this.updateInvoiceAfterApproval(payment.invoiceId, finalAmount);
+        // Check if project should be auto-activated (non-blocking)
+        try {
+            const validation = await this.projectStatusService.canActivateProject(payment.project.id);
+            if (validation.canActivate) {
+                await this.projectStatusService.activateProject(payment.project.id);
+                this.logger.log(`Project ${payment.project.id} auto-activated after payment approval`);
+            }
+        } catch (error) {
+            // Log but don't fail - the payment is already approved
+            this.logger.warn(`Auto-activation check failed for project ${payment.project.id}: ${error}`);
         }
 
-        // Notify client
+        // Notify client (non-blocking)
         if (payment.fromUser) {
             await this.notifyPaymentApproved(
                 payment.fromUser.id,
@@ -114,10 +183,11 @@ export class PaymentApprovalService {
                 finalAmount,
                 wasAmountCorrected,
                 Number(payment.amount),
+                overpaymentWarning,
             );
         }
 
-        return updatedPayment;
+        return result;
     }
 
     /**
@@ -204,42 +274,6 @@ export class PaymentApprovalService {
     }
 
     /**
-     * Update invoice amounts after payment approval
-     */
-    private async updateInvoiceAfterApproval(invoiceId: string, amount: number): Promise<void> {
-        const invoice = await this.prisma.invoice.findUnique({
-            where: { id: invoiceId },
-        });
-
-        if (!invoice) {
-            return;
-        }
-
-        const newAmountPaid = Number(invoice.amountPaid) + amount;
-        const totalAmount = Number(invoice.totalAmount);
-
-        // Determine new status
-        let newStatus = invoice.status;
-        if (newAmountPaid >= totalAmount) {
-            newStatus = 'PAID';
-        } else if (newAmountPaid > 0) {
-            newStatus = 'PARTIALLY_PAID';
-        }
-
-        await this.prisma.invoice.update({
-            where: { id: invoiceId },
-            data: {
-                amountPaid: newAmountPaid,
-                status: newStatus,
-            },
-        });
-
-        this.logger.log(
-            `Updated invoice ${invoiceId} amountPaid to ${newAmountPaid}, status: ${newStatus}`,
-        );
-    }
-
-    /**
      * Send notification for approved payment
      */
     private async notifyPaymentApproved(
@@ -248,10 +282,16 @@ export class PaymentApprovalService {
         finalAmount: number,
         wasAmountCorrected: boolean,
         originalAmount: number,
+        overpaymentWarning?: string | null,
     ): Promise<void> {
-        const notificationMessage = wasAmountCorrected
+        let notificationMessage = wasAmountCorrected
             ? `Su comprobante de pago ha sido aprobado. El monto fue ajustado a $${finalAmount.toFixed(2)} (monto original: $${originalAmount.toFixed(2)}). El pago ha sido registrado.`
             : `Su comprobante de pago de $${finalAmount.toFixed(2)} ha sido aprobado y registrado exitosamente.`;
+
+        // Add overpayment notice if applicable
+        if (overpaymentWarning) {
+            notificationMessage += ' Nota: El pago excede el monto de la factura. El saldo a favor será aplicado a futuros servicios.';
+        }
 
         await this.notificationsService.create({
             userId,

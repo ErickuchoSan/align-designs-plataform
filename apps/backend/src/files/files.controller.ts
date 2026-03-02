@@ -29,6 +29,7 @@ import {
 } from '@nestjs/swagger';
 import { FilesService } from './files.service';
 import { FileVersionService } from './file-version.service';
+import { FileStageService } from './services/file-stage.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator'; // Restored
@@ -60,6 +61,7 @@ export class FilesController {
   constructor(
     private readonly filesService: FilesService,
     private readonly fileVersionService: FileVersionService,
+    private readonly fileStageService: FileStageService,
     private readonly auditService: AuditService,
   ) { }
 
@@ -439,6 +441,133 @@ export class FilesController {
         },
       },
       'orphan cleanup',
+    );
+
+    return result;
+  }
+
+  /**
+   * Admin approves a SUBMITTED file (moves to ADMIN_APPROVED)
+   */
+  @Patch(':id/approve')
+  @ApiOperation({
+    summary: 'Admin approve file',
+    description: 'Move a SUBMITTED file to ADMIN_APPROVED stage (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'File UUID' })
+  @ApiResponse({ status: 200, description: 'File approved successfully' })
+  @ApiResponse({ status: 400, description: 'File not in SUBMITTED stage or has no content' })
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async approveFile(
+    @Param('id') id: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.fileStageService.approveFileByAdmin(id, user.userId);
+
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.FILE_UPLOAD, // Using FILE_UPLOAD as proxy for approval
+        resourceType: 'file',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: { action: 'admin_approve', newStage: 'ADMIN_APPROVED' },
+      },
+      'file admin approval',
+    );
+
+    return result;
+  }
+
+  /**
+   * Admin rejects a SUBMITTED file
+   */
+  @Patch(':id/reject')
+  @ApiOperation({
+    summary: 'Admin reject file',
+    description: 'Reject a SUBMITTED file and notify employee (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'File UUID' })
+  @ApiBody({
+    schema: {
+      properties: {
+        reason: { type: 'string', description: 'Rejection reason' },
+      },
+      required: ['reason'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'File rejected successfully' })
+  @ApiResponse({ status: 400, description: 'File not in SUBMITTED stage' })
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async rejectFile(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    if (!reason || reason.trim() === '') {
+      throw new BadRequestException('Rejection reason is required');
+    }
+
+    const result = await this.fileStageService.rejectFileByAdmin(id, user.userId, reason);
+
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.FILE_DELETE, // Using FILE_DELETE as proxy for rejection
+        resourceType: 'file',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: { action: 'admin_reject', reason },
+      },
+      'file admin rejection',
+    );
+
+    return result;
+  }
+
+  /**
+   * Admin marks file as client approved (moves to CLIENT_APPROVED)
+   */
+  @Patch(':id/client-approve')
+  @ApiOperation({
+    summary: 'Mark file as client approved',
+    description: 'Move an ADMIN_APPROVED file to CLIENT_APPROVED stage (Admin only)',
+  })
+  @ApiParam({ name: 'id', description: 'File UUID' })
+  @ApiResponse({ status: 200, description: 'File marked as client approved' })
+  @ApiResponse({ status: 400, description: 'File not in ADMIN_APPROVED stage' })
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async clientApproveFile(
+    @Param('id') id: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.fileStageService.approveFileByClient(id, user.userId);
+
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.FILE_UPLOAD,
+        resourceType: 'file',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: { action: 'client_approve', newStage: 'CLIENT_APPROVED' },
+      },
+      'file client approval',
     );
 
     return result;

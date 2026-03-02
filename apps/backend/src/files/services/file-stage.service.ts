@@ -33,7 +33,181 @@ export class FileStageService {
     private readonly notificationsService: NotificationsService,
   ) { }
 
-  // ... existing methods ...
+  /**
+   * Admin approves a SUBMITTED file (move to ADMIN_APPROVED stage)
+   * Validates that the file has actual content (storagePath exists)
+   */
+  async approveFileByAdmin(fileId: string, adminId: string): Promise<any> {
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileId },
+      select: {
+        id: true,
+        stage: true,
+        projectId: true,
+        storagePath: true,
+        feedbackCycleId: true,
+        uploader: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            clientId: true,
+          },
+        },
+      },
+    });
+
+    if (!file) {
+      throw new BadRequestException(`File ${fileId} not found`);
+    }
+
+    if (file.stage !== Stage.SUBMITTED) {
+      throw new BadRequestException(
+        `Can only approve files in SUBMITTED stage. Current: ${file.stage}`,
+      );
+    }
+
+    // Validate that the file has actual content (not just a comment)
+    if (!file.storagePath) {
+      throw new BadRequestException(
+        'Cannot approve a comment-only entry. A file must be attached.',
+      );
+    }
+
+    const updatedFile = await this.prisma.file.update({
+      where: { id: fileId },
+      data: {
+        stage: Stage.ADMIN_APPROVED,
+        approvedAdminAt: new Date(),
+      },
+      include: {
+        uploader: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `File ${fileId} moved from SUBMITTED to ADMIN_APPROVED by admin ${adminId}`,
+    );
+
+    // Notify Employee (Uploader) that their work was approved by admin
+    if (updatedFile.uploader) {
+      await this.notificationsService.create({
+        userId: updatedFile.uploader.id,
+        type: NotificationType.SUCCESS,
+        title: 'Work Approved by Admin',
+        message: `Your deliverable in ${file.project.name} has been approved by admin. Awaiting client approval.`,
+        link: `/dashboard/projects/${updatedFile.projectId}/files`,
+      });
+    }
+
+    // Notify Client that there's a new deliverable to review
+    if (file.project.clientId) {
+      await this.notificationsService.create({
+        userId: file.project.clientId,
+        type: NotificationType.INFO,
+        title: 'New Deliverable Ready',
+        message: `A deliverable is ready for your review in ${file.project.name}.`,
+        link: `/dashboard/projects/${updatedFile.projectId}/files`,
+      });
+    }
+
+    return updatedFile;
+  }
+
+  /**
+   * Admin rejects a SUBMITTED file (keep in SUBMITTED stage, notify employee)
+   * Links to the feedback cycle for revision tracking
+   */
+  async rejectFileByAdmin(
+    fileId: string,
+    adminId: string,
+    rejectionReason: string,
+  ): Promise<any> {
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileId },
+      select: {
+        id: true,
+        stage: true,
+        projectId: true,
+        feedbackCycleId: true,
+        rejectionCount: true,
+        uploader: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        project: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!file) {
+      throw new BadRequestException(`File ${fileId} not found`);
+    }
+
+    if (file.stage !== Stage.SUBMITTED) {
+      throw new BadRequestException(
+        `Can only reject files in SUBMITTED stage. Current: ${file.stage}`,
+      );
+    }
+
+    // Update file with rejection tracking
+    const updatedFile = await this.prisma.file.update({
+      where: { id: fileId },
+      data: {
+        rejectionCount: { increment: 1 },
+        lastRejectedAt: new Date(),
+      },
+      include: {
+        uploader: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `File ${fileId} rejected by admin ${adminId}. Rejection #${updatedFile.rejectionCount}. Reason: ${rejectionReason}`,
+    );
+
+    // Notify Employee about rejection
+    if (updatedFile.uploader) {
+      await this.notificationsService.create({
+        userId: updatedFile.uploader.id,
+        type: NotificationType.WARNING,
+        title: 'Deliverable Requires Changes',
+        message: `Your deliverable in ${file.project.name} needs revision: ${rejectionReason}`,
+        link: `/dashboard/projects/${updatedFile.projectId}/files`,
+      });
+    }
+
+    return {
+      ...updatedFile,
+      rejectionReason,
+    };
+  }
 
   /**
    * Mark file as client approved (move to CLIENT_APPROVED stage)

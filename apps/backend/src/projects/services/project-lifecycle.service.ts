@@ -58,12 +58,27 @@ export class ProjectLifecycleService {
         await executeTransactionWithRetry(
             this.prisma,
             async (tx) => {
+                const now = new Date();
+
                 // Soft delete all files in the project
                 await tx.file.updateMany({
                     where: { projectId: id, deletedAt: null },
                     data: {
-                        deletedAt: new Date(),
+                        deletedAt: now,
                         deletedBy: userId,
+                    },
+                });
+
+                // Close any open feedback cycles for the project
+                // Note: Feedback entries are cascaded when FeedbackCycle is deleted via DB relation
+                await tx.feedbackCycle.updateMany({
+                    where: {
+                        projectId: id,
+                        status: { in: ['open', 'submitted'] },
+                    },
+                    data: {
+                        status: 'rejected', // Mark as rejected since project is deleted
+                        endDate: now,
                     },
                 });
 
@@ -71,7 +86,7 @@ export class ProjectLifecycleService {
                 await tx.project.update({
                     where: { id },
                     data: {
-                        deletedAt: new Date(),
+                        deletedAt: now,
                         deletedBy: userId,
                     },
                 });
@@ -105,8 +120,8 @@ export class ProjectLifecycleService {
             throw new NotFoundException('Project not found');
         }
 
-        // Count files, employees, invoices and payments
-        const [filesCount, employeesCount, invoicesCount, paymentsCount, client] = await Promise.all([
+        // Count files, employees, invoices, payments, and feedback cycles
+        const [filesCount, employeesCount, invoicesCount, paymentsCount, feedbackCyclesCount, client] = await Promise.all([
             this.prisma.file.count({
                 where: { projectId, deletedAt: null },
             }),
@@ -119,6 +134,9 @@ export class ProjectLifecycleService {
             this.prisma.payment.count({
                 where: { projectId },
             }),
+            this.prisma.feedbackCycle.count({
+                where: { projectId, status: { in: ['open', 'submitted'] } },
+            }),
             this.prisma.user.findUnique({
                 where: { id: project.clientId },
                 select: { id: true, firstName: true, lastName: true },
@@ -130,6 +148,7 @@ export class ProjectLifecycleService {
             employees: employeesCount > 0,
             invoices: invoicesCount > 0,
             payments: paymentsCount > 0,
+            feedbackCycles: feedbackCyclesCount > 0,
         };
 
         const hasAnyData = Object.values(hasData).some((v) => v);
@@ -147,6 +166,9 @@ export class ProjectLifecycleService {
         if (hasData.employees) {
             warnings.push(`${employeesCount} assigned employee${employeesCount > 1 ? 's' : ''}`);
         }
+        if (hasData.feedbackCycles) {
+            warnings.push(`${feedbackCyclesCount} active feedback cycle${feedbackCyclesCount > 1 ? 's' : ''}`);
+        }
 
         return {
             projectId,
@@ -158,6 +180,7 @@ export class ProjectLifecycleService {
                 employees: employeesCount,
                 invoices: invoicesCount,
                 payments: paymentsCount,
+                feedbackCycles: feedbackCyclesCount,
             },
             warnings,
             client: client
