@@ -61,12 +61,13 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://dev.aligndesignsllc.com/api
     container_name: frontend-dev
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://dev.aligndesignsllc.com/api
-      NODE_ENV: development
+      NODE_ENV: production
     depends_on:
       - backend-dev
     networks:

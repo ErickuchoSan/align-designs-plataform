@@ -1,10 +1,14 @@
 # Builder stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
 
 WORKDIR /app
+
+# Build args for Next.js public env vars (needed at build time)
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Copy workspace config and lock file from monorepo root
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -23,7 +27,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 # Runner stage
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
@@ -34,7 +38,6 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy standalone build
-# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/static ./apps/frontend/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/public ./apps/frontend/public
