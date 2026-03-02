@@ -2,9 +2,6 @@ import { plainToClass } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
-  IsEmail,
-  IsPort,
-  IsUrl,
   Matches,
   MinLength,
   validateSync,
@@ -47,17 +44,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  EMAIL_HOST: string;
-
-  @IsPort()
-  EMAIL_PORT: string;
-
-  @IsEmail({}, { message: 'EMAIL_USER must be a valid email address' })
-  EMAIL_USER: string;
-
-  @IsString()
-  @IsNotEmpty()
-  EMAIL_PASSWORD: string;
+  RESEND_API_KEY: string;
 
   @IsString()
   @IsNotEmpty()
@@ -65,7 +52,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  ALLOWED_ORIGINS: string;
+  CORS_ORIGIN: string;
 }
 
 export function validate(config: Record<string, unknown>) {
