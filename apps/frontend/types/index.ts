@@ -38,6 +38,7 @@ export interface User {
   role: Role;
   isActive: boolean;
   emailVerified: boolean;
+  hasPassword?: boolean; // Whether user has set their password
   createdAt: string;
   updatedAt: string;
 }

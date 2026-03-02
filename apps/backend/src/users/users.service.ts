@@ -134,13 +134,54 @@ export class UsersService {
       }),
     ]);
 
+    // Transform users to include hasPassword and exclude passwordHash
+    const transformedUsers = users.map(({ passwordHash, ...user }) => ({
+      ...user,
+      hasPassword: !!passwordHash,
+    }));
+
     const result = PaginationHelper.buildPaginatedResult(
-      users,
+      transformedUsers,
       total,
       paginationDto,
     );
     // await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
     return result;
+  }
+
+  /**
+   * Resend welcome email to a user (Admin only)
+   * Only works for users who haven't set their password yet
+   */
+  async resendWelcomeEmail(userId: string, origin: string) {
+    const user = await this.prisma.user.findFirst({
+      where: getActiveRecordsWhereWith({ id: userId }),
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        passwordHash: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.passwordHash) {
+      throw new ForbiddenException('User has already set their password');
+    }
+
+    await this.mailService.sendWelcomeEmail(
+      user.email,
+      `${user.firstName} ${user.lastName}`,
+      origin,
+    );
+
+    this.logger.log(`Welcome email resent to ${user.email}`);
+
+    return { message: 'Welcome email sent successfully' };
   }
 
   /**
@@ -172,8 +213,15 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    await this.cacheManager.set(cacheKey, user, CACHE_TTL.FIVE_MINUTES);
-    return user;
+    // Transform to include hasPassword and exclude passwordHash
+    const { passwordHash, ...userWithoutPassword } = user;
+    const transformedUser = {
+      ...userWithoutPassword,
+      hasPassword: !!passwordHash,
+    };
+
+    await this.cacheManager.set(cacheKey, transformedUser, CACHE_TTL.FIVE_MINUTES);
+    return transformedUser;
   }
 
   /**

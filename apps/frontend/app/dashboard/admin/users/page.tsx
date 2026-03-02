@@ -75,6 +75,7 @@ export default function UsersManagementPage() {
             activeTab={activeTab}
             togglingUserId={usersHook.togglingUserId}
             deletingUserId={usersHook.deletingUserId}
+            resendingUserId={usersHook.resendingUserId}
             currentPage={usersHook.currentPage}
             totalPages={usersHook.totalPages}
             totalItems={usersHook.totalItems}
@@ -82,6 +83,7 @@ export default function UsersManagementPage() {
             onToggleStatus={usersHook.openToggleConfirm}
             onEdit={usersHook.openEditModal}
             onDelete={usersHook.openDeleteConfirm}
+            onResendEmail={usersHook.handleResendWelcomeEmail}
             onPageChange={usersHook.setCurrentPage}
             onItemsPerPageChange={usersHook.setItemsPerPage}
           />
@@ -92,6 +94,7 @@ export default function UsersManagementPage() {
             activeTab={activeTab}
             togglingUserId={usersHook.togglingUserId}
             deletingUserId={usersHook.deletingUserId}
+            resendingUserId={usersHook.resendingUserId}
             currentPage={usersHook.currentPage}
             totalPages={usersHook.totalPages}
             totalItems={usersHook.totalItems}
@@ -99,6 +102,7 @@ export default function UsersManagementPage() {
             onToggleStatus={usersHook.openToggleConfirm}
             onEdit={usersHook.openEditModal}
             onDelete={usersHook.openDeleteConfirm}
+            onResendEmail={usersHook.handleResendWelcomeEmail}
             onPageChange={usersHook.setCurrentPage}
             onItemsPerPageChange={usersHook.setItemsPerPage}
           />

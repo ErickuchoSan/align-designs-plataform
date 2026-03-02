@@ -287,6 +287,45 @@ export class UsersController {
     return updatedUser;
   }
 
+  @Post(':id/resend-welcome-email')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Resend welcome email',
+    description: 'Admin-only: Resend welcome email to a user who has not set their password',
+  })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, description: 'Welcome email sent successfully' })
+  @ApiResponse({ status: 403, description: 'User has already set their password' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @Throttle({ default: RATE_LIMIT_USERS.CREATE })
+  @HttpCode(HttpStatus.OK)
+  async resendWelcomeEmail(
+    @Param('id') id: string,
+    @Headers('origin') origin: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.usersService.resendWelcomeEmail(id, origin);
+
+    // Audit log for resending welcome email
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.USER_UPDATE,
+        resourceType: 'user',
+        resourceId: id,
+        ipAddress,
+        userAgent,
+        details: { action: 'resend_welcome_email' },
+      },
+      'resend welcome email',
+    );
+
+    return result;
+  }
+
   @Patch(':id/toggle-status')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.TOGGLE_STATUS })

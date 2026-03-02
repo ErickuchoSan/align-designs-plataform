@@ -23,6 +23,7 @@ export const USER_BASIC_SELECT = {
 /**
  * Full user fields including verification and timestamps
  * Used for complete user profiles and listings
+ * Includes passwordHash to compute hasPassword (not exposed directly)
  */
 export const USER_FULL_SELECT = {
   id: true,
@@ -33,6 +34,7 @@ export const USER_FULL_SELECT = {
   role: true,
   isActive: true,
   emailVerified: true,
+  passwordHash: true,
   createdAt: true,
   updatedAt: true,
 } as const;

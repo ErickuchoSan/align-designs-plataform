@@ -197,6 +197,21 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     [userToEdit, editFormData, fetchUsers, closeEditModal]
   );
 
+  // Resend welcome email state
+  const [resendingUserId, setResendingUserId] = useState<string | null>(null);
+
+  const handleResendWelcomeEmail = useCallback(async (user: User) => {
+    setResendingUserId(user.id);
+    try {
+      await UsersService.resendWelcomeEmail(user.id);
+      toast.success(`Welcome email sent to ${user.email}`);
+    } catch (err) {
+      toast.error(handleApiError(err, 'Error sending welcome email'));
+    } finally {
+      setResendingUserId(null);
+    }
+  }, []);
+
   return {
     // State
     users,
@@ -236,5 +251,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     openEditModal,
     closeEditModal,
     handleUpdateUser,
+    // Resend welcome email
+    resendingUserId,
+    handleResendWelcomeEmail,
   };
 }

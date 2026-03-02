@@ -12,6 +12,7 @@ interface UsersTableProps {
   activeTab: 'clients' | 'employees';
   togglingUserId: string | null;
   deletingUserId: string | null;
+  resendingUserId: string | null;
   currentPage: number;
   totalPages: number;
   totalItems: number;
@@ -19,6 +20,7 @@ interface UsersTableProps {
   onToggleStatus: (user: User) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onResendEmail: (user: User) => void;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
 }
@@ -29,6 +31,7 @@ function UsersTable({
   activeTab,
   togglingUserId,
   deletingUserId,
+  resendingUserId,
   currentPage,
   totalPages,
   totalItems,
@@ -36,6 +39,7 @@ function UsersTable({
   onToggleStatus,
   onEdit,
   onDelete,
+  onResendEmail,
   onPageChange,
   onItemsPerPageChange,
 }: UsersTableProps) {
@@ -50,6 +54,7 @@ function UsersTable({
               <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Phone</th>
               <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Status</th>
               <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Created At</th>
+              <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-navy-900 uppercase tracking-wider">Resend Email</th>
               <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-navy-900 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
@@ -62,7 +67,7 @@ function UsersTable({
               </>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-stone-500">
+                <td colSpan={7} className="px-6 py-12 text-center text-stone-500">
                   No {activeTab} found.
                 </td>
               </tr>
@@ -94,6 +99,35 @@ function UsersTable({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
                     {formatDate(usr.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    {usr.hasPassword ? (
+                      <span className="inline-flex items-center gap-1 text-stone-400 text-sm" title="Password already set">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <span className="hidden lg:inline">Registered</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => onResendEmail(usr)}
+                        disabled={resendingUserId === usr.id}
+                        className="inline-flex items-center gap-1 text-gold-600 hover:text-gold-800 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Resend welcome email"
+                      >
+                        {resendingUserId === usr.id ? (
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                          </svg>
+                        )}
+                        <span className="hidden lg:inline">Resend</span>
+                      </button>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">

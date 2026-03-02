@@ -94,5 +94,13 @@ export class UsersService {
     static async delete(id: string, options: { hard?: boolean; force?: boolean } = {}): Promise<void> {
         await api.delete(`${this.BASE_URL}/${id}`, { params: options });
     }
+
+    /**
+     * Resend welcome email to a user who hasn't set their password
+     */
+    static async resendWelcomeEmail(id: string): Promise<{ message: string }> {
+        const response = await api.post<{ message: string }>(`${this.BASE_URL}/${id}/resend-welcome-email`);
+        return response.data;
+    }
 }
 
