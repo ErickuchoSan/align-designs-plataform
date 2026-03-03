@@ -94,10 +94,17 @@ export class ProjectsService {
       if (!params.page) params.page = 1;
     }
 
-    const response = await api.get<PaginatedProjects>(this.BASE_URL, {
+    const response = await api.get<{ data: Project[]; meta: any }>(this.BASE_URL, {
       params,
     });
-    return response.data;
+    
+    return {
+      projects: response.data.data,
+      total: response.data.meta.total,
+      page: response.data.meta.page,
+      limit: response.data.meta.limit,
+      totalPages: response.data.meta.totalPages
+    };
   }
 
   /**
