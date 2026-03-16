@@ -152,8 +152,8 @@ export default function RecordPaymentModal({
 
                 {/* Pending Files Selection */}
                 {isEmployeePayment && selectedEmployeeId && (
-                    <div className="p-4 border rounded-lg border-stone-200 bg-stone-50">
-                        <label className="block mb-2 text-sm font-medium text-stone-700">Pending Jobs</label>
+                    <fieldset className="p-4 border rounded-lg border-stone-200 bg-stone-50">
+                        <legend className="block mb-2 text-sm font-medium text-stone-700">Pending Jobs</legend>
                         {isLoadingFiles ? (
                             <div className="text-sm text-stone-500">Loading...</div>
                         ) : (pendingFiles ?? []).length === 0 ? (
@@ -179,7 +179,7 @@ export default function RecordPaymentModal({
                         <p className="mt-2 text-xs text-stone-500">
                             Select the jobs you are paying for to calculate efficiency.
                         </p>
-                    </div>
+                    </fieldset>
                 )}
 
                 <div>

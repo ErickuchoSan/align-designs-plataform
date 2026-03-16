@@ -80,6 +80,10 @@ function UserModals({
   onForceDeleteConfirm,
 }: UserModalsProps) {
   const userTypeLabel = userRole === 'CLIENT' ? 'Client' : 'Employee';
+  const getCreateButtonText = () => {
+    if (isCreating) return <ButtonLoader />;
+    return userRole === 'CLIENT' ? 'Create Client' : 'Create Employee';
+  };
 
   return (
     <>
@@ -161,7 +165,7 @@ function UserModals({
               disabled={isCreating}
               className="px-5 py-2.5 text-sm font-semibold text-navy-900 bg-gradient-to-r from-gold-500 to-gold-600 rounded-lg hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center shadow-lg hover:shadow-gold-300/50"
             >
-              {isCreating ? <ButtonLoader /> : (userRole === 'CLIENT' ? 'Create Client' : 'Create Employee')}
+              {getCreateButtonText()}
             </button>
           </div>
         </form>

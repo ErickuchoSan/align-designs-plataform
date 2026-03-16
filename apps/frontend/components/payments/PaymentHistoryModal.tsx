@@ -35,11 +35,13 @@ export default function PaymentHistoryModal({
     </p>
   ) : null;
 
+  const modalTitle = projectName ? `Payment History - ${projectName}` : 'Payment History';
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Payment History${projectName ? ` - ${projectName}` : ''}`}
+      title={modalTitle}
       size="2xl"
     >
       {additionalHeaderContent && (

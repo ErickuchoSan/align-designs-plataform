@@ -67,8 +67,8 @@ function DataTable<T>({
         <tbody className="bg-white divide-y divide-stone-200">
           {isLoading && data.length === 0 && (
             <>
-              {Array.from({ length: skeletonRows }).map((_, i) => (
-                <TableRowSkeleton key={`skeleton-${i}`} />
+              {Array.from({ length: skeletonRows }, (_, i) => `skeleton-row-${i}`).map((key) => (
+                <TableRowSkeleton key={key} />
               ))}
             </>
           )}

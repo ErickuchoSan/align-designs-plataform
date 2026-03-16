@@ -154,21 +154,23 @@ export default function UsersPage() {
 
           {/* Mobile Users Cards */}
           <div className="md:hidden space-y-4 animate-slideUp">
-            {usersHook.isLoading && usersHook.users.length === 0 ? (
+            {usersHook.isLoading && usersHook.users.length === 0 && (
               <>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
+                {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((key) => (
+                  <div key={key} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
                     <div className="h-4 bg-stone-200 rounded w-3/4 mb-3"></div>
                     <div className="h-3 bg-stone-200 rounded w-1/2 mb-2"></div>
                     <div className="h-3 bg-stone-200 rounded w-2/3"></div>
                   </div>
                 ))}
               </>
-            ) : usersHook.users.filter((usr) => usr.role === 'CLIENT').length === 0 ? (
+            )}
+            {!usersHook.isLoading && usersHook.users.filter((usr) => usr.role === 'CLIENT').length === 0 && (
               <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 text-center text-stone-500">
                 No clients found.
               </div>
-            ) : (
+            )}
+            {usersHook.users.filter((usr) => usr.role === 'CLIENT').length > 0 &&
               usersHook.users
                 .filter((usr) => usr.role === 'CLIENT')
                 .map((usr) => (
@@ -227,7 +229,7 @@ export default function UsersPage() {
                     </div>
                   </div>
                 ))
-            )}
+            }
 
             {/* Mobile Pagination */}
             {usersHook.totalPages > 0 && (

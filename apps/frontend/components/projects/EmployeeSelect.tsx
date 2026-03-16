@@ -123,6 +123,7 @@ function EmployeeSelect({
                     checked={isSelected}
                     onChange={() => handleToggle(employee.id)}
                     disabled={disabled}
+                    aria-label={`Select ${employee.firstName} ${employee.lastName}`}
                     className={cn(CHECKBOX_BASE, 'disabled:cursor-not-allowed')}
                   />
                   <div className="ml-3 flex-1">

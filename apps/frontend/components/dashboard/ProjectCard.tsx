@@ -41,13 +41,24 @@ function ProjectCard({
     onDelete(project);
   }, [onDelete, project]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick(project);
+    }
+  }, [onClick, project]);
+
   // Use centralized theme styles (SSOT)
   const styles = PROJECT_THEMES[theme];
 
   return (
-    <div
+    <article
       onClick={handleCardClick}
-      className={`overflow-hidden rounded-2xl ${styles.card} transition-all duration-300 hover:scale-105 ${onClick ? 'cursor-pointer' : ''}`}
+      onKeyDown={onClick ? handleKeyDown : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? 'button' : undefined}
+      aria-label={onClick ? `View project ${project.name}` : undefined}
+      className={`overflow-hidden rounded-2xl ${styles.card} transition-all duration-300 hover:scale-105 ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2' : ''}`}
     >
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
@@ -128,7 +139,7 @@ function ProjectCard({
           </p>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 

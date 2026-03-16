@@ -19,8 +19,8 @@ export const TableSkeleton = memo(function TableSkeleton({ rows = 5 }: { rows?: 
         <Skeleton className="h-4 w-28" />
       </div>
       {/* Rows */}
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={`row-${i}`} className="flex gap-4 p-4 bg-white border border-stone-200 rounded-lg">
+      {Array.from({ length: rows }, (_, i) => `table-row-${i}`).map((key) => (
+        <div key={key} className="flex gap-4 p-4 bg-white border border-stone-200 rounded-lg">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-20" />

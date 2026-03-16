@@ -294,9 +294,9 @@ function ClientWorkflowView({
             <span>Payment Status</span>
           </div>
           <p className="font-semibold text-navy-900">
-            {invoiceDeadlines.length > 0
-              ? `${invoiceDeadlines.length} pending invoice${invoiceDeadlines.length > 1 ? 's' : ''}`
-              : 'All caught up'}
+            {invoiceDeadlines.length === 0 && 'All caught up'}
+            {invoiceDeadlines.length === 1 && '1 pending invoice'}
+            {invoiceDeadlines.length > 1 && `${invoiceDeadlines.length} pending invoices`}
           </p>
         </div>
       </div>

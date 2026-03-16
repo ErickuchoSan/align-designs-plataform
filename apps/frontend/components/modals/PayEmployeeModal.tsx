@@ -131,8 +131,8 @@ export default function PayEmployeeModal({
         </div>
 
         {employeeId && (
-          <div className="border border-stone-200 rounded-lg p-3 bg-stone-50">
-            <label className={FORM_LABEL}>Client Approved Items (Unpaid)</label>
+          <fieldset className="border border-stone-200 rounded-lg p-3 bg-stone-50">
+            <legend className={FORM_LABEL}>Client Approved Items (Unpaid)</legend>
             {loadingItems ? (
               <p className="text-xs text-stone-500">Loading pending items...</p>
             ) : (pendingItems ?? []).length === 0 ? (
@@ -158,7 +158,7 @@ export default function PayEmployeeModal({
                 ))}
               </div>
             )}
-          </div>
+          </fieldset>
         )}
 
         <div>

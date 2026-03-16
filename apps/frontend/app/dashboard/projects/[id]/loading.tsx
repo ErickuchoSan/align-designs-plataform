@@ -8,8 +8,8 @@ export default function ProjectDetailLoading() {
       {/* Project stages */}
       <div className="bg-white border border-stone-200 rounded-xl p-6">
         <div className="flex gap-2 mb-6">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={`stage-${i}`} className="h-10 w-24 rounded-lg" />
+          {['brief', 'design', 'revision', 'approval', 'delivery'].map((stage) => (
+            <Skeleton key={`stage-${stage}`} className="h-10 w-24 rounded-lg" />
           ))}
         </div>
         <div className="space-y-4">

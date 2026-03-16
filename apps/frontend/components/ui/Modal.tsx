@@ -24,6 +24,7 @@ const FOCUSABLE_SELECTORS = [
 ].join(', ');
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
   const hasSetInitialFocus = useRef(false);
@@ -67,9 +68,15 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
 
   // Combined effect for body overflow, focus management, and keyboard handling
   useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
     if (!isOpen) {
       // Reset initial focus flag when modal closes
       hasSetInitialFocus.current = false;
+      if (dialog.open) {
+        dialog.close();
+      }
       return;
     }
 
@@ -78,8 +85,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
       previousActiveElement.current = document.activeElement as HTMLElement;
     }
 
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+    // Show dialog using native method
+    if (!dialog.open) {
+      dialog.showModal();
+    }
 
     // Focus the first focusable element after modal opens (only once)
     if (!hasSetInitialFocus.current) {
@@ -95,12 +104,19 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
       });
     }
 
+    // Handle native cancel event (Escape key)
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onCloseRef.current();
+    };
+    dialog.addEventListener('cancel', handleCancel);
+
     // Add keyboard listener for focus trap
     document.addEventListener('keydown', handleKeyDown);
 
-    // Cleanup: restore scroll and remove event listener
+    // Cleanup: remove event listeners
     return () => {
-      document.body.style.overflow = 'unset';
+      dialog.removeEventListener('cancel', handleCancel);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, getFocusableElements, handleKeyDown]);
@@ -114,22 +130,18 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className={cn(MODAL_CONTAINER, 'animate-fadeIn')}
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      className="fixed inset-0 z-50 m-auto p-0 bg-transparent animate-fadeIn backdrop:bg-black/60 backdrop:transition-opacity open:flex open:items-center open:justify-center"
       aria-labelledby="modal-title"
+      onClick={(e) => {
+        // Close when clicking backdrop (the dialog element itself)
+        if (e.target === dialogRef.current) {
+          onClose();
+        }
+      }}
     >
-      {/* Backdrop - Using opacity instead of blur for better performance */}
-      <div
-        className="absolute inset-0 transition-opacity bg-black/60"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
       {/* Modal - with max-height and scroll */}
       <div
         ref={modalRef}
@@ -156,6 +168,6 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
           <div className="flex-shrink-0 p-4 border-t border-stone-200 sm:p-6">{footer}</div>
         )}
       </div>
-    </div>
+    </dialog>
   );
 }
