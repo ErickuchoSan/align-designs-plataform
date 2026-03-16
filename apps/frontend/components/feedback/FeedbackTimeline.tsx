@@ -1,4 +1,4 @@
-import { Feedback, FeedbackCycle } from '../../types/feedback';
+import { FeedbackCycle } from '../../types/feedback';
 
 interface FeedbackTimelineProps {
     cycles: FeedbackCycle[];
@@ -15,7 +15,7 @@ const getStatusBadgeClass = (status: string): string => {
     return 'bg-red-100 text-red-800';
 };
 
-export function FeedbackTimeline({ cycles, isLoading, onCycleSelect, selectedCycleId }: FeedbackTimelineProps) {
+export function FeedbackTimeline({ cycles, isLoading, onCycleSelect, selectedCycleId }: Readonly<FeedbackTimelineProps>) {
     if (isLoading) {
         return <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-100 rounded"></div>)}

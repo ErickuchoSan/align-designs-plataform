@@ -30,7 +30,7 @@ function EmployeeSelect({
   onChange,
   disabled = false,
   className = '',
-}: EmployeeSelectProps) {
+}: Readonly<EmployeeSelectProps>) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Memoize expensive filtering operation

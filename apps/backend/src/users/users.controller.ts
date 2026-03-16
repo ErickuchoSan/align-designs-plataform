@@ -23,7 +23,6 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UserAnalyticsService } from './services/user-analytics.service';
-import { CreateClientDto } from './dto/create-client.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ToggleStatusDto } from './dto/toggle-status.dto';

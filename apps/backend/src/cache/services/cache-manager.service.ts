@@ -30,7 +30,7 @@ export class CacheManagerService {
       // Record cache hit or miss
       if (this.metricsService) {
         this.metricsService.recordCacheOperation(
-          value !== undefined ? 'hit' : 'miss',
+          value === undefined ? 'miss' : 'hit',
           key,
         );
       }

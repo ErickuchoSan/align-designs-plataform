@@ -60,37 +60,37 @@ export class PasswordValidationUtils {
   ];
 
   private static validatePasswordNotEmpty(password: string): string | null {
-    return !password ? 'Password is required' : null;
+    return password ? null : 'Password is required';
   }
 
   private static validatePasswordLength(password: string): string | null {
-    return password.length < this.PASSWORD_MIN_LENGTH
-      ? `Password must be at least ${this.PASSWORD_MIN_LENGTH} characters long`
-      : null;
+    return password.length >= this.PASSWORD_MIN_LENGTH
+      ? null
+      : `Password must be at least ${this.PASSWORD_MIN_LENGTH} characters long`;
   }
 
   private static validatePasswordUppercase(password: string): string | null {
-    return !/[A-Z]/.test(password)
-      ? 'Password must contain at least one uppercase letter'
-      : null;
+    return /[A-Z]/.test(password)
+      ? null
+      : 'Password must contain at least one uppercase letter';
   }
 
   private static validatePasswordLowercase(password: string): string | null {
-    return !/[a-z]/.test(password)
-      ? 'Password must contain at least one lowercase letter'
-      : null;
+    return /[a-z]/.test(password)
+      ? null
+      : 'Password must contain at least one lowercase letter';
   }
 
   private static validatePasswordNumber(password: string): string | null {
-    return !/\d/.test(password)
-      ? 'Password must contain at least one number'
-      : null;
+    return /\d/.test(password)
+      ? null
+      : 'Password must contain at least one number';
   }
 
   private static validatePasswordSpecialChar(password: string): string | null {
-    return !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
-      ? 'Password must contain at least one special character'
-      : null;
+    return /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
+      ? null
+      : 'Password must contain at least one special character';
   }
 
   private static validatePasswordCommonPatterns(

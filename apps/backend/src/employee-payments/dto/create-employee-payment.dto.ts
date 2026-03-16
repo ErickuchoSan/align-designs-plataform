@@ -16,7 +16,7 @@ export class CreateEmployeePaymentDto {
   @IsString()
   employeeId: string;
 
-  @ApiProperty({ description: 'Monto del pago', example: 1000.0 })
+  @ApiProperty({ description: 'Monto del pago', example: 1000 })
   @IsNumber()
   @Min(0)
   amount: number;

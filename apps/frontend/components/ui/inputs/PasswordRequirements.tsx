@@ -88,7 +88,7 @@ const renderStatusIcon = (isEmpty: boolean, isMet: boolean) => {
 export default function PasswordRequirements({
   password,
   className = '',
-}: PasswordRequirementsProps) {
+}: Readonly<PasswordRequirementsProps>) {
   return (
     <div className={`space-y-2 ${className}`}>
       <p className="text-sm font-medium text-gray-700">Password must have:</p>

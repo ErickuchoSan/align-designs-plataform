@@ -40,21 +40,21 @@ export class OtpValidationService {
     const token = await this.otpService.createOtp(user.id);
 
     // Send appropriate email based on user status
-    if (!user.passwordHash) {
-      // New user - send account verification email
-      await this.emailService.sendOtpEmail(
-        user.email,
-        token,
-        `${user.firstName} ${user.lastName}`,
-        'new_user',
-      );
-    } else {
+    if (user.passwordHash) {
       // Existing user - send login OTP email
       await this.emailService.sendOtpEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`,
         'login',
+      );
+    } else {
+      // New user - send account verification email
+      await this.emailService.sendOtpEmail(
+        user.email,
+        token,
+        `${user.firstName} ${user.lastName}`,
+        'new_user',
       );
     }
 

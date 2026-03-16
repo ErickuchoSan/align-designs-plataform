@@ -23,7 +23,7 @@ const FOCUSABLE_SELECTORS = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);

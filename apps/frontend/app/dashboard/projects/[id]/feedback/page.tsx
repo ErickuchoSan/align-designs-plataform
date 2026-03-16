@@ -41,7 +41,7 @@ export default function ProjectFeedbackPage() {
         try {
             const data = await FeedbackService.getProjectCycles(projectId);
             setCycles(data);
-        } catch (error) {
+        } catch {
             // Silent refresh - don't show error toast for background refreshes
         }
     };

@@ -51,46 +51,46 @@ export class RequestSizeLimitMiddleware implements NestMiddleware {
       }
     }
 
-    // If a specific limit is found, apply it
-    if (limit !== undefined) {
-      // Create route-specific body parsers
-      const jsonParser = express.json({
-        limit,
-        // Only apply to JSON content
-        type: 'application/json',
-      });
+    // If no specific limit found, continue to next middleware
+    // The global limit from main.ts will apply
+    if (limit === undefined) {
+      next();
+      return;
+    }
 
-      const urlencodedParser = express.urlencoded({
-        extended: true,
-        limit,
-        // Only apply to URL-encoded content
-        type: 'application/x-www-form-urlencoded',
-      });
+    // Create route-specific body parsers
+    const jsonParser = express.json({
+      limit,
+      // Only apply to JSON content
+      type: 'application/json',
+    });
 
-      // Apply the parsers
-      jsonParser(req, res, (err) => {
+    const urlencodedParser = express.urlencoded({
+      extended: true,
+      limit,
+      // Only apply to URL-encoded content
+      type: 'application/x-www-form-urlencoded',
+    });
+
+    // Apply the parsers
+    jsonParser(req, res, (err) => {
+      if (err) {
+        this.logger.warn(
+          `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit)})`,
+        );
+        return next(err);
+      }
+
+      urlencodedParser(req, res, (err) => {
         if (err) {
           this.logger.warn(
             `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit)})`,
           );
           return next(err);
         }
-
-        urlencodedParser(req, res, (err) => {
-          if (err) {
-            this.logger.warn(
-              `Request size limit exceeded for ${requestPath} (limit: ${this.formatBytes(limit)})`,
-            );
-            return next(err);
-          }
-          next();
-        });
+        next();
       });
-    } else {
-      // No specific limit found, continue to next middleware
-      // The global limit from main.ts will apply
-      next();
-    }
+    });
   }
 
   private formatBytes(bytes: number): string {

@@ -12,7 +12,7 @@ interface PaymentProgressBarProps {
  * Displays payment progress with a visual progress bar
  * Shows: paid amount, required amount, remaining, and percentage
  */
-export function PaymentProgressBar({ required, paid, pendingAmount = 0, className = '' }: PaymentProgressBarProps & { pendingAmount?: number }) {
+export function PaymentProgressBar({ required, paid, pendingAmount = 0, className = '' }: Readonly<PaymentProgressBarProps & { pendingAmount?: number }>) {
   const effectivePaid = paid;
   const effectivePending = pendingAmount;
   const remaining = Math.max(0, required - effectivePaid - effectivePending);

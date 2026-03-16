@@ -114,7 +114,7 @@ function ClientWorkflowView({
   invoiceDeadlines,
   pendingAmount,
   loadingInvoices,
-}: ClientWorkflowViewProps) {
+}: Readonly<ClientWorkflowViewProps>) {
   const router = useRouter();
 
   // IMPORTANT: All hooks must be called before any conditional returns

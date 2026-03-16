@@ -26,7 +26,7 @@ export default function PaymentHistoryModal({
   projectName,
   amountPaid,
   amountRequired,
-}: PaymentHistoryModalProps) {
+}: Readonly<PaymentHistoryModalProps>) {
 
   const additionalHeaderContent = amountPaid !== undefined && amountRequired !== undefined ? (
     <p className="text-xs sm:text-sm text-gray-500 mt-1 break-words font-normal">

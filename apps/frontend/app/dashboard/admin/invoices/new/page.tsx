@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createInvoiceSchema, CreateInvoiceFormData } from '@/lib/schemas/invoice.schema';
 import { InvoicesService } from '@/services/invoices.service';
 import { ProjectsService } from '@/services/projects.service';
-import { Project, User } from '@/types';
+import { Project } from '@/types';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
 import { ButtonLoader } from '@/components/ui/Loader';

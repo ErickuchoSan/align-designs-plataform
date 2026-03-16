@@ -19,11 +19,8 @@ COPY apps/backend ./apps/backend
 
 WORKDIR /app/apps/backend
 
-# Generate Prisma Client
-RUN pnpm prisma:generate
-
-# Build the application
-RUN pnpm build
+# Generate Prisma Client and build the application
+RUN pnpm prisma:generate && pnpm build
 
 EXPOSE 3001
 

@@ -36,7 +36,7 @@ export default function ConfirmModal({
   variant = 'info',
   warningItems = [],
   showDetailedWarning = false,
-}: ConfirmModalProps) {
+}: Readonly<ConfirmModalProps>) {
   const variantStyles = {
     danger: {
       icon: '⚠️',

@@ -1,11 +1,10 @@
 import {
   Injectable,
   BadRequestException,
-  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Stage, Role, ProjectStatus, NotificationType } from '@prisma/client';
+import { Stage, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../../notifications/notifications.service';
 
 /**

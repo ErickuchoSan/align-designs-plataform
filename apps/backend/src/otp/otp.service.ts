@@ -83,7 +83,7 @@ export class OtpService {
         `OTP rate limit exceeded for user ${userId}: ${recentOtpCount} attempts in last 15 minutes`,
       );
       throw new BadRequestException(
-        `Too many OTP requests. Please wait ${waitMinutes} minute${waitMinutes !== 1 ? 's' : ''} before trying again.`,
+        `Too many OTP requests. Please wait ${waitMinutes} minute${waitMinutes === 1 ? '' : 's'} before trying again.`,
       );
     }
 

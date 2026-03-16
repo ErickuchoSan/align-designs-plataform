@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -162,7 +161,7 @@ export class ProjectLifecycleService {
       feedbackCycles: feedbackCyclesCount > 0,
     };
 
-    const hasAnyData = Object.values(hasData).some((v) => v);
+    const hasAnyData = Object.values(hasData).some(Boolean);
 
     const warnings = this.buildDeletionWarnings({
       files: filesCount,

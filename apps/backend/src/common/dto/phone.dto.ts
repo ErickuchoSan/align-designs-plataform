@@ -7,7 +7,7 @@ export class PhoneDto {
   @IsString({ message: 'Country code must be a string' })
   @Matches(
     new RegExp(
-      `^\\+\\d{${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH},${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH}}$`,
+      String.raw`^\+\d{${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH},${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH}}$`,
     ),
     {
       message: `Country code must start with + and contain ${PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH}-${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH} digits`,
@@ -17,7 +17,7 @@ export class PhoneDto {
 
   @IsNotEmpty({ message: 'Phone number is required' })
   @IsString({ message: 'Phone number must be a string' })
-  @Matches(new RegExp(`^\\d{${PHONE_CONSTRAINTS.NUMBER_LENGTH}}$`), {
+  @Matches(new RegExp(String.raw`^\d{${PHONE_CONSTRAINTS.NUMBER_LENGTH}}$`), {
     message: `Phone number must contain exactly ${PHONE_CONSTRAINTS.NUMBER_LENGTH} digits`,
   })
   @Length(PHONE_CONSTRAINTS.NUMBER_LENGTH, PHONE_CONSTRAINTS.NUMBER_LENGTH, {

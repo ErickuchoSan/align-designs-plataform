@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { File } from '@prisma/client';
 
 interface UploaderInfo {
   id: string;

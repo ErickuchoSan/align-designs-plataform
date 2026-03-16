@@ -46,7 +46,7 @@ function EmployeePaymentsList({
   onViewReceipt,
   onApprove,
   onReject,
-}: EmployeePaymentsListProps) {
+}: Readonly<EmployeePaymentsListProps>) {
   const isAdmin = userRole === 'ADMIN';
 
   if (payments.length === 0) {

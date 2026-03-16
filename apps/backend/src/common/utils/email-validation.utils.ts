@@ -57,8 +57,8 @@ export class EmailValidationUtils {
       return { isValid: false, error: 'Invalid domain format' };
     }
 
-    const tld = domainParts[domainParts.length - 1];
-    if (tld.length < 2 || tld.length > 6) {
+    const tld = domainParts.at(-1);
+    if (!tld || tld.length < 2 || tld.length > 6) {
       return { isValid: false, error: 'Invalid top-level domain' };
     }
 

@@ -21,7 +21,7 @@ export function LoadingSpinner({
   size = 'md',
   color = 'border-navy-600',
   className = '',
-}: LoadingSpinnerProps) {
+}: Readonly<LoadingSpinnerProps>) {
   return (
     <output aria-label="Loading">
       <span
@@ -45,7 +45,7 @@ interface LoadingOverlayProps {
 export function LoadingOverlay({
   message = 'Loading...',
   transparent = false,
-}: LoadingOverlayProps) {
+}: Readonly<LoadingOverlayProps>) {
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity ${
@@ -82,7 +82,7 @@ export function LoadingState({
   loadingMessage = 'Loading...',
   emptyMessage = 'No data available',
   isEmpty = false,
-}: LoadingStateProps) {
+}: Readonly<LoadingStateProps>) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">

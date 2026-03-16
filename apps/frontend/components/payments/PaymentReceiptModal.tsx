@@ -16,7 +16,7 @@ export default function PaymentReceiptModal({
     isOpen,
     onClose,
     payment,
-}: PaymentReceiptModalProps) {
+}: Readonly<PaymentReceiptModalProps>) {
     if (!payment) return null;
 
     const hasReceipt = isEmployeePayment(payment)

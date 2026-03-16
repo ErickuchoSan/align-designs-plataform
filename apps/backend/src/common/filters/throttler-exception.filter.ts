@@ -22,7 +22,7 @@ export class ThrottlerExceptionFilter implements ExceptionFilter {
 
     response.status(status).json({
       statusCode: HttpStatus.TOO_MANY_REQUESTS,
-      message: `Too many requests. Please wait ${waitTimeMinutes} minute${waitTimeMinutes !== 1 ? 's' : ''} before trying again.`,
+      message: `Too many requests. Please wait ${waitTimeMinutes} minute${waitTimeMinutes === 1 ? '' : 's'} before trying again.`,
       error: 'Too Many Requests',
     });
   }

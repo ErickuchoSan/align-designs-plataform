@@ -29,7 +29,7 @@ export default function GenerateInvoiceModal({
   onClose,
   projectId,
   onSuccess,
-}: GenerateInvoiceModalProps) {
+}: Readonly<GenerateInvoiceModalProps>) {
   const {
     register,
     handleSubmit,

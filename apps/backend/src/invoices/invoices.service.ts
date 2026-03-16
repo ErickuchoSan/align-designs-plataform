@@ -299,7 +299,7 @@ export class InvoicesService {
       // Creates a copy of the invoice with status SENT for the PDF
       const invoiceForPdf = { ...fullInvoice, status: InvoiceStatus.SENT };
       const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(
-        invoiceForPdf as any,
+        invoiceForPdf,
       );
       this.logger.log(
         `PDF generated successfully. Size: ${pdfBuffer.length} bytes.`,

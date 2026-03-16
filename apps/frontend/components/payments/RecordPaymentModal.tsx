@@ -28,7 +28,7 @@ export default function RecordPaymentModal({
     onSuccess,
     initialAmount,
     defaultType = PaymentType.INITIAL_PAYMENT
-}: RecordPaymentModalProps) {
+}: Readonly<RecordPaymentModalProps>) {
     const [amount, setAmount] = useState<number | string>(initialAmount || '');
     const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.TRANSFER);
     const [type, setType] = useState<PaymentType>(defaultType);

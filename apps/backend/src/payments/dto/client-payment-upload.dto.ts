@@ -32,7 +32,7 @@ export class ClientPaymentUploadDto {
 
   @ApiProperty({
     description: 'Payment amount',
-    example: 500.0,
+    example: 500,
     minimum: 0.01,
   })
   @IsNumber({}, { message: 'Amount must be a valid number' })

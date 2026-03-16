@@ -205,6 +205,7 @@ export class TokenService {
     try {
       return await this.jwt.verifyAsync(token);
     } catch (error) {
+      this.logger.debug('Token verification failed', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

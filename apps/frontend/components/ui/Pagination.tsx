@@ -19,7 +19,7 @@ function Pagination({
   itemsPerPage,
   onPageChange,
   onItemsPerPageChange,
-}: PaginationProps) {
+}: Readonly<PaginationProps>) {
   // Ref to track the pagination component position
   const paginationRef = useRef<HTMLElement>(null);
   const previousPageRef = useRef<number>(currentPage);

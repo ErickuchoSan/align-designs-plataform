@@ -23,7 +23,7 @@ export default function ProjectsList({
   theme = 'navy',
   showCreateButton = true,
   showUsersButton = false,
-}: ProjectsListProps) {
+}: Readonly<ProjectsListProps>) {
   const projectsHook = useProjects(isAuthenticated, userRole);
   const isAdmin = userRole === 'ADMIN';
 

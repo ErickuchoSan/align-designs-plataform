@@ -10,6 +10,8 @@ import * as crypto from 'node:crypto';
 import { COOKIE_MAX_AGE_ONE_DAY } from '../constants/time.constants';
 import { getCookieSecurityConfig } from '../utils/request.utils';
 
+type SameSitePolicy = 'strict' | 'lax' | 'none';
+
 @Injectable()
 export class CsrfMiddleware implements NestMiddleware {
   private readonly logger = new Logger('CSRF');
@@ -82,12 +84,12 @@ export class CsrfMiddleware implements NestMiddleware {
   }
 
   private handleSafeMethod(req: Request, res: Response): void {
-    if (!req.cookies[this.csrfTokenCookie]) {
-      this.generateAndSetToken(req, res);
-    } else {
+    if (req.cookies[this.csrfTokenCookie]) {
       const existingSecret = req.cookies[this.csrfTokenCookie];
       const token = this.generateToken(existingSecret);
       res.setHeader('X-CSRF-Token', token);
+    } else {
+      this.generateAndSetToken(req, res);
     }
   }
 
@@ -185,11 +187,11 @@ export class CsrfMiddleware implements NestMiddleware {
   private resolveSameSite(
     configSameSite: string | undefined,
     allowNgrok: boolean,
-    defaultValue: 'strict' | 'lax' | 'none',
-  ): 'strict' | 'lax' | 'none' {
-    const validValues = ['strict', 'lax', 'none'];
-    if (configSameSite && validValues.includes(configSameSite)) {
-      return configSameSite as 'strict' | 'lax' | 'none';
+    defaultValue: SameSitePolicy,
+  ): SameSitePolicy {
+    const validValues: SameSitePolicy[] = ['strict', 'lax', 'none'];
+    if (configSameSite && validValues.includes(configSameSite as SameSitePolicy)) {
+      return configSameSite as SameSitePolicy;
     }
     return allowNgrok ? 'none' : defaultValue;
   }

@@ -1,10 +1,12 @@
 import type { Request } from 'express';
 
+export type SameSitePolicy = 'strict' | 'lax' | 'none';
+
 export interface CookieSecurityConfig {
   isProduction: boolean;
   isHttps: boolean;
   useSecureCookie: boolean;
-  sameSite: 'strict' | 'lax' | 'none';
+  sameSite: SameSitePolicy;
 }
 
 /**
@@ -48,7 +50,7 @@ export function isProduction(): boolean {
 function resolveSameSitePolicy(
   useSecureCookie: boolean,
   isProd: boolean,
-): 'strict' | 'lax' | 'none' {
+): SameSitePolicy {
   if (useSecureCookie) return 'none';
   if (isProd) return 'strict';
   return 'lax';
@@ -84,7 +86,7 @@ export function buildAuthCookieOptions(
 ): {
   httpOnly: boolean;
   secure: boolean;
-  sameSite: 'strict' | 'lax' | 'none';
+  sameSite: SameSitePolicy;
   maxAge?: number;
   path: string;
 } {

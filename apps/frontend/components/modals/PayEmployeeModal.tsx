@@ -33,7 +33,7 @@ export default function PayEmployeeModal({
   onClose,
   projectId,
   onSuccess,
-}: PayEmployeeModalProps) {
+}: Readonly<PayEmployeeModalProps>) {
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
   const {

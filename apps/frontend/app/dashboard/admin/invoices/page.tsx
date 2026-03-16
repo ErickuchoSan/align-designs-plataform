@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { InvoicesService } from '@/services/invoices.service';
 import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';

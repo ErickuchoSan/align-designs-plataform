@@ -4,7 +4,7 @@ interface LoaderProps {
   text?: string;
 }
 
-export default function Loader({ size = 'md', color = 'blue', text }: LoaderProps) {
+export default function Loader({ size = 'md', color = 'blue', text }: Readonly<LoaderProps>) {
   const sizeClasses = {
     sm: 'w-5 h-5 border-2',
     md: 'w-8 h-8 border-3',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Project, ProjectStatus } from '@/types';
+import { Project } from '@/types';
 import { Payment } from '@/types/payments';
 import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';

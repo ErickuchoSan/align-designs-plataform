@@ -20,7 +20,7 @@ interface ProfileInfoCardProps {
   onUpdateUser: (data: Partial<User>) => void;
 }
 
-function ProfileInfoCard({ user, onUpdateUser }: ProfileInfoCardProps) {
+function ProfileInfoCard({ user, onUpdateUser }: Readonly<ProfileInfoCardProps>) {
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: user.firstName,

@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Correct import for App Router
-import { useParams } from 'next/navigation'; // Correct hook for App Router params
+import { useRouter, useParams } from 'next/navigation';
 import { InvoicesService } from '@/services/invoices.service';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { PageLoader } from '@/components/ui/Loader';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';

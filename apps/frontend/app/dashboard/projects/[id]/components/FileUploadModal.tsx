@@ -22,7 +22,7 @@ export default function FileUploadModal({
   uploading,
   uploadProgress,
   error,
-}: FileUploadModalProps) {
+}: Readonly<FileUploadModalProps>) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadComment, setUploadComment] = useState('');
 

@@ -31,7 +31,7 @@ export class PhoneValidationUtils {
       // If no country code provided and number doesn't start with +, try default validation
       if (!countryCode) {
         // Try common North American format (10 digits)
-        const digitsOnly = phone.replace(/\D/g, '');
+        const digitsOnly = phone.replaceAll(/\D/g, '');
         if (/^\d{10}$/.test(digitsOnly)) {
           return true;
         }
@@ -40,7 +40,8 @@ export class PhoneValidationUtils {
 
       // Validate with specific country code
       return isValidPhoneNumber(phone, countryCode);
-    } catch (error) {
+    } catch {
+      // Validation errors result in invalid phone number
       return false;
     }
   }
@@ -61,7 +62,7 @@ export class PhoneValidationUtils {
 
       // If no country code, try US/CA default
       if (!countryCode) {
-        const digitsOnly = phone.replace(/\D/g, '');
+        const digitsOnly = phone.replaceAll(/\D/g, '');
         if (/^\d{10}$/.test(digitsOnly)) {
           return `+1${digitsOnly}`;
         }
@@ -71,7 +72,8 @@ export class PhoneValidationUtils {
       // Parse with country code
       const parsed = parsePhoneNumber(phone, countryCode);
       return parsed ? parsed.number : null;
-    } catch (error) {
+    } catch {
+      // Parsing errors result in null
       return null;
     }
   }
@@ -104,7 +106,8 @@ export class PhoneValidationUtils {
           rfc3966: parsed.format('RFC3966'), // tel:+1-415-555-2671
         },
       };
-    } catch (error) {
+    } catch {
+      // Parsing errors result in null
       return null;
     }
   }

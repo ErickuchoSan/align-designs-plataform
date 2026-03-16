@@ -4,7 +4,7 @@ interface SkeletonProps {
   className?: string;
 }
 
-export const Skeleton = memo(function Skeleton({ className = '' }: SkeletonProps) {
+export const Skeleton = memo(function Skeleton({ className = '' }: Readonly<SkeletonProps>) {
   return <div className={`animate-pulse bg-stone-200 rounded ${className}`} />;
 });
 
@@ -86,7 +86,7 @@ interface PageLoadingProps {
   title?: string;
 }
 
-export default memo(function PageLoading({ title }: PageLoadingProps) {
+export default memo(function PageLoading({ title }: Readonly<PageLoadingProps>) {
   return (
     <output className="block p-6 space-y-6" aria-label={title ? `Loading ${title}` : 'Loading'}>
       <PageHeaderSkeleton />

@@ -10,22 +10,19 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CacheManagerService } from '../cache/services/cache-manager.service';
-import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
 import type { IProjectRepository } from './repositories/project.repository.interface';
 import type { IUserRepository } from '../users/repositories/user.repository.interface';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Role, Stage, ProjectStatus } from '@prisma/client';
+import { Role, Stage, ProjectStatus, NotificationType } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';
 import { getFilesAndCommentsCounts } from '../common/utils/file.utils';
 import { PermissionContext } from '../common/strategies/permission.strategy';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
-import { TRANSACTION_TIMEOUT_MS } from '../common/constants/timeouts.constants';
 import { PaginationHelper } from '../common/helpers/pagination.helper';
 import { BigIntTransformer } from '../common/helpers/bigint-transformer.helper';
-import { executeTransactionWithRetry } from '../common/helpers/transaction.helpers';
 import {
   USER_BASIC_INFO_SELECT,
   FILE_BASIC_SELECT,
@@ -37,7 +34,6 @@ import { ProjectStatusService } from './services/project-status.service';
 import { ProjectLifecycleService } from './services/project-lifecycle.service';
 import { InvoicesService } from '../invoices/invoices.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotificationType } from '@prisma/client';
 import {
   getAccessibleStages as getAccessibleStagesHelper,
   getStagePermissions,

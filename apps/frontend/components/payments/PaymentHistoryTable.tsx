@@ -93,7 +93,7 @@ const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment
 
 PaymentRow.displayName = 'PaymentRow';
 
-function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: PaymentHistoryTableProps) {
+function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Readonly<PaymentHistoryTableProps>) {
     // Use regular table for small lists (< 50 items), virtualized for large lists
     // This prevents unnecessary complexity for most use cases
     const useVirtualization = payments.length > 50;

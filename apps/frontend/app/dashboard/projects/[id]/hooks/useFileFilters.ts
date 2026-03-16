@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getFileExtension } from '@/lib/utils/file.utils';
 import type { FileData } from './useProjectFiles';
 

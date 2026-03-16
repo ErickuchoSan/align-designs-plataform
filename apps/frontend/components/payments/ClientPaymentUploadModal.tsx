@@ -29,7 +29,7 @@ export default function ClientPaymentUploadModal({
   onSuccess,
   suggestedAmount,
   maxAmount,
-}: ClientPaymentUploadModalProps) {
+}: Readonly<ClientPaymentUploadModalProps>) {
   const [amount, setAmount] = useState<number | string>('');
   const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.TRANSFER);
   const [date, setDate] = useState(getTodayDateString());

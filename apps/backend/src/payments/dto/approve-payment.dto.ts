@@ -5,7 +5,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export class ApprovePaymentDto {
   @ApiPropertyOptional({
     description: 'Corrected amount if the original amount was incorrect',
-    example: 150.0,
+    example: 150,
     minimum: 0.01,
   })
   @IsOptional()

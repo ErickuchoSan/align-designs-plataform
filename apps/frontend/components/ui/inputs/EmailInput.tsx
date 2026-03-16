@@ -18,7 +18,7 @@ const businessDomains = new Set([
   'linkedin.com', 'twitter.com', 'facebook.com', 'instagram.com', 'whatsapp.com'
 ]);
 
-export default function EmailInput({ value, onChange, className = '', required = false, placeholder = 'Email address', id }: EmailInputProps) {
+export default function EmailInput({ value, onChange, className = '', required = false, placeholder = 'Email address', id }: Readonly<EmailInputProps>) {
   const [error, setError] = useState('');
   const [warning, setWarning] = useState('');
   const [isValidating, setIsValidating] = useState(false);

@@ -90,13 +90,13 @@ export class MinioStorageService implements OnModuleInit {
       // Check if bucket exists, if not, create it
       const bucketExists = await this.minioClient.bucketExists(this.bucketName);
 
-      if (!bucketExists) {
+      if (bucketExists) {
+        this.logger.log(`Bucket "${this.bucketName}" already exists`);
+      } else {
         await this.minioClient.makeBucket(this.bucketName, this.region);
         this.logger.log(
           `Bucket "${this.bucketName}" created successfully in region "${this.region}"`,
         );
-      } else {
-        this.logger.log(`Bucket "${this.bucketName}" already exists`);
       }
 
       // Verify bucket is accessible after creation/check
@@ -236,7 +236,7 @@ export class MinioStorageService implements OnModuleInit {
       // Verify file exists before generating presigned URL
       try {
         await this.minioClient.statObject(this.bucketName, storagePath);
-      } catch (statError) {
+      } catch {
         this.logger.warn(`File not found in storage: ${storagePath}`);
         throw new BadRequestException(
           'The requested file does not exist in storage. It may have been deleted or the upload may have failed.',
@@ -290,7 +290,7 @@ export class MinioStorageService implements OnModuleInit {
     try {
       await this.minioClient.statObject(this.bucketName, storagePath);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

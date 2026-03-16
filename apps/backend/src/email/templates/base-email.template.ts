@@ -53,7 +53,7 @@ export function escapeHtml(text: string): string {
     "'": '&#x27;',
     '/': '&#x2F;',
   };
-  return text.replace(/[&<>"'/]/g, (char) => map[char]);
+  return text.replaceAll(/[&<>"'/]/g, (char) => map[char]);
 }
 
 /**

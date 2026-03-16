@@ -24,7 +24,7 @@ const AMERICAN_COUNTRIES = new Set([
 const POPULAR_COUNTRY_CODES = new Set(['US', 'CA', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR']);
 const POPULAR_COUNTRY_CODES_ARRAY = ['US', 'CA', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
 
-export default function CountryCodeSelector({ value, onChange, className = '' }: CountryCodeSelectorProps) {
+export default function CountryCodeSelector({ value, onChange, className = '' }: Readonly<CountryCodeSelectorProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 

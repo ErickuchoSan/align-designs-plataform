@@ -1,5 +1,4 @@
 import { IsOptional, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
 import { Role } from '@prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 

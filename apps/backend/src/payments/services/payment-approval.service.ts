@@ -81,8 +81,7 @@ export class PaymentApprovalService {
       );
     }
 
-    const finalAmount =
-      correctedAmount !== undefined ? correctedAmount : Number(payment.amount);
+    const finalAmount = correctedAmount ?? Number(payment.amount);
     const wasAmountCorrected =
       correctedAmount !== undefined &&
       correctedAmount !== Number(payment.amount);

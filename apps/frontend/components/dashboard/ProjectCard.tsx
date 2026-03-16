@@ -24,7 +24,7 @@ function ProjectCard({
   onDelete,
   onClick,
   theme = 'navy',
-}: ProjectCardProps) {
+}: Readonly<ProjectCardProps>) {
   const handleCardClick = useCallback(() => {
     if (onClick) {
       onClick(project);

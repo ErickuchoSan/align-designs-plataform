@@ -60,7 +60,7 @@ function StageContent({
   onUploadPaymentProof,
   onRefresh,
   onBriefApproved,
-}: StageContentProps) {
+}: Readonly<StageContentProps>) {
   const [approvingBrief, setApprovingBrief] = useState(false);
   const [briefError, setBriefError] = useState<string | null>(null);
 

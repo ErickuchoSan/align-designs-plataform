@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AxiosRequestConfig } from 'axios';
 
 // Helper function to get status-based colors
@@ -67,7 +67,7 @@ export default function ErrorModal({
   responseData,
   stackTrace,
   errorCode,
-}: ErrorModalProps) {
+}: Readonly<ErrorModalProps>) {
   // Use safe version to avoid errors when modal is rendered outside AuthProvider
   const isDevelopment = process.env.NODE_ENV === 'development';
 
