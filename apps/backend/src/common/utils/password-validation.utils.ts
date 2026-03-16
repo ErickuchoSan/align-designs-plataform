@@ -28,32 +28,16 @@ export class PasswordValidationUtils {
 
     const score = Object.values(requirements).filter(Boolean).length;
 
-    let label = 'Very Weak';
-    let color = 'bg-red-500';
+    const strengthMap: Record<number, { label: string; color: string }> = {
+      0: { label: 'Very Weak', color: 'bg-red-500' },
+      1: { label: 'Very Weak', color: 'bg-red-500' },
+      2: { label: 'Weak', color: 'bg-orange-500' },
+      3: { label: 'Fair', color: 'bg-yellow-500' },
+      4: { label: 'Good', color: 'bg-blue-500' },
+      5: { label: 'Strong', color: 'bg-green-500' },
+    };
 
-    switch (score) {
-      case 0:
-      case 1:
-        label = 'Very Weak';
-        color = 'bg-red-500';
-        break;
-      case 2:
-        label = 'Weak';
-        color = 'bg-orange-500';
-        break;
-      case 3:
-        label = 'Fair';
-        color = 'bg-yellow-500';
-        break;
-      case 4:
-        label = 'Good';
-        color = 'bg-blue-500';
-        break;
-      case 5:
-        label = 'Strong';
-        color = 'bg-green-500';
-        break;
-    }
+    const { label, color } = strengthMap[score] ?? strengthMap[0];
 
     return { score, label, color, requirements };
   }

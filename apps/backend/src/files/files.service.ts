@@ -333,11 +333,7 @@ export class FilesService {
       fileFilters,
     );
 
-    // Cache result if eligible
-    if (shouldCache) {
-      // const cacheKey = CACHE_KEYS.FILES.LIST(projectId, page, limit);
-      // await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
-    }
+    // Note: Caching disabled for now - can be re-enabled when ready
 
     return result;
   }

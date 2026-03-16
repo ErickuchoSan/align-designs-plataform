@@ -196,17 +196,10 @@ export class ProjectsService {
     paginationDto: PaginationDto,
     filterClientId?: string,
   ): Promise<PaginatedResult<ProjectResponse>> {
-    const { page, limit, skip } =
+    const { limit, skip } =
       PaginationHelper.extractPaginationParams(paginationDto);
 
-    // Generate cache key based on user role and pagination
-    const cacheKey = CACHE_KEYS.PROJECTS.LIST(
-      page,
-      limit,
-      userRole === Role.CLIENT ? userId : filterClientId,
-    );
-
-    // Try to get from cache first
+    // Note: Caching disabled for now - can be re-enabled when ready
 
     // Build where clause based on user role
     const where: any = {

@@ -124,12 +124,15 @@ export class EmailService implements OnModuleInit {
     to: string,
     otpCode: string,
     userName: string,
-    subject: string,
-    title: string,
-    preMessage: string,
-    warningMessage: string,
-    logPrefix: string,
+    options: {
+      subject: string;
+      title: string;
+      preMessage: string;
+      warningMessage: string;
+      logPrefix: string;
+    },
   ): Promise<void> {
+    const { subject, title, preMessage, warningMessage, logPrefix } = options;
     const html = getBaseEmailTemplate({
       title,
       userName,
@@ -229,16 +232,13 @@ export class EmailService implements OnModuleInit {
       context = 'Password recovery OTP';
     }
 
-    return this.sendOtpEmailGeneric(
-      to,
-      otpCode,
-      userName,
+    return this.sendOtpEmailGeneric(to, otpCode, userName, {
       subject,
       title,
-      message,
-      disclaimer,
-      context,
-    );
+      preMessage: message,
+      warningMessage: disclaimer,
+      logPrefix: context,
+    });
   }
 
   /**

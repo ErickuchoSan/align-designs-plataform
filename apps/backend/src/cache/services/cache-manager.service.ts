@@ -137,8 +137,7 @@ export class CacheManagerService {
     // Also invalidate the project detail since it includes file count
     await this.del(CACHE_KEYS.PROJECTS.DETAIL(projectId));
 
-    this.logger.debug(
-      `File caches invalidated for project ${projectId}${fileId ? ` and file ${fileId}` : ''}`,
-    );
+    const fileDetail = fileId ? ` and file ${fileId}` : '';
+    this.logger.debug(`File caches invalidated for project ${projectId}${fileDetail}`);
   }
 }

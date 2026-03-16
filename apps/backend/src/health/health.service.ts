@@ -80,7 +80,7 @@ export class HealthService {
       (check) => check.status === 'unhealthy',
     );
 
-    const status = anyUnhealthy ? 'error' : allHealthy ? 'ok' : 'degraded';
+    const status = this.resolveOverallStatus(anyUnhealthy, allHealthy);
     const responseTime = Date.now() - startTime;
 
     const memoryUsage = process.memoryUsage();
@@ -238,6 +238,18 @@ export class HealthService {
       configured: true,
       verified: isHealthy,
     };
+  }
+
+  /**
+   * Resolve the overall health status based on check results
+   */
+  private resolveOverallStatus(
+    anyUnhealthy: boolean,
+    allHealthy: boolean,
+  ): 'ok' | 'degraded' | 'error' {
+    if (anyUnhealthy) return 'error';
+    if (allHealthy) return 'ok';
+    return 'degraded';
   }
 
   /**

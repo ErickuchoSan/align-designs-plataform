@@ -128,10 +128,11 @@ export class PhoneValidationUtils {
       const isValid = this.validatePhoneNumber(phone, countryCode);
 
       if (!isValid) {
+        const countryDetail = countryCode ? ` for country ${countryCode}` : '';
         return {
           isValid: false,
           formatted: null,
-          error: `Invalid phone number${countryCode ? ` for country ${countryCode}` : ''}`,
+          error: `Invalid phone number${countryDetail}`,
         };
       }
 

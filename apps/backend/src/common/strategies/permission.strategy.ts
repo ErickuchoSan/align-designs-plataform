@@ -126,7 +126,7 @@ export class EmployeePermissionStrategy implements PermissionStrategy {
  * Provides a clean interface for permission checks
  */
 export class PermissionContext {
-  private strategy: PermissionStrategy;
+  private readonly strategy: PermissionStrategy;
 
   constructor(private readonly role: Role) {
     this.strategy = this.createStrategy(role);

@@ -82,7 +82,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             error: 'Not Found',
           };
 
-        case 'P2002':
+        case 'P2002': {
           // Unique constraint violation
           const target = exception.meta?.target as string[] | undefined;
           const field = target?.[0] || 'field';
@@ -91,6 +91,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             message: `A record with this ${field} already exists.`,
             error: 'Conflict',
           };
+        }
 
         case 'P2003':
           // Foreign key constraint violation
