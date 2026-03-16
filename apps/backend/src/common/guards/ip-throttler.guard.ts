@@ -105,7 +105,7 @@ export class IpThrottlerGuard extends ThrottlerGuard {
       if (!/^\d+$/.test(part)) return false;
       if (part.length > 1 && part.startsWith('0')) return false;
 
-      const num = parseInt(part, 10);
+      const num = Number.parseInt(part, 10);
       return num >= 0 && num <= 255;
     });
   }

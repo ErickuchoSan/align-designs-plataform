@@ -22,8 +22,9 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
     const { loading: isUploading, execute } = useAsyncOperation();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+            setFile(selectedFile);
         }
     };
 
@@ -71,10 +72,11 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="version-notes" className="block text-sm font-medium text-gray-700 mb-1">
                         Version Notes (Optional)
                     </label>
                     <textarea
+                        id="version-notes"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}

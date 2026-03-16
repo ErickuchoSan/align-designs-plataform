@@ -69,21 +69,11 @@ function AdminWorkflowView({
   onCompleteProject,
   onArchiveProject,
 }: AdminWorkflowViewProps) {
-  const router = useRouter();
-
   // Modal states
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const [showChecklistModal, setShowChecklistModal] = useState(false);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   const canComplete = project.status === ProjectStatus.ACTIVE;
   const canArchive = project.status === ProjectStatus.COMPLETED;
@@ -218,8 +208,6 @@ const PaymentSection = memo(function PaymentSection({
   loadingInvoices: boolean;
   onShowHistory: () => void;
 }) {
-  const router = useRouter();
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',

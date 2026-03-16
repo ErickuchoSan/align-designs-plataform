@@ -81,7 +81,7 @@ export function useFileFilters(files: FileData[]): UseFileFiltersReturn {
         // Filter by name - skip if file has no filename (comment-only entries)
         const matchesName =
           nameFilter === '' ||
-          (file.filename && file.filename.toLowerCase().includes(nameFilter.toLowerCase()));
+          file.filename?.toLowerCase().includes(nameFilter.toLowerCase());
 
         // Filter by type - handle null filename
         const fileExtension = file.filename ? getFileExtension(file.filename) : null;

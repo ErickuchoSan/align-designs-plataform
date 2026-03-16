@@ -21,8 +21,9 @@ export default function ApproveEmployeePaymentModal({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) {
+            setFile(selectedFile);
         }
     };
 
@@ -49,10 +50,12 @@ export default function ApproveEmployeePaymentModal({
                     </p>
 
                     <div className="w-full">
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                        <label htmlFor="receipt-upload" className="block text-sm font-medium text-stone-700 mb-2">
                             Upload Transfer Receipt *
                         </label>
-                        <div
+                        <button
+                            type="button"
+                            id="receipt-upload-trigger"
                             onClick={() => fileInputRef.current?.click()}
                             className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-lg cursor-pointer hover:border-navy-500 transition-colors bg-stone-50 hover:bg-white"
                         >
@@ -85,7 +88,7 @@ export default function ApproveEmployeePaymentModal({
                                 </div>
                                 <p className="text-xs text-stone-500">PNG, JPG, PDF up to 10MB</p>
                             </div>
-                        </div>
+                        </button>
                         {file && (
                             <div className="mt-2 flex items-center justify-between p-2 bg-navy-50 rounded text-sm text-navy-700">
                                 <span className="truncate">{file.name}</span>
