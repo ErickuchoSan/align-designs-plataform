@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { TokenService } from './token.service';
 import { JwtBlacklistService } from '../jwt-blacklist.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 describe('TokenService', () => {
   let service: TokenService;
