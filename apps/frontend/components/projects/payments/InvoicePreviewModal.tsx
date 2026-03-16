@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 
@@ -8,6 +8,53 @@ interface InvoicePreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Print styles injected when component mounts
+const PRINT_STYLES = `
+@media print {
+  /* Hide everything except invoice content */
+  body > *:not(#invoice-print-content) {
+    display: none !important;
+  }
+
+  /* Reset body styles for printing */
+  body {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Show only the invoice container */
+  #invoice-print-content {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Hide non-printable elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Page break between invoice pages */
+  .print-page {
+    page-break-after: always;
+    page-break-inside: avoid;
+    margin: 0 !important;
+    padding: 20px !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto;
+  }
+}
+`;
 
 // Color scheme matching PDF invoice design
 const COLORS = {
@@ -49,6 +96,150 @@ function InvoicePreviewModal({ isOpen, onClose }: InvoicePreviewModalProps) {
   const balanceDue = SAMPLE_INVOICE.totalAmount - SAMPLE_INVOICE.amountPaid;
   const isPaid = SAMPLE_INVOICE.status === 'PAID';
 
+  // Inject print styles when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const styleElement = document.createElement('style');
+    styleElement.id = 'invoice-print-styles';
+    styleElement.textContent = PRINT_STYLES;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      const existingStyle = document.getElementById('invoice-print-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, [isOpen]);
+
+  const handlePrint = () => {
+    // Create a printable version
+    const printContent = document.getElementById('invoice-print-content');
+    if (!printContent) return;
+
+    // Clone and prepare for print
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice Preview - Align Designs</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+            .page { padding: 40px; page-break-after: always; }
+            .page:last-child { page-break-after: auto; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+            .company-name { font-size: 24px; font-weight: bold; color: #D4A843; }
+            .contact { font-size: 12px; color: #333; }
+            .logo { text-align: center; }
+            .logo-text { font-size: 12px; font-weight: bold; letter-spacing: 2px; }
+            .separator { border-top: 1px solid #E5E5E5; margin: 20px 0; }
+            .bill-section { display: flex; justify-content: space-between; margin-bottom: 20px; }
+            .label { font-size: 12px; font-weight: bold; color: #D4A843; }
+            .value { font-size: 12px; color: #333; margin-top: 4px; }
+            .table-header { background: #D4A843; display: flex; padding: 10px; }
+            .table-header span { color: white; font-weight: bold; font-size: 12px; }
+            .table-body { border: 1px solid #E5E5E5; border-top: none; display: flex; }
+            .desc-col { flex: 1; padding: 15px; border-right: 1px solid #E5E5E5; }
+            .amount-col { width: 100px; padding: 15px; }
+            .totals { display: flex; justify-content: flex-end; margin-top: 20px; }
+            .totals-box { width: 200px; }
+            .total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
+            .total-row.main { font-weight: bold; border-top: 1px solid #E5E5E5; padding-top: 10px; }
+            .balance-due { color: #C53030; font-weight: bold; }
+            .terms-title { font-size: 14px; font-weight: bold; color: #D4A843; border-bottom: 1px solid #E5E5E5; padding-bottom: 15px; margin-bottom: 15px; }
+            .terms-text { font-size: 12px; color: #333; line-height: 1.6; }
+            .vertical-text { position: absolute; left: 10px; top: 50%; transform: rotate(-90deg) translateX(-50%); font-size: 12px; font-weight: bold; color: #D4A843; white-space: nowrap; }
+            @media print { .page { padding: 30px; } }
+          </style>
+        </head>
+        <body>
+          <!-- Page 1: Invoice -->
+          <div class="page" style="position: relative;">
+            <div class="vertical-text">Invoice ${SAMPLE_INVOICE.invoiceNumber}</div>
+            <div style="margin-left: 30px;">
+              <div class="header">
+                <div>
+                  <div class="company-name">${COMPANY_INFO.name}</div>
+                  <div class="contact">${COMPANY_INFO.phone}</div>
+                  <div class="contact">${COMPANY_INFO.email}</div>
+                </div>
+                <div class="logo">
+                  <svg width="60" height="50" viewBox="0 0 60 50">
+                    <path d="M30 5 L10 40" stroke="#333" stroke-width="2.5" fill="none"/>
+                    <path d="M30 5 L50 40" stroke="#333" stroke-width="2.5" fill="none"/>
+                    <path d="M18 28 L42 28" stroke="#333" stroke-width="2.5" fill="none"/>
+                  </svg>
+                  <div class="logo-text">ALIGN</div>
+                </div>
+              </div>
+              <div class="separator"></div>
+              <div class="bill-section">
+                <div>
+                  <div class="label">Bill To</div>
+                  <div class="value">${SAMPLE_INVOICE.client.company}</div>
+                </div>
+                <div style="text-align: right;">
+                  <span class="label">Invoice Date </span>
+                  <span class="value">${SAMPLE_INVOICE.issueDate}</span>
+                </div>
+              </div>
+              <div class="table-header">
+                <span style="flex: 1;">Description</span>
+                <span style="width: 100px;">Amount</span>
+              </div>
+              <div class="table-body">
+                <div class="desc-col">${SAMPLE_INVOICE.description.replace(/\n/g, '<br>')}</div>
+                <div class="amount-col">${formatCurrency(SAMPLE_INVOICE.subtotal)}</div>
+              </div>
+              <div class="totals">
+                <div class="totals-box">
+                  <div class="total-row main">
+                    <span>Total</span>
+                    <span>${formatCurrency(SAMPLE_INVOICE.totalAmount)}</span>
+                  </div>
+                  ${SAMPLE_INVOICE.amountPaid > 0 ? `
+                  <div class="total-row">
+                    <span>Amount Paid</span>
+                    <span>${formatCurrency(SAMPLE_INVOICE.amountPaid)}</span>
+                  </div>
+                  <div class="total-row balance-due">
+                    <span>Balance Due</span>
+                    <span>${formatCurrency(balanceDue)}</span>
+                  </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 2: Terms -->
+          <div class="page">
+            <div class="terms-title">Terms & Conditions</div>
+            <div class="terms-text">
+              <p>Any additional items requested beyond the scope of this package will be subject to separate charges. Feel free to reach out if you have any questions or if you require further customization. Engineering and permitting is not included.</p>
+              <p style="margin-top: 15px;">Payment is due within 15 days.</p>
+              <p style="margin-top: 15px; font-weight: 500;">Thank you for your business!</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+
+    // Wait for content to load then print
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -56,9 +247,9 @@ function InvoicePreviewModal({ isOpen, onClose }: InvoicePreviewModalProps) {
       title="Invoice Template Preview"
       size="xl"
     >
-      <div className="space-y-4">
+      <div className="space-y-4" id="invoice-print-content">
         {/* Preview Notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 no-print">
           <p className="text-sm text-amber-800 flex items-center gap-2">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -267,9 +458,9 @@ function InvoicePreviewModal({ isOpen, onClose }: InvoicePreviewModalProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex justify-end gap-3 pt-2 no-print">
           <button
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
             style={{
               backgroundColor: COLORS.primary,
