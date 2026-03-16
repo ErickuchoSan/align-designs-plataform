@@ -30,7 +30,6 @@ interface UseWorkflowDataReturn {
   // Payment data
   payments: Payment[];
   pendingAmount: number;
-  loadingPayments: boolean;
   // Completion data
   checklistData: any;
   checklistLoading: boolean;
@@ -58,7 +57,6 @@ export function useWorkflowData(project: Project, onUpdate: () => void): UseWork
   // Payment data
   const [payments, setPayments] = useState<Payment[]>([]);
   const [pendingAmount, setPendingAmount] = useState(0);
-  const [loadingPayments, setLoadingPayments] = useState(false);
 
   // Completion data
   const [checklistData, setChecklistData] = useState<any>(null);
@@ -163,7 +161,6 @@ export function useWorkflowData(project: Project, onUpdate: () => void): UseWork
     loadingInvoices,
     payments,
     pendingAmount,
-    loadingPayments,
     checklistData,
     checklistLoading,
     fetchCompletionStatus,

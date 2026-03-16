@@ -73,7 +73,6 @@ export default function ProjectDetailsPage() {
     setNameFilter,
     typeFilter,
     setTypeFilter,
-    availableTypes,
     refreshTypes,
   } = useProjectFiles(projectId);
 

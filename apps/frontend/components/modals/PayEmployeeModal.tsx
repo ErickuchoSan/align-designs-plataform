@@ -112,8 +112,9 @@ export default function PayEmployeeModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Record Employee Payment" size="md">
       <form id="pay-employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className={FORM_LABEL}>Select Employee</label>
+          <label htmlFor="pay-employee-employeeId" className={FORM_LABEL}>Select Employee</label>
           <select
+            id="pay-employee-employeeId"
             {...register('employeeId', { required: 'Please select an employee' })}
             disabled={loadingEmployees}
             className={cn(errors.employeeId ? inputErrorClass : inputClass, 'disabled:bg-stone-100')}
@@ -161,10 +162,11 @@ export default function PayEmployeeModal({
         )}
 
         <div>
-          <label className={FORM_LABEL}>Amount (USD)</label>
+          <label htmlFor="pay-employee-amount" className={FORM_LABEL}>Amount (USD)</label>
           <div className="relative">
             <span className="absolute left-3 top-2 text-stone-500">$</span>
             <input
+              id="pay-employee-amount"
               type="number"
               step="0.01"
               {...register('amount', { required: 'Amount is required' })}
@@ -177,8 +179,9 @@ export default function PayEmployeeModal({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className={FORM_LABEL}>Payment Method</label>
+            <label htmlFor="pay-employee-method" className={FORM_LABEL}>Payment Method</label>
             <input
+              id="pay-employee-method"
               type="text"
               {...register('paymentMethod')}
               disabled
@@ -186,8 +189,9 @@ export default function PayEmployeeModal({
             />
           </div>
           <div>
-            <label className={FORM_LABEL}>Payment Date</label>
+            <label htmlFor="pay-employee-date" className={FORM_LABEL}>Payment Date</label>
             <input
+              id="pay-employee-date"
               type="date"
               {...register('paymentDate', { required: 'Date is required' })}
               className={errors.paymentDate ? inputErrorClass : inputClass}
@@ -197,8 +201,9 @@ export default function PayEmployeeModal({
         </div>
 
         <div>
-          <label className={FORM_LABEL}>Description / Notes (Optional)</label>
+          <label htmlFor="pay-employee-description" className={FORM_LABEL}>Description / Notes (Optional)</label>
           <textarea
+            id="pay-employee-description"
             rows={2}
             {...register('description')}
             className={inputClass}

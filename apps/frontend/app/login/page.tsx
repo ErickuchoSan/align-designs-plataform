@@ -22,7 +22,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // User data
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false);
 
   // Forgot Password Modal
@@ -152,7 +151,6 @@ export default function LoginPage() {
   const resetToEmail = () => {
     setStep('email');
     setEmail('');
-    setUserRole(null);
     setRequiresPasswordSetup(false);
   };
 

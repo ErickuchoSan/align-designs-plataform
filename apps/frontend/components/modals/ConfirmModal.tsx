@@ -82,7 +82,7 @@ export default function ConfirmModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size={showDetailedWarning ? "md" : "sm"}>
       <div className={showDetailedWarning ? "" : "text-center"}>
-        <div className={`mx-auto flex items-center justify-center h-14 w-14 rounded-full ${style.iconBg} mb-4 ${showDetailedWarning ? '' : ''}`}>
+        <div className={`mx-auto flex items-center justify-center h-14 w-14 rounded-full ${style.iconBg} mb-4`}>
           <span className="text-3xl">{style.icon}</span>
         </div>
 

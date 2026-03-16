@@ -74,8 +74,8 @@ export default function FileUploadModal({
             <div className="mt-2 text-sm text-stone-700 max-h-32 overflow-y-auto">
               <p className="font-medium mb-1">{selectedFiles.length} file(s) selected:</p>
               <ul className="list-disc list-inside">
-                {selectedFiles.map((file, idx) => (
-                  <li key={idx} className="truncate">
+                {selectedFiles.map((file) => (
+                  <li key={`${file.name}-${file.size}-${file.lastModified}`} className="truncate">
                     {file.name} ({formatFileSize(file.size)})
                   </li>
                 ))}

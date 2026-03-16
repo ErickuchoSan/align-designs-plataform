@@ -91,7 +91,7 @@ export default function FileEditModal({
               <p className="font-medium mb-1 text-emerald-700">{editFiles.length} new file(s) selected:</p>
               <ul className="list-disc list-inside">
                 {editFiles.map((f, idx) => (
-                  <li key={idx} className="truncate">
+                  <li key={`${f.name}-${f.size}-${f.lastModified}`} className="truncate">
                     {idx === 0 && file?.filename ?
                       <span className="font-semibold text-amber-700">[Replaces Current] </span> :
                       <span className="font-semibold text-blue-700">[New Entry] </span>

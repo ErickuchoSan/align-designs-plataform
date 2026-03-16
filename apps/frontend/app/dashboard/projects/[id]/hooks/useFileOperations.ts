@@ -57,7 +57,6 @@ export function useFileOperations(
       // Validate all files first
       for (const file of files) {
         if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
-          const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
           const maxSizeGB = (FILE_UPLOAD.MAX_SIZE_MB / 1000).toFixed(0);
           onErrorRef.current(`File "${file.name}" exceeds size limit of ${maxSizeGB}GB.`);
           return false;

@@ -120,7 +120,7 @@ function CreateProjectModal({
             value={formData.initialAmountRequired || ''}
             onChange={(e) => onFormChange({
               ...formData,
-              initialAmountRequired: e.target.value ? parseFloat(e.target.value) : undefined,
+              initialAmountRequired: e.target.value ? Number.parseFloat(e.target.value) : undefined,
             })}
             onWheel={(e) => (e.target as HTMLInputElement).blur()}
             className={`w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 ${styles.focusRing} transition-all ${styles.input} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}

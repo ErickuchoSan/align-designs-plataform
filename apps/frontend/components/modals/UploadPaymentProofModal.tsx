@@ -135,10 +135,11 @@ export default function UploadPaymentProofModal({
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
 
                     <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-invoiceId" className="block text-sm font-medium text-stone-700 mb-1">
                             Select Invoice to Pay
                         </label>
                         <select
+                            id="payment-proof-invoiceId"
                             {...register('invoiceId', { required: 'Please select an invoice' })}
                             onChange={handleInvoiceChange}
                             disabled={loadingInvoices}
@@ -157,12 +158,13 @@ export default function UploadPaymentProofModal({
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-amount" className="block text-sm font-medium text-stone-700 mb-1">
                             Amount Paid (USD)
                         </label>
                         <div className="relative">
                             <span className="absolute left-3 top-2 text-stone-500">$</span>
                             <input
+                                id="payment-proof-amount"
                                 type="number"
                                 step="0.01"
                                 {...register('amount', { required: 'Amount is required' })}
@@ -175,10 +177,11 @@ export default function UploadPaymentProofModal({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label htmlFor="payment-proof-method" className="block text-sm font-medium text-stone-700 mb-1">
                                 Payment Method
                             </label>
                             <select
+                                id="payment-proof-method"
                                 {...register('paymentMethod')}
                                 className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                             >
@@ -187,10 +190,11 @@ export default function UploadPaymentProofModal({
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label htmlFor="payment-proof-date" className="block text-sm font-medium text-stone-700 mb-1">
                                 Payment Date
                             </label>
                             <input
+                                id="payment-proof-date"
                                 type="date"
                                 {...register('paymentDate', { required: 'Date is required' })}
                                 className={cn(INPUT_BASE, errors.paymentDate ? INPUT_VARIANTS.error : INPUT_VARIANTS.default)}
@@ -200,10 +204,11 @@ export default function UploadPaymentProofModal({
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-reference" className="block text-sm font-medium text-stone-700 mb-1">
                             Reference Number (Optional)
                         </label>
                         <input
+                            id="payment-proof-reference"
                             type="text"
                             {...register('referenceNumber')}
                             className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
@@ -213,10 +218,11 @@ export default function UploadPaymentProofModal({
 
                     {/* File Upload Placeholder */}
                     <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-file" className="block text-sm font-medium text-stone-700 mb-1">
                             Payment Proof (Screenshot/PDF)
                         </label>
                         <input
+                            id="payment-proof-file"
                             type="file"
                             accept="image/*,application/pdf"
                             onChange={handleFileChange}

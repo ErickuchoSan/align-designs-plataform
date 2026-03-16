@@ -133,8 +133,9 @@ export default function RecordPaymentModal({
                 {/* Employee Selection */}
                 {isEmployeePayment && (
                     <div>
-                        <label className="block mb-2 text-sm font-medium text-stone-700">Employee</label>
+                        <label htmlFor="record-payment-employee" className="block mb-2 text-sm font-medium text-stone-700">Employee</label>
                         <select
+                            id="record-payment-employee"
                             required
                             className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
                             value={selectedEmployeeId}
@@ -182,12 +183,13 @@ export default function RecordPaymentModal({
                 )}
 
                 <div>
-                    <label className="block mb-2 text-sm font-medium text-stone-700">Amount</label>
+                    <label htmlFor="record-payment-amount" className="block mb-2 text-sm font-medium text-stone-700">Amount</label>
                     <div className="relative rounded-md shadow-sm">
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <span className="text-stone-500 sm:text-sm">$</span>
                         </div>
                         <input
+                            id="record-payment-amount"
                             type="number"
                             step="0.01"
                             min="0"
@@ -206,8 +208,9 @@ export default function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
+                    <label htmlFor="record-payment-date" className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
                     <input
+                        id="record-payment-date"
                         type="date"
                         required
                         value={date}
@@ -217,8 +220,9 @@ export default function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label className="block mb-2 text-sm font-medium text-stone-700">Receipt (Optional)</label>
+                    <label htmlFor="record-payment-receipt" className="block mb-2 text-sm font-medium text-stone-700">Receipt (Optional)</label>
                     <input
+                        id="record-payment-receipt"
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -227,8 +231,9 @@ export default function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
+                    <label htmlFor="record-payment-notes" className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
                     <textarea
+                        id="record-payment-notes"
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}

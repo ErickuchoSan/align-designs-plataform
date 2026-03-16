@@ -108,7 +108,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   // Separate effect for restoring focus when modal closes
   useEffect(() => {
     // When modal closes, restore focus to the previously focused element
-    if (!isOpen && previousActiveElement.current && previousActiveElement.current.focus) {
+    if (!isOpen && previousActiveElement.current?.focus) {
       previousActiveElement.current.focus();
       previousActiveElement.current = null;
     }
