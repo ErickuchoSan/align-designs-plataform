@@ -20,7 +20,6 @@ import InvoicePreviewModal from './InvoicePreviewModal';
 interface PaymentsStageContentProps {
   projectId: string;
   userRole: 'ADMIN' | 'CLIENT' | 'EMPLOYEE';
-  userId: string;
   onGenerateInvoice?: () => void;
   onPayEmployee?: () => void;
   onUploadPaymentProof?: () => void;
@@ -34,7 +33,7 @@ function PaymentsStageContent({
   onPayEmployee,
   onUploadPaymentProof,
   onRefresh,
-}: PaymentsStageContentProps) {
+}: Readonly<PaymentsStageContentProps>) {
   // Data hook
   const {
     invoices,

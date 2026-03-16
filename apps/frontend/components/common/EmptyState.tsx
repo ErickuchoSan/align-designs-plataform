@@ -16,7 +16,7 @@ function EmptyState({
   description,
   action,
   className = '',
-}: EmptyStateProps) {
+}: Readonly<EmptyStateProps>) {
   return (
     <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}>
       {icon && (

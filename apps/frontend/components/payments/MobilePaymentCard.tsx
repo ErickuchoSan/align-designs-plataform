@@ -21,7 +21,7 @@ interface MobilePaymentCardProps {
   onViewReceipt?: (payment: Payment) => void;
 }
 
-function MobilePaymentCard({ payment, isAdmin, onViewReceipt }: MobilePaymentCardProps) {
+function MobilePaymentCard({ payment, isAdmin, onViewReceipt }: Readonly<MobilePaymentCardProps>) {
   const formattedAmount = useMemo(() => formatCurrency(payment.amount), [payment.amount]);
   const formattedDate = useMemo(() => formatDateSimple(payment.paymentDate), [payment.paymentDate]);
 

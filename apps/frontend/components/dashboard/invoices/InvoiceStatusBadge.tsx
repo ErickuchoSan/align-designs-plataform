@@ -15,7 +15,7 @@ interface InvoiceStatusBadgeProps {
   status: InvoiceStatus;
 }
 
-export default memo(function InvoiceStatusBadge({ status }: InvoiceStatusBadgeProps) {
+export default memo(function InvoiceStatusBadge({ status }: Readonly<InvoiceStatusBadgeProps>) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG[InvoiceStatus.DRAFT];
 
   return <Badge color={config.color}>{config.label}</Badge>;

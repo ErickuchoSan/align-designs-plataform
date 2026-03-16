@@ -37,7 +37,7 @@ function NextStepIndicator({
   userRole,
   hasUnpaidInvoices = false,
   onAction,
-}: NextStepIndicatorProps) {
+}: Readonly<NextStepIndicatorProps>) {
   const nextStep = useMemo((): NextStep | null => {
     // Priority 1: Payment required
     if (projectStatus === ProjectStatus.WAITING_PAYMENT) {

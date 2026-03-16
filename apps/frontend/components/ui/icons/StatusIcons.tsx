@@ -15,7 +15,7 @@ const sizeClasses = {
   lg: 'w-5 h-5',
 };
 
-export function CheckCircleIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function CheckCircleIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -34,7 +34,7 @@ export function CheckCircleIcon({ className = '', size = 'md', ...props }: IconP
   );
 }
 
-export function CheckIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function CheckIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -48,7 +48,7 @@ export function CheckIcon({ className = '', size = 'md', ...props }: IconProps) 
   );
 }
 
-export function ErrorCircleIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function ErrorCircleIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -67,7 +67,7 @@ export function ErrorCircleIcon({ className = '', size = 'md', ...props }: IconP
   );
 }
 
-export function WarningIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function WarningIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -86,7 +86,7 @@ export function WarningIcon({ className = '', size = 'md', ...props }: IconProps
   );
 }
 
-export function CloseIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function CloseIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -100,7 +100,7 @@ export function CloseIcon({ className = '', size = 'md', ...props }: IconProps) 
   );
 }
 
-export function SpinnerIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function SpinnerIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], 'animate-spin', className)}
@@ -118,7 +118,7 @@ export function SpinnerIcon({ className = '', size = 'md', ...props }: IconProps
   );
 }
 
-export function ChevronDownIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function ChevronDownIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -132,7 +132,7 @@ export function ChevronDownIcon({ className = '', size = 'md', ...props }: IconP
   );
 }
 
-export function EyeIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function EyeIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -157,7 +157,7 @@ export function EyeIcon({ className = '', size = 'md', ...props }: IconProps) {
   );
 }
 
-export function EyeOffIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function EyeOffIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -176,7 +176,7 @@ export function EyeOffIcon({ className = '', size = 'md', ...props }: IconProps)
   );
 }
 
-export function ChevronUpDownIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function ChevronUpDownIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}
@@ -191,7 +191,7 @@ export function ChevronUpDownIcon({ className = '', size = 'md', ...props }: Ico
   );
 }
 
-export function SearchIcon({ className = '', size = 'md', ...props }: IconProps) {
+export function SearchIcon({ className = '', size = 'md', ...props }: Readonly<IconProps>) {
   return (
     <svg
       className={cn(sizeClasses[size], className)}

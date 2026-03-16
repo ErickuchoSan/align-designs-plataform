@@ -14,7 +14,7 @@ import type { IProjectRepository } from './repositories/project.repository.inter
 import type { IUserRepository } from '../users/repositories/user.repository.interface';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Role, Stage, ProjectStatus, NotificationType } from '@prisma/client';
+import { Role, Stage, ProjectStatus } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 import { ProjectResponse } from '../common/interfaces/project-response.interface';

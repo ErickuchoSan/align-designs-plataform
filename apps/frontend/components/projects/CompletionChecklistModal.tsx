@@ -30,7 +30,7 @@ export default function CompletionChecklistModal({
     checklist,
     counts,
     onArchive
-}: CompletionChecklistModalProps) {
+}: Readonly<CompletionChecklistModalProps>) {
     return (
         <Modal
             isOpen={isOpen}

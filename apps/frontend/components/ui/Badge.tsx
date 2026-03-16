@@ -16,7 +16,7 @@ export function Badge({
   color = 'gray',
   withBorder = false,
   className,
-}: BadgeProps) {
+}: Readonly<BadgeProps>) {
   return (
     <span
       className={cn(BADGE_BASE, BADGE_VARIANTS[variant], BADGE_COLORS[color], withBorder && 'border', className)}

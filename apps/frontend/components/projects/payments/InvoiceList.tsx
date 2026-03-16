@@ -40,7 +40,7 @@ interface InvoiceListProps {
   isAdmin: boolean;
 }
 
-function InvoiceList({ invoices, isAdmin }: InvoiceListProps) {
+function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
   const [loadingInvoiceId, setLoadingInvoiceId] = useState<string | null>(null);
 
   const handleViewInvoice = async (invoice: Invoice) => {

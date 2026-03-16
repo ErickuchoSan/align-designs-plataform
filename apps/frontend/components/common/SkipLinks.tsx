@@ -29,7 +29,7 @@ const DEFAULT_LINKS: SkipLink[] = [
  *
  * Links are visually hidden but appear when focused.
  */
-function SkipLinks({ links = DEFAULT_LINKS }: SkipLinksProps) {
+function SkipLinks({ links = DEFAULT_LINKS }: Readonly<SkipLinksProps>) {
   return (
     <nav aria-label="Skip links" className="sr-only focus-within:not-sr-only">
       <ul className="fixed top-0 left-0 z-[9999] flex gap-2 p-2 bg-white shadow-lg">

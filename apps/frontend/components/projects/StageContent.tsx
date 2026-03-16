@@ -85,7 +85,6 @@ function StageContent({
           key={`payments-${projectStatus}-${amountPaid}-${paymentRefreshKey}`}
           projectId={projectId}
           userRole={userRole as 'ADMIN' | 'CLIENT' | 'EMPLOYEE'}
-          userId={userId}
           onGenerateInvoice={onGenerateInvoice}
           onPayEmployee={onPayEmployee}
           onUploadPaymentProof={onUploadPaymentProof}

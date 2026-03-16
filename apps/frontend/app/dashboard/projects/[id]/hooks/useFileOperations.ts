@@ -192,7 +192,7 @@ export function useFileOperations(
 
   // Helper function to upload additional files
   const uploadAdditionalFiles = useCallback(
-    async (files: File[], comment: string, stage: string): Promise<boolean> => {
+    async (files: File[], comment: string, stage?: string): Promise<boolean> => {
       let allSuccess = true;
       for (const file of files) {
         try {

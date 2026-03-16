@@ -34,7 +34,7 @@ function SearchableSelect({
   required = false,
   disabled = false,
   className = '',
-}: SearchableSelectProps) {
+}: Readonly<SearchableSelectProps>) {
   const [query, setQuery] = useState('');
 
   const selectedOption = useMemo(() => options.find((opt) => opt.id === value) || null, [options, value]);

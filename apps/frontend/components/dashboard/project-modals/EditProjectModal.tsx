@@ -62,7 +62,7 @@ function EditProjectModal({
   onSubmit,
   onConfirm,
   theme = 'navy',
-}: EditProjectModalProps) {
+}: Readonly<EditProjectModalProps>) {
   const styles = PROJECT_THEMES[theme];
 
   // Include both available employees AND currently assigned employees

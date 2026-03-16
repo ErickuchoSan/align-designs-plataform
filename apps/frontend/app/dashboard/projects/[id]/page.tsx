@@ -10,7 +10,6 @@ import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { useProjectFiles } from './hooks/useProjectFiles';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useFileModals } from './hooks/useFileModals';
-import { useFileFilters } from './hooks/useFileFilters';
 import type { FileData } from './hooks/useProjectFiles';
 
 // Components

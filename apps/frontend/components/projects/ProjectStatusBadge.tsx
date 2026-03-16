@@ -19,7 +19,7 @@ interface ProjectStatusBadgeProps {
 export const ProjectStatusBadge = memo(function ProjectStatusBadge({
   status,
   className = '',
-}: ProjectStatusBadgeProps) {
+}: Readonly<ProjectStatusBadgeProps>) {
   const label = PROJECT_STATUS_LABELS[status];
   const color = PROJECT_STATUS_COLORS[status] as BadgeColor;
 

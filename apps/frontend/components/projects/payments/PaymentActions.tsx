@@ -16,7 +16,7 @@ function PaymentActions({
   onPayEmployee,
   onUploadPaymentProof,
   onPreviewInvoice,
-}: PaymentActionsProps) {
+}: Readonly<PaymentActionsProps>) {
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
       {userRole === 'ADMIN' && (

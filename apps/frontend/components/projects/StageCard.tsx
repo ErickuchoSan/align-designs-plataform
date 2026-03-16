@@ -20,7 +20,7 @@ interface StageCardProps {
  *
  * Optimized with memoization (rendered in loop within ProjectStagesView)
  */
-function StageCard({ stage, isActive, onClick }: StageCardProps) {
+function StageCard({ stage, isActive, onClick }: Readonly<StageCardProps>) {
   // Memoize permission badge to prevent recreation on every render
   const permissionBadge = useMemo(() => {
     if (stage.permissions.canWrite) {

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PaymentsService } from '@/services/payments.service';
 import { InvoicesService } from '@/services/invoices.service';
 import { ProjectsService } from '@/services/projects.service';
-import { Payment, PaymentType } from '@/types/payments';
+import { Payment } from '@/types/payments';
 import { Invoice } from '@/types/invoice';
 import { Project } from '@/types';
 import { toast } from '@/lib/toast';

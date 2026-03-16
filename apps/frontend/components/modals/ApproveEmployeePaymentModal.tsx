@@ -16,7 +16,7 @@ export default function ApproveEmployeePaymentModal({
     onClose,
     onConfirm,
     isLoading,
-}: ApproveEmployeePaymentModalProps) {
+}: Readonly<ApproveEmployeePaymentModalProps>) {
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 

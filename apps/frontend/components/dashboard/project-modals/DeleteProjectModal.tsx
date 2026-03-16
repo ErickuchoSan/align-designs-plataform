@@ -22,7 +22,7 @@ function DeleteProjectModal({
   onClose,
   onProjectChange,
   onConfirm,
-}: DeleteProjectModalProps) {
+}: Readonly<DeleteProjectModalProps>) {
   const hasPayments = Number(project?.amountPaid || 0) > 0;
   const hasEmployees = project?.employees && project.employees.length > 0;
   const showDetailedWarning = hasPayments || hasEmployees;

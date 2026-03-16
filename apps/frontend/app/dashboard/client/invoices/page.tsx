@@ -6,7 +6,6 @@ import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
-import Link from 'next/link';
 
 // NOTE: We need to update InvoicesService to support "getMyInvoices" or assume API handles it via user session
 // For now, let's use getAll({ clientId: 'current-user-id' }) but we need current user ID. 

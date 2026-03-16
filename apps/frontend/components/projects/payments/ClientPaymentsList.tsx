@@ -23,7 +23,7 @@ interface ClientPaymentsListProps {
   onViewReceipt: (payment: Payment) => void;
 }
 
-function ClientPaymentsList({ payments, onViewReceipt }: ClientPaymentsListProps) {
+function ClientPaymentsList({ payments, onViewReceipt }: Readonly<ClientPaymentsListProps>) {
   if (payments.length === 0) {
     return (
       <div className="text-center py-8">
@@ -89,7 +89,7 @@ interface PendingPaymentsListProps {
 export const PendingPaymentsList = memo(function PendingPaymentsList({
   payments,
   onReviewPayment,
-}: PendingPaymentsListProps) {
+}: Readonly<PendingPaymentsListProps>) {
   const pendingPayments = payments.filter((p) => p.status === 'PENDING_APPROVAL');
 
   if (pendingPayments.length === 0) {

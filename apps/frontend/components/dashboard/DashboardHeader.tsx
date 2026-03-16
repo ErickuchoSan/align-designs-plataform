@@ -19,7 +19,7 @@ export default function DashboardHeader({
   showBackButton = false,
   backUrl = '/dashboard',
   children
-}: DashboardHeaderProps) {
+}: Readonly<DashboardHeaderProps>) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { isOpen: showProfileMenu, toggle: toggleProfileMenu, close: closeProfileMenu, menuRef } = useProfileMenu();

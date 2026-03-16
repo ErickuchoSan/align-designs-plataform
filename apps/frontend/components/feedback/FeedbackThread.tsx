@@ -12,7 +12,7 @@ interface FeedbackThreadProps {
     currentUserId: string; // To determine side
 }
 
-export function FeedbackThread({ cycle, onUpdate, currentUserId }: FeedbackThreadProps) {
+export function FeedbackThread({ cycle, onUpdate, currentUserId }: Readonly<FeedbackThreadProps>) {
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
 

@@ -28,7 +28,7 @@ function FormModal({
   error,
   children,
   size = 'md',
-}: FormModalProps) {
+}: Readonly<FormModalProps>) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size={size}>
       <form onSubmit={onSubmit} className="space-y-4">

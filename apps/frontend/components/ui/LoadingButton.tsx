@@ -26,7 +26,7 @@ export default function LoadingButton({
   children,
   className = '',
   ...props
-}: LoadingButtonProps) {
+}: Readonly<LoadingButtonProps>) {
   const baseStyles =
     'font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center';
 

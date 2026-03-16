@@ -25,7 +25,7 @@ function StageHeader({
   onOpenUploadModal,
   onOpenCommentModal,
   onDownload,
-}: StageHeaderProps) {
+}: Readonly<StageHeaderProps>) {
   const isAdmin = userRole === 'ADMIN';
   const isEmployee = userRole === 'EMPLOYEE';
 

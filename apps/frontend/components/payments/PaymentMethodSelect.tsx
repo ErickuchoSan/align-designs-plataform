@@ -6,7 +6,7 @@ interface PaymentMethodSelectProps {
     disabled?: boolean;
 }
 
-export function PaymentMethodSelect({ value, onChange, disabled }: PaymentMethodSelectProps) {
+export function PaymentMethodSelect({ value, onChange, disabled }: Readonly<PaymentMethodSelectProps>) {
     return (
         <div className="grid grid-cols-2 gap-4">
             {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((method) => (

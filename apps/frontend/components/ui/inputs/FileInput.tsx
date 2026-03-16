@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { FILE_UPLOAD } from '@/lib/constants/ui.constants';
 
 interface FileInputProps {
+  id?: string;
   onChange: (files: File[] | null) => void;
   accept?: string;
   className?: string;
@@ -21,7 +22,7 @@ export default function FileInput({
   placeholder = 'No file selected',
   maxSizeMB = FILE_UPLOAD.MAX_SIZE_MB,
   multiple = false
-}: FileInputProps) {
+}: Readonly<FileInputProps>) {
   const [fileNames, setFileNames] = useState<string>('');
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);

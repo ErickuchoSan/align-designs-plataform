@@ -27,7 +27,7 @@ function StageFileItem({
   onDelete,
   onOpenCommentModal,
   canDeleteFile,
-}: StageFileItemProps) {
+}: Readonly<StageFileItemProps>) {
   const isAdmin = userRole === 'ADMIN';
   const isEmployee = userRole === 'EMPLOYEE';
   const isSubmittedStage = stage === Stage.SUBMITTED;

@@ -22,7 +22,7 @@ interface ProjectEmployee {
     employee?: User;
 }
 
-export default function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmployees, onSuccess }: ManageEmployeesModalProps) {
+export default function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmployees, onSuccess }: Readonly<ManageEmployeesModalProps>) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     // DRY: Use useFetchOnOpen for automatic fetch when modal opens

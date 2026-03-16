@@ -35,7 +35,7 @@ export default function PasswordInput({
   required = false,
   placeholder = 'Password',
   showStrengthIndicator = true,
-}: PasswordInputProps) {
+}: Readonly<PasswordInputProps>) {
   const [showPassword, setShowPassword] = useState(false);
 
   // Use centralized password strength calculation (SSOT)

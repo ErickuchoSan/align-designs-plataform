@@ -48,7 +48,7 @@ function CreateProjectModal({
   onFormChange,
   onSubmit,
   theme = 'navy',
-}: CreateProjectModalProps) {
+}: Readonly<CreateProjectModalProps>) {
   const styles = PROJECT_THEMES[theme];
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { toast } from '@/lib/toast';
 import { Payment, PaymentStatus } from '@/types/payments';
 import { PaymentsService } from '@/services/payments.service';
@@ -13,7 +13,7 @@ function getStatusBadgeClass(status: PaymentStatus): string {
     [PaymentStatus.CONFIRMED]: 'bg-green-100 text-green-800',
     [PaymentStatus.REJECTED]: 'bg-red-100 text-red-800',
     [PaymentStatus.PENDING_APPROVAL]: 'bg-yellow-100 text-yellow-800',
-    [PaymentStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+    [PaymentStatus.PENDING_CONFIRMATION]: 'bg-blue-100 text-blue-800',
   };
   return statusStyles[status] || 'bg-gray-100 text-gray-800';
 }
@@ -30,7 +30,7 @@ export default function AdminPaymentReviewModal({
   onClose,
   payment,
   onSuccess,
-}: AdminPaymentReviewModalProps) {
+}: Readonly<AdminPaymentReviewModalProps>) {
   // DRY: Use useAsyncOperation for approve/reject handling
   const { loading: processing, execute } = useAsyncOperation();
   const [rejecting, setRejecting] = useState(false);

@@ -21,7 +21,7 @@ export default function PhoneInput({
   required = false,
   placeholder = 'Phone number',
   id,
-}: PhoneInputProps) {
+}: Readonly<PhoneInputProps>) {
   const [countryCode, setCountryCode] = useState('+1');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');

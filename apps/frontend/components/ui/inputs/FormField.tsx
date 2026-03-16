@@ -22,7 +22,7 @@ export function FormField({
   htmlFor,
   children,
   className,
-}: FormFieldProps) {
+}: Readonly<FormFieldProps>) {
   const id = useId();
   const errorId = error ? `${id}-error` : undefined;
   const hintId = hint && !error ? `${id}-hint` : undefined;

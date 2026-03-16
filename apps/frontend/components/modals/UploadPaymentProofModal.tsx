@@ -34,7 +34,7 @@ export default function UploadPaymentProofModal({
     projectId,
     onSuccess,
     userId,
-}: UploadPaymentProofModalProps) {
+}: Readonly<UploadPaymentProofModalProps>) {
     const [file, setFile] = useState<File | null>(null);
 
     const {

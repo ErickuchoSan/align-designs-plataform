@@ -63,7 +63,7 @@ function ProjectStagesView({
   onGenerateInvoice,
   onPayEmployee,
   onUploadPaymentProof,
-}: ProjectStagesViewProps) {
+}: Readonly<ProjectStagesViewProps>) {
   const { user } = useAuth();
   const [stages, setStages] = useState<StageInfo[]>([]);
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);

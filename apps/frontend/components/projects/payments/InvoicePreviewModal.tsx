@@ -92,7 +92,7 @@ const SAMPLE_INVOICE = {
   status: 'PENDING' as 'PENDING' | 'PAID',
 };
 
-function InvoicePreviewModal({ isOpen, onClose }: InvoicePreviewModalProps) {
+function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalProps>) {
   const balanceDue = SAMPLE_INVOICE.totalAmount - SAMPLE_INVOICE.amountPaid;
   const isPaid = SAMPLE_INVOICE.status === 'PAID';
 

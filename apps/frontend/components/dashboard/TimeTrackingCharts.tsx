@@ -6,7 +6,7 @@ interface TimeTrackingChartsProps {
     projectId: string;
 }
 
-function TimeTrackingCharts({ projectId }: TimeTrackingChartsProps) {
+function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
     const [stats, setStats] = useState<ProjectTrackingStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');

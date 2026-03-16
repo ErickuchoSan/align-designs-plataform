@@ -67,7 +67,7 @@ function ProjectModals({
   editModal,
   deleteModal,
   theme = 'navy',
-}: ProjectModalsProps) {
+}: Readonly<ProjectModalsProps>) {
   return (
     <>
       <CreateProjectModal

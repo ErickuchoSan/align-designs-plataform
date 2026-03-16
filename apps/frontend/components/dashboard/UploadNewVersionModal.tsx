@@ -14,7 +14,7 @@ interface UploadNewVersionModalProps {
     onSuccess: () => void;
 }
 
-export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, projectId, onSuccess }: UploadNewVersionModalProps) {
+export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, projectId, onSuccess }: Readonly<UploadNewVersionModalProps>) {
     const [file, setFile] = useState<File | null>(null);
     const [notes, setNotes] = useState('');
 
