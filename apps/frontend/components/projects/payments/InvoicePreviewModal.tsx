@@ -9,33 +9,45 @@ interface InvoicePreviewModalProps {
   onClose: () => void;
 }
 
+// Color scheme matching PDF invoice design
+const COLORS = {
+  primary: '#D4A843', // Golden/Orange for headers
+  text: '#333333',
+  lightText: '#666666',
+  paid: '#C53030', // Red for PAID stamp
+  border: '#E5E5E5',
+  white: '#FFFFFF',
+};
+
+// Company information
+const COMPANY_INFO = {
+  name: 'Align Designs LLC',
+  phone: '(956)534-4110',
+  email: 'Alfonso21guz@gmail.com',
+};
+
 // Sample data for preview - this shows how the invoice will look
 const SAMPLE_INVOICE = {
   invoiceNumber: 'INV-2026-PREVIEW',
-  issueDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+  issueDate: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
   client: {
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    phone: '+1 (555) 123-4567',
+    name: 'Danaby Rentals Inc.',
+    company: 'Danaby Rentals Inc.',
   },
   project: {
-    name: 'Website Redesign Project',
+    name: 'Architectural Design Package',
   },
-  items: [
-    { description: 'UI/UX Design Services', amount: 2500 },
-    { description: 'Frontend Development', amount: 3500 },
-    { description: 'Backend Integration', amount: 2000 },
-  ],
+  description: 'Architectural Design Package\n\nProject services as agreed.',
   subtotal: 8000,
-  taxRate: 0,
-  taxAmount: 0,
   totalAmount: 8000,
   amountPaid: 3000,
+  status: 'PENDING' as 'PENDING' | 'PAID',
 };
 
 function InvoicePreviewModal({ isOpen, onClose }: InvoicePreviewModalProps) {
   const balanceDue = SAMPLE_INVOICE.totalAmount - SAMPLE_INVOICE.amountPaid;
+  const isPaid = SAMPLE_INVOICE.status === 'PAID';
 
   return (
     <Modal
@@ -55,108 +67,216 @@ function InvoicePreviewModal({ isOpen, onClose }: InvoicePreviewModalProps) {
           </p>
         </div>
 
-        {/* Invoice Document */}
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6 space-y-6">
+        {/* Invoice Document - Matching PDF Design */}
+        <div className="bg-white border-2 border-stone-200 rounded-lg shadow-lg overflow-hidden relative">
+          {/* Vertical Invoice Number (Left Side) */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center"
+            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+          >
+            <span
+              className="text-sm font-bold tracking-wider"
+              style={{ color: COLORS.primary }}
+            >
+              Invoice {SAMPLE_INVOICE.invoiceNumber}
+            </span>
+          </div>
 
+          <div className="ml-8 p-6 space-y-6">
             {/* Header */}
-            <div className="flex justify-between border-b border-gray-200 pb-6">
+            <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-xl font-bold text-navy-900">Align Designs</h2>
-                <p className="text-gray-500 text-sm mt-1">Professional Design Services</p>
-                <p className="text-gray-500 text-sm">contact@aligndesigns.com</p>
+                {/* Company Name */}
+                <h2
+                  className="text-2xl font-bold"
+                  style={{ color: COLORS.primary }}
+                >
+                  {COMPANY_INFO.name}
+                </h2>
+                {/* Contact Info */}
+                <p className="text-sm mt-1" style={{ color: COLORS.text }}>{COMPANY_INFO.phone}</p>
+                <p className="text-sm" style={{ color: COLORS.text }}>{COMPANY_INFO.email}</p>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-navy-900">INVOICE</div>
-                <div className="text-sm text-gray-500 mt-1">{SAMPLE_INVOICE.invoiceNumber}</div>
+
+              {/* Stylized A Logo */}
+              <div className="flex flex-col items-center">
+                <svg width="60" height="50" viewBox="0 0 60 50" className="mb-1">
+                  <path
+                    d="M30 5 L10 40"
+                    stroke={COLORS.text}
+                    strokeWidth="2.5"
+                    fill="none"
+                  />
+                  <path
+                    d="M30 5 L50 40"
+                    stroke={COLORS.text}
+                    strokeWidth="2.5"
+                    fill="none"
+                  />
+                  <path
+                    d="M18 28 L42 28"
+                    stroke={COLORS.text}
+                    strokeWidth="2.5"
+                    fill="none"
+                  />
+                </svg>
+                <span className="text-xs font-bold tracking-widest" style={{ color: COLORS.text }}>
+                  ALIGN
+                </span>
               </div>
             </div>
 
-            {/* Bill To & Invoice Details */}
-            <div className="grid grid-cols-2 gap-6">
+            {/* Separator */}
+            <div className="border-t" style={{ borderColor: COLORS.border }} />
+
+            {/* Bill To and Invoice Date */}
+            <div className="flex justify-between">
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Bill To</h3>
-                <p className="font-medium text-gray-900">{SAMPLE_INVOICE.client.name}</p>
-                <p className="text-sm text-gray-500">{SAMPLE_INVOICE.client.email}</p>
-                <p className="text-sm text-gray-500">{SAMPLE_INVOICE.client.phone}</p>
+                <h3
+                  className="text-sm font-bold"
+                  style={{ color: COLORS.primary }}
+                >
+                  Bill To
+                </h3>
+                <p className="text-sm mt-1" style={{ color: COLORS.text }}>
+                  {SAMPLE_INVOICE.client.company}
+                </p>
               </div>
               <div className="text-right">
-                <div className="space-y-1">
-                  <div>
-                    <span className="text-xs font-semibold text-gray-500 uppercase">Issue Date: </span>
-                    <span className="text-sm text-gray-900">{SAMPLE_INVOICE.issueDate}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold text-gray-500 uppercase">Due Date: </span>
-                    <span className="text-sm text-gray-900">{SAMPLE_INVOICE.dueDate}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold text-gray-500 uppercase">Project: </span>
-                    <span className="text-sm text-gray-900">{SAMPLE_INVOICE.project.name}</span>
-                  </div>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: COLORS.primary }}
+                >
+                  Invoice Date{' '}
+                </span>
+                <span className="text-sm" style={{ color: COLORS.text }}>
+                  {SAMPLE_INVOICE.issueDate}
+                </span>
+              </div>
+            </div>
+
+            {/* Description Table */}
+            <div className="overflow-hidden rounded-sm">
+              {/* Table Header */}
+              <div
+                className="flex"
+                style={{ backgroundColor: COLORS.primary }}
+              >
+                <div className="flex-1 px-3 py-2">
+                  <span className="text-sm font-bold text-white">Description</span>
+                </div>
+                <div className="w-28 px-3 py-2">
+                  <span className="text-sm font-bold text-white">Amount</span>
+                </div>
+              </div>
+
+              {/* Table Body */}
+              <div className="flex border-l border-r border-b" style={{ borderColor: COLORS.border }}>
+                <div
+                  className="flex-1 px-3 py-4 whitespace-pre-line border-r"
+                  style={{ borderColor: COLORS.border, color: COLORS.text }}
+                >
+                  <p className="text-sm">{SAMPLE_INVOICE.description}</p>
+                </div>
+                <div className="w-28 px-3 py-4">
+                  <span className="text-sm" style={{ color: COLORS.text }}>
+                    {formatCurrency(SAMPLE_INVOICE.subtotal)}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Line Items */}
-            <div>
-              <table className="min-w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="text-right py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {SAMPLE_INVOICE.items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="py-3 text-sm text-gray-900">{item.description}</td>
-                      <td className="py-3 text-sm text-gray-900 text-right">{formatCurrency(item.amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* PAID Stamp (positioned over table if paid) */}
+            {isPaid && (
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 pointer-events-none">
+                <div
+                  className="border-4 rounded-lg px-8 py-4"
+                  style={{ borderColor: COLORS.paid }}
+                >
+                  <span
+                    className="text-5xl font-bold"
+                    style={{ color: COLORS.paid }}
+                  >
+                    PAID
+                  </span>
+                </div>
+              </div>
+            )}
 
-            {/* Totals */}
+            {/* Total Section */}
             <div className="flex justify-end">
               <div className="w-64 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">{formatCurrency(SAMPLE_INVOICE.subtotal)}</span>
+                <div className="flex justify-between text-base font-bold border-t pt-3" style={{ borderColor: COLORS.border }}>
+                  <span style={{ color: COLORS.text }}>Total</span>
+                  <span style={{ color: COLORS.text }}>{formatCurrency(SAMPLE_INVOICE.totalAmount)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax ({SAMPLE_INVOICE.taxRate}%)</span>
-                  <span className="text-gray-900">{formatCurrency(SAMPLE_INVOICE.taxAmount)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-base border-t border-gray-200 pt-2">
-                  <span className="text-navy-900">Total</span>
-                  <span className="text-navy-900">{formatCurrency(SAMPLE_INVOICE.totalAmount)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Amount Paid</span>
-                  <span className="text-green-600">-{formatCurrency(SAMPLE_INVOICE.amountPaid)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg border-t border-gray-200 pt-2">
-                  <span className="text-navy-900">Balance Due</span>
-                  <span className="text-navy-900">{formatCurrency(balanceDue)}</span>
-                </div>
+
+                {SAMPLE_INVOICE.amountPaid > 0 && !isPaid && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: COLORS.lightText }}>Amount Paid</span>
+                      <span style={{ color: COLORS.lightText }}>{formatCurrency(SAMPLE_INVOICE.amountPaid)}</span>
+                    </div>
+                    <div className="flex justify-between text-base font-bold">
+                      <span style={{ color: COLORS.paid }}>Balance Due</span>
+                      <span style={{ color: COLORS.paid }}>{formatCurrency(balanceDue)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-
-            {/* Footer */}
-            <div className="border-t border-gray-200 pt-4 text-center text-xs text-gray-500">
-              <p>Thank you for your business!</p>
-              <p className="mt-1">Payment is due within 30 days of invoice date.</p>
-            </div>
           </div>
+        </div>
+
+        {/* Page 2 Preview - Terms */}
+        <div className="bg-white border-2 border-stone-200 rounded-lg shadow-lg p-6 relative">
+          <div className="border-b pb-4 mb-4" style={{ borderColor: COLORS.border }}>
+            <h3
+              className="text-base font-bold"
+              style={{ color: COLORS.primary }}
+            >
+              Terms &amp; Conditions
+            </h3>
+          </div>
+          <div className="text-sm space-y-3" style={{ color: COLORS.text }}>
+            <p>
+              Any additional items requested beyond the scope of this package will be subject to separate charges.
+              Feel free to reach out if you have any questions or if you require further customization.
+              Engineering and permitting is not included.
+            </p>
+            <p>Payment is due within 15 days.</p>
+            <p className="font-medium">Thank you for your business!</p>
+          </div>
+
+          {/* PAID Stamp on terms page if paid */}
+          {isPaid && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 pointer-events-none opacity-80">
+              <div
+                className="border-4 rounded-lg px-12 py-6"
+                style={{ borderColor: COLORS.paid }}
+              >
+                <span
+                  className="text-6xl font-bold"
+                  style={{ color: COLORS.paid }}
+                >
+                  PAID
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2">
           <button
             onClick={() => window.print()}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              backgroundColor: COLORS.primary,
+              color: COLORS.white
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
             Print Preview
           </button>
