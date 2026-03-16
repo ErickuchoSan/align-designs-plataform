@@ -206,15 +206,11 @@ export class FilesService {
       userContext.role,
     );
 
-    const { page, limit, skip } =
+    const { limit, skip } =
       PaginationHelper.extractPaginationParams(fileFilters);
 
     // Only cache if there are no filters (name/type filters would create too many cache variations)
-    const shouldCache =
-      !fileFilters.name && (!fileFilters.type || fileFilters.type === 'all');
-
-    if (shouldCache) {
-    }
+    // Note: Caching logic to be implemented in future iteration
 
     // Build where clause with filters
     const where: Record<string, unknown> = {

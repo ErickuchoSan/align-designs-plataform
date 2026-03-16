@@ -20,8 +20,8 @@ import { FileSecurityService } from './file-security.service';
 @Injectable()
 export class MinioStorageService implements OnModuleInit {
   private readonly logger = new Logger(MinioStorageService.name);
-  private minioClient: Minio.Client;
-  private bucketName: string;
+  private readonly minioClient: Minio.Client;
+  private readonly bucketName: string;
   private readonly region: string;
   private readonly internalEndpoint: string;
   private readonly internalPort: number;

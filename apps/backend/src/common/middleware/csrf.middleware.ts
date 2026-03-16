@@ -158,12 +158,7 @@ export class CsrfMiddleware implements NestMiddleware {
     // Allow override from env for CSRF-specific sameSite setting
     const allowNgrok = process.env.ALLOW_NGROK === 'true';
     const configSameSite = this.configService.get<string>('CSRF_SAME_SITE');
-    const sameSite =
-      configSameSite && ['strict', 'lax', 'none'].includes(configSameSite)
-        ? (configSameSite as 'strict' | 'lax' | 'none')
-        : allowNgrok
-          ? 'none'
-          : config.sameSite;
+    const sameSite = this.resolveSameSite(configSameSite, allowNgrok, config.sameSite);
 
     this.logger.debug(
       `CSRF Cookie Settings: secure=${config.useSecureCookie}, sameSite=${sameSite}, isHttps=${config.isHttps}, host=${req.headers.host || 'not set'}`,
@@ -185,6 +180,18 @@ export class CsrfMiddleware implements NestMiddleware {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.createHmac('sha256', secret).update(salt).digest('hex');
     return `${salt}-${hash}`;
+  }
+
+  private resolveSameSite(
+    configSameSite: string | undefined,
+    allowNgrok: boolean,
+    defaultValue: 'strict' | 'lax' | 'none',
+  ): 'strict' | 'lax' | 'none' {
+    const validValues = ['strict', 'lax', 'none'];
+    if (configSameSite && validValues.includes(configSameSite)) {
+      return configSameSite as 'strict' | 'lax' | 'none';
+    }
+    return allowNgrok ? 'none' : defaultValue;
   }
 
   private validateToken(secret: string, token: string): boolean {

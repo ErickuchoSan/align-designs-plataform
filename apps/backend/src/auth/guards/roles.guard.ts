@@ -23,7 +23,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     // Null check: if user is not authenticated, deny access
-    if (!user || !user.role) {
+    if (!user?.role) {
       return false;
     }
 

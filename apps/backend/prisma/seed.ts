@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function main() {
+try {
   console.log('🌱 Seeding database...');
 
   // Hash de la contraseña del admin: NoloseAlfonso136!
@@ -26,15 +26,10 @@ async function main() {
   });
 
   console.log('✅ Admin user created:', admin.email);
-
   console.log('🎉 Seeding completed!');
+} catch (e) {
+  console.error('❌ Seeding failed:', e);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
 }
-
-main()
-  .catch((e) => {
-    console.error('❌ Seeding failed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

@@ -20,17 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         // First try to extract from cookie (preferred for security)
-        (request: Request) => {
-          const token = request?.cookies?.access_token;
-          if (!token) {
-            const fs = require('fs');
-            const log = `[JWT] Missing cookie. Cookies: ${JSON.stringify(request?.cookies)} URL: ${request?.url} Method: ${request?.method}\n`;
-            try {
-              fs.appendFileSync('auth_debug.log', log);
-            } catch (e) {}
-          }
-          return token;
-        },
+        (request: Request) => request?.cookies?.access_token,
         // Fallback to Authorization header for backward compatibility
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),

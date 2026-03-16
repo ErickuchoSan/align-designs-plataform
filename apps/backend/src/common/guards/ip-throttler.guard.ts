@@ -19,8 +19,8 @@ import type { Request } from 'express';
  */
 @Injectable()
 export class IpThrottlerGuard extends ThrottlerGuard {
-  private trustedProxies: string[] = [];
-  private trustProxy = false;
+  private readonly trustedProxies: string[];
+  private readonly trustProxy: boolean;
 
   constructor(
     @Inject('THROTTLER_OPTIONS')

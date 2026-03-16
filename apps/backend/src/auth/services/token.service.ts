@@ -166,7 +166,7 @@ export class TokenService {
       // Decode the token to get expiration time
       const decoded = this.jwt.decode(token);
 
-      if (!decoded || !decoded.exp) {
+      if (!decoded?.exp) {
         this.logger.warn(
           'Cannot revoke token: Invalid token or missing expiration',
         );

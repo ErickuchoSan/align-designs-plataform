@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import * as path from 'path';
+import * as path from 'node:path';
 import { FileMagicNumberValidator } from '../../common/utils/file-magic-numbers.utils';
 
 /**

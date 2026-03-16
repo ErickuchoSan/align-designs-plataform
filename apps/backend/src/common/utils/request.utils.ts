@@ -43,6 +43,18 @@ export function isProduction(): boolean {
 }
 
 /**
+ * Resolve SameSite policy based on cookie security and environment
+ */
+function resolveSameSitePolicy(
+  useSecureCookie: boolean,
+  isProd: boolean,
+): 'strict' | 'lax' | 'none' {
+  if (useSecureCookie) return 'none';
+  if (isProd) return 'strict';
+  return 'lax';
+}
+
+/**
  * Get cookie security configuration based on request
  * Centralizes cookie security logic to follow DRY principle
  */
@@ -53,11 +65,7 @@ export function getCookieSecurityConfig(req?: Request): CookieSecurityConfig {
 
   // When secure is true (HTTPS), we can use sameSite: 'none' for cross-origin
   // When secure is false (HTTP), we must use 'lax' or 'strict'
-  const sameSite: 'strict' | 'lax' | 'none' = useSecureCookie
-    ? 'none'
-    : isProd
-      ? 'strict'
-      : 'lax';
+  const sameSite = resolveSameSitePolicy(useSecureCookie, isProd);
 
   return {
     isProduction: isProd,

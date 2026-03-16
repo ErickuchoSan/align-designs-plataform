@@ -117,6 +117,35 @@ function ClientWorkflowView({
 }: ClientWorkflowViewProps) {
   const router = useRouter();
 
+  // IMPORTANT: All hooks must be called before any conditional returns
+  // Calculate next step for the client
+  const nextStep = useMemo((): NextStep => {
+    if (project.status === ProjectStatus.COMPLETED) {
+      return {
+        label: 'Project Complete',
+        description: 'Your project has been completed. Download your final deliverables from the Final Deliverables section.',
+        color: 'green',
+      };
+    }
+
+    if (invoiceDeadlines.length > 0) {
+      return {
+        label: 'Pay Outstanding Invoice',
+        description: 'You have an invoice pending payment.',
+        color: 'amber',
+        action: () => router.push(`/dashboard/projects/${project.id}/payments`),
+        actionLabel: 'View Invoice',
+      };
+    }
+
+    // Default: work in progress
+    return {
+      label: 'Design In Progress',
+      description: 'Your project is being worked on. We\'ll notify you when there\'s something to review.',
+      color: 'blue',
+    };
+  }, [project.status, invoiceDeadlines, router, project.id]);
+
   // Waiting for initial payment
   if (project.status === ProjectStatus.WAITING_PAYMENT) {
     const isPendingCoverage =
@@ -208,34 +237,6 @@ function ClientWorkflowView({
       </div>
     );
   }
-
-  // Calculate next step for the client
-  const nextStep = useMemo((): NextStep => {
-    if (project.status === ProjectStatus.COMPLETED) {
-      return {
-        label: 'Project Complete',
-        description: 'Your project has been completed. Download your final deliverables from the Final Deliverables section.',
-        color: 'green',
-      };
-    }
-
-    if (invoiceDeadlines.length > 0) {
-      return {
-        label: 'Pay Outstanding Invoice',
-        description: 'You have an invoice pending payment.',
-        color: 'amber',
-        action: () => router.push(`/dashboard/projects/${project.id}/payments`),
-        actionLabel: 'View Invoice',
-      };
-    }
-
-    // Default: work in progress
-    return {
-      label: 'Design In Progress',
-      description: 'Your project is being worked on. We\'ll notify you when there\'s something to review.',
-      color: 'blue',
-    };
-  }, [project.status, invoiceDeadlines, router, project.id]);
 
   // Active project status - Project Overview
   return (
