@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Project, ProjectStatus } from '@/types';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
-import { CalendarIcon, ClockIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon } from '@heroicons/react/24/outline';
 
 interface InvoiceDeadline {
   date: Date;
@@ -20,6 +20,94 @@ interface ClientWorkflowViewProps {
   pendingAmount: number;
   loadingInvoices: boolean;
 }
+
+// Color configuration for next step indicator
+type NextStepColor = 'green' | 'amber' | 'blue';
+
+interface ColorConfig {
+  container: string;
+  badge: string;
+  title: string;
+  text: string;
+}
+
+const NEXT_STEP_COLORS: Record<NextStepColor, ColorConfig> = {
+  green: {
+    container: 'bg-green-50 border-green-200',
+    badge: 'bg-green-100 text-green-800',
+    title: 'text-green-900',
+    text: 'text-green-800',
+  },
+  amber: {
+    container: 'bg-amber-50 border-amber-200',
+    badge: 'bg-amber-100 text-amber-800',
+    title: 'text-amber-900',
+    text: 'text-amber-800',
+  },
+  blue: {
+    container: 'bg-blue-50 border-blue-200',
+    badge: 'bg-blue-100 text-blue-800',
+    title: 'text-blue-900',
+    text: 'text-blue-800',
+  },
+};
+
+// Get progress percentage based on status
+function getProgressPercentage(status: ProjectStatus): string {
+  if (status === ProjectStatus.COMPLETED) return '100%';
+  if (status === ProjectStatus.ACTIVE) return '50%';
+  return '0%';
+}
+
+// Get progress bar color based on status
+function getProgressBarColor(status: ProjectStatus): string {
+  if (status === ProjectStatus.COMPLETED) return 'bg-green-500';
+  if (status === ProjectStatus.ACTIVE) return 'bg-navy-600';
+  return 'bg-stone-300';
+}
+
+// Next Step interface
+interface NextStep {
+  label: string;
+  description: string;
+  color: NextStepColor;
+  action?: () => void;
+  actionLabel?: string;
+}
+
+// NextStepIndicator component
+const NextStepIndicator = memo(function NextStepIndicator({ nextStep }: { nextStep: NextStep }) {
+  const colors = NEXT_STEP_COLORS[nextStep.color];
+
+  return (
+    <div className={`rounded-xl border p-4 mb-6 ${colors.container}`}>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${colors.badge}`}>
+              Next Step
+            </span>
+          </div>
+          <h3 className={`font-semibold text-lg ${colors.title}`}>
+            {nextStep.label}
+          </h3>
+          <p className={`text-sm opacity-80 mt-1 ${colors.text}`}>
+            {nextStep.description}
+          </p>
+        </div>
+
+        {nextStep.action && nextStep.actionLabel && (
+          <button
+            onClick={nextStep.action}
+            className="flex items-center gap-1 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium shrink-0"
+          >
+            {nextStep.actionLabel}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
 
 function ClientWorkflowView({
   project,
@@ -122,7 +210,7 @@ function ClientWorkflowView({
   }
 
   // Calculate next step for the client
-  const nextStep = useMemo(() => {
+  const nextStep = useMemo((): NextStep => {
     if (project.status === ProjectStatus.COMPLETED) {
       return {
         label: 'Project Complete',
@@ -163,21 +251,13 @@ function ClientWorkflowView({
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-stone-600">Project Progress</span>
           <span className="text-sm font-semibold text-navy-900">
-            {project.status === ProjectStatus.COMPLETED ? '100%' :
-             project.status === ProjectStatus.ACTIVE ? '50%' : '0%'}
+            {getProgressPercentage(project.status)}
           </span>
         </div>
         <div className="h-3 bg-stone-200 rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              project.status === ProjectStatus.COMPLETED ? 'bg-green-500' :
-              project.status === ProjectStatus.ACTIVE ? 'bg-navy-600' :
-              'bg-stone-300'
-            }`}
-            style={{
-              width: project.status === ProjectStatus.COMPLETED ? '100%' :
-                     project.status === ProjectStatus.ACTIVE ? '50%' : '0%'
-            }}
+            className={`h-full rounded-full transition-all duration-500 ${getProgressBarColor(project.status)}`}
+            style={{ width: getProgressPercentage(project.status) }}
           />
         </div>
         <div className="flex justify-between text-xs text-stone-500 mt-1">
@@ -221,48 +301,7 @@ function ClientWorkflowView({
       </div>
 
       {/* Next Step Indicator */}
-      <div className={`rounded-xl border p-4 mb-6 ${
-        nextStep.color === 'green' ? 'bg-green-50 border-green-200' :
-        nextStep.color === 'amber' ? 'bg-amber-50 border-amber-200' :
-        'bg-blue-50 border-blue-200'
-      }`}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
-                nextStep.color === 'green' ? 'bg-green-100 text-green-800' :
-                nextStep.color === 'amber' ? 'bg-amber-100 text-amber-800' :
-                'bg-blue-100 text-blue-800'
-              }`}>
-                Next Step
-              </span>
-            </div>
-            <h3 className={`font-semibold text-lg ${
-              nextStep.color === 'green' ? 'text-green-900' :
-              nextStep.color === 'amber' ? 'text-amber-900' :
-              'text-blue-900'
-            }`}>
-              {nextStep.label}
-            </h3>
-            <p className={`text-sm opacity-80 mt-1 ${
-              nextStep.color === 'green' ? 'text-green-800' :
-              nextStep.color === 'amber' ? 'text-amber-800' :
-              'text-blue-800'
-            }`}>
-              {nextStep.description}
-            </p>
-          </div>
-
-          {nextStep.action && nextStep.actionLabel && (
-            <button
-              onClick={nextStep.action}
-              className="flex items-center gap-1 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium shrink-0"
-            >
-              {nextStep.actionLabel}
-            </button>
-          )}
-        </div>
-      </div>
+      <NextStepIndicator nextStep={nextStep} />
 
       {/* Payment Details Section */}
       <div className="border border-stone-200 rounded-lg p-4">

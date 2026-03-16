@@ -45,10 +45,27 @@ export function formatDateTime(dateString: string | Date, locale: string = 'en-U
 }
 
 /**
+ * Helper to pluralize time units
+ */
+function pluralize(value: number, unit: string): string {
+  return `${value} ${unit}${value !== 1 ? 's' : ''}`;
+}
+
+/**
+ * Format relative time value with proper unit
+ */
+function formatRelativeValue(days: number, hours: number, minutes: number): string {
+  if (days > 0) return pluralize(days, 'day');
+  if (hours > 0) return pluralize(hours, 'hour');
+  if (minutes > 0) return pluralize(minutes, 'minute');
+  return '';
+}
+
+/**
  * Get relative time string
  * @example "2 hours ago", "in 3 days"
  */
-export function getRelativeTime(dateString: string | Date, locale: string = 'en-US'): string {
+export function getRelativeTime(dateString: string | Date, _locale: string = 'en-US'): string {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
@@ -58,21 +75,13 @@ export function getRelativeTime(dateString: string | Date, locale: string = 'en-
 
   // Future dates
   if (diffMs > 0) {
-    if (diffDays > 0) return `in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
-    if (diffHours > 0) return `in ${diffHours} hour${diffHours > 1 ? 's' : ''}`;
-    if (diffMinutes > 0) return `in ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
-    return 'in a moment';
+    const formatted = formatRelativeValue(diffDays, diffHours, diffMinutes);
+    return formatted ? `in ${formatted}` : 'in a moment';
   }
 
   // Past dates
-  const absDays = Math.abs(diffDays);
-  const absHours = Math.abs(diffHours);
-  const absMinutes = Math.abs(diffMinutes);
-
-  if (absDays > 0) return `${absDays} day${absDays > 1 ? 's' : ''} ago`;
-  if (absHours > 0) return `${absHours} hour${absHours > 1 ? 's' : ''} ago`;
-  if (absMinutes > 0) return `${absMinutes} minute${absMinutes > 1 ? 's' : ''} ago`;
-  return 'just now';
+  const formatted = formatRelativeValue(Math.abs(diffDays), Math.abs(diffHours), Math.abs(diffMinutes));
+  return formatted ? `${formatted} ago` : 'just now';
 }
 
 /**

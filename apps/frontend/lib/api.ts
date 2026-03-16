@@ -189,16 +189,32 @@ api.interceptors.request.use(
   }
 );
 
+// Check if dev mode is enabled
+function isDevModeEnabled(): boolean {
+  return typeof window !== 'undefined' && localStorage.getItem('devMode') === 'true';
+}
+
+// Build error details from error data
+function buildErrorDetails(errorData: any): string[] {
+  if (errorData?.errors && Array.isArray(errorData.errors)) {
+    return errorData.errors.map((err: any) =>
+      `${err.field || err.property || 'Field'}: ${err.message || err.error}`
+    );
+  }
+  if (errorData?.details) {
+    return [JSON.stringify(errorData.details)];
+  }
+  return [];
+}
+
 // Helper function to show error modal to user
 function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, willRedirect = false): void {
   if (typeof window === 'undefined') return;
 
   // Only show detailed error modal in developer mode
   // Regular users will see simple error messages inline
-  const isDevMode = localStorage.getItem('devMode') === 'true';
-  if (!isDevMode && !willRedirect) {
-    // Skip modal for non-dev users (they see inline errors)
-    // Exception: Always show modal if redirecting (auth errors)
+  // Exception: Always show modal if redirecting (auth errors)
+  if (!isDevModeEnabled() && !willRedirect) {
     return;
   }
 
@@ -207,24 +223,10 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
   const statusCode = error.response?.status || 'N/A';
   const url = config?.url || 'Unknown';
   const method = config?.method?.toUpperCase() || 'UNKNOWN';
+  const details = buildErrorDetails(errorData);
 
-  // Build details array for validation errors
-  const details: string[] = [];
-  if (errorData?.errors && Array.isArray(errorData.errors)) {
-    errorData.errors.forEach((err: any) => {
-      details.push(`${err.field || err.property || 'Field'}: ${err.message || err.error}`);
-    });
-  } else if (errorData?.details) {
-    details.push(JSON.stringify(errorData.details));
-  }
+  logger.apiError(url, statusCode as number, errorData, { method, message: errorMessage });
 
-  // Log for developers
-  logger.apiError(url, statusCode as number, errorData, {
-    method,
-    message: errorMessage
-  });
-
-  // Show error modal using the global manager with full error details
   errorModalManager.show({
     title: `Request Failed (${statusCode})`,
     message: errorMessage,
@@ -233,189 +235,196 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
     method,
     statusCode,
     willRedirect,
-    // Pass full error object and config for dev mode display
     errorObject: error,
     requestConfig: config,
     responseData: error.response?.data,
     stackTrace: error.stack,
     errorCode: error.code,
     onClose: willRedirect ? () => {
-      // Clear auth data and redirect to login
       AuthStorage.clearAuthData();
       window.location.href = '/login';
     } : undefined,
   });
 }
 
+// Extended config type for retry tracking
+type ExtendedConfig = InternalAxiosRequestConfig & {
+  retryCount?: number;
+  csrfRetry?: boolean;
+  _errorShown?: boolean;
+};
+
+// Check if URL should skip redirect on 401
+function shouldSkipAuthRedirect(url: string): boolean {
+  return (
+    url.includes('/auth/change-password') ||
+    url.includes('/auth/reset-password') ||
+    url.includes('/auth/logout') ||
+    (typeof window !== 'undefined' && window.location.pathname.includes('/login'))
+  );
+}
+
+// Handle CSRF error retry
+async function handleCsrfRetry(config: ExtendedConfig, errorMessage: string): Promise<any | null> {
+  const isCsrfError = errorMessage.toLowerCase().includes('csrf');
+
+  if (isCsrfError && !config.csrfRetry) {
+    logger.debug('CSRF token invalid, fetching new token and retrying...');
+    await fetchCsrfToken();
+    if (csrfToken) {
+      config.csrfRetry = true;
+      config.headers['X-CSRF-Token'] = csrfToken;
+      logger.debug('Retrying request with new CSRF token', { tokenPreview: csrfToken.substring(0, 20) + '...' });
+      return api(config);
+    }
+    logger.error('Failed to fetch new CSRF token');
+  } else if (isCsrfError && config.csrfRetry) {
+    logger.error('CSRF retry already attempted, giving up');
+  }
+  return null;
+}
+
+// Show authentication error modal and handle redirect
+function showAuthErrorModal(url: string, errorMessage: string, method?: string): void {
+  const errorDetails = errorMessage || 'Your session has expired or the authentication token is invalid.';
+
+  errorModalManager.show({
+    title: 'Authentication Error (401)',
+    message: errorDetails,
+    endpoint: url,
+    method: method?.toUpperCase(),
+    statusCode: 401,
+    willRedirect: true,
+    onClose: () => {
+      AuthStorage.clearAuthData();
+      window.location.href = '/login';
+    },
+  });
+}
+
+// Handle 401 authentication errors
+async function handle401Error(error: AxiosError, config: ExtendedConfig): Promise<any> {
+  const errorMessage = (error.response?.data as { message?: string })?.message || '';
+  const url = config?.url || '';
+
+  logger.warn('401 Unauthorized', { url, message: errorMessage, method: config?.method });
+
+  // Try CSRF retry if applicable
+  const csrfRetryResult = await handleCsrfRetry(config, errorMessage);
+  if (csrfRetryResult) return csrfRetryResult;
+
+  // Handle redirect for auth errors
+  if (!shouldSkipAuthRedirect(url)) {
+    logger.error('Authentication Error - Session expired', undefined, { url, message: errorMessage });
+    showAuthErrorModal(url, errorMessage, config?.method);
+  }
+
+  throw error;
+}
+
+// Handle 4xx client errors (excluding 401 and 409)
+function handle4xxError(error: AxiosError, config: ExtendedConfig): void {
+  const status = error.response?.status;
+  if (!status || status < 400 || status >= 500 || status === 401 || status === 409) return;
+  if (config?._errorShown) return;
+
+  if (config) config._errorShown = true;
+  showErrorModal(error, config);
+}
+
+// Handle 5xx server errors
+function handle5xxError(error: AxiosError, config: ExtendedConfig): void {
+  const status = error.response?.status;
+  if (!status || status < 500 || config?._errorShown) return;
+
+  const willRetry = (config?.retryCount || 0) < MAX_RETRIES;
+  const serverMessage = (error.response?.data as any)?.message || 'The server encountered an error.';
+
+  logger.error('Server Error (5xx)', undefined, { status, url: config?.url, data: error.response?.data });
+
+  if (!willRetry) {
+    errorModalManager.show({
+      title: `Server Error (${status})`,
+      message: serverMessage,
+      details: ['Max retries reached. Please try again later.'],
+      endpoint: config?.url,
+      method: config?.method?.toUpperCase(),
+      statusCode: status,
+    });
+  }
+
+  if (config) config._errorShown = true;
+}
+
+// Handle network errors (no response)
+function handleNetworkError(error: AxiosError, config: ExtendedConfig): void {
+  if (error.response || config?._errorShown) return;
+
+  logger.error('Network Error - Cannot connect to server', error, { url: config?.url, code: error.code });
+
+  errorModalManager.show({
+    title: 'Network Error',
+    message: 'Could not connect to the server. Please check your internet connection and try again.',
+    details: [error.message || 'Unknown network error'],
+  });
+
+  if (config) config._errorShown = true;
+}
+
+// Execute retry logic
+async function executeRetry(error: AxiosError, config: ExtendedConfig): Promise<any | null> {
+  if (!shouldRetry(error)) return null;
+
+  config.retryCount = config.retryCount || 0;
+  if (config.retryCount >= MAX_RETRIES) return null;
+
+  config.retryCount += 1;
+  const delay = getRetryDelay(config.retryCount - 1);
+  await new Promise((resolve) => setTimeout(resolve, delay));
+  return api(config);
+}
+
 // Interceptor to handle authentication errors and retry logic
 api.interceptors.response.use(
   (response) => {
     // Clean up pending request from deduplication map
-    if (response.config && response.config.method?.toUpperCase() === 'GET') {
-      const requestKey = getRequestKey(response.config as InternalAxiosRequestConfig);
-      pendingRequests.delete(requestKey);
+    if (response.config?.method?.toUpperCase() === 'GET') {
+      pendingRequests.delete(getRequestKey(response.config as InternalAxiosRequestConfig));
     }
 
-    // Update CSRF token if present in response headers
-    // ONLY update if we don't have a token yet (initial load)
+    // Update CSRF token if present and we don't have one yet
     const newCsrfToken = response.headers['x-csrf-token'];
     if (newCsrfToken && !csrfToken) {
       csrfToken = newCsrfToken;
-      const preview = csrfToken ? csrfToken.substring(0, 20) + '...' : 'unknown';
-      logger.debug('CSRF token auto-updated from response', { tokenPreview: preview });
+      logger.debug('CSRF token auto-updated from response', { tokenPreview: newCsrfToken.substring(0, 20) + '...' });
     }
     return response;
   },
   async (error: AxiosError) => {
-    const config = error.config as InternalAxiosRequestConfig & { retryCount?: number; csrfRetry?: boolean; _errorShown?: boolean };
+    const config = error.config as ExtendedConfig;
+    const isClientSide = typeof window !== 'undefined';
 
     // Handle 401 authentication errors
-    if (typeof window !== 'undefined' && error.response?.status === 401) {
-      const errorMessage = (error.response?.data as { message?: string })?.message || '';
-
-      // Log 401 errors for debugging
-      logger.warn('401 Unauthorized', {
-        url: config?.url,
-        message: errorMessage,
-        method: config?.method
-      });
-
-      // If CSRF token is invalid or missing, fetch a new one and retry once
-      const isCsrfError = errorMessage.toLowerCase().includes('csrf');
-      if (isCsrfError && !config?.csrfRetry) {
-        logger.debug('CSRF token invalid, fetching new token and retrying...');
-        await fetchCsrfToken();
-        if (config && csrfToken) {
-          config.csrfRetry = true;
-          config.headers['X-CSRF-Token'] = csrfToken;
-          logger.debug('Retrying request with new CSRF token', { tokenPreview: csrfToken.substring(0, 20) + '...' });
-          return api(config);
-        } else {
-          logger.error('Failed to fetch new CSRF token');
-        }
-      } else if (isCsrfError && config?.csrfRetry) {
-        logger.error('CSRF retry already attempted, giving up');
-      }
-
-      // Don't redirect on endpoints that handle their own validation errors
-      const url = config?.url || '';
-      const shouldNotRedirect =
-        url.includes('/auth/change-password') ||
-        url.includes('/auth/reset-password') ||
-        url.includes('/auth/logout') ||
-        window.location.pathname.includes('/login');
-
-      if (!shouldNotRedirect) {
-        // Log authentication error
-        logger.error('Authentication Error - Session expired', undefined, {
-          url,
-          message: errorMessage
-        });
-
-        // Show error modal before redirecting
-        const errorDetails = errorMessage || 'Your session has expired or the authentication token is invalid.';
-
-        errorModalManager.show({
-          title: 'Authentication Error (401)',
-          message: errorDetails,
-          endpoint: url,
-          method: config?.method?.toUpperCase(),
-          statusCode: 401,
-          willRedirect: true,
-          onClose: () => {
-            // Clear auth data and redirect to login
-            AuthStorage.clearAuthData();
-            window.location.href = '/login';
-          },
-        });
-
-        // Don't reject the promise, we're handling it with redirect
-        throw error;
-      }
+    if (isClientSide && error.response?.status === 401) {
+      return handle401Error(error, config);
     }
 
-    // Handle other 4xx errors (400, 403, 404, 422, etc.) - show modal but don't redirect
-    // EXCLUDE 409 (Conflict): It is often handled by specific UI flows (e.g. Force Delete)
-    if (typeof window !== 'undefined' && error.response &&
-      error.response.status >= 400 && error.response.status < 500 &&
-      error.response.status !== 401 && error.response.status !== 409 && !config?._errorShown) {
-
-      // Mark error as shown to prevent duplicate modals on retry
-      if (config) {
-        config._errorShown = true;
-      }
-
-      showErrorModal(error, config);
+    // Handle other errors on client side
+    if (isClientSide) {
+      handle4xxError(error, config);
+      handle5xxError(error, config);
+      handleNetworkError(error, config);
     }
 
-    // Handle 5xx server errors - show modal before retrying
-    if (typeof window !== 'undefined' && error.response &&
-      error.response.status >= 500 && !config?._errorShown) {
+    // Retry logic
+    if (config) {
+      const retryResult = await executeRetry(error, config);
+      if (retryResult) return retryResult;
 
-      const willRetry = config && (config.retryCount || 0) < MAX_RETRIES;
-      const serverMessage = (error.response.data as any)?.message || 'The server encountered an error.';
-
-      logger.error('Server Error (5xx)', undefined, {
-        status: error.response.status,
-        url: config?.url,
-        data: error.response.data
-      });
-
-      // Only show modal on final retry failure
-      if (!willRetry) {
-        errorModalManager.show({
-          title: `Server Error (${error.response.status})`,
-          message: serverMessage,
-          details: ['Max retries reached. Please try again later.'],
-          endpoint: config?.url,
-          method: config?.method?.toUpperCase(),
-          statusCode: error.response.status,
-        });
+      // Clean up deduplication map on error
+      if (config.method?.toUpperCase() === 'GET') {
+        pendingRequests.delete(getRequestKey(config));
       }
-
-      if (config) {
-        config._errorShown = true;
-      }
-    }
-
-    // Handle network errors - show modal
-    if (typeof window !== 'undefined' && !error.response && !config?._errorShown) {
-      logger.error('Network Error - Cannot connect to server', error, {
-        url: config?.url,
-        code: error.code
-      });
-
-      errorModalManager.show({
-        title: 'Network Error',
-        message: 'Could not connect to the server. Please check your internet connection and try again.',
-        details: [error.message || 'Unknown network error'],
-      });
-
-      if (config) {
-        config._errorShown = true;
-      }
-    }
-
-    // Retry logic for network errors and 5xx errors
-    if (config && shouldRetry(error)) {
-      config.retryCount = config.retryCount || 0;
-
-      if (config.retryCount < MAX_RETRIES) {
-        config.retryCount += 1;
-        const delay = getRetryDelay(config.retryCount - 1);
-
-        // Wait before retrying
-        await new Promise((resolve) => setTimeout(resolve, delay));
-
-        // Retry the request
-        return api(config);
-      }
-    }
-
-    // Clean up pending request from deduplication map on error
-    if (config && config.method?.toUpperCase() === 'GET') {
-      const requestKey = getRequestKey(config);
-      pendingRequests.delete(requestKey);
     }
 
     throw error;
