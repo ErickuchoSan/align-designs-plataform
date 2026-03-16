@@ -50,6 +50,12 @@ export default function PasswordInput({
     return INPUT_VARIANTS.default;
   };
 
+  const getStrengthColor = () => {
+    if (strength.score >= 4) return 'text-green-600';
+    if (strength.score >= 2) return 'text-amber-600';
+    return 'text-red-600';
+  };
+
   return (
     <div className={cn('w-full', className)}>
       <div className="relative">
@@ -77,7 +83,7 @@ export default function PasswordInput({
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-stone-700">Password Strength</span>
               <span
-                className={`font-medium ${strength.score >= 4 ? 'text-green-600' : strength.score >= 2 ? 'text-amber-600' : 'text-red-600'}`}
+                className={`font-medium ${getStrengthColor()}`}
               >
                 {strength.label}
               </span>
