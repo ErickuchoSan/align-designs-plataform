@@ -116,53 +116,48 @@ export function useFileOperations(
     [projectId, setTrackedTimeout]
   );
 
+  // Helper function to upload multiple files
+  const uploadFiles = useCallback(
+    async (files: File[], comment: string, stage?: string, relatedFileId?: string): Promise<boolean> => {
+      let allSuccess = true;
+      for (let i = 0; i < files.length; i++) {
+        try {
+          await FilesService.upload(projectId, {
+            file: files[i],
+            comment: i === 0 ? (comment || undefined) : undefined,
+            stage,
+            relatedFileId,
+          });
+        } catch {
+          allSuccess = false;
+        }
+      }
+      return allSuccess;
+    },
+    [projectId]
+  );
+
   const handleCreateComment = useCallback(
     async (comment: string, files: File[], stage?: string, relatedFileId?: string) => {
-      // Validate inputs
       if (!comment.trim() && files.length === 0) return false;
 
       setUploading(true);
 
       try {
-        // CASE A: Files attached - Upload each file
-        if (files.length > 0) {
-          let totalSuccess = true;
+        const success = files.length > 0
+          ? await uploadFiles(files, comment, stage, relatedFileId)
+          : await FilesService.createComment(projectId, comment, stage, relatedFileId).then(() => true);
 
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const fileComment = i === 0 ? comment : '';
+        const message = files.length > 0
+          ? (success ? 'Feedback created successfully' : 'Some files failed to upload')
+          : 'Comment created successfully';
 
-            try {
-              await FilesService.upload(projectId, {
-                file,
-                comment: fileComment || undefined,
-                stage,
-                relatedFileId,
-              });
-            } catch {
-              totalSuccess = false;
-            }
-          }
+        if (success) onSuccessRef.current(message);
+        else onErrorRef.current(message);
 
-          if (totalSuccess) {
-            onSuccessRef.current('Feedback created successfully');
-          } else {
-            onErrorRef.current('Some files failed to upload');
-          }
-
-          await onRefreshRef.current();
-          setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
-          return totalSuccess;
-
-        } else {
-          // CASE B: Text only comment
-          await FilesService.createComment(projectId, comment, stage, relatedFileId);
-
-          onSuccessRef.current('Comment created successfully');
-          await onRefreshRef.current();
-          setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
-          return true;
-        }
+        await onRefreshRef.current();
+        setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
+        return success;
 
       } catch (error) {
         onErrorRef.current(handleApiError(error, 'Error creating feedback'));
@@ -171,61 +166,63 @@ export function useFileOperations(
         setUploading(false);
       }
     },
-    [projectId, setTrackedTimeout]
+    [projectId, setTrackedTimeout, uploadFiles]
+  );
+
+  // Helper function to update primary file
+  const updatePrimaryFile = useCallback(
+    async (fileToEdit: FileData, editComment: string, primaryFile?: File): Promise<boolean> => {
+      const commentChanged = editComment !== fileToEdit.comment;
+      if (!commentChanged && !primaryFile) return true;
+
+      try {
+        await FilesService.update(fileToEdit.id, {
+          comment: commentChanged ? editComment : undefined,
+          file: primaryFile,
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    []
+  );
+
+  // Helper function to upload additional files
+  const uploadAdditionalFiles = useCallback(
+    async (files: File[], comment: string, stage: string): Promise<boolean> => {
+      let allSuccess = true;
+      for (const file of files) {
+        try {
+          await FilesService.upload(projectId, { file, comment: comment || undefined, stage });
+        } catch {
+          allSuccess = false;
+        }
+      }
+      return allSuccess;
+    },
+    [projectId]
   );
 
   const handleEditEntry = useCallback(
     async (fileToEdit: FileData, editComment: string, editFiles: File[]) => {
       setUploading(true);
-      let successCount = 0;
-      let hasError = false;
 
       try {
-        // 1. Update the existing file (PATCH) - optionally replacing content with first file
         const primaryFile = editFiles.length > 0 ? editFiles[0] : undefined;
-        const commentChanged = editComment !== fileToEdit.comment;
+        const primarySuccess = await updatePrimaryFile(fileToEdit, editComment, primaryFile);
 
-        // Only call patch if there's something to update
-        if (commentChanged || primaryFile) {
-          try {
-            await FilesService.update(fileToEdit.id, {
-              comment: commentChanged ? editComment : undefined,
-              file: primaryFile,
-            });
-            successCount++;
-          } catch {
-            hasError = true;
-          }
-        } else {
-          successCount++;
-        }
+        const additionalSuccess = editFiles.length > 1
+          ? await uploadAdditionalFiles(editFiles.slice(1), editComment, fileToEdit.stage)
+          : true;
 
-        // 2. Upload any additional files (POST) as new entries
-        if (editFiles.length > 1) {
-          const additionalFiles = editFiles.slice(1);
-          for (const file of additionalFiles) {
-            try {
-              await FilesService.upload(projectId, {
-                file,
-                comment: editComment || undefined,
-                stage: fileToEdit.stage,
-              });
-              successCount++;
-            } catch {
-              hasError = true;
-            }
-          }
-        }
-
-        if (hasError) {
-          onErrorRef.current('Some changes failed to save.');
-        } else {
-          onSuccessRef.current('Entry updated successfully');
-        }
+        const success = primarySuccess && additionalSuccess;
+        if (success) onSuccessRef.current('Entry updated successfully');
+        else onErrorRef.current('Some changes failed to save.');
 
         await onRefreshRef.current();
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);
-        return !hasError;
+        return success;
 
       } catch (error) {
         onErrorRef.current(handleApiError(error, 'Error updating entry'));
@@ -234,7 +231,7 @@ export function useFileOperations(
         setUploading(false);
       }
     },
-    [projectId, setTrackedTimeout]
+    [setTrackedTimeout, updatePrimaryFile, uploadAdditionalFiles]
   );
 
   const handleDownload = useCallback(
