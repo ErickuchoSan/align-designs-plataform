@@ -20,87 +20,85 @@ export interface StagePermissions {
 export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
   /**
    * PROJECT BRIEF
-   * Admin uploads initial project specifications
-   * Employees can read to understand requirements
+   * Initial project scope, consultation notes, client questionnaire, inspiration images
    */
   BRIEF_PROJECT: {
-    canView: [Role.ADMIN, Role.EMPLOYEE],
-    canWrite: [Role.ADMIN],
+    canView: [Role.ADMIN, Role.EMPLOYEE, Role.CLIENT],
+    canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Admin uploads initial specs. Required before employees can work.',
+    description: 'Initial project scope, consultation notes, and client requirements.',
   },
 
   /**
-   * FEEDBACK - CLIENT SPACE
+   * CONCEPT DESIGN (was REFERENCES)
+   * Preliminary floor plan, conceptual sketches, initial layout
+   * First design proposal for client review
+   */
+  REFERENCES: {
+    canView: [Role.ADMIN, Role.CLIENT],
+    canWrite: [Role.ADMIN],
+    canDelete: [Role.ADMIN],
+    description: 'Preliminary designs, conceptual sketches, and initial layout proposals.',
+  },
+
+  /**
+   * DESIGN REVIEW (was FEEDBACK_CLIENT)
+   * Client reviews the design and provides feedback
    * Private space for client-admin communication
-   * Employees cannot see this feedback
    */
   FEEDBACK_CLIENT: {
     canView: [Role.ADMIN, Role.CLIENT],
     canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Client creates feedback. Admin responds. Separate from employee feedback.',
+    description: 'Client reviews designs and provides feedback. Admin responds.',
   },
 
   /**
-   * FEEDBACK - EMPLOYEE SPACE
-   * Admin creates feedback for employees
-   * Employees can only read, cannot respond here
-   * Can be linked to rejected files
+   * REVISION TRACKING (was FEEDBACK_EMPLOYEE)
+   * Internal revision control - hidden from clients
+   * Tracks revision rounds: client comments, changes made, updated files
    */
   FEEDBACK_EMPLOYEE: {
     canView: [Role.ADMIN, Role.EMPLOYEE],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
-    description: 'Admin creates feedback for employees. Employees read only.',
+    description: 'Internal revision tracking. Employees read only. Hidden from clients.',
   },
 
   /**
-   * REFERENCES
-   * Client can upload visual references, links, inspiration
-   * Admin can also add references
-   */
-  REFERENCES: {
-    canView: [Role.ADMIN, Role.CLIENT],
-    canWrite: [Role.ADMIN, Role.CLIENT],
-    canDelete: [Role.ADMIN],
-    description: 'Client uploads links (Google, visual references).',
-  },
-
-  /**
-   * SUBMITTED
+   * CONSTRUCTION PLANS (was SUBMITTED)
+   * Full plan set: floor plan, elevations, electrical, foundation, roof
    * Employees submit their work here
-   * STRICT: Admin Read-Only (Download/View). Employee uploads files (Link/File).
    */
   SUBMITTED: {
     canView: [Role.ADMIN, Role.EMPLOYEE],
-    canWrite: [Role.EMPLOYEE], // Only employees can upload/write here
-    canDelete: [], // Neither can delete (strict record)
-    description: 'Employees submit work. Admin read-only.',
+    canWrite: [Role.EMPLOYEE],
+    canDelete: [],
+    description: 'Construction plans submitted by employees. States: Drafting, Under Review, Submitted.',
   },
 
   /**
-   * ADMIN APPROVED
-   * Files that admin has approved
-   * Waiting for client presentation
+   * CLIENT REVIEW (was ADMIN_APPROVED)
+   * Client reviews the complete plan set
+   * Can leave comments and approve the project
    */
   ADMIN_APPROVED: {
-    canView: [Role.ADMIN],
-    canWrite: [Role.ADMIN],
+    canView: [Role.ADMIN, Role.CLIENT],
+    canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Admin only. Files approved by admin.',
+    description: 'Client reviews complete plan set, leaves comments, and approves.',
   },
 
   /**
-   * CLIENT APPROVED
-   * Files that client has approved
-   * Client does NOT see this stage (only admin and employee)
+   * FINAL DELIVERABLES (was CLIENT_APPROVED)
+   * Final PDF set, CAD files, renders
+   * Ready for client download
    */
   CLIENT_APPROVED: {
-    canView: [Role.ADMIN],
+    canView: [Role.ADMIN, Role.CLIENT],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
-    description: 'Admin only. Client does NOT see this stage.',
+    description: 'Final deliverables: PDF plans, CAD files, renders for download.',
   },
 
   /**
@@ -184,16 +182,19 @@ export function getStagePermissions(stage: Stage): StagePermissions {
 
 /**
  * Get user-friendly stage name
+ * Updated to reflect the new workflow structure:
+ * Project Brief → Concept Design → Design Review → Revision Tracking →
+ * Construction Plans → Client Review → Final Deliverables → Payments
  */
 export function getStageName(stage: Stage): string {
   const names: Record<Stage, string> = {
     BRIEF_PROJECT: 'Project Brief',
-    FEEDBACK_CLIENT: 'Client Feedback',
-    FEEDBACK_EMPLOYEE: 'Employee Feedback',
-    REFERENCES: 'References',
-    SUBMITTED: 'Submitted',
-    ADMIN_APPROVED: 'Admin Approved',
-    CLIENT_APPROVED: 'Client Approved',
+    REFERENCES: 'Concept Design',
+    FEEDBACK_CLIENT: 'Design Review',
+    FEEDBACK_EMPLOYEE: 'Revision Tracking',
+    SUBMITTED: 'Construction Plans',
+    ADMIN_APPROVED: 'Client Review',
+    CLIENT_APPROVED: 'Final Deliverables',
     PAYMENTS: 'Payments',
   };
   return names[stage];
@@ -205,12 +206,12 @@ export function getStageName(stage: Stage): string {
 export function getStageIcon(stage: Stage): string {
   const icons: Record<Stage, string> = {
     BRIEF_PROJECT: '📋',
-    FEEDBACK_CLIENT: '💬',
-    FEEDBACK_EMPLOYEE: '📝',
-    REFERENCES: '🔗',
-    SUBMITTED: '📤',
-    ADMIN_APPROVED: '✅',
-    CLIENT_APPROVED: '⭐',
+    REFERENCES: '🎨',       // Concept Design
+    FEEDBACK_CLIENT: '💬',  // Design Review
+    FEEDBACK_EMPLOYEE: '📝', // Revision Tracking
+    SUBMITTED: '📐',        // Construction Plans
+    ADMIN_APPROVED: '👁️',   // Client Review
+    CLIENT_APPROVED: '📦',  // Final Deliverables
     PAYMENTS: '💰',
   };
   return icons[stage];

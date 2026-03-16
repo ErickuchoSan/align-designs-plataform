@@ -119,14 +119,42 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 
 export const STAGE_LABELS: Record<Stage, string> = {
   [Stage.BRIEF_PROJECT]: 'Project Brief',
-  [Stage.FEEDBACK_CLIENT]: 'Feedback (Client)',
-  [Stage.FEEDBACK_EMPLOYEE]: 'Feedback (Employee)',
-  [Stage.REFERENCES]: 'References',
-  [Stage.SUBMITTED]: 'Submitted',
-  [Stage.ADMIN_APPROVED]: 'Approved by Admin',
-  [Stage.CLIENT_APPROVED]: 'Approved by Client',
+  [Stage.FEEDBACK_CLIENT]: 'Design Review',
+  [Stage.FEEDBACK_EMPLOYEE]: 'Revision Tracking',
+  [Stage.REFERENCES]: 'Concept Design',
+  [Stage.SUBMITTED]: 'Construction Plans',
+  [Stage.ADMIN_APPROVED]: 'Client Review',
+  [Stage.CLIENT_APPROVED]: 'Final Deliverables',
   [Stage.PAYMENTS]: 'Payments',
 };
+
+// Client-friendly stage labels (simplified view)
+export const CLIENT_STAGE_LABELS: Record<Stage, string> = {
+  [Stage.BRIEF_PROJECT]: 'Project Brief',
+  [Stage.FEEDBACK_CLIENT]: 'Design Review',
+  [Stage.FEEDBACK_EMPLOYEE]: 'Revision Tracking', // Hidden from client
+  [Stage.REFERENCES]: 'Concept Design',
+  [Stage.SUBMITTED]: 'Construction Plans', // Hidden from client
+  [Stage.ADMIN_APPROVED]: 'Plan Set Review',
+  [Stage.CLIENT_APPROVED]: 'Final Deliverables',
+  [Stage.PAYMENTS]: 'Payments',
+};
+
+// Stages visible to clients (simplified portal)
+export const CLIENT_VISIBLE_STAGES: Stage[] = [
+  Stage.BRIEF_PROJECT,
+  Stage.REFERENCES, // Concept Design
+  Stage.FEEDBACK_CLIENT, // Design Review
+  Stage.ADMIN_APPROVED, // Plan Set Review
+  Stage.CLIENT_APPROVED, // Final Deliverables
+  Stage.PAYMENTS,
+];
+
+// Stages hidden from clients (internal only)
+export const ADMIN_ONLY_STAGES: Stage[] = [
+  Stage.FEEDBACK_EMPLOYEE, // Revision Tracking - internal
+  Stage.SUBMITTED, // Construction Plans - employee work area
+];
 
 export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   [InvoiceStatus.DRAFT]: 'Draft',
@@ -186,14 +214,14 @@ export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
 };
 
 export const STAGE_COLORS: Record<Stage, string> = {
-  [Stage.BRIEF_PROJECT]: 'blue',
-  [Stage.FEEDBACK_CLIENT]: 'purple',
-  [Stage.FEEDBACK_EMPLOYEE]: 'orange',
-  [Stage.REFERENCES]: 'cyan',
-  [Stage.SUBMITTED]: 'yellow',
-  [Stage.ADMIN_APPROVED]: 'green',
-  [Stage.CLIENT_APPROVED]: 'emerald',
-  [Stage.PAYMENTS]: 'pink',
+  [Stage.BRIEF_PROJECT]: 'blue',       // Project Brief
+  [Stage.REFERENCES]: 'purple',         // Concept Design
+  [Stage.FEEDBACK_CLIENT]: 'cyan',      // Design Review
+  [Stage.FEEDBACK_EMPLOYEE]: 'orange',  // Revision Tracking (internal)
+  [Stage.SUBMITTED]: 'yellow',          // Construction Plans
+  [Stage.ADMIN_APPROVED]: 'green',      // Client Review / Plan Set Review
+  [Stage.CLIENT_APPROVED]: 'emerald',   // Final Deliverables
+  [Stage.PAYMENTS]: 'pink',             // Payments
 };
 
 export const INVOICE_STATUS_COLORS: Record<InvoiceStatus, string> = {

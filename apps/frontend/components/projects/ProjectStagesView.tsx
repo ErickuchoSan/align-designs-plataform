@@ -188,7 +188,7 @@ function ProjectStagesView({
       {/* Stage Cards Grid */}
       <div>
         <h2 className="text-lg font-semibold text-navy-900 mb-4">
-          Project Sections
+          Project Progress
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stages.map((stage) => (

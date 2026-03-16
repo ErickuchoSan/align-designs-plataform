@@ -1,10 +1,11 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Project, ProjectStatus } from '@/types';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
+import { CalendarIcon, ClockIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 interface InvoiceDeadline {
   date: Date;
@@ -120,17 +121,124 @@ function ClientWorkflowView({
     );
   }
 
-  // Active project status
+  // Calculate next step for the client
+  const nextStep = useMemo(() => {
+    if (project.status === ProjectStatus.COMPLETED) {
+      return {
+        label: 'Project Complete',
+        description: 'Your project has been completed. Download your final deliverables from the Final Deliverables section.',
+        color: 'green',
+      };
+    }
+
+    if (invoiceDeadlines.length > 0) {
+      return {
+        label: 'Pay Outstanding Invoice',
+        description: 'You have an invoice pending payment.',
+        color: 'amber',
+        action: () => router.push(`/dashboard/projects/${project.id}/payments`),
+        actionLabel: 'View Invoice',
+      };
+    }
+
+    // Default: work in progress
+    return {
+      label: 'Design In Progress',
+      description: 'Your project is being worked on. We\'ll notify you when there\'s something to review.',
+      color: 'blue',
+    };
+  }, [project.status, invoiceDeadlines, router, project.id]);
+
+  // Active project status - Project Overview
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
+      {/* Header with status badge */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-navy-900">Project Status</h2>
+        <h2 className="text-xl font-bold text-navy-900">Project Overview</h2>
         <ProjectStatusBadge status={project.status} />
       </div>
 
+      {/* Project Info Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Estimated Delivery */}
+        {project.deadlineDate && (
+          <div className="bg-stone-50 rounded-lg p-4 border border-stone-200">
+            <div className="flex items-center gap-2 text-stone-500 text-sm mb-1">
+              <CalendarIcon className="w-4 h-4" />
+              <span>Estimated Delivery</span>
+            </div>
+            <p className="font-semibold text-navy-900">
+              {new Date(project.deadlineDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+          </div>
+        )}
+
+        {/* Payment Status Summary */}
+        <div className="bg-stone-50 rounded-lg p-4 border border-stone-200">
+          <div className="flex items-center gap-2 text-stone-500 text-sm mb-1">
+            <span>💰</span>
+            <span>Payment Status</span>
+          </div>
+          <p className="font-semibold text-navy-900">
+            {invoiceDeadlines.length > 0
+              ? `${invoiceDeadlines.length} pending invoice${invoiceDeadlines.length > 1 ? 's' : ''}`
+              : 'All caught up'}
+          </p>
+        </div>
+      </div>
+
+      {/* Next Step Indicator */}
+      <div className={`rounded-xl border p-4 mb-6 ${
+        nextStep.color === 'green' ? 'bg-green-50 border-green-200' :
+        nextStep.color === 'amber' ? 'bg-amber-50 border-amber-200' :
+        'bg-blue-50 border-blue-200'
+      }`}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
+                nextStep.color === 'green' ? 'bg-green-100 text-green-800' :
+                nextStep.color === 'amber' ? 'bg-amber-100 text-amber-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+                Next Step
+              </span>
+            </div>
+            <h3 className={`font-semibold text-lg ${
+              nextStep.color === 'green' ? 'text-green-900' :
+              nextStep.color === 'amber' ? 'text-amber-900' :
+              'text-blue-900'
+            }`}>
+              {nextStep.label}
+            </h3>
+            <p className={`text-sm opacity-80 mt-1 ${
+              nextStep.color === 'green' ? 'text-green-800' :
+              nextStep.color === 'amber' ? 'text-amber-800' :
+              'text-blue-800'
+            }`}>
+              {nextStep.description}
+            </p>
+          </div>
+
+          {nextStep.action && nextStep.actionLabel && (
+            <button
+              onClick={nextStep.action}
+              className="flex items-center gap-1 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium shrink-0"
+            >
+              {nextStep.actionLabel}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Payment Details Section */}
       <div className="border border-stone-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-navy-900">Payment Status</h3>
+          <h3 className="font-semibold text-navy-900">Payment Details</h3>
           <button
             onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
             className="text-sm px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
