@@ -1,21 +1,23 @@
-
 import { Injectable, Logger } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { Invoice } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { Readable } from 'stream';
 
-// Información de la empresa Align Designs
+// Align Designs company information
 const COMPANY_INFO = {
-  name: 'Align Designs',
-  tagline: 'Professional Design Solutions',
-  address: '1234 Creative Avenue, Suite 500',
-  city: 'San Francisco, CA 94102',
-  country: 'United States',
-  email: 'invoices@aligndesigns.com',
-  phone: '+1 (415) 555-0123',
-  website: 'www.aligndesigns.com',
-  taxId: 'EIN: 12-3456789',
+  name: 'Align Designs LLC',
+  phone: '(956)534-4110',
+  email: 'Alfonso21guz@gmail.com',
+};
+
+// Color scheme matching reference PDF
+const COLORS = {
+  primary: '#D4A843', // Golden/Orange for headers
+  text: '#333333',
+  lightText: '#666666',
+  paid: '#C53030', // Red for PAID stamp
+  tableHeader: '#D4A843',
+  border: '#E5E5E5',
 };
 
 interface InvoiceWithRelations extends Invoice {
@@ -25,7 +27,12 @@ interface InvoiceWithRelations extends Invoice {
     lastName: string;
     email: string;
     phone?: string;
+    company?: string;
   };
+  items?: Array<{
+    description: string;
+    amount: number | Decimal;
+  }>;
 }
 
 @Injectable()
@@ -33,35 +40,29 @@ export class InvoicePdfService {
   private readonly logger = new Logger(InvoicePdfService.name);
 
   /**
-   * Generate a professional PDF invoice
-   * Returns a readable stream that can be piped to response or saved to file
+   * Generate a professional PDF invoice matching Align Designs reference
    */
   async generateInvoicePDF(invoice: InvoiceWithRelations): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({
           size: 'LETTER',
-          margins: { top: 50, bottom: 50, left: 50, right: 50 },
+          margins: { top: 50, bottom: 50, left: 60, right: 60 },
         });
 
         const chunks: Buffer[] = [];
 
-        // Collect PDF data into buffer
         doc.on('data', (chunk: Buffer) => chunks.push(chunk));
         doc.on('end', () => resolve(Buffer.concat(chunks)));
         doc.on('error', reject);
 
-        // Build the PDF
-        this.buildPdfHeader(doc);
-        this.buildCompanyInfo(doc);
-        this.buildClientInfo(doc, invoice);
-        this.buildInvoiceDetails(doc, invoice);
-        this.buildItemsTable(doc, invoice);
-        this.buildTotals(doc, invoice);
-        this.buildPaymentInfo(doc, invoice);
-        this.buildFooter(doc);
+        // Page 1: Invoice
+        this.buildPage1(doc, invoice);
 
-        // Finalize PDF
+        // Page 2: Terms & Conditions
+        doc.addPage();
+        this.buildPage2(doc, invoice);
+
         doc.end();
       } catch (error) {
         this.logger.error('Error generating PDF', error);
@@ -70,263 +71,360 @@ export class InvoicePdfService {
     });
   }
 
-  private buildPdfHeader(doc: PDFKit.PDFDocument) {
-    // Company logo placeholder (you can add actual logo later)
-    doc
-      .fontSize(28)
-      .fillColor('#1e3a5f') // Navy blue
-      .font('Helvetica-Bold')
-      .text(COMPANY_INFO.name, 50, 50);
+  private buildPage1(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+    // Header with company name
+    this.buildHeader(doc);
 
-    doc
-      .fontSize(10)
-      .fillColor('#666666')
-      .font('Helvetica')
-      .text(COMPANY_INFO.tagline, 50, 85);
+    // Bill To and Invoice Date section
+    this.buildBillToSection(doc, invoice);
 
-    // INVOICE title on the right
-    doc
-      .fontSize(36)
-      .fillColor('#d4af37') // Gold
-      .font('Helvetica-Bold')
-      .text('INVOICE', 400, 50, { align: 'right' });
+    // Description table
+    const tableEndY = this.buildDescriptionTable(doc, invoice);
 
-    doc.moveDown(2);
-  }
+    // Total
+    this.buildTotal(doc, invoice, tableEndY);
 
-  private buildCompanyInfo(doc: PDFKit.PDFDocument) {
-    const startY = 130;
-
-    doc
-      .fontSize(10)
-      .fillColor('#333333')
-      .font('Helvetica-Bold')
-      .text('FROM:', 50, startY);
-
-    doc
-      .font('Helvetica')
-      .text(COMPANY_INFO.name, 50, startY + 15)
-      .text(COMPANY_INFO.address, 50, startY + 30)
-      .text(COMPANY_INFO.city, 50, startY + 45)
-      .text(COMPANY_INFO.country, 50, startY + 60)
-      .text(`Email: ${COMPANY_INFO.email}`, 50, startY + 75)
-      .text(`Phone: ${COMPANY_INFO.phone}`, 50, startY + 90)
-      .text(COMPANY_INFO.taxId, 50, startY + 105);
-  }
-
-  private buildClientInfo(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
-    const startY = 130;
-
-    doc
-      .fontSize(10)
-      .fillColor('#333333')
-      .font('Helvetica-Bold')
-      .text('BILL TO:', 320, startY);
-
-    const clientName = invoice.client
-      ? `${invoice.client.firstName} ${invoice.client.lastName}`
-      : 'Client Name';
-
-    const clientEmail = invoice.client?.email || 'N/A';
-    const clientPhone = invoice.client?.phone || 'N/A';
-
-    doc
-      .font('Helvetica')
-      .text(clientName, 320, startY + 15)
-      .text(`Email: ${clientEmail}`, 320, startY + 30)
-      .text(`Phone: ${clientPhone}`, 320, startY + 45);
-  }
-
-  private buildInvoiceDetails(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
-    const startY = 280;
-
-    // Invoice details box background
-    doc
-      .fillColor('#f8f9fa')
-      .rect(50, startY, 512, 80)
-      .fill();
-
-    doc
-      .fillColor('#333333')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('Invoice Number:', 60, startY + 15)
-      .text('Invoice Date:', 60, startY + 35)
-      .text('Due Date:', 60, startY + 55);
-
-    doc
-      .font('Helvetica')
-      .text(invoice.invoiceNumber, 180, startY + 15)
-      .text(this.formatDate(invoice.issueDate), 180, startY + 35)
-      .text(this.formatDate(invoice.dueDate), 180, startY + 55);
-
-    doc
-      .font('Helvetica-Bold')
-      .text('Project:', 320, startY + 15)
-      .text('Status:', 320, startY + 35)
-      .text('Payment Terms:', 320, startY + 55);
-
-    doc
-      .font('Helvetica')
-      .text(invoice.project?.name || 'N/A', 420, startY + 15)
-      .text(this.formatStatus(invoice.status), 420, startY + 35)
-      .text(`${invoice.paymentTermsDays} days`, 420, startY + 55);
-  }
-
-  private buildItemsTable(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
-    const startY = 390;
-    const tableTop = startY;
-
-    // Table header background
-    doc
-      .fillColor('#1e3a5f')
-      .rect(50, tableTop, 512, 25)
-      .fill();
-
-    // Table headers
-    doc
-      .fontSize(10)
-      .fillColor('#ffffff')
-      .font('Helvetica-Bold')
-      .text('DESCRIPTION', 60, tableTop + 8)
-      .text('QUANTITY', 320, tableTop + 8)
-      .text('RATE', 400, tableTop + 8)
-      .text('AMOUNT', 480, tableTop + 8);
-
-    // Table row
-    const rowY = tableTop + 35;
-
-    doc
-      .fillColor('#333333')
-      .font('Helvetica')
-      .text(`Initial Payment - ${invoice.project?.name || 'Project'}`, 60, rowY)
-      .text('1', 320, rowY)
-      .text(`$${this.formatCurrency(invoice.subtotal)}`, 400, rowY)
-      .text(`$${this.formatCurrency(invoice.subtotal)}`, 480, rowY);
-
-    // Line under item
-    doc
-      .strokeColor('#e0e0e0')
-      .lineWidth(1)
-      .moveTo(50, rowY + 25)
-      .lineTo(562, rowY + 25)
-      .stroke();
-  }
-
-  private buildTotals(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
-    const startY = 480;
-
-    doc
-      .fontSize(10)
-      .fillColor('#333333')
-      .font('Helvetica')
-      .text('Subtotal:', 400, startY)
-      .text('Tax:', 400, startY + 20)
-      .text(`$${this.formatCurrency(invoice.subtotal)}`, 480, startY, { align: 'right' })
-      .text(`$${this.formatCurrency(invoice.taxAmount)}`, 480, startY + 20, { align: 'right' });
-
-    // Total box
-    doc
-      .fillColor('#1e3a5f')
-      .rect(400, startY + 45, 162, 30)
-      .fill();
-
-    doc
-      .fontSize(12)
-      .fillColor('#ffffff')
-      .font('Helvetica-Bold')
-      .text('TOTAL:', 410, startY + 55)
-      .text(`$${this.formatCurrency(invoice.totalAmount)}`, 480, startY + 55, { align: 'right' });
-
-    // Amount paid
-    const amountPaid = Number(invoice.amountPaid);
-    if (amountPaid > 0) {
-      doc
-        .fontSize(10)
-        .fillColor('#28a745')
-        .font('Helvetica')
-        .text('Amount Paid:', 400, startY + 85)
-        .text(`-$${this.formatCurrency(invoice.amountPaid)}`, 480, startY + 85, { align: 'right' });
-
-      // Balance due
-      const balance = Number(invoice.totalAmount) - Number(invoice.amountPaid);
-      doc
-        .fontSize(11)
-        .fillColor('#dc3545')
-        .font('Helvetica-Bold')
-        .text('Balance Due:', 400, startY + 110)
-        .text(`$${this.formatCurrency(balance)}`, 480, startY + 110, { align: 'right' });
+    // PAID stamp if applicable
+    if (invoice.status === 'PAID') {
+      this.drawPaidStamp(doc, 280, 380, 150);
     }
+
+    // Vertical text on left side
+    this.drawVerticalInvoiceText(doc, invoice);
   }
 
-  private buildPaymentInfo(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
-    const startY = 570; // Moved up to 570 to provide more space for footer
+  private buildPage2(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+    const pageWidth = doc.page.width;
+    const leftMargin = 60;
+
+    // Horizontal line at top
+    doc
+      .strokeColor(COLORS.border)
+      .lineWidth(1)
+      .moveTo(leftMargin, 50)
+      .lineTo(pageWidth - leftMargin, 50)
+      .stroke();
+
+    // Terms & Conditions title
+    doc
+      .fontSize(14)
+      .fillColor(COLORS.primary)
+      .font('Helvetica-Bold')
+      .text('Terms & Conditions', leftMargin, 70);
+
+    // Terms text
+    const termsText = `Any additional items requested beyond the scope of this package will be subject to separate charges. Feel free to reach out if you have any questions or if you require further customization. Engineering and permitting is not included.
+Payment is due within ${invoice.paymentTermsDays || 15} days.
+
+Thank you for your business!`;
 
     doc
       .fontSize(11)
-      .fillColor('#1e3a5f')
-      .font('Helvetica-Bold')
-      .text('Payment Information', 50, startY);
-
-    doc
-      .fontSize(9)
-      .fillColor('#666666')
+      .fillColor(COLORS.text)
       .font('Helvetica')
-      .text('Please make payment to:', 50, startY + 20)
-      .text(`Bank Transfer: ${COMPANY_INFO.name}`, 50, startY + 35)
-      .text('Account Number: XXXX-XXXX-1234', 50, startY + 50)
-      .text('Routing Number: 123456789', 50, startY + 65)
-      .text(`Reference: Include invoice number ${invoice.invoiceNumber} in payment reference`, 50, startY + 80);
+      .text(termsText, leftMargin, 100, {
+        width: pageWidth - leftMargin * 2,
+        lineGap: 5,
+      });
+
+    // Large PAID stamp in center if paid
+    if (invoice.status === 'PAID') {
+      this.drawPaidStamp(doc, (pageWidth - 200) / 2, 400, 200);
+    }
   }
 
-  private buildFooter(doc: PDFKit.PDFDocument) {
-    const pageHeight = doc.page.height;
-    const footerY = pageHeight - 95; // Moved up from -80 to ensure it fits in page margins
+  private buildHeader(doc: PDFKit.PDFDocument) {
+    const pageWidth = doc.page.width;
+    const leftMargin = 60;
 
-    // Signature line
+    // Company name in golden color
     doc
-      .strokeColor('#cccccc')
+      .fontSize(24)
+      .fillColor(COLORS.primary)
+      .font('Helvetica-Bold')
+      .text(COMPANY_INFO.name, leftMargin, 50);
+
+    // Phone and email
+    doc
+      .fontSize(11)
+      .fillColor(COLORS.text)
+      .font('Helvetica')
+      .text(COMPANY_INFO.phone, leftMargin, 80)
+      .text(COMPANY_INFO.email, leftMargin, 95);
+
+    // Draw logo on the right
+    this.drawLogo(doc, pageWidth - 140, 45);
+  }
+
+  private drawLogo(doc: PDFKit.PDFDocument, x: number, y: number) {
+    // Draw a stylized "A" logo similar to Align Designs branding
+    const size = 60;
+
+    // Draw the stylized "A" shape
+    doc
+      .save()
+      .strokeColor(COLORS.text)
+      .lineWidth(2)
+      .moveTo(x + size / 2, y) // Top point
+      .lineTo(x, y + size * 0.7) // Bottom left
+      .moveTo(x + size / 2, y) // Top point
+      .lineTo(x + size, y + size * 0.7) // Bottom right
+      .moveTo(x + size * 0.2, y + size * 0.5) // Crossbar left
+      .lineTo(x + size * 0.8, y + size * 0.5) // Crossbar right
+      .stroke()
+      .restore();
+
+    // "ALIGN" text below the A
+    doc
+      .fontSize(12)
+      .fillColor(COLORS.text)
+      .font('Helvetica-Bold')
+      .text('ALIGN', x - 5, y + size * 0.75, { width: size + 10, align: 'center' });
+  }
+
+  private buildBillToSection(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+    const pageWidth = doc.page.width;
+    const leftMargin = 60;
+    const startY = 140;
+
+    // Horizontal separator line
+    doc
+      .strokeColor(COLORS.border)
       .lineWidth(1)
-      .moveTo(50, footerY - 20)
-      .lineTo(250, footerY - 20)
+      .moveTo(leftMargin, startY - 10)
+      .lineTo(pageWidth - leftMargin, startY - 10)
+      .stroke();
+
+    // Bill To label
+    doc
+      .fontSize(11)
+      .fillColor(COLORS.primary)
+      .font('Helvetica-Bold')
+      .text('Bill To', leftMargin, startY);
+
+    // Client name/company
+    const clientName = invoice.client?.company ||
+      (invoice.client
+        ? `${invoice.client.firstName} ${invoice.client.lastName}`
+        : 'Client Name');
+
+    doc
+      .fontSize(11)
+      .fillColor(COLORS.text)
+      .font('Helvetica')
+      .text(clientName, leftMargin, startY + 18);
+
+    // Invoice Date on the right
+    doc
+      .fontSize(11)
+      .fillColor(COLORS.primary)
+      .font('Helvetica-Bold')
+      .text('Invoice Date', pageWidth - 200, startY);
+
+    doc
+      .fontSize(11)
+      .fillColor(COLORS.text)
+      .font('Helvetica')
+      .text(this.formatDate(invoice.issueDate), pageWidth - 120, startY);
+  }
+
+  private buildDescriptionTable(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations): number {
+    const pageWidth = doc.page.width;
+    const leftMargin = 60;
+    const rightMargin = 60;
+    const tableWidth = pageWidth - leftMargin - rightMargin;
+    const amountColWidth = 100;
+    const descColWidth = tableWidth - amountColWidth;
+    const startY = 200;
+
+    // Table header background
+    doc
+      .fillColor(COLORS.tableHeader)
+      .rect(leftMargin, startY, tableWidth, 30)
+      .fill();
+
+    // Table header text
+    doc
+      .fontSize(11)
+      .fillColor('#FFFFFF')
+      .font('Helvetica-Bold')
+      .text('Description', leftMargin + 10, startY + 9)
+      .text('Amount', leftMargin + descColWidth + 10, startY + 9);
+
+    // Table content
+    let currentY = startY + 35;
+
+    // Main item - Project description
+    const projectName = invoice.project?.name || 'Design Services';
+    const description = `${projectName}\n\nProject services as agreed.`;
+
+    // Draw description cell with border
+    doc
+      .strokeColor(COLORS.border)
+      .rect(leftMargin, currentY - 5, descColWidth, 80)
       .stroke();
 
     doc
-      .fontSize(9)
-      .fillColor('#666666')
-      .font('Helvetica-Oblique')
-      .text('Authorized Signature', 50, footerY - 10);
-
-    // Footer text
-    doc
-      .fontSize(8)
-      .fillColor('#999999')
+      .fontSize(10)
+      .fillColor(COLORS.text)
       .font('Helvetica')
-      .text(
-        'Thank you for your business! | Questions? Contact us at ' + COMPANY_INFO.email,
-        50,
-        footerY + 20,
-        { align: 'center', width: 512 }
-      );
+      .text(description, leftMargin + 10, currentY, {
+        width: descColWidth - 20,
+        lineGap: 3,
+      });
+
+    // Amount cell
+    doc
+      .strokeColor(COLORS.border)
+      .rect(leftMargin + descColWidth, currentY - 5, amountColWidth, 80)
+      .stroke();
 
     doc
-      .text(COMPANY_INFO.website, 50, footerY + 35, { align: 'center', width: 512, link: `https://${COMPANY_INFO.website}` });
+      .fontSize(10)
+      .fillColor(COLORS.text)
+      .font('Helvetica')
+      .text(this.formatCurrency(invoice.subtotal), leftMargin + descColWidth + 10, currentY);
+
+    currentY += 80;
+
+    // Additional items if any
+    if (invoice.items && invoice.items.length > 0) {
+      for (const item of invoice.items) {
+        // Description cell
+        doc
+          .strokeColor(COLORS.border)
+          .rect(leftMargin, currentY - 5, descColWidth, 60)
+          .stroke();
+
+        doc
+          .fontSize(10)
+          .fillColor(COLORS.text)
+          .font('Helvetica')
+          .text(item.description, leftMargin + 10, currentY, {
+            width: descColWidth - 20,
+            lineGap: 3,
+          });
+
+        // Amount cell
+        doc
+          .strokeColor(COLORS.border)
+          .rect(leftMargin + descColWidth, currentY - 5, amountColWidth, 60)
+          .stroke();
+
+        doc
+          .fontSize(10)
+          .fillColor(COLORS.text)
+          .font('Helvetica')
+          .text(this.formatCurrency(item.amount), leftMargin + descColWidth + 10, currentY);
+
+        currentY += 60;
+      }
+    }
+
+    return currentY;
+  }
+
+  private buildTotal(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations, tableEndY: number) {
+    const pageWidth = doc.page.width;
+    const rightMargin = 60;
+    const totalY = tableEndY + 30;
+
+    // Total label and amount
+    doc
+      .fontSize(14)
+      .fillColor(COLORS.text)
+      .font('Helvetica-Bold')
+      .text('Total', pageWidth - 250, totalY)
+      .text(`$${this.formatCurrency(invoice.totalAmount)}`, pageWidth - rightMargin - 100, totalY, {
+        width: 100,
+        align: 'right',
+      });
+
+    // If there's a balance due (partial payment)
+    const amountPaid = Number(invoice.amountPaid || 0);
+    if (amountPaid > 0 && amountPaid < Number(invoice.totalAmount)) {
+      const balance = Number(invoice.totalAmount) - amountPaid;
+
+      doc
+        .fontSize(10)
+        .fillColor(COLORS.lightText)
+        .font('Helvetica')
+        .text(`Amount Paid: $${this.formatCurrency(amountPaid)}`, pageWidth - 250, totalY + 25);
+
+      doc
+        .fontSize(12)
+        .fillColor(COLORS.paid)
+        .font('Helvetica-Bold')
+        .text(`Balance Due: $${this.formatCurrency(balance)}`, pageWidth - 250, totalY + 45);
+    }
+  }
+
+  private drawPaidStamp(doc: PDFKit.PDFDocument, x: number, y: number, width: number) {
+    const height = width * 0.5;
+    const borderRadius = 8;
+
+    doc.save();
+
+    // Rotate slightly for stamp effect
+    doc.rotate(-15, { origin: [x + width / 2, y + height / 2] });
+
+    // Outer border (double line effect)
+    doc
+      .strokeColor(COLORS.paid)
+      .lineWidth(3)
+      .roundedRect(x, y, width, height, borderRadius)
+      .stroke();
+
+    doc
+      .strokeColor(COLORS.paid)
+      .lineWidth(1)
+      .roundedRect(x + 5, y + 5, width - 10, height - 10, borderRadius - 2)
+      .stroke();
+
+    // PAID text
+    doc
+      .fontSize(width * 0.35)
+      .fillColor(COLORS.paid)
+      .font('Helvetica-Bold')
+      .text('PAID', x, y + height * 0.25, {
+        width: width,
+        align: 'center',
+      });
+
+    doc.restore();
+  }
+
+  private drawVerticalInvoiceText(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+    doc.save();
+
+    const pageHeight = doc.page.height;
+    const x = 25;
+    const y = pageHeight / 2;
+
+    // Rotate 90 degrees counter-clockwise
+    doc.rotate(-90, { origin: [x, y] });
+
+    // Invoice label with project name
+    const label = `Invoice ${invoice.invoiceNumber}`;
+    doc
+      .fontSize(14)
+      .fillColor(COLORS.primary)
+      .font('Helvetica-Bold')
+      .text(label, x - 100, y - 10, { width: 200 });
+
+    doc.restore();
   }
 
   private formatCurrency(amount: number | Decimal): string {
     const numAmount = typeof amount === 'number' ? amount : Number(amount);
-    return numAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return numAmount.toFixed(2);
   }
 
   private formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  }
-
-  private formatStatus(status: string): string {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    const d = new Date(date);
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${month}/${day}/${year}`;
   }
 }

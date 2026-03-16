@@ -5,21 +5,15 @@ export class PaymentsService {
     private static readonly BASE_URL = '/payments';
 
     static async create(data: FormData): Promise<Payment> {
-        const response = await api.post<Payment>(this.BASE_URL, data, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        // Axios auto-detects FormData and sets correct Content-Type with boundary
+        const response = await api.post<Payment>(this.BASE_URL, data);
         return response.data;
     }
 
     static async uploadClientPayment(data: FormData): Promise<Payment> {
-        // Override default Content-Type to let browser set multipart/form-data with boundary
-        const response = await api.post<Payment>(`${this.BASE_URL}/client-upload`, data, {
-            headers: {
-                'Content-Type': undefined, // This tells axios to let the browser set it
-            },
-        });
+        // Axios auto-detects FormData and sets correct Content-Type with boundary
+        // Don't override headers to preserve CSRF token from interceptor
+        const response = await api.post<Payment>(`${this.BASE_URL}/client-upload`, data);
         return response.data;
     }
 
