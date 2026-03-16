@@ -97,10 +97,11 @@ function UserModals({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="create-firstName" className="block text-sm font-semibold text-navy-900 mb-2">
                 First Name
               </label>
               <input
+                id="create-firstName"
                 type="text"
                 required
                 value={formData.firstName}
@@ -109,10 +110,11 @@ function UserModals({
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="create-lastName" className="block text-sm font-semibold text-navy-900 mb-2">
                 Last Name
               </label>
               <input
+                id="create-lastName"
                 type="text"
                 required
                 value={formData.lastName}
@@ -123,8 +125,9 @@ function UserModals({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-navy-900 mb-2">Email</label>
+            <label htmlFor="create-email" className="block text-sm font-semibold text-navy-900 mb-2">Email</label>
             <EmailInput
+              id="create-email"
               value={formData.email}
               onChange={(email) => onFormDataChange({ ...formData, email })}
               placeholder="Email address"
@@ -133,8 +136,9 @@ function UserModals({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
+            <label htmlFor="create-phone" className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
             <PhoneInput
+              id="create-phone"
               value={formData.phone || ''}
               onChange={(phone) => onFormDataChange({ ...formData, phone })}
               placeholder="Phone number"
@@ -177,10 +181,11 @@ function UserModals({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="edit-firstName" className="block text-sm font-semibold text-navy-900 mb-2">
                 First Name
               </label>
               <input
+                id="edit-firstName"
                 type="text"
                 required
                 value={editFormData.firstName || ''}
@@ -189,10 +194,11 @@ function UserModals({
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="edit-lastName" className="block text-sm font-semibold text-navy-900 mb-2">
                 Last Name
               </label>
               <input
+                id="edit-lastName"
                 type="text"
                 required
                 value={editFormData.lastName || ''}
@@ -203,8 +209,9 @@ function UserModals({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
+            <label htmlFor="edit-phone" className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
             <PhoneInput
+              id="edit-phone"
               value={editFormData.phone || ''}
               onChange={(phone) => onEditFormDataChange({ ...editFormData, phone })}
               placeholder="Phone number"

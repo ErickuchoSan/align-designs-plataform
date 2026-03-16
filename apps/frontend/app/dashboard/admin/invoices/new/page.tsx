@@ -126,8 +126,9 @@ export default function CreateInvoicePage() {
 
                 {/* Project Selection */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Project</label>
+                    <label htmlFor="projectId" className="block text-sm font-medium text-gray-700">Project</label>
                     <select
+                        id="projectId"
                         {...register('projectId')}
                         className={cn(INPUT_BASE, errors.projectId ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'mt-1')}
                     >
@@ -143,8 +144,9 @@ export default function CreateInvoicePage() {
 
                 <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Issue Date</label>
+                        <label htmlFor="issueDate" className="block text-sm font-medium text-gray-700">Issue Date</label>
                         <input
+                            id="issueDate"
                             type="date"
                             {...register('issueDate')}
                             className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1')}
@@ -152,8 +154,9 @@ export default function CreateInvoicePage() {
                         {errors.issueDate && <p className="mt-1 text-sm text-red-600">{errors.issueDate.message}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Terms (Days)</label>
+                        <label htmlFor="paymentTermsDays" className="block text-sm font-medium text-gray-700">Terms (Days)</label>
                         <input
+                            id="paymentTermsDays"
                             type="number"
                             {...register('paymentTermsDays', { valueAsNumber: true })}
                             className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1')}
@@ -162,8 +165,9 @@ export default function CreateInvoicePage() {
                         {errors.paymentTermsDays && <p className="mt-1 text-sm text-red-600">{errors.paymentTermsDays.message}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">Due Date</label>
                         <input
+                            id="dueDate"
                             type="date"
                             value={dueDate}
                             readOnly
@@ -176,8 +180,9 @@ export default function CreateInvoicePage() {
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Financials</h3>
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Subtotal ($)</label>
+                            <label htmlFor="subtotal" className="block text-sm font-medium text-gray-700">Subtotal ($)</label>
                             <input
+                                id="subtotal"
                                 type="number"
                                 step="0.01"
                                 {...register('subtotal', { valueAsNumber: true })}
@@ -186,8 +191,9 @@ export default function CreateInvoicePage() {
                             {errors.subtotal && <p className="mt-1 text-sm text-red-600">{errors.subtotal.message}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
+                            <label htmlFor="taxRate" className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
                             <input
+                                id="taxRate"
                                 type="number"
                                 step="0.1"
                                 {...register('taxRate', { valueAsNumber: true })}
@@ -205,8 +211,9 @@ export default function CreateInvoicePage() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Notes (Visible to Client)</label>
+                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Visible to Client)</label>
                     <textarea
+                        id="notes"
                         rows={3}
                         {...register('notes')}
                         className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default, 'mt-1')}
