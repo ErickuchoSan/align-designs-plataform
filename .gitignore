@@ -94,3 +94,7 @@ scripts/create_bundle.ps1
 
 # SSH keys
 *.key
+
+# Claude Code
+.claude/
+.mcp.json
