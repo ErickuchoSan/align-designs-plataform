@@ -43,6 +43,7 @@ export class IpThrottlerGuard extends ThrottlerGuard {
    * Override the default getTracker method to use IP address
    * instead of user identifier
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   protected async getTracker(req: Request): Promise<string> {
     // Only trust X-Forwarded-For if we're behind a trusted proxy
     if (this.trustProxy && this.isTrustedProxy(req)) {
@@ -89,12 +90,37 @@ export class IpThrottlerGuard extends ThrottlerGuard {
    * Validate IP address format (basic validation)
    */
   private isValidIp(ip: string): boolean {
-    // IPv4 regex
-    const ipv4Regex =
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    // IPv6 regex (simplified)
-    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+    return this.isValidIpv4(ip) || this.isValidIpv6(ip);
+  }
 
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+  /**
+   * Validate IPv4 address using programmatic approach (avoids complex regex)
+   */
+  private isValidIpv4(ip: string): boolean {
+    const parts = ip.split('.');
+    if (parts.length !== 4) return false;
+
+    return parts.every((part) => {
+      // Must be numeric and not have leading zeros (except "0" itself)
+      if (!/^\d+$/.test(part)) return false;
+      if (part.length > 1 && part.startsWith('0')) return false;
+
+      const num = parseInt(part, 10);
+      return num >= 0 && num <= 255;
+    });
+  }
+
+  /**
+   * Validate IPv6 address (simplified check)
+   */
+  private isValidIpv6(ip: string): boolean {
+    const ipv6Regex = /^[0-9a-fA-F:]+$/;
+    if (!ipv6Regex.test(ip)) return false;
+
+    const parts = ip.split(':');
+    return (
+      parts.length === 8 &&
+      parts.every((part) => part.length >= 1 && part.length <= 4)
+    );
   }
 }

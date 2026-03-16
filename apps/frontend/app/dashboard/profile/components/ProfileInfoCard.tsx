@@ -137,8 +137,9 @@ const ProfileForm = memo(function ProfileForm({
     <form onSubmit={onSave} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">First Name</label>
+          <label htmlFor="profile-firstName" className="block text-sm font-medium text-navy-900 mb-2">First Name</label>
           <input
+            id="profile-firstName"
             type="text"
             required
             value={profileData.firstName}
@@ -147,8 +148,9 @@ const ProfileForm = memo(function ProfileForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">Last Name</label>
+          <label htmlFor="profile-lastName" className="block text-sm font-medium text-navy-900 mb-2">Last Name</label>
           <input
+            id="profile-lastName"
             type="text"
             required
             value={profileData.lastName}
@@ -158,8 +160,9 @@ const ProfileForm = memo(function ProfileForm({
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-navy-900 mb-2">Phone</label>
+        <label htmlFor="profile-phone" className="block text-sm font-medium text-navy-900 mb-2">Phone</label>
         <PhoneInput
+          id="profile-phone"
           value={profileData.phone}
           onChange={(phone) => setProfileData({ ...profileData, phone })}
           placeholder="Phone number"

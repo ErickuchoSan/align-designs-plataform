@@ -42,24 +42,31 @@ function UsersCards({
   onPageChange,
   onItemsPerPageChange,
 }: UsersCardsProps) {
-  return (
-    <div className="md:hidden space-y-4 animate-slideUp">
-      {isLoading && users.length === 0 ? (
-        <>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
-              <div className="h-4 bg-stone-200 rounded w-3/4 mb-3"></div>
-              <div className="h-3 bg-stone-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-stone-200 rounded w-2/3"></div>
-            </div>
-          ))}
-        </>
-      ) : users.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 text-center text-stone-500">
-          No {activeTab} found.
+  const renderLoadingState = () => (
+    <>
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
+          <div className="h-4 bg-stone-200 rounded w-3/4 mb-3"></div>
+          <div className="h-3 bg-stone-200 rounded w-1/2 mb-2"></div>
+          <div className="h-3 bg-stone-200 rounded w-2/3"></div>
         </div>
-      ) : (
-        users.map((usr) => (
+      ))}
+    </>
+  );
+
+  const renderEmptyState = () => (
+    <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 text-center text-stone-500">
+      No {activeTab} found.
+    </div>
+  );
+
+  const renderContent = () => {
+    if (isLoading && users.length === 0) return renderLoadingState();
+    if (users.length === 0) return renderEmptyState();
+    return users.map((usr) => renderUserCard(usr));
+  };
+
+  const renderUserCard = (usr: User) => (
           <div key={usr.id} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 hover:shadow-2xl transition-shadow">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -149,8 +156,11 @@ function UsersCards({
               </button>
             </div>
           </div>
-        ))
-      )}
+  );
+
+  return (
+    <div className="md:hidden space-y-4 animate-slideUp">
+      {renderContent()}
 
       {totalPages > 0 && (
         <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4">

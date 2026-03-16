@@ -265,10 +265,11 @@ export default function UsersPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="user-firstName" className="block text-sm font-semibold text-navy-900 mb-2">
                 First Name
               </label>
               <input
+                id="user-firstName"
                 type="text"
                 required
                 value={usersHook.formData.firstName}
@@ -279,10 +280,11 @@ export default function UsersPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="user-lastName" className="block text-sm font-semibold text-navy-900 mb-2">
                 Last Name
               </label>
               <input
+                id="user-lastName"
                 type="text"
                 required
                 value={usersHook.formData.lastName}
@@ -295,8 +297,9 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-navy-900 mb-2">Email</label>
+            <label htmlFor="user-email" className="block text-sm font-semibold text-navy-900 mb-2">Email</label>
             <EmailInput
+              id="user-email"
               value={usersHook.formData.email}
               onChange={(email) => usersHook.setFormData({ ...usersHook.formData, email })}
               placeholder="Email address"
@@ -305,8 +308,9 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
+            <label htmlFor="user-phone" className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
             <PhoneInput
+              id="user-phone"
               value={usersHook.formData.phone || ''}
               onChange={(phone) => usersHook.setFormData({ ...usersHook.formData, phone })}
               placeholder="Phone number"

@@ -10,6 +10,7 @@ interface EmailInputProps {
   className?: string;
   required?: boolean;
   placeholder?: string;
+  id?: string;
 }
 
 const businessDomains = [
@@ -17,7 +18,7 @@ const businessDomains = [
   'linkedin.com', 'twitter.com', 'facebook.com', 'instagram.com', 'whatsapp.com'
 ];
 
-export default function EmailInput({ value, onChange, className = '', required = false, placeholder = 'Email address' }: EmailInputProps) {
+export default function EmailInput({ value, onChange, className = '', required = false, placeholder = 'Email address', id }: EmailInputProps) {
   const [error, setError] = useState('');
   const [warning, setWarning] = useState('');
   const [isValidating, setIsValidating] = useState(false);
@@ -122,6 +123,7 @@ export default function EmailInput({ value, onChange, className = '', required =
     <div className={cn('w-full', className)}>
       <div className="relative">
         <input
+          id={id}
           type="email"
           value={value}
           onChange={(e) => handleChange(e.target.value)}

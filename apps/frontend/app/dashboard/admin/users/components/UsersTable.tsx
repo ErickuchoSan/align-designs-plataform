@@ -43,36 +43,29 @@ function UsersTable({
   onPageChange,
   onItemsPerPageChange,
 }: UsersTableProps) {
-  return (
-    <div className="hidden md:block bg-white rounded-2xl shadow-2xl overflow-hidden border border-stone-200 animate-slideUp">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-stone-200">
-          <thead className="bg-gradient-to-r from-navy-50 to-stone-100">
-            <tr>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">User</th>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Email</th>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Phone</th>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Status</th>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Created At</th>
-              <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-navy-900 uppercase tracking-wider">Resend Email</th>
-              <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-navy-900 uppercase tracking-wider">Action</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-stone-200">
-            {isLoading && users.length === 0 ? (
-              <>
-                {[1, 2, 3].map((i) => (
-                  <TableRowSkeleton key={i} />
-                ))}
-              </>
-            ) : users.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-stone-500">
-                  No {activeTab} found.
-                </td>
-              </tr>
-            ) : (
-              users.map((usr) => (
+  const renderLoadingRows = () => (
+    <>
+      {[1, 2, 3].map((i) => (
+        <TableRowSkeleton key={i} />
+      ))}
+    </>
+  );
+
+  const renderEmptyRow = () => (
+    <tr>
+      <td colSpan={7} className="px-6 py-12 text-center text-stone-500">
+        No {activeTab} found.
+      </td>
+    </tr>
+  );
+
+  const renderTableBody = () => {
+    if (isLoading && users.length === 0) return renderLoadingRows();
+    if (users.length === 0) return renderEmptyRow();
+    return users.map((usr) => renderUserRow(usr));
+  };
+
+  const renderUserRow = (usr: User) => (
                 <tr key={usr.id} className="hover:bg-stone-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-semibold text-navy-900">
@@ -153,8 +146,25 @@ function UsersTable({
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
+  );
+
+  return (
+    <div className="hidden md:block bg-white rounded-2xl shadow-2xl overflow-hidden border border-stone-200 animate-slideUp">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-stone-200">
+          <thead className="bg-gradient-to-r from-navy-50 to-stone-100">
+            <tr>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">User</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Email</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Phone</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Status</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Created At</th>
+              <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-navy-900 uppercase tracking-wider">Resend Email</th>
+              <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-navy-900 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-stone-200">
+            {renderTableBody()}
           </tbody>
         </table>
       </div>

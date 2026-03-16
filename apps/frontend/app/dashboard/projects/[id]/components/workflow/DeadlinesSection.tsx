@@ -39,6 +39,24 @@ export function DeadlinesSection({ deadlines, loading = false }: DeadlinesSectio
     return diffDays;
   };
 
+  const getDeadlineCardStyles = (isOverdue: boolean, isUrgent: boolean): string => {
+    if (isOverdue) return 'bg-red-50 border-red-200';
+    if (isUrgent) return 'bg-amber-50 border-amber-200';
+    return 'bg-stone-50 border-stone-200';
+  };
+
+  const getDeadlineBadgeStyles = (isOverdue: boolean, isUrgent: boolean): string => {
+    if (isOverdue) return 'bg-red-100 text-red-700';
+    if (isUrgent) return 'bg-amber-100 text-amber-700';
+    return 'bg-blue-100 text-blue-700';
+  };
+
+  const getDeadlineText = (daysUntil: number, isOverdue: boolean): string => {
+    if (isOverdue) return `${Math.abs(daysUntil)} days overdue`;
+    if (daysUntil === 0) return 'Due today';
+    return `${daysUntil} days left`;
+  };
+
   if (loading) {
     return (
       <div className="animate-pulse">
@@ -72,30 +90,14 @@ export function DeadlinesSection({ deadlines, loading = false }: DeadlinesSectio
           return (
             <div
               key={deadline.invoiceId || index}
-              className={`p-3 rounded-lg border ${
-                isOverdue
-                  ? 'bg-red-50 border-red-200'
-                  : isUrgent
-                  ? 'bg-amber-50 border-amber-200'
-                  : 'bg-stone-50 border-stone-200'
-              }`}
+              className={`p-3 rounded-lg border ${getDeadlineCardStyles(isOverdue, isUrgent)}`}
             >
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-navy-900">{deadline.label}</p>
                 <span
-                  className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                    isOverdue
-                      ? 'bg-red-100 text-red-700'
-                      : isUrgent
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-blue-100 text-blue-700'
-                  }`}
+                  className={`text-xs font-semibold px-2 py-0.5 rounded ${getDeadlineBadgeStyles(isOverdue, isUrgent)}`}
                 >
-                  {isOverdue
-                    ? `${Math.abs(daysUntil)} days overdue`
-                    : daysUntil === 0
-                    ? 'Due today'
-                    : `${daysUntil} days left`}
+                  {getDeadlineText(daysUntil, isOverdue)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs text-stone-600">

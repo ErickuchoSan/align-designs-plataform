@@ -41,6 +41,7 @@ export interface PermissionStrategy {
  * Admins have unrestricted access to all resources
  */
 export class AdminPermissionStrategy implements PermissionStrategy {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   verifyProjectAccess(
     userId: string,
     projectClientId: string,
@@ -56,6 +57,7 @@ export class AdminPermissionStrategy implements PermissionStrategy {
   ): void {
     // Admins can access all user data - no verification needed
   }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   isAdmin(): boolean {
     return true;
@@ -98,14 +100,16 @@ export class ClientPermissionStrategy implements PermissionStrategy {
  * Extends ClientPermissionStrategy to reuse verifyUserAccess logic
  */
 export class EmployeePermissionStrategy extends ClientPermissionStrategy {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   verifyProjectAccess(
     userId: string,
     projectClientId: string,
-    errorMessage = 'You do not have permission to access this project',
+    errorMessage?: string,
   ): void {
     // Employee access is verified by checking project assignment in the service layer
     // This is a placeholder - actual verification happens in ProjectsService
   }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   // verifyUserAccess is inherited from ClientPermissionStrategy
   // isAdmin is inherited from ClientPermissionStrategy
@@ -134,7 +138,7 @@ export class PermissionContext {
       case Role.EMPLOYEE:
         return new EmployeePermissionStrategy();
       default:
-        throw new Error(`Unsupported role: ${role}`);
+        throw new Error(`Unsupported role: ${String(role)}`);
     }
   }
 

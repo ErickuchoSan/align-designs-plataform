@@ -11,6 +11,7 @@ interface PhoneInputProps {
   className?: string;
   required?: boolean;
   placeholder?: string;
+  id?: string;
 }
 
 export default function PhoneInput({
@@ -19,6 +20,7 @@ export default function PhoneInput({
   className = '',
   required = false,
   placeholder = 'Phone number',
+  id,
 }: PhoneInputProps) {
   const [countryCode, setCountryCode] = useState('+1');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -95,6 +97,7 @@ export default function PhoneInput({
 
         <div className="flex-1 relative">
           <input
+            id={id}
             type="tel"
             value={formatPhoneNumber(phoneNumber)}
             onChange={(e) => handlePhoneChange(e.target.value)}

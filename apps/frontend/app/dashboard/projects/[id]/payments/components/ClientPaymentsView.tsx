@@ -20,6 +20,12 @@ interface ClientPaymentsViewProps {
   onRefresh: () => void;
 }
 
+const getInvoiceStatusBadgeClass = (status: InvoiceStatus): string => {
+  if (status === InvoiceStatus.PAID) return 'bg-green-100 text-green-800';
+  if (status === InvoiceStatus.OVERDUE) return 'bg-red-100 text-red-800';
+  return 'bg-gray-100 text-gray-800';
+};
+
 function ClientPaymentsView({
   projectId,
   project,
@@ -124,10 +130,7 @@ function ClientPaymentsView({
                     <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-navy-900">#{invoice.invoiceNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          invoice.status === InvoiceStatus.PAID ? 'bg-green-100 text-green-800' :
-                          invoice.status === InvoiceStatus.OVERDUE ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getInvoiceStatusBadgeClass(invoice.status)}`}>
                           {invoice.status}
                         </span>
                       </td>
@@ -165,10 +168,7 @@ function ClientPaymentsView({
                 <div key={invoice.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex justify-between items-start mb-3">
                     <div className="text-sm font-medium text-navy-900">#{invoice.invoiceNumber}</div>
-                    <span className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      invoice.status === InvoiceStatus.PAID ? 'bg-green-100 text-green-800' :
-                      invoice.status === InvoiceStatus.OVERDUE ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${getInvoiceStatusBadgeClass(invoice.status)}`}>
                       {invoice.status}
                     </span>
                   </div>
