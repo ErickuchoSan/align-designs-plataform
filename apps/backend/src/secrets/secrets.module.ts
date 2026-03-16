@@ -6,8 +6,8 @@ import { AwsSecretsManager } from './managers/aws-secrets-manager';
 
 @Global()
 @Module({
-    imports: [ConfigModule],
-    providers: [SecretsService, EnvSecretsManager, AwsSecretsManager],
-    exports: [SecretsService],
+  imports: [ConfigModule],
+  providers: [SecretsService, EnvSecretsManager, AwsSecretsManager],
+  exports: [SecretsService],
 })
-export class SecretsModule { }
+export class SecretsModule {}

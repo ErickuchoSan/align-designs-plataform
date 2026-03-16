@@ -30,7 +30,7 @@ export class FilesService {
     private readonly cacheManager: CacheManagerService,
     private readonly fileNotifications: FileNotificationService,
     private readonly fileMaintenance: FileMaintenanceService,
-  ) { }
+  ) {}
 
   async uploadFile(
     projectId: string,
@@ -214,7 +214,6 @@ export class FilesService {
       !fileFilters.name && (!fileFilters.type || fileFilters.type === 'all');
 
     if (shouldCache) {
-
     }
 
     // Build where clause with filters
@@ -244,7 +243,11 @@ export class FilesService {
       where.OR = [
         {
           stage: {
-            in: [Stage.BRIEF_PROJECT, Stage.FEEDBACK_EMPLOYEE, Stage.REFERENCES],
+            in: [
+              Stage.BRIEF_PROJECT,
+              Stage.FEEDBACK_EMPLOYEE,
+              Stage.REFERENCES,
+            ],
           },
         },
         {
@@ -266,10 +269,7 @@ export class FilesService {
 
       if (where.OR) {
         // If role-based OR exists, we need to combine with AND
-        where.AND = [
-          { OR: where.OR },
-          { OR: nameFilter },
-        ];
+        where.AND = [{ OR: where.OR }, { OR: nameFilter }];
         delete where.OR;
       } else {
         where.OR = nameFilter;

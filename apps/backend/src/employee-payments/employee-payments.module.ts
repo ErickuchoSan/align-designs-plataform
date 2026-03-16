@@ -11,4 +11,4 @@ import { StorageModule } from '../storage/storage.module';
   providers: [EmployeePaymentsService],
   exports: [EmployeePaymentsService],
 })
-export class EmployeePaymentsModule { }
+export class EmployeePaymentsModule {}

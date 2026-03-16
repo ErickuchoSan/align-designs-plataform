@@ -4,7 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CacheManagerService } from '../cache/services/cache-manager.service';
 import { EmailService } from '../email/email.service';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CreateClientDto } from './dto/create-client.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -111,14 +115,18 @@ describe('UsersService', () => {
     it('should throw ConflictException if email exists', async () => {
       userRepo.findByEmail.mockResolvedValue(mockUser);
 
-      await expect(service.createClient(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.createClient(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException if phone exists', async () => {
       userRepo.findByEmail.mockResolvedValue(null);
       prismaService.user.findFirst.mockResolvedValueOnce(mockUser); // Phone exists
 
-      await expect(service.createClient(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.createClient(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -176,7 +184,11 @@ describe('UsersService', () => {
     it('should return user if allowed', async () => {
       prismaService.user.findFirst.mockResolvedValue(mockUser);
 
-      const result = await service.findOne(mockUser.id, mockUser.id, Role.CLIENT);
+      const result = await service.findOne(
+        mockUser.id,
+        mockUser.id,
+        Role.CLIENT,
+      );
 
       expect(result).toEqual(mockUser);
     });
@@ -201,7 +213,10 @@ describe('UsersService', () => {
 
     it('should update user successfully', async () => {
       prismaService.user.findFirst.mockResolvedValue(mockUser);
-      prismaService.user.update.mockResolvedValue({ ...mockUser, ...updateDto });
+      prismaService.user.update.mockResolvedValue({
+        ...mockUser,
+        ...updateDto,
+      });
 
       const result = await service.update(
         mockUser.id,
@@ -224,7 +239,10 @@ describe('UsersService', () => {
   describe('toggleStatus', () => {
     it('should toggle user status', async () => {
       prismaService.user.findFirst.mockResolvedValue(mockUser);
-      prismaService.user.update.mockResolvedValue({ ...mockUser, isActive: false });
+      prismaService.user.update.mockResolvedValue({
+        ...mockUser,
+        isActive: false,
+      });
 
       const result = await service.toggleStatus(mockUser.id, false);
 

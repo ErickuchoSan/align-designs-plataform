@@ -179,10 +179,16 @@ Thank you for your business!`;
       .fontSize(12)
       .fillColor(COLORS.text)
       .font('Helvetica-Bold')
-      .text('ALIGN', x - 5, y + size * 0.75, { width: size + 10, align: 'center' });
+      .text('ALIGN', x - 5, y + size * 0.75, {
+        width: size + 10,
+        align: 'center',
+      });
   }
 
-  private buildBillToSection(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+  private buildBillToSection(
+    doc: PDFKit.PDFDocument,
+    invoice: InvoiceWithRelations,
+  ) {
     const pageWidth = doc.page.width;
     const leftMargin = 60;
     const startY = 140;
@@ -203,7 +209,8 @@ Thank you for your business!`;
       .text('Bill To', leftMargin, startY);
 
     // Client name/company
-    const clientName = invoice.client?.company ||
+    const clientName =
+      invoice.client?.company ||
       (invoice.client
         ? `${invoice.client.firstName} ${invoice.client.lastName}`
         : 'Client Name');
@@ -228,7 +235,10 @@ Thank you for your business!`;
       .text(this.formatDate(invoice.issueDate), pageWidth - 120, startY);
   }
 
-  private buildDescriptionTable(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations): number {
+  private buildDescriptionTable(
+    doc: PDFKit.PDFDocument,
+    invoice: InvoiceWithRelations,
+  ): number {
     const pageWidth = doc.page.width;
     const leftMargin = 60;
     const rightMargin = 60;
@@ -283,7 +293,11 @@ Thank you for your business!`;
       .fontSize(10)
       .fillColor(COLORS.text)
       .font('Helvetica')
-      .text(this.formatCurrency(invoice.subtotal), leftMargin + descColWidth + 10, currentY);
+      .text(
+        this.formatCurrency(invoice.subtotal),
+        leftMargin + descColWidth + 10,
+        currentY,
+      );
 
     currentY += 80;
 
@@ -315,7 +329,11 @@ Thank you for your business!`;
           .fontSize(10)
           .fillColor(COLORS.text)
           .font('Helvetica')
-          .text(this.formatCurrency(item.amount), leftMargin + descColWidth + 10, currentY);
+          .text(
+            this.formatCurrency(item.amount),
+            leftMargin + descColWidth + 10,
+            currentY,
+          );
 
         currentY += 60;
       }
@@ -324,7 +342,11 @@ Thank you for your business!`;
     return currentY;
   }
 
-  private buildTotal(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations, tableEndY: number) {
+  private buildTotal(
+    doc: PDFKit.PDFDocument,
+    invoice: InvoiceWithRelations,
+    tableEndY: number,
+  ) {
     const pageWidth = doc.page.width;
     const rightMargin = 60;
     const totalY = tableEndY + 30;
@@ -335,10 +357,15 @@ Thank you for your business!`;
       .fillColor(COLORS.text)
       .font('Helvetica-Bold')
       .text('Total', pageWidth - 250, totalY)
-      .text(`$${this.formatCurrency(invoice.totalAmount)}`, pageWidth - rightMargin - 100, totalY, {
-        width: 100,
-        align: 'right',
-      });
+      .text(
+        `$${this.formatCurrency(invoice.totalAmount)}`,
+        pageWidth - rightMargin - 100,
+        totalY,
+        {
+          width: 100,
+          align: 'right',
+        },
+      );
 
     // If there's a balance due (partial payment)
     const amountPaid = Number(invoice.amountPaid || 0);
@@ -349,17 +376,30 @@ Thank you for your business!`;
         .fontSize(10)
         .fillColor(COLORS.lightText)
         .font('Helvetica')
-        .text(`Amount Paid: $${this.formatCurrency(amountPaid)}`, pageWidth - 250, totalY + 25);
+        .text(
+          `Amount Paid: $${this.formatCurrency(amountPaid)}`,
+          pageWidth - 250,
+          totalY + 25,
+        );
 
       doc
         .fontSize(12)
         .fillColor(COLORS.paid)
         .font('Helvetica-Bold')
-        .text(`Balance Due: $${this.formatCurrency(balance)}`, pageWidth - 250, totalY + 45);
+        .text(
+          `Balance Due: $${this.formatCurrency(balance)}`,
+          pageWidth - 250,
+          totalY + 45,
+        );
     }
   }
 
-  private drawPaidStamp(doc: PDFKit.PDFDocument, x: number, y: number, width: number) {
+  private drawPaidStamp(
+    doc: PDFKit.PDFDocument,
+    x: number,
+    y: number,
+    width: number,
+  ) {
     const height = width * 0.5;
     const borderRadius = 8;
 
@@ -394,7 +434,10 @@ Thank you for your business!`;
     doc.restore();
   }
 
-  private drawVerticalInvoiceText(doc: PDFKit.PDFDocument, invoice: InvoiceWithRelations) {
+  private drawVerticalInvoiceText(
+    doc: PDFKit.PDFDocument,
+    invoice: InvoiceWithRelations,
+  ) {
     doc.save();
 
     const pageHeight = doc.page.height;

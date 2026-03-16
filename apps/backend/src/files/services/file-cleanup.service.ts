@@ -121,9 +121,7 @@ export class FileCleanupService {
 
       // If there were no failures, log successful completion
       if (failureCount === 0) {
-        this.logger.log(
-          `✅ File cleanup job completed successfully`,
-        );
+        this.logger.log(`✅ File cleanup job completed successfully`);
       } else {
         this.logger.warn(
           `⚠️ File cleanup job completed with ${failureCount} failures`,
@@ -205,9 +203,7 @@ export class FileCleanupService {
         sizeFreed += file.sizeBytes || 0n;
       } catch (error) {
         const err = error as Error;
-        errors.push(
-          `Failed to delete ${file.filename}: ${err.message}`,
-        );
+        errors.push(`Failed to delete ${file.filename}: ${err.message}`);
       }
     }
 
@@ -269,12 +265,15 @@ export class FileCleanupService {
 
     const oldestArchive: Date | null =
       eligibleFiles.length > 0
-        ? eligibleFiles.reduce((oldest: Date | null, file) => {
-            const archivedAt = file.project.archivedAt;
-            if (!archivedAt) return oldest;
-            if (!oldest) return archivedAt;
-            return archivedAt < oldest ? archivedAt : oldest;
-          }, null as Date | null)
+        ? eligibleFiles.reduce(
+            (oldest: Date | null, file) => {
+              const archivedAt = file.project.archivedAt;
+              if (!archivedAt) return oldest;
+              if (!oldest) return archivedAt;
+              return archivedAt < oldest ? archivedAt : oldest;
+            },
+            null as Date | null,
+          )
         : null;
 
     return {

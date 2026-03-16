@@ -94,10 +94,14 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
-    authDependencies = module.get<AuthDependenciesService>(AuthDependenciesService);
+    authDependencies = module.get<AuthDependenciesService>(
+      AuthDependenciesService,
+    );
     tokenService = module.get<TokenService>(TokenService);
     otpValidation = module.get<OtpValidationService>(OtpValidationService);
-    passwordManagement = module.get<PasswordManagementService>(PasswordManagementService);
+    passwordManagement = module.get<PasswordManagementService>(
+      PasswordManagementService,
+    );
   });
 
   it('should be defined', () => {
@@ -113,11 +117,20 @@ describe('AuthService', () => {
 
       const result = await service.loginAdmin('test@example.com', 'password');
 
-      expect(authDependencies.accountLockout.validateAccountNotLocked).toHaveBeenCalledWith(mockUser);
-      expect(authDependencies.password.comparePassword).toHaveBeenCalledWith('password', 'hashed_password');
-      expect(authDependencies.accountLockout.resetFailedAttempts).toHaveBeenCalledWith(mockUser);
+      expect(
+        authDependencies.accountLockout.validateAccountNotLocked,
+      ).toHaveBeenCalledWith(mockUser);
+      expect(authDependencies.password.comparePassword).toHaveBeenCalledWith(
+        'password',
+        'hashed_password',
+      );
+      expect(
+        authDependencies.accountLockout.resetFailedAttempts,
+      ).toHaveBeenCalledWith(mockUser);
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith(mockUser);
-      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith(mockUser.id);
+      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith(
+        mockUser.id,
+      );
       expect(result).toEqual({
         access_token: 'access_token',
         refresh_token: 'refresh_token',
@@ -128,10 +141,16 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if password valid is false', async () => {
       prismaService.user.findFirst.mockResolvedValue(mockUser);
       authDependencies.password.comparePassword.mockResolvedValue(false);
-      authDependencies.accountLockout.handleFailedLogin.mockRejectedValue(new UnauthorizedException());
+      authDependencies.accountLockout.handleFailedLogin.mockRejectedValue(
+        new UnauthorizedException(),
+      );
 
-      await expect(service.loginAdmin('test@example.com', 'wrong')).rejects.toThrow(UnauthorizedException);
-      expect(authDependencies.accountLockout.handleFailedLogin).toHaveBeenCalledWith(mockUser);
+      await expect(
+        service.loginAdmin('test@example.com', 'wrong'),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(
+        authDependencies.accountLockout.handleFailedLogin,
+      ).toHaveBeenCalledWith(mockUser);
     });
   });
 
@@ -152,9 +171,14 @@ describe('AuthService', () => {
 
       const result = await service.verifyOtpForClient('email', '123456');
 
-      expect(otpValidation.verifyOtpForLogin).toHaveBeenCalledWith('email', '123456');
+      expect(otpValidation.verifyOtpForLogin).toHaveBeenCalledWith(
+        'email',
+        '123456',
+      );
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith(mockUser);
-      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith(mockUser.id);
+      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith(
+        mockUser.id,
+      );
       expect(result).toEqual({
         access_token: 'access_token',
         refresh_token: 'refresh_token',
@@ -166,7 +190,12 @@ describe('AuthService', () => {
   describe('Delegated Methods', () => {
     it('changePassword delegation', async () => {
       await service.changePassword('u', 'o', 'n', 'c');
-      expect(passwordManagement.changePassword).toHaveBeenCalledWith('u', 'o', 'n', 'c');
+      expect(passwordManagement.changePassword).toHaveBeenCalledWith(
+        'u',
+        'o',
+        'n',
+        'c',
+      );
     });
 
     it('forgotPassword delegation', async () => {
@@ -176,7 +205,12 @@ describe('AuthService', () => {
 
     it('resetPassword delegation', async () => {
       await service.resetPassword('e', 'o', 'n', 'c');
-      expect(passwordManagement.resetPassword).toHaveBeenCalledWith('e', 'o', 'n', 'c');
+      expect(passwordManagement.resetPassword).toHaveBeenCalledWith(
+        'e',
+        'o',
+        'n',
+        'c',
+      );
     });
 
     it('checkEmail delegation', async () => {
@@ -186,7 +220,11 @@ describe('AuthService', () => {
 
     it('setPassword delegation', async () => {
       await service.setPassword('u', 'p', 'c');
-      expect(passwordManagement.setPassword).toHaveBeenCalledWith('u', 'p', 'c');
+      expect(passwordManagement.setPassword).toHaveBeenCalledWith(
+        'u',
+        'p',
+        'c',
+      );
     });
 
     it('revokeToken delegation', async () => {

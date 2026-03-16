@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsOptional, IsDateString, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEmployeePaymentDto {
@@ -10,7 +16,7 @@ export class CreateEmployeePaymentDto {
   @IsString()
   employeeId: string;
 
-  @ApiProperty({ description: 'Monto del pago', example: 1000.00 })
+  @ApiProperty({ description: 'Monto del pago', example: 1000.0 })
   @IsNumber()
   @Min(0)
   amount: number;
@@ -20,7 +26,10 @@ export class CreateEmployeePaymentDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Método de pago', example: 'Transferencia Bancaria' })
+  @ApiProperty({
+    description: 'Método de pago',
+    example: 'Transferencia Bancaria',
+  })
   @IsString()
   paymentMethod: string;
 

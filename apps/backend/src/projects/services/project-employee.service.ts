@@ -23,7 +23,7 @@ export class ProjectEmployeeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   /**
    * Assign employees to a project
@@ -114,9 +114,7 @@ export class ProjectEmployeeService {
     }
 
     if (!user.isActive) {
-      throw new BadRequestException(
-        `Employee ${user.email} is not active`,
-      );
+      throw new BadRequestException(`Employee ${user.email} is not active`);
     }
 
     // Check if employee is already assigned to an ACTIVE project
@@ -191,9 +189,7 @@ export class ProjectEmployeeService {
       },
     });
 
-    this.logger.log(
-      `Removed employee ${employeeId} from project ${projectId}`,
-    );
+    this.logger.log(`Removed employee ${employeeId} from project ${projectId}`);
   }
 
   /**

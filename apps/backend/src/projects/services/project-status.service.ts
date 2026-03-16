@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProjectStatus, NotificationType, Stage } from '@prisma/client';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -39,7 +35,7 @@ export class ProjectStatusService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   /**
    * Check if project can be activated
@@ -90,7 +86,9 @@ export class ProjectStatusService {
     });
 
     if (employeeCount === 0) {
-      missingRequirements.push('No employee assigned. Please assign at least one employee to the project.');
+      missingRequirements.push(
+        'No employee assigned. Please assign at least one employee to the project.',
+      );
     }
 
     // Check #2: Project Brief (at least one file in BRIEF_PROJECT stage)
@@ -103,12 +101,16 @@ export class ProjectStatusService {
     });
 
     if (briefFileCount === 0) {
-      missingRequirements.push('No Project Brief. Please upload at least one file to the Brief stage.');
+      missingRequirements.push(
+        'No Project Brief. Please upload at least one file to the Brief stage.',
+      );
     }
 
     // Check #3: Payment amount configured
     if (project.initialAmountRequired === null) {
-      missingRequirements.push('Payment amount not configured. Please edit project to set an Initial Amount (use 0 for free projects).');
+      missingRequirements.push(
+        'Payment amount not configured. Please edit project to set an Initial Amount (use 0 for free projects).',
+      );
     }
 
     // If there are missing requirements, return early
@@ -133,7 +135,9 @@ export class ProjectStatusService {
       return {
         canActivate: false,
         reason: `Initial payment not complete. Received $${paid.toFixed(2)} of $${required.toFixed(2)} required.`,
-        missingRequirements: [`Initial payment not complete. Received $${paid.toFixed(2)} of $${required.toFixed(2)} required.`],
+        missingRequirements: [
+          `Initial payment not complete. Received $${paid.toFixed(2)} of $${required.toFixed(2)} required.`,
+        ],
         paymentProgress: {
           required,
           paid,
@@ -217,7 +221,10 @@ export class ProjectStatusService {
         }
       }
     } catch (error) {
-      this.logger.error(`Failed to send activation notifications for project ${projectId}`, error);
+      this.logger.error(
+        `Failed to send activation notifications for project ${projectId}`,
+        error,
+      );
       // Suppress error so activation successful response is returned
     }
 
@@ -399,9 +406,10 @@ export class ProjectStatusService {
    * Useful for dashboards and status displays
    */
 
-
   // ...
-  async getProjectStatusSummary(projectId: string): Promise<ProjectStatusSummary> {
+  async getProjectStatusSummary(
+    projectId: string,
+  ): Promise<ProjectStatusSummary> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
@@ -431,16 +439,15 @@ export class ProjectStatusService {
 
     const paymentProgress = project.initialAmountRequired
       ? {
-        required: Number(project.initialAmountRequired),
-        paid: Number(project.amountPaid),
-        remaining:
-          Number(project.initialAmountRequired) -
-          Number(project.amountPaid),
-        percentage:
-          (Number(project.amountPaid) /
-            Number(project.initialAmountRequired)) *
-          100,
-      }
+          required: Number(project.initialAmountRequired),
+          paid: Number(project.amountPaid),
+          remaining:
+            Number(project.initialAmountRequired) - Number(project.amountPaid),
+          percentage:
+            (Number(project.amountPaid) /
+              Number(project.initialAmountRequired)) *
+            100,
+        }
       : null;
 
     return {

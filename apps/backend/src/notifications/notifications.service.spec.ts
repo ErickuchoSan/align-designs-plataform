@@ -171,7 +171,10 @@ describe('NotificationsService', () => {
 
   describe('findAllByUser', () => {
     it('should return last 50 notifications for user ordered by createdAt desc', async () => {
-      const notifications = [mockNotification, { ...mockNotification, id: 'notification-789' }];
+      const notifications = [
+        mockNotification,
+        { ...mockNotification, id: 'notification-789' },
+      ];
       jest
         .spyOn(prismaService.notification, 'findMany')
         .mockResolvedValue(notifications);

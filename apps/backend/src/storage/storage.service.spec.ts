@@ -50,12 +50,18 @@ describe('StorageService', () => {
     } as Express.Multer.File;
 
     it('should delegate to MinioStorageService', async () => {
-      const expectedResult = { filename: 'uuid-test.txt', storagePath: 'projects/123/uuid-test.txt' };
+      const expectedResult = {
+        filename: 'uuid-test.txt',
+        storagePath: 'projects/123/uuid-test.txt',
+      };
       mockMinioStorageService.uploadFile.mockResolvedValue(expectedResult);
 
       const result = await service.uploadFile(mockFile, '123');
 
-      expect(minioStorageService.uploadFile).toHaveBeenCalledWith(mockFile, '123');
+      expect(minioStorageService.uploadFile).toHaveBeenCalledWith(
+        mockFile,
+        '123',
+      );
       expect(result).toEqual(expectedResult);
     });
   });
@@ -79,7 +85,10 @@ describe('StorageService', () => {
 
       const result = await service.getDownloadUrl(storagePath);
 
-      expect(minioStorageService.getDownloadUrl).toHaveBeenCalledWith(storagePath, undefined);
+      expect(minioStorageService.getDownloadUrl).toHaveBeenCalledWith(
+        storagePath,
+        undefined,
+      );
       expect(result).toBe(mockUrl);
     });
 
@@ -90,7 +99,10 @@ describe('StorageService', () => {
 
       await service.getDownloadUrl(storagePath, customExpiry);
 
-      expect(minioStorageService.getDownloadUrl).toHaveBeenCalledWith(storagePath, customExpiry);
+      expect(minioStorageService.getDownloadUrl).toHaveBeenCalledWith(
+        storagePath,
+        customExpiry,
+      );
     });
   });
 

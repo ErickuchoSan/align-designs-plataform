@@ -79,10 +79,10 @@ async function bootstrap() {
       // HSTS - Force HTTPS in production
       strictTransportSecurity: isProd
         ? {
-          maxAge: 31536000, // 1 year in seconds
-          includeSubDomains: true,
-          preload: true,
-        }
+            maxAge: 31536000, // 1 year in seconds
+            includeSubDomains: true,
+            preload: true,
+          }
         : false, // Disable in development (http://localhost)
       // Referrer Policy - Control referrer information leakage
       referrerPolicy: {
@@ -137,7 +137,10 @@ async function bootstrap() {
       }
 
       // Allow ngrok domains (*.ngrok-free.app or *.ngrok.io)
-      const isNgrokDomain = origin.includes('.ngrok-free.app') || origin.includes('.ngrok.io') || origin.includes('.ngrok-free.dev');
+      const isNgrokDomain =
+        origin.includes('.ngrok-free.app') ||
+        origin.includes('.ngrok.io') ||
+        origin.includes('.ngrok-free.dev');
 
       if (allowedOrigins.includes(origin) || isNgrokDomain) {
         callback(null, true);
@@ -165,7 +168,7 @@ async function bootstrap() {
   // Order matters: More specific filters first, then general ones
   app.useGlobalFilters(
     new PrismaExceptionFilter(), // Handle Prisma errors first
-    new HttpExceptionFilter(),   // Then HTTP exceptions
+    new HttpExceptionFilter(), // Then HTTP exceptions
     new ThrottlerExceptionFilter(), // Then throttling errors
   );
 

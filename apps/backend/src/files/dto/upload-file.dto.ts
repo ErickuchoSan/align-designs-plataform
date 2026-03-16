@@ -22,7 +22,10 @@ export class UploadFileDto {
   comment?: string;
 
   // Phase 1: Workflow stage
-  @ApiPropertyOptional({ enum: Stage, description: 'Stage where the file belongs' })
+  @ApiPropertyOptional({
+    enum: Stage,
+    description: 'Stage where the file belongs',
+  })
   @IsOptional()
   @IsEnum(Stage, {
     message:
@@ -32,14 +35,20 @@ export class UploadFileDto {
     // If value is a string and matches a Stage enum, return it
     // If value is undefined or null, return undefined
     if (!value) return undefined;
-    if (typeof value === 'string' && Object.values(Stage).includes(value as Stage)) {
+    if (
+      typeof value === 'string' &&
+      Object.values(Stage).includes(value as Stage)
+    ) {
       return value as Stage;
     }
     return value;
   })
   stage?: Stage;
 
-  @ApiPropertyOptional({ description: 'ID of the file related to this upload (e.g. usage for rejection evidence)' })
+  @ApiPropertyOptional({
+    description:
+      'ID of the file related to this upload (e.g. usage for rejection evidence)',
+  })
   @IsOptional()
   @IsString()
   relatedFileId?: string;

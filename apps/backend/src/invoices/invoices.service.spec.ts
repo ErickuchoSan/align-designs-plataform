@@ -8,198 +8,210 @@ import { InvoiceStatus, NotificationType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('InvoicesService', () => {
-    let service: InvoicesService;
-    let prismaService: any;
-    let notificationsService: any;
-    let invoicePdfService: any;
-    let emailService: any;
+  let service: InvoicesService;
+  let prismaService: any;
+  let notificationsService: any;
+  let invoicePdfService: any;
+  let emailService: any;
 
-    const mockProjectId = 'project-123';
-    const mockInvoiceId = 'invoice-123';
-    const mockClientId = 'client-123';
+  const mockProjectId = 'project-123';
+  const mockInvoiceId = 'invoice-123';
+  const mockClientId = 'client-123';
 
-    const mockInvoice = {
-        id: mockInvoiceId,
-        invoiceNumber: 'INV-2024-01-01-001',
-        projectId: mockProjectId,
-        clientId: mockClientId,
-        subtotal: 1000,
-        taxAmount: 0,
-        totalAmount: 1000,
-        amountPaid: 0,
-        status: InvoiceStatus.DRAFT,
-        dueDate: new Date(),
-        sentToClientAt: null,
-        client: {
-            firstName: 'Test',
-            lastName: 'Client',
-            email: 'test@example.com',
+  const mockInvoice = {
+    id: mockInvoiceId,
+    invoiceNumber: 'INV-2024-01-01-001',
+    projectId: mockProjectId,
+    clientId: mockClientId,
+    subtotal: 1000,
+    taxAmount: 0,
+    totalAmount: 1000,
+    amountPaid: 0,
+    status: InvoiceStatus.DRAFT,
+    dueDate: new Date(),
+    sentToClientAt: null,
+    client: {
+      firstName: 'Test',
+      lastName: 'Client',
+      email: 'test@example.com',
+    },
+    project: {
+      name: 'Test Project',
+      clientId: mockClientId,
+    },
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        InvoicesService,
+        {
+          provide: PrismaService,
+          useValue: {
+            invoice: {
+              findMany: jest.fn(),
+              create: jest.fn(),
+              findUnique: jest.fn(),
+              findFirst: jest.fn(),
+              update: jest.fn(),
+              count: jest.fn(),
+              aggregate: jest.fn(),
+            },
+            payment: {
+              findMany: jest.fn(),
+              updateMany: jest.fn(),
+            },
+          },
         },
-        project: {
-            name: 'Test Project',
-            clientId: mockClientId,
+        {
+          provide: NotificationsService,
+          useValue: {
+            create: jest.fn(),
+          },
         },
+        {
+          provide: InvoicePdfService,
+          useValue: {
+            generateInvoicePDF: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+          },
+        },
+        {
+          provide: EmailService,
+          useValue: {
+            sendInvoiceEmail: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<InvoicesService>(InvoicesService);
+    prismaService = module.get<PrismaService>(PrismaService);
+    notificationsService =
+      module.get<NotificationsService>(NotificationsService);
+    invoicePdfService = module.get<InvoicePdfService>(InvoicePdfService);
+    emailService = module.get<EmailService>(EmailService);
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('create', () => {
+    const createDto: any = {
+      projectId: mockProjectId,
+      totalAmount: 1000,
+      dueDate: new Date().toISOString(),
     };
 
-    beforeEach(async () => {
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [
-                InvoicesService,
-                {
-                    provide: PrismaService,
-                    useValue: {
-                        invoice: {
-                            findMany: jest.fn(),
-                            create: jest.fn(),
-                            findUnique: jest.fn(),
-                            findFirst: jest.fn(),
-                            update: jest.fn(),
-                            count: jest.fn(),
-                            aggregate: jest.fn(),
-                        },
-                        payment: {
-                            findMany: jest.fn(),
-                            updateMany: jest.fn(),
-                        },
-                    },
-                },
-                {
-                    provide: NotificationsService,
-                    useValue: {
-                        create: jest.fn(),
-                    },
-                },
-                {
-                    provide: InvoicePdfService,
-                    useValue: {
-                        generateInvoicePDF: jest.fn().mockResolvedValue(Buffer.from('pdf')),
-                    },
-                },
-                {
-                    provide: EmailService,
-                    useValue: {
-                        sendInvoiceEmail: jest.fn(),
-                    },
-                },
-            ],
-        }).compile();
+    it('should create invoice manually', async () => {
+      prismaService.invoice.findMany.mockResolvedValue([]); // No pending invoices
+      prismaService.invoice.findFirst.mockResolvedValue(null); // For generating number
+      prismaService.invoice.create.mockResolvedValue(mockInvoice);
+      prismaService.invoice.findUnique.mockResolvedValue(mockInvoice); // For full data
+      prismaService.invoice.update.mockResolvedValue({
+        ...mockInvoice,
+        status: InvoiceStatus.SENT,
+      });
 
-        service = module.get<InvoicesService>(InvoicesService);
-        prismaService = module.get<PrismaService>(PrismaService);
-        notificationsService = module.get<NotificationsService>(NotificationsService);
-        invoicePdfService = module.get<InvoicePdfService>(InvoicePdfService);
-        emailService = module.get<EmailService>(EmailService);
+      const result = await service.create(createDto);
+
+      expect(result).toBeDefined();
+      expect(prismaService.invoice.create).toHaveBeenCalled();
+      expect(invoicePdfService.generateInvoicePDF).toHaveBeenCalled();
+      expect(emailService.sendInvoiceEmail).toHaveBeenCalled();
+      expect(prismaService.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: mockInvoiceId },
+          data: expect.objectContaining({ status: InvoiceStatus.SENT }),
+        }),
+      );
     });
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
+    it('should throw BadRequest if project has unpaid invoices', async () => {
+      prismaService.invoice.findMany.mockResolvedValue([
+        { ...mockInvoice, totalAmount: 1000, amountPaid: 500 },
+      ]);
+
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
+  });
 
-    describe('create', () => {
-        const createDto: any = {
-            projectId: mockProjectId,
-            totalAmount: 1000,
-            dueDate: new Date().toISOString(),
-        };
+  describe('createInvoiceForProject', () => {
+    it('should create invoice and link existing payments', async () => {
+      prismaService.invoice.findFirst.mockResolvedValue(null);
+      prismaService.invoice.create.mockResolvedValue(mockInvoice);
+      prismaService.payment.findMany.mockResolvedValue([
+        { id: 'p1', amount: 500 },
+      ]); // Has initial payment
+      prismaService.invoice.findUnique.mockResolvedValue(mockInvoice);
+      prismaService.invoice.update.mockResolvedValue({
+        ...mockInvoice,
+        status: InvoiceStatus.SENT,
+      });
 
-        it('should create invoice manually', async () => {
-            prismaService.invoice.findMany.mockResolvedValue([]); // No pending invoices
-            prismaService.invoice.findFirst.mockResolvedValue(null); // For generating number
-            prismaService.invoice.create.mockResolvedValue(mockInvoice);
-            prismaService.invoice.findUnique.mockResolvedValue(mockInvoice); // For full data
-            prismaService.invoice.update.mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.SENT });
+      await service.createInvoiceForProject(mockProjectId, mockClientId, 1000);
 
-            const result = await service.create(createDto);
-
-            expect(result).toBeDefined();
-            expect(prismaService.invoice.create).toHaveBeenCalled();
-            expect(invoicePdfService.generateInvoicePDF).toHaveBeenCalled();
-            expect(emailService.sendInvoiceEmail).toHaveBeenCalled();
-            expect(prismaService.invoice.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { id: mockInvoiceId },
-                    data: expect.objectContaining({ status: InvoiceStatus.SENT }),
-                }),
-            );
-        });
-
-        it('should throw BadRequest if project has unpaid invoices', async () => {
-            prismaService.invoice.findMany.mockResolvedValue([
-                { ...mockInvoice, totalAmount: 1000, amountPaid: 500 },
-            ]);
-
-            await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
-        });
+      expect(prismaService.invoice.create).toHaveBeenCalled();
+      expect(prismaService.payment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['p1'] } },
+          data: { invoiceId: mockInvoiceId },
+        }),
+      );
+      // Should update invoice amount paid
+      expect(prismaService.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: mockInvoiceId },
+          data: expect.objectContaining({ amountPaid: 500 }),
+        }),
+      );
     });
+  });
 
-    describe('createInvoiceForProject', () => {
-        it('should create invoice and link existing payments', async () => {
-            prismaService.invoice.findFirst.mockResolvedValue(null);
-            prismaService.invoice.create.mockResolvedValue(mockInvoice);
-            prismaService.payment.findMany.mockResolvedValue([
-                { id: 'p1', amount: 500 },
-            ]); // Has initial payment
-            prismaService.invoice.findUnique.mockResolvedValue(mockInvoice);
-            prismaService.invoice.update.mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.SENT });
+  describe('checkOverdueInvoices', () => {
+    it('should mark overdue invoices and notify', async () => {
+      const overdueInvoice = { ...mockInvoice, status: InvoiceStatus.SENT };
+      prismaService.invoice.findMany.mockResolvedValue([overdueInvoice]);
 
-            await service.createInvoiceForProject(mockProjectId, mockClientId, 1000);
+      await service.checkOverdueInvoices();
 
-            expect(prismaService.invoice.create).toHaveBeenCalled();
-            expect(prismaService.payment.updateMany).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { id: { in: ['p1'] } },
-                    data: { invoiceId: mockInvoiceId },
-                }),
-            );
-            // Should update invoice amount paid
-            expect(prismaService.invoice.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { id: mockInvoiceId },
-                    data: expect.objectContaining({ amountPaid: 500 }),
-                }),
-            );
-        });
+      expect(prismaService.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: overdueInvoice.id },
+          data: { status: InvoiceStatus.OVERDUE },
+        }),
+      );
+      expect(notificationsService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: mockClientId,
+          type: NotificationType.WARNING,
+        }),
+      );
     });
+  });
 
-    describe('checkOverdueInvoices', () => {
-        it('should mark overdue invoices and notify', async () => {
-            const overdueInvoice = { ...mockInvoice, status: InvoiceStatus.SENT };
-            prismaService.invoice.findMany.mockResolvedValue([overdueInvoice]);
+  describe('resendInvoiceEmail', () => {
+    it('should resend email and update status to SENT', async () => {
+      const draftInvoice = { ...mockInvoice, status: InvoiceStatus.DRAFT };
+      // First call for findOne, subsequent calls for updateStatus
+      prismaService.invoice.findUnique.mockResolvedValue(draftInvoice);
+      prismaService.invoice.update.mockResolvedValue({
+        ...draftInvoice,
+        status: InvoiceStatus.SENT,
+      });
 
-            await service.checkOverdueInvoices();
+      await service.resendInvoiceEmail(mockInvoiceId);
 
-            expect(prismaService.invoice.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { id: overdueInvoice.id },
-                    data: { status: InvoiceStatus.OVERDUE },
-                }),
-            );
-            expect(notificationsService.create).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    userId: mockClientId,
-                    type: NotificationType.WARNING,
-                }),
-            );
-        });
+      expect(invoicePdfService.generateInvoicePDF).toHaveBeenCalled();
+      expect(emailService.sendInvoiceEmail).toHaveBeenCalled();
+      expect(prismaService.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: mockInvoiceId },
+          data: expect.objectContaining({ status: InvoiceStatus.SENT }),
+        }),
+      );
     });
-
-    describe('resendInvoiceEmail', () => {
-        it('should resend email and update status to SENT', async () => {
-            const draftInvoice = { ...mockInvoice, status: InvoiceStatus.DRAFT };
-            // First call for findOne, subsequent calls for updateStatus
-            prismaService.invoice.findUnique.mockResolvedValue(draftInvoice);
-            prismaService.invoice.update.mockResolvedValue({ ...draftInvoice, status: InvoiceStatus.SENT });
-
-            await service.resendInvoiceEmail(mockInvoiceId);
-
-            expect(invoicePdfService.generateInvoicePDF).toHaveBeenCalled();
-            expect(emailService.sendInvoiceEmail).toHaveBeenCalled();
-            expect(prismaService.invoice.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { id: mockInvoiceId },
-                    data: expect.objectContaining({ status: InvoiceStatus.SENT }),
-                }),
-            );
-        });
-    });
+  });
 });

@@ -61,7 +61,7 @@ export class FilesController {
     private readonly fileVersionService: FileVersionService,
     private readonly fileStageService: FileStageService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   /**
    * Upload file with optional comment
@@ -139,7 +139,8 @@ export class FilesController {
   @Post(':id/version')
   @ApiOperation({
     summary: 'Upload new version',
-    description: 'Upload a new version of an existing file (must be current version)',
+    description:
+      'Upload a new version of an existing file (must be current version)',
   })
   @ApiParam({ name: 'id', description: 'Parent File UUID' })
   @ApiConsumes('multipart/form-data')
@@ -170,7 +171,7 @@ export class FilesController {
       id,
       file,
       user.userId,
-      uploadFileDto.comment
+      uploadFileDto.comment,
     );
 
     // Audit log
@@ -306,7 +307,8 @@ export class FilesController {
   @Get('project/:projectId/pending-payment')
   @ApiOperation({
     summary: 'Get files pending payment (Admin only)',
-    description: 'Retrieve files marked as pending payment for employee payments',
+    description:
+      'Retrieve files marked as pending payment for employee payments',
   })
   @Roles(Role.ADMIN)
   async getPendingPaymentFiles(
@@ -360,7 +362,8 @@ export class FilesController {
   @Get('admin/verify-integrity')
   @ApiOperation({
     summary: 'Verify file storage integrity (Admin only)',
-    description: 'Check for orphaned database records (files that exist in DB but not in MinIO)',
+    description:
+      'Check for orphaned database records (files that exist in DB but not in MinIO)',
   })
   @ApiResponse({
     status: 200,
@@ -378,11 +381,11 @@ export class FilesController {
               storagePath: { type: 'string' },
               projectId: { type: 'string' },
               uploadedAt: { type: 'string' },
-            }
-          }
-        }
-      }
-    }
+            },
+          },
+        },
+      },
+    },
   })
   async verifyIntegrity(@CurrentUser() user: UserPayload) {
     return this.filesService.verifyStorageIntegrity(user.userId, user.role);
@@ -391,7 +394,8 @@ export class FilesController {
   @Delete('admin/cleanup-orphans')
   @ApiOperation({
     summary: 'Clean up orphaned file records (Admin only)',
-    description: 'Soft delete database records for files that no longer exist in MinIO storage',
+    description:
+      'Soft delete database records for files that no longer exist in MinIO storage',
   })
   @ApiResponse({
     status: 200,
@@ -409,11 +413,11 @@ export class FilesController {
               id: { type: 'string' },
               filename: { type: 'string' },
               storagePath: { type: 'string' },
-            }
-          }
-        }
-      }
-    }
+            },
+          },
+        },
+      },
+    },
   })
   @HttpCode(HttpStatus.OK)
   async cleanupOrphans(
@@ -421,7 +425,10 @@ export class FilesController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.filesService.cleanupOrphanedFiles(user.userId, user.role);
+    const result = await this.filesService.cleanupOrphanedFiles(
+      user.userId,
+      user.role,
+    );
 
     // Audit log for cleanup operation
     await safeAuditLog(
@@ -454,7 +461,10 @@ export class FilesController {
   })
   @ApiParam({ name: 'id', description: 'File UUID' })
   @ApiResponse({ status: 200, description: 'File approved successfully' })
-  @ApiResponse({ status: 400, description: 'File not in SUBMITTED stage or has no content' })
+  @ApiResponse({
+    status: 400,
+    description: 'File not in SUBMITTED stage or has no content',
+  })
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   async approveFile(
@@ -463,7 +473,10 @@ export class FilesController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.fileStageService.approveFileByAdmin(id, user.userId);
+    const result = await this.fileStageService.approveFileByAdmin(
+      id,
+      user.userId,
+    );
 
     await safeAuditLog(
       this.auditService,
@@ -514,7 +527,11 @@ export class FilesController {
       throw new BadRequestException('Rejection reason is required');
     }
 
-    const result = await this.fileStageService.rejectFileByAdmin(id, user.userId, reason);
+    const result = await this.fileStageService.rejectFileByAdmin(
+      id,
+      user.userId,
+      reason,
+    );
 
     await safeAuditLog(
       this.auditService,
@@ -539,7 +556,8 @@ export class FilesController {
   @Patch(':id/client-approve')
   @ApiOperation({
     summary: 'Mark file as client approved',
-    description: 'Move an ADMIN_APPROVED file to CLIENT_APPROVED stage (Admin only)',
+    description:
+      'Move an ADMIN_APPROVED file to CLIENT_APPROVED stage (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'File UUID' })
   @ApiResponse({ status: 200, description: 'File marked as client approved' })
@@ -552,7 +570,10 @@ export class FilesController {
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.fileStageService.approveFileByClient(id, user.userId);
+    const result = await this.fileStageService.approveFileByClient(
+      id,
+      user.userId,
+    );
 
     await safeAuditLog(
       this.auditService,

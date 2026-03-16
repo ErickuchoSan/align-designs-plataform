@@ -53,7 +53,7 @@ export class ProjectsController {
     private readonly auditService: AuditService,
     private readonly projectEmployeeService: ProjectEmployeeService,
     private readonly projectStatusService: ProjectStatusService,
-  ) { }
+  ) {}
 
   @Post()
   @Roles(Role.ADMIN)
@@ -82,7 +82,7 @@ export class ProjectsController {
       name: createProjectDto.name,
       clientId: createProjectDto.clientId,
       hasEmployees: !!createProjectDto.employeeIds?.length,
-      userId: user.userId
+      userId: user.userId,
     });
 
     const project = await this.projectsService.create(
@@ -144,7 +144,12 @@ export class ProjectsController {
     @Query() paginationDto: PaginationDto,
     @Query('clientId') clientId?: string,
   ) {
-    return this.projectsService.findAll(user.userId, user.role, paginationDto, clientId);
+    return this.projectsService.findAll(
+      user.userId,
+      user.role,
+      paginationDto,
+      clientId,
+    );
   }
 
   @Get(':id')
@@ -292,7 +297,10 @@ export class ProjectsController {
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Employees assigned successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input or employee already assigned' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or employee already assigned',
+  })
   @ApiResponse({ status: 404, description: 'Project or employee not found' })
   async assignEmployees(
     @Param('id') projectId: string,
@@ -509,7 +517,10 @@ export class ProjectsController {
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Project completed successfully' })
-  @ApiResponse({ status: 400, description: 'Project must be ACTIVE to complete' })
+  @ApiResponse({
+    status: 400,
+    description: 'Project must be ACTIVE to complete',
+  })
   async completeProject(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
@@ -552,7 +563,10 @@ export class ProjectsController {
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Project archived successfully' })
-  @ApiResponse({ status: 400, description: 'Project must be COMPLETED to archive' })
+  @ApiResponse({
+    status: 400,
+    description: 'Project must be COMPLETED to archive',
+  })
   async archiveProject(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
@@ -593,7 +607,10 @@ export class ProjectsController {
       'Returns detailed status information including payment progress and activation eligibility.',
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Status summary retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Status summary retrieved successfully',
+  })
   async getProjectStatus(@Param('id') projectId: string) {
     return this.projectStatusService.getProjectStatusSummary(projectId);
   }
@@ -626,7 +643,11 @@ export class ProjectsController {
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
   ) {
-    return this.projectsService.getAccessibleStages(projectId, user.role, user.userId);
+    return this.projectsService.getAccessibleStages(
+      projectId,
+      user.role,
+      user.userId,
+    );
   }
 
   /**
@@ -636,7 +657,8 @@ export class ProjectsController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Check project deletion safety',
-    description: 'Returns information about project data to warn admin before deletion',
+    description:
+      'Returns information about project data to warn admin before deletion',
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Deletion check completed' })
@@ -653,12 +675,16 @@ export class ProjectsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Approve project brief',
-    description: 'Client approves the project brief, confirming the project scope. This action records the approval timestamp.',
+    description:
+      'Client approves the project brief, confirming the project scope. This action records the approval timestamp.',
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Brief approved successfully' })
   @ApiResponse({ status: 400, description: 'Brief already approved' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Not the project client' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Not the project client',
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   async approveBrief(
     @Param('id') projectId: string,

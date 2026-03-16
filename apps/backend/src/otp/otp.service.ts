@@ -1,8 +1,8 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
-import { randomInt, createHash } from 'crypto';
+import { randomInt, createHash } from 'node:crypto';
 import {
   OTP_EXPIRATION_MS,
   OTP_EXPIRATION_MINUTES,
@@ -21,8 +21,8 @@ export class OtpService {
   private readonly MAX_CLEANUP_FAILURES = 3;
 
   constructor(
-    private prisma: PrismaService,
-    private configService: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**

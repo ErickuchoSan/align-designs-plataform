@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateEmployeePaymentDto } from './dto/create-employee-payment.dto';
 import { UpdateEmployeePaymentDto } from './dto/update-employee-payment.dto';
 import { EmployeePaymentStatus, Role, Prisma } from '@prisma/client';
-
-
 
 @Injectable()
 export class EmployeePaymentsService {
@@ -14,7 +18,7 @@ export class EmployeePaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
-  ) { }
+  ) {}
 
   async create(createDto: CreateEmployeePaymentDto, createdBy: string) {
     // Verify project exists
@@ -37,7 +41,9 @@ export class EmployeePaymentsService {
     });
 
     if (!employeeAssignment) {
-      throw new BadRequestException(`Employee ${createDto.employeeId} is not assigned to this project`);
+      throw new BadRequestException(
+        `Employee ${createDto.employeeId} is not assigned to this project`,
+      );
     }
 
     return this.prisma.employeePayment.create({
@@ -146,7 +152,11 @@ export class EmployeePaymentsService {
     return payment;
   }
 
-  async update(id: string, updateDto: UpdateEmployeePaymentDto, userId: string) {
+  async update(
+    id: string,
+    updateDto: UpdateEmployeePaymentDto,
+    userId: string,
+  ) {
     const payment = await this.prisma.employeePayment.findUnique({
       where: { id },
     });
@@ -157,14 +167,18 @@ export class EmployeePaymentsService {
 
     // Only allow updates if status is PENDING
     if (payment.status !== EmployeePaymentStatus.PENDING) {
-      throw new BadRequestException('Cannot update payment that is not pending');
+      throw new BadRequestException(
+        'Cannot update payment that is not pending',
+      );
     }
 
     return this.prisma.employeePayment.update({
       where: { id },
       data: {
         ...updateDto,
-        paymentDate: updateDto.paymentDate ? new Date(updateDto.paymentDate) : undefined,
+        paymentDate: updateDto.paymentDate
+          ? new Date(updateDto.paymentDate)
+          : undefined,
       },
       include: {
         employee: {
@@ -200,11 +214,16 @@ export class EmployeePaymentsService {
     }
 
     if (!file) {
-      throw new BadRequestException('Payment receipt file is required for approval');
+      throw new BadRequestException(
+        'Payment receipt file is required for approval',
+      );
     }
 
     // Upload receipt file
-    const uploadResult = await this.storageService.uploadFile(file, payment.projectId);
+    const uploadResult = await this.storageService.uploadFile(
+      file,
+      payment.projectId,
+    );
 
     // Create File record for the receipt
     const receiptFile = await this.prisma.file.create({
@@ -217,7 +236,7 @@ export class EmployeePaymentsService {
         sizeBytes: file.size,
         storagePath: uploadResult.storagePath,
         pendingPayment: false, // It IS the payment proof
-      }
+      },
     });
 
     const updatedPayment = await this.prisma.employeePayment.update({
@@ -299,7 +318,10 @@ export class EmployeePaymentsService {
     }
 
     // Only allow deletion if status is PENDING or REJECTED
-    if (payment.status !== EmployeePaymentStatus.PENDING && payment.status !== EmployeePaymentStatus.REJECTED) {
+    if (
+      payment.status !== EmployeePaymentStatus.PENDING &&
+      payment.status !== EmployeePaymentStatus.REJECTED
+    ) {
       throw new BadRequestException('Cannot delete approved payments');
     }
 
@@ -343,7 +365,11 @@ export class EmployeePaymentsService {
   /**
    * Get presigned URL for payment receipt
    */
-  async getReceiptDownloadUrl(paymentId: string, userId: string, userRole: Role): Promise<string> {
+  async getReceiptDownloadUrl(
+    paymentId: string,
+    userId: string,
+    userRole: Role,
+  ): Promise<string> {
     const payment = await this.findOne(paymentId, userId, userRole);
 
     if (!payment.receiptFile || !payment.receiptFile.storagePath) {

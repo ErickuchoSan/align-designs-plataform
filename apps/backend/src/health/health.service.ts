@@ -153,7 +153,7 @@ export class HealthService {
         >`SHOW max_connections`;
 
         if (maxConnections && maxConnections[0]) {
-          poolSize = parseInt(maxConnections[0].max_connections);
+          poolSize = Number.parseInt(maxConnections[0].max_connections, 10);
         }
       } catch (poolError) {
         // Pool stats are optional, log but don't fail the health check

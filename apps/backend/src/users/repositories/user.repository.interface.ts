@@ -10,8 +10,11 @@ import { UpdateUserDto } from '../dto/update-user.dto';
  * User repository interface
  * Abstracts data access for User entities
  */
-export interface IUserRepository
-  extends IBaseRepository<User, CreateClientDto, UpdateUserDto> {
+export interface IUserRepository extends IBaseRepository<
+  User,
+  CreateClientDto,
+  UpdateUserDto
+> {
   /**
    * Find user by email
    */

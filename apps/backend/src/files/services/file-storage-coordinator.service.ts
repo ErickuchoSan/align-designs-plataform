@@ -47,7 +47,10 @@ export class FileStorageCoordinatorService {
 
     try {
       // Step 2: Upload file to MinIO - this returns the actual filename and storagePath
-      const uploadResult = await this.storageService.uploadFile(file, projectId);
+      const uploadResult = await this.storageService.uploadFile(
+        file,
+        projectId,
+      );
 
       // Step 3: Update database record with actual storagePath and filename from MinIO
       const updatedFileRecord = await this.prisma.file.update({

@@ -42,7 +42,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   /**
    * Set authentication cookie with secure settings
@@ -59,11 +59,12 @@ export class AuthController {
       path: '/',
     };
 
-    this.logger.debug(`Auth Cookie Settings: secure=${config.useSecureCookie}, sameSite=${config.sameSite}, isHttps=${config.isHttps}, host=${req?.headers.host || 'unknown'}`);
+    this.logger.debug(
+      `Auth Cookie Settings: secure=${config.useSecureCookie}, sameSite=${config.sameSite}, isHttps=${config.isHttps}, host=${req?.headers.host || 'unknown'}`,
+    );
 
     res.cookie('access_token', token, cookieOptions as any);
   }
-
 
   @Get('csrf-token')
   @HttpCode(HttpStatus.OK)
@@ -81,7 +82,10 @@ export class AuthController {
   })
   async getCsrfToken(@Res({ passthrough: true }) res: Response) {
     // Disable caching for this endpoint to always get fresh CSRF token
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, private',
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
@@ -273,13 +277,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Refresh access token',
-    description: 'Uses httpOnly refresh token cookie to issue new access and refresh tokens',
+    description:
+      'Uses httpOnly refresh token cookie to issue new access and refresh tokens',
   })
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-    @IpAddress() ipAddress: string,
-    @UserAgent() userAgent: string,
   ) {
     const refreshToken = req.cookies?.refresh_token;
 
@@ -433,7 +436,11 @@ export class AuthController {
   /**
    * Helper to set refresh token cookie
    */
-  private setRefreshTokenCookie(res: Response, token: string, req?: Request): void {
+  private setRefreshTokenCookie(
+    res: Response,
+    token: string,
+    req?: Request,
+  ): void {
     const config = getCookieSecurityConfig(req);
 
     res.cookie('refresh_token', token, {
@@ -459,7 +466,10 @@ export class AuthController {
     };
 
     res.clearCookie('access_token', cookieOptions);
-    res.clearCookie('refresh_token', { ...cookieOptions, path: '/api/v1/auth' });
+    res.clearCookie('refresh_token', {
+      ...cookieOptions,
+      path: '/api/v1/auth',
+    });
   }
 
   /**

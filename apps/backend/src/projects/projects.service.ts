@@ -87,7 +87,7 @@ export class ProjectsService {
     @Inject(forwardRef(() => InvoicesService))
     private readonly invoicesService: InvoicesService,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   /**
    * Create a new project
@@ -127,7 +127,10 @@ export class ProjectsService {
     }
 
     // Phase 2: Auto-generate invoice if initialAmountRequired is set
-    if (project.initialAmountRequired && Number(project.initialAmountRequired) > 0) {
+    if (
+      project.initialAmountRequired &&
+      Number(project.initialAmountRequired) > 0
+    ) {
       try {
         await this.invoicesService.createInvoiceForProject(
           project.id,
@@ -205,9 +208,8 @@ export class ProjectsService {
 
     // Try to get from cache first
 
-
     // Build where clause based on user role
-    let where: any = {
+    const where: any = {
       deletedAt: null, // Only include non-deleted projects
     };
 
@@ -294,8 +296,9 @@ export class ProjectsService {
   async findOne(id: string, userId: string, userRole: Role) {
     // Try cache first
 
-
-    this.logger.debug(`findOne called - projectId: ${id}, userId: ${userId}, userRole: ${userRole}`);
+    this.logger.debug(
+      `findOne called - projectId: ${id}, userId: ${userId}, userRole: ${userRole}`,
+    );
 
     const project = await this.prisma.project.findFirst({
       where: {
@@ -333,7 +336,9 @@ export class ProjectsService {
       throw new NotFoundException('Project not found');
     }
 
-    this.logger.debug(`Project found - clientId: ${project.clientId}, employeeIds: ${project.employees.map(e => e.employeeId).join(', ')}`);
+    this.logger.debug(
+      `Project found - clientId: ${project.clientId}, employeeIds: ${project.employees.map((e) => e.employeeId).join(', ')}`,
+    );
 
     // Verify access based on role
     const permissionContext = new PermissionContext(userRole);
@@ -352,7 +357,9 @@ export class ProjectsService {
       }
     } else {
       // For client and admin, use standard permission check
-      this.logger.debug(`Checking access for ${userRole} - userId: ${userId}, clientId: ${project.clientId}`);
+      this.logger.debug(
+        `Checking access for ${userRole} - userId: ${userId}, clientId: ${project.clientId}`,
+      );
       permissionContext.verifyProjectAccess(
         userId,
         project.clientId,
@@ -440,12 +447,19 @@ export class ProjectsService {
       const currentEmployeeIds = project.employees.map((e) => e.employeeId);
 
       // Determine additions and removals
-      const toAdd = employeeIds.filter((id) => !currentEmployeeIds.includes(id));
-      const toRemove = currentEmployeeIds.filter((id) => !employeeIds.includes(id));
+      const toAdd = employeeIds.filter(
+        (id) => !currentEmployeeIds.includes(id),
+      );
+      const toRemove = currentEmployeeIds.filter(
+        (id) => !employeeIds.includes(id),
+      );
 
       // Remove employees
       for (const employeeId of toRemove) {
-        await this.projectEmployeeService.removeEmployeeFromProject(id, employeeId);
+        await this.projectEmployeeService.removeEmployeeFromProject(
+          id,
+          employeeId,
+        );
       }
 
       // Add new employees (validates availability internally)
@@ -575,9 +589,11 @@ export class ProjectsService {
     const deliveredFiles = await this.prisma.file.count({
       where: {
         projectId: id,
-        stage: { in: [Stage.ADMIN_APPROVED, Stage.CLIENT_APPROVED, Stage.PAYMENTS] },
-        deletedAt: null
-      }
+        stage: {
+          in: [Stage.ADMIN_APPROVED, Stage.CLIENT_APPROVED, Stage.PAYMENTS],
+        },
+        deletedAt: null,
+      },
     });
 
     const isReady =
@@ -598,7 +614,7 @@ export class ProjectsService {
         pendingInvoices,
         pendingEmployeePayments,
         openFeedback,
-      }
+      },
     };
   }
 
@@ -619,7 +635,9 @@ export class ProjectsService {
     });
 
     if (oldProjects.length > 0) {
-      this.logger.warn(`Found ${oldProjects.length} projects archived > 90 days ago: ${oldProjects.map(p => p.name).join(', ')}`);
+      this.logger.warn(
+        `Found ${oldProjects.length} projects archived > 90 days ago: ${oldProjects.map((p) => p.name).join(', ')}`,
+      );
       // Future: Implement auto-deletion or email notification to admin
     }
   }
@@ -628,7 +646,11 @@ export class ProjectsService {
    * Get accessible stages for a project based on user role
    * Returns stage information with permissions and file counts
    */
-  async getAccessibleStages(projectId: string, userRole: Role, userId?: string) {
+  async getAccessibleStages(
+    projectId: string,
+    userRole: Role,
+    userId?: string,
+  ) {
     // Verify project exists
     const project = await this.projectRepo.findById(projectId);
     if (!project) {
@@ -648,9 +670,7 @@ export class ProjectsService {
     });
 
     // Map counts to stages
-    const countsMap = new Map(
-      fileCounts.map((fc) => [fc.stage, fc._count.id]),
-    );
+    const countsMap = new Map(fileCounts.map((fc) => [fc.stage, fc._count.id]));
 
     // Special handling for PAYMENTS stage count
     // For Employees: Count their own payments
@@ -723,7 +743,9 @@ export class ProjectsService {
 
     // Check if user is the client or an admin
     if (userRole === Role.CLIENT && project.clientId !== userId) {
-      throw new ForbiddenException('Only the project client can approve the brief');
+      throw new ForbiddenException(
+        'Only the project client can approve the brief',
+      );
     }
 
     // Check if already approved

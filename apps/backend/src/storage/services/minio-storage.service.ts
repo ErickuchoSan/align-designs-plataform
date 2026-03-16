@@ -30,9 +30,9 @@ export class MinioStorageService implements OnModuleInit {
   private readonly publicUseSSL: boolean;
 
   constructor(
-    private configService: ConfigService,
-    private fileValidationService: FileValidationService,
-    private fileSecurityService: FileSecurityService,
+    private readonly configService: ConfigService,
+    private readonly fileValidationService: FileValidationService,
+    private readonly fileSecurityService: FileSecurityService,
   ) {
     // MinIO configuration - all required in production
     // Internal endpoint for container-to-container communication
@@ -54,7 +54,7 @@ export class MinioStorageService implements OnModuleInit {
     // When set, presigned URLs will use this endpoint instead of internal
     this.publicEndpoint =
       this.configService.get<string>('MINIO_PUBLIC_ENDPOINT') ?? null;
-    this.publicPort = parseInt(
+    this.publicPort = Number.parseInt(
       this.configService.get<string>('MINIO_PUBLIC_PORT') ?? '443',
       10,
     );

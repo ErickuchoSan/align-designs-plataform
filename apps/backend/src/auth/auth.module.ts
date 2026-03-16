@@ -26,7 +26,10 @@ import { AuditModule } from '../audit/audit.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService, SecretsService],
-      useFactory: async (configService: ConfigService, secretsService: SecretsService): Promise<JwtModuleOptions> => {
+      useFactory: async (
+        configService: ConfigService,
+        secretsService: SecretsService,
+      ): Promise<JwtModuleOptions> => {
         const secret = await secretsService.getSecret('JWT_SECRET');
         if (!secret) {
           throw new Error(
@@ -69,4 +72,4 @@ import { AuditModule } from '../audit/audit.module';
     PasswordManagementService,
   ],
 })
-export class AuthModule { }
+export class AuthModule {}

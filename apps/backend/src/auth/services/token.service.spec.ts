@@ -21,7 +21,10 @@ describe('TokenService', () => {
   };
 
   const mockRefreshToken = 'a'.repeat(80); // 40 bytes hex = 80 chars
-  const mockTokenHash = crypto.createHash('sha256').update(mockRefreshToken).digest('hex');
+  const mockTokenHash = crypto
+    .createHash('sha256')
+    .update(mockRefreshToken)
+    .digest('hex');
 
   const mockRefreshTokenRecord = {
     id: 'token-id-123',
@@ -121,7 +124,9 @@ describe('TokenService', () => {
 
   describe('generateRefreshToken', () => {
     it('should generate a refresh token and store hash in database', async () => {
-      prismaService.refreshToken.create.mockResolvedValue(mockRefreshTokenRecord);
+      prismaService.refreshToken.create.mockResolvedValue(
+        mockRefreshTokenRecord,
+      );
 
       const result = await service.generateRefreshToken('user-123');
 
@@ -137,14 +142,17 @@ describe('TokenService', () => {
     });
 
     it('should set expiration to 7 days from now', async () => {
-      prismaService.refreshToken.create.mockResolvedValue(mockRefreshTokenRecord);
+      prismaService.refreshToken.create.mockResolvedValue(
+        mockRefreshTokenRecord,
+      );
 
       await service.generateRefreshToken('user-123');
 
       const createCall = prismaService.refreshToken.create.mock.calls[0][0];
       const expiresAt = createCall.data.expiresAt;
       const now = new Date();
-      const diffDays = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      const diffDays =
+        (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
 
       expect(diffDays).toBeGreaterThan(6.9);
       expect(diffDays).toBeLessThan(7.1);
@@ -153,7 +161,9 @@ describe('TokenService', () => {
 
   describe('verifyRefreshToken', () => {
     it('should return token record for valid token', async () => {
-      prismaService.refreshToken.findUnique.mockResolvedValue(mockRefreshTokenRecord);
+      prismaService.refreshToken.findUnique.mockResolvedValue(
+        mockRefreshTokenRecord,
+      );
 
       const result = await service.verifyRefreshToken(mockRefreshToken);
 
@@ -178,9 +188,9 @@ describe('TokenService', () => {
         revoked: true,
       });
 
-      await expect(service.verifyRefreshToken(mockRefreshToken)).rejects.toThrow(
-        new UnauthorizedException('Refresh token revoked'),
-      );
+      await expect(
+        service.verifyRefreshToken(mockRefreshToken),
+      ).rejects.toThrow(new UnauthorizedException('Refresh token revoked'));
     });
 
     it('should throw UnauthorizedException for expired token', async () => {
@@ -189,9 +199,9 @@ describe('TokenService', () => {
         expiresAt: new Date(Date.now() - 1000), // Expired 1 second ago
       });
 
-      await expect(service.verifyRefreshToken(mockRefreshToken)).rejects.toThrow(
-        new UnauthorizedException('Refresh token expired'),
-      );
+      await expect(
+        service.verifyRefreshToken(mockRefreshToken),
+      ).rejects.toThrow(new UnauthorizedException('Refresh token expired'));
     });
 
     it('should detect token reuse and revoke ALL tokens for user', async () => {
@@ -202,7 +212,9 @@ describe('TokenService', () => {
       });
       prismaService.refreshToken.updateMany.mockResolvedValue({ count: 3 });
 
-      await expect(service.verifyRefreshToken(mockRefreshToken)).rejects.toThrow(
+      await expect(
+        service.verifyRefreshToken(mockRefreshToken),
+      ).rejects.toThrow(
         new UnauthorizedException('Invalid refresh token (reused)'),
       );
 
@@ -218,7 +230,10 @@ describe('TokenService', () => {
     it('should revoke old token and create new one in transaction', async () => {
       prismaService.$transaction.mockResolvedValue([{}, {}]);
 
-      const result = await service.rotateRefreshToken(mockTokenHash, 'user-123');
+      const result = await service.rotateRefreshToken(
+        mockTokenHash,
+        'user-123',
+      );
 
       expect(result).toBeDefined();
       expect(result).toHaveLength(80); // 40 bytes hex
@@ -228,7 +243,10 @@ describe('TokenService', () => {
     it('should return a new token different from the old one', async () => {
       prismaService.$transaction.mockResolvedValue([{}, {}]);
 
-      const newToken = await service.rotateRefreshToken(mockTokenHash, 'user-123');
+      const newToken = await service.rotateRefreshToken(
+        mockTokenHash,
+        'user-123',
+      );
 
       // New token should be different from the original
       expect(newToken).not.toBe(mockRefreshToken);
@@ -290,7 +308,11 @@ describe('TokenService', () => {
 
   describe('decodeToken', () => {
     it('should decode JWT token without verification', () => {
-      const mockPayload = { userId: '123', email: 'test@example.com', role: 'CLIENT' };
+      const mockPayload = {
+        userId: '123',
+        email: 'test@example.com',
+        role: 'CLIENT',
+      };
       jwtService.decode.mockReturnValue(mockPayload);
 
       const result = service.decodeToken('some-token');
@@ -302,7 +324,11 @@ describe('TokenService', () => {
 
   describe('verifyToken', () => {
     it('should verify and return payload for valid token', async () => {
-      const mockPayload = { userId: '123', email: 'test@example.com', role: 'CLIENT' };
+      const mockPayload = {
+        userId: '123',
+        email: 'test@example.com',
+        role: 'CLIENT',
+      };
       jwtService.verifyAsync.mockResolvedValue(mockPayload);
 
       const result = await service.verifyToken('valid-token');

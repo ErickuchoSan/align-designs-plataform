@@ -140,7 +140,9 @@ export class FilePermissionsService {
       return file;
     }
 
-    throw new ForbiddenException('You do not have permission to edit this entry');
+    throw new ForbiddenException(
+      'You do not have permission to edit this entry',
+    );
   }
 
   /**
@@ -267,6 +269,8 @@ export class FilePermissionsService {
       return file;
     }
 
-    throw new ForbiddenException('You do not have permission to delete this entry');
+    throw new ForbiddenException(
+      'You do not have permission to delete this entry',
+    );
   }
 }

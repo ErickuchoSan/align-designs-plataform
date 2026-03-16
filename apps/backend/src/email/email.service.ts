@@ -27,7 +27,10 @@ export class EmailService implements OnModuleInit {
   async onModuleInit() {
     try {
       const apiKey = this.configService.get<string>('RESEND_API_KEY');
-      this.emailFrom = this.configService.get<string>('EMAIL_FROM', 'Align Designs <onboarding@resend.dev>');
+      this.emailFrom = this.configService.get<string>(
+        'EMAIL_FROM',
+        'Align Designs <onboarding@resend.dev>',
+      );
 
       if (!apiKey) {
         throw new Error('RESEND_API_KEY is not configured');
@@ -55,7 +58,9 @@ export class EmailService implements OnModuleInit {
         'Please check your RESEND_API_KEY environment variable.',
       );
       // Don't throw - allow app to start without email
-      this.logger.warn('Application will start but email sending will be disabled.');
+      this.logger.warn(
+        'Application will start but email sending will be disabled.',
+      );
     }
   }
 
@@ -76,7 +81,9 @@ export class EmailService implements OnModuleInit {
     attachments?: Array<{ filename: string; content: Buffer }>,
   ): Promise<void> {
     if (!this.isHealthy) {
-      this.logger.warn(`Email not sent (service not configured): ${subject} to ${to}`);
+      this.logger.warn(
+        `Email not sent (service not configured): ${subject} to ${to}`,
+      );
       return;
     }
 
@@ -150,7 +157,9 @@ export class EmailService implements OnModuleInit {
     origin: string,
   ): Promise<void> {
     if (!origin) {
-      this.logger.error('sendWelcomeEmail called without origin - cannot send email with incorrect link');
+      this.logger.error(
+        'sendWelcomeEmail called without origin - cannot send email with incorrect link',
+      );
       return;
     }
 
@@ -199,20 +208,24 @@ export class EmailService implements OnModuleInit {
     let subject = 'Verification Code';
     let title = 'Verification Code';
     let message = 'Hello {userName},<br>Use the following code to log in:';
-    let disclaimer = 'If you did not request this code, please ignore this message.';
+    let disclaimer =
+      'If you did not request this code, please ignore this message.';
     let context = 'OTP';
 
     if (type === 'new_user') {
       subject = 'Account Verification';
       title = 'Account Verification';
-      message = 'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:';
-      disclaimer = 'If you did not create this account, please ignore this message.';
+      message =
+        'Hello {userName},<br>Welcome to Align Designs! Use this code to verify your account and create your password:';
+      disclaimer =
+        'If you did not create this account, please ignore this message.';
       context = 'New user OTP';
     } else if (type === 'password_recovery') {
       subject = 'Password Recovery Code';
       title = 'Password Recovery Code';
       message = 'Hello {userName},<br>Use this code to reset your password:';
-      disclaimer = 'If you did not request this password reset, please ignore this message.';
+      disclaimer =
+        'If you did not request this password reset, please ignore this message.';
       context = 'Password recovery OTP';
     }
 
@@ -238,8 +251,12 @@ export class EmailService implements OnModuleInit {
     origin: string,
   ): Promise<void> {
     if (!origin) {
-      this.logger.error('sendPasswordResetEmail called without origin - cannot send email with incorrect link');
-      throw new InternalServerErrorException('Origin is required to send password reset email.');
+      this.logger.error(
+        'sendPasswordResetEmail called without origin - cannot send email with incorrect link',
+      );
+      throw new InternalServerErrorException(
+        'Origin is required to send password reset email.',
+      );
     }
 
     const resetLink = `${origin}/reset-password?token=${resetToken}`;
@@ -369,7 +386,9 @@ export class EmailService implements OnModuleInit {
       title,
       userName: 'User',
       preMessage: message,
-      bodyContent: actionLink ? `<div style="text-align: center; margin: 30px 0;"><a href="${actionLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">${actionText || 'View Details'}</a></div>` : '',
+      bodyContent: actionLink
+        ? `<div style="text-align: center; margin: 30px 0;"><a href="${actionLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">${actionText || 'View Details'}</a></div>`
+        : '',
       postMessage: '',
       warningMessage: '',
     });

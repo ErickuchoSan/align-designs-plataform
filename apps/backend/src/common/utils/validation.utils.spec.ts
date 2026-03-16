@@ -14,20 +14,32 @@ describe('PhoneValidationUtils', () => {
 
     it('should reject phone numbers with incorrect length', () => {
       expect(PhoneValidationUtils.validatePhoneNumber('123456789')).toBe(false); // 9 digits
-      expect(PhoneValidationUtils.validatePhoneNumber('12345678901')).toBe(false); // 11 digits
+      expect(PhoneValidationUtils.validatePhoneNumber('12345678901')).toBe(
+        false,
+      ); // 11 digits
       expect(PhoneValidationUtils.validatePhoneNumber('123')).toBe(false); // 3 digits
     });
 
     it('should accept phone numbers with formatting when they have 10 digits', () => {
       // Implementation strips non-digits and validates 10 digits
-      expect(PhoneValidationUtils.validatePhoneNumber('123-456-7890')).toBe(true);
-      expect(PhoneValidationUtils.validatePhoneNumber('(123) 456-7890')).toBe(true);
-      expect(PhoneValidationUtils.validatePhoneNumber('123.456.7890')).toBe(true);
+      expect(PhoneValidationUtils.validatePhoneNumber('123-456-7890')).toBe(
+        true,
+      );
+      expect(PhoneValidationUtils.validatePhoneNumber('(123) 456-7890')).toBe(
+        true,
+      );
+      expect(PhoneValidationUtils.validatePhoneNumber('123.456.7890')).toBe(
+        true,
+      );
     });
 
     it('should reject phone numbers with letters', () => {
-      expect(PhoneValidationUtils.validatePhoneNumber('123abc7890')).toBe(false);
-      expect(PhoneValidationUtils.validatePhoneNumber('abcdefghij')).toBe(false);
+      expect(PhoneValidationUtils.validatePhoneNumber('123abc7890')).toBe(
+        false,
+      );
+      expect(PhoneValidationUtils.validatePhoneNumber('abcdefghij')).toBe(
+        false,
+      );
     });
 
     it('should reject empty or whitespace inputs', () => {
@@ -36,32 +48,52 @@ describe('PhoneValidationUtils', () => {
     });
 
     it('should validate international phone numbers with + prefix', () => {
-      expect(PhoneValidationUtils.validatePhoneNumber('+14155552671')).toBe(true);
-      expect(PhoneValidationUtils.validatePhoneNumber('+525551234567')).toBe(true);
+      expect(PhoneValidationUtils.validatePhoneNumber('+14155552671')).toBe(
+        true,
+      );
+      expect(PhoneValidationUtils.validatePhoneNumber('+525551234567')).toBe(
+        true,
+      );
     });
 
     it('should validate phone numbers with country code parameter', () => {
       // Valid US number format (area code + 7 digits)
-      expect(PhoneValidationUtils.validatePhoneNumber('2025551234', 'US')).toBe(true);
+      expect(PhoneValidationUtils.validatePhoneNumber('2025551234', 'US')).toBe(
+        true,
+      );
       // Valid MX number format
-      expect(PhoneValidationUtils.validatePhoneNumber('5512345678', 'MX')).toBe(true);
+      expect(PhoneValidationUtils.validatePhoneNumber('5512345678', 'MX')).toBe(
+        true,
+      );
     });
   });
 
   describe('formatToE164', () => {
     it('should format 10-digit phone numbers to E.164 with +1 prefix', () => {
-      expect(PhoneValidationUtils.formatToE164('1234567890')).toBe('+11234567890');
-      expect(PhoneValidationUtils.formatToE164('5551234567')).toBe('+15551234567');
+      expect(PhoneValidationUtils.formatToE164('1234567890')).toBe(
+        '+11234567890',
+      );
+      expect(PhoneValidationUtils.formatToE164('5551234567')).toBe(
+        '+15551234567',
+      );
     });
 
     it('should format phone numbers with country code parameter', () => {
-      expect(PhoneValidationUtils.formatToE164('5551234567', 'US')).toBe('+15551234567');
-      expect(PhoneValidationUtils.formatToE164('5551234567', 'MX')).toBe('+525551234567');
+      expect(PhoneValidationUtils.formatToE164('5551234567', 'US')).toBe(
+        '+15551234567',
+      );
+      expect(PhoneValidationUtils.formatToE164('5551234567', 'MX')).toBe(
+        '+525551234567',
+      );
     });
 
     it('should return already formatted E.164 numbers as-is', () => {
-      expect(PhoneValidationUtils.formatToE164('+14155552671')).toBe('+14155552671');
-      expect(PhoneValidationUtils.formatToE164('+525551234567')).toBe('+525551234567');
+      expect(PhoneValidationUtils.formatToE164('+14155552671')).toBe(
+        '+14155552671',
+      );
+      expect(PhoneValidationUtils.formatToE164('+525551234567')).toBe(
+        '+525551234567',
+      );
     });
 
     it('should return null for invalid phone numbers', () => {
@@ -72,28 +104,33 @@ describe('PhoneValidationUtils', () => {
 
   describe('extractCountryCodeAndNumber', () => {
     it('should extract country code and phone number', () => {
-      const result1 = PhoneValidationUtils.extractCountryCodeAndNumber('+11234567890');
+      const result1 =
+        PhoneValidationUtils.extractCountryCodeAndNumber('+11234567890');
       expect(result1.countryCode).toBe('+1');
       expect(result1.phoneNumber).toBe('1234567890');
 
-      const result2 = PhoneValidationUtils.extractCountryCodeAndNumber('+525551234567');
+      const result2 =
+        PhoneValidationUtils.extractCountryCodeAndNumber('+525551234567');
       expect(result2.countryCode).toBe('+52');
       expect(result2.phoneNumber).toBe('5551234567');
 
-      const result3 = PhoneValidationUtils.extractCountryCodeAndNumber('+449876543210');
+      const result3 =
+        PhoneValidationUtils.extractCountryCodeAndNumber('+449876543210');
       expect(result3.countryCode).toBe('+44');
       expect(result3.phoneNumber).toBe('9876543210');
     });
 
     it('should handle phone numbers without country code', () => {
-      const result = PhoneValidationUtils.extractCountryCodeAndNumber('1234567890');
+      const result =
+        PhoneValidationUtils.extractCountryCodeAndNumber('1234567890');
       expect(result.countryCode).toBe('+1');
       expect(result.phoneNumber).toBe('1234567890');
     });
 
     it('should preserve spaces in phone number after extraction', () => {
       // Implementation preserves the format after country code
-      const result = PhoneValidationUtils.extractCountryCodeAndNumber('+1 123 456 7890');
+      const result =
+        PhoneValidationUtils.extractCountryCodeAndNumber('+1 123 456 7890');
       expect(result.countryCode).toBe('+1');
       expect(result.phoneNumber).toBe('123 456 7890');
     });
@@ -103,33 +140,53 @@ describe('PhoneValidationUtils', () => {
 describe('EmailValidationUtils', () => {
   describe('validateEmail', () => {
     it('should validate correct email formats', () => {
-      expect(EmailValidationUtils.validateEmail('user@example.com').isValid).toBe(true);
-      expect(EmailValidationUtils.validateEmail('john.doe@company.org').isValid).toBe(true);
-      expect(EmailValidationUtils.validateEmail('test.user123@domain.co.uk').isValid).toBe(true);
+      expect(
+        EmailValidationUtils.validateEmail('user@example.com').isValid,
+      ).toBe(true);
+      expect(
+        EmailValidationUtils.validateEmail('john.doe@company.org').isValid,
+      ).toBe(true);
+      expect(
+        EmailValidationUtils.validateEmail('test.user123@domain.co.uk').isValid,
+      ).toBe(true);
       expect(EmailValidationUtils.validateEmail('a@b.co').isValid).toBe(true);
     });
 
     it('should reject invalid email formats', () => {
-      expect(EmailValidationUtils.validateEmail('invalid-email').isValid).toBe(false);
+      expect(EmailValidationUtils.validateEmail('invalid-email').isValid).toBe(
+        false,
+      );
       expect(EmailValidationUtils.validateEmail('user@').isValid).toBe(false);
-      expect(EmailValidationUtils.validateEmail('@domain.com').isValid).toBe(false);
-      expect(EmailValidationUtils.validateEmail('user@domain').isValid).toBe(false);
+      expect(EmailValidationUtils.validateEmail('@domain.com').isValid).toBe(
+        false,
+      );
+      expect(EmailValidationUtils.validateEmail('user@domain').isValid).toBe(
+        false,
+      );
       expect(EmailValidationUtils.validateEmail('').isValid).toBe(false);
     });
 
     it('should reject emails with spaces in local part', () => {
-      const result = EmailValidationUtils.validateEmail('user space@domain.com');
+      const result = EmailValidationUtils.validateEmail(
+        'user space@domain.com',
+      );
       expect(result.isValid).toBe(false);
       expect(result.error).toBe('Invalid email format');
     });
 
     it('should reject emails that start or end with dots', () => {
-      expect(EmailValidationUtils.validateEmail('.user@domain.com').isValid).toBe(false);
-      expect(EmailValidationUtils.validateEmail('user.@domain.com').isValid).toBe(false);
+      expect(
+        EmailValidationUtils.validateEmail('.user@domain.com').isValid,
+      ).toBe(false);
+      expect(
+        EmailValidationUtils.validateEmail('user.@domain.com').isValid,
+      ).toBe(false);
     });
 
     it('should reject emails with consecutive dots', () => {
-      expect(EmailValidationUtils.validateEmail('user..name@domain.com').isValid).toBe(false);
+      expect(
+        EmailValidationUtils.validateEmail('user..name@domain.com').isValid,
+      ).toBe(false);
     });
 
     it('should reject emails with suspicious domains', () => {
@@ -140,7 +197,9 @@ describe('EmailValidationUtils', () => {
 
     it('should reject emails that are too long', () => {
       const longLocal = 'a'.repeat(65);
-      const result = EmailValidationUtils.validateEmail(`${longLocal}@domain.com`);
+      const result = EmailValidationUtils.validateEmail(
+        `${longLocal}@domain.com`,
+      );
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('too long');
     });
@@ -148,15 +207,27 @@ describe('EmailValidationUtils', () => {
 
   describe('isBusinessEmail', () => {
     it('should identify business emails correctly', () => {
-      expect(EmailValidationUtils.isBusinessEmail('user@microsoft.com')).toBe(true);
-      expect(EmailValidationUtils.isBusinessEmail('user@google.com')).toBe(true);
-      expect(EmailValidationUtils.isBusinessEmail('user@linkedin.com')).toBe(true);
+      expect(EmailValidationUtils.isBusinessEmail('user@microsoft.com')).toBe(
+        true,
+      );
+      expect(EmailValidationUtils.isBusinessEmail('user@google.com')).toBe(
+        true,
+      );
+      expect(EmailValidationUtils.isBusinessEmail('user@linkedin.com')).toBe(
+        true,
+      );
     });
 
     it('should not identify personal emails as business', () => {
-      expect(EmailValidationUtils.isBusinessEmail('user@gmail.com')).toBe(false);
-      expect(EmailValidationUtils.isBusinessEmail('user@yahoo.com')).toBe(false);
-      expect(EmailValidationUtils.isBusinessEmail('user@hotmail.com')).toBe(false);
+      expect(EmailValidationUtils.isBusinessEmail('user@gmail.com')).toBe(
+        false,
+      );
+      expect(EmailValidationUtils.isBusinessEmail('user@yahoo.com')).toBe(
+        false,
+      );
+      expect(EmailValidationUtils.isBusinessEmail('user@hotmail.com')).toBe(
+        false,
+      );
     });
   });
 });
@@ -164,9 +235,15 @@ describe('EmailValidationUtils', () => {
 describe('PasswordValidationUtils', () => {
   describe('validatePassword', () => {
     it('should validate strong passwords', () => {
-      expect(PasswordValidationUtils.validatePassword('MyP@ssw0rd12!').isValid).toBe(true);
-      expect(PasswordValidationUtils.validatePassword('C0mpl3x!P@ss!').isValid).toBe(true);
-      expect(PasswordValidationUtils.validatePassword('Str0ng#P@ssw0!').isValid).toBe(true);
+      expect(
+        PasswordValidationUtils.validatePassword('MyP@ssw0rd12!').isValid,
+      ).toBe(true);
+      expect(
+        PasswordValidationUtils.validatePassword('C0mpl3x!P@ss!').isValid,
+      ).toBe(true);
+      expect(
+        PasswordValidationUtils.validatePassword('Str0ng#P@ssw0!').isValid,
+      ).toBe(true);
     });
 
     it('should reject passwords that are too short', () => {
@@ -200,7 +277,8 @@ describe('PasswordValidationUtils', () => {
     });
 
     it('should reject passwords with common patterns', () => {
-      const result = PasswordValidationUtils.validatePassword('MyPassword123456!');
+      const result =
+        PasswordValidationUtils.validatePassword('MyPassword123456!');
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('common patterns');
     });
@@ -236,7 +314,8 @@ describe('PasswordValidationUtils', () => {
       expect(good.label).toBe('Good');
 
       // 'MyP@ssw0rd12' = length>=12 + uppercase + lowercase + number + symbol = score 5
-      const strong = PasswordValidationUtils.calculatePasswordStrength('MyP@ssw0rd12');
+      const strong =
+        PasswordValidationUtils.calculatePasswordStrength('MyP@ssw0rd12');
       expect(strong.score).toBe(5);
       expect(strong.label).toBe('Strong');
     });
@@ -245,10 +324,16 @@ describe('PasswordValidationUtils', () => {
   describe('checkPasswordContainsUserInfo', () => {
     it('should detect when password contains username', () => {
       expect(
-        PasswordValidationUtils.checkPasswordContainsUserInfo('johnpassword123!', 'john'),
+        PasswordValidationUtils.checkPasswordContainsUserInfo(
+          'johnpassword123!',
+          'john',
+        ),
       ).toBe(true);
       expect(
-        PasswordValidationUtils.checkPasswordContainsUserInfo('MyJohnPass123!', 'john'),
+        PasswordValidationUtils.checkPasswordContainsUserInfo(
+          'MyJohnPass123!',
+          'john',
+        ),
       ).toBe(true);
     });
 
@@ -265,7 +350,10 @@ describe('PasswordValidationUtils', () => {
 
     it('should not detect false positives', () => {
       expect(
-        PasswordValidationUtils.checkPasswordContainsUserInfo('MyComplexPass123!', 'jane'),
+        PasswordValidationUtils.checkPasswordContainsUserInfo(
+          'MyComplexPass123!',
+          'jane',
+        ),
       ).toBe(false);
       expect(
         PasswordValidationUtils.checkPasswordContainsUserInfo(

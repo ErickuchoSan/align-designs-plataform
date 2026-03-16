@@ -5,9 +5,9 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-    imports: [PrismaModule, AuthModule],
-    controllers: [TrackingController],
-    providers: [TimeTrackingService],
-    exports: [TimeTrackingService],
+  imports: [PrismaModule, AuthModule],
+  controllers: [TrackingController],
+  providers: [TimeTrackingService],
+  exports: [TimeTrackingService],
 })
-export class TrackingModule { }
+export class TrackingModule {}

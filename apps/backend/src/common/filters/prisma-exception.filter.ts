@@ -179,7 +179,8 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientUnknownRequestError) {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'An unexpected database error occurred. Please try again later.',
+        message:
+          'An unexpected database error occurred. Please try again later.',
         error: 'Internal Server Error',
       };
     }
@@ -188,7 +189,8 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientInitializationError) {
       return {
         status: HttpStatus.SERVICE_UNAVAILABLE,
-        message: 'Database service is currently unavailable. Please try again later.',
+        message:
+          'Database service is currently unavailable. Please try again later.',
         error: 'Service Unavailable',
       };
     }

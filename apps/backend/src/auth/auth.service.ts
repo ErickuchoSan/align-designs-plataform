@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDependenciesService } from './services/auth-dependencies.service';
 import { TokenService } from './services/token.service';
@@ -19,7 +15,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly otpValidation: OtpValidationService,
     private readonly passwordManagement: PasswordManagementService,
-  ) { }
+  ) {}
 
   /**
    * Login with email and password (for ADMIN and CLIENT)
@@ -38,7 +34,9 @@ export class AuthService {
         this.logger.warn(`Login attempt for non-existent user: ${email}`);
         throw new UnauthorizedException('Invalid email or password');
       }
-      this.logger.log(`User found: ${user.id}, Role: ${user.role}, Active: ${user.isActive}`);
+      this.logger.log(
+        `User found: ${user.id}, Role: ${user.role}, Active: ${user.isActive}`,
+      );
 
       // Check if account is locked
       this.authDependencies.accountLockout.validateAccountNotLocked(user);
@@ -75,7 +73,9 @@ export class AuthService {
 
       this.logger.log(`Successful login for user: ${email} (${user.role})`);
       const access_token = this.tokenService.generateAccessToken(user);
-      const refresh_token = await this.tokenService.generateRefreshToken(user.id);
+      const refresh_token = await this.tokenService.generateRefreshToken(
+        user.id,
+      );
 
       return {
         access_token,
@@ -90,7 +90,10 @@ export class AuthService {
         },
       };
     } catch (error) {
-      this.logger.error(`Login failed for ${email}: ${(error as any).message}`, (error as any).stack);
+      this.logger.error(
+        `Login failed for ${email}: ${(error as any).message}`,
+        (error as any).stack,
+      );
       throw error;
     }
   }
@@ -134,9 +137,15 @@ export class AuthService {
    */
   async refresh(refreshToken: string) {
     // Verify and rotate refresh token
-    const tokenRecord = await this.tokenService.verifyRefreshToken(refreshToken);
-    const newRefreshToken = await this.tokenService.rotateRefreshToken(tokenRecord.tokenHash, tokenRecord.userId);
-    const newAccessToken = this.tokenService.generateAccessToken(tokenRecord.user);
+    const tokenRecord =
+      await this.tokenService.verifyRefreshToken(refreshToken);
+    const newRefreshToken = await this.tokenService.rotateRefreshToken(
+      tokenRecord.tokenHash,
+      tokenRecord.userId,
+    );
+    const newAccessToken = this.tokenService.generateAccessToken(
+      tokenRecord.user,
+    );
 
     return {
       access_token: newAccessToken,

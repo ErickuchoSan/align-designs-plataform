@@ -7,9 +7,9 @@ import { AuthModule } from '../auth/auth.module';
 
 @Global() // Make it global so we can inject NotificationsService anywhere easily
 @Module({
-    imports: [PrismaModule, EmailModule, AuthModule],
-    controllers: [NotificationsController],
-    providers: [NotificationsService],
-    exports: [NotificationsService],
+  imports: [PrismaModule, EmailModule, AuthModule],
+  controllers: [NotificationsController],
+  providers: [NotificationsService],
+  exports: [NotificationsService],
 })
-export class NotificationsModule { }
+export class NotificationsModule {}

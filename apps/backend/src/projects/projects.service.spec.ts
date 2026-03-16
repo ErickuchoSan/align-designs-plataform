@@ -369,7 +369,10 @@ describe('ProjectsService', () => {
       jest
         .spyOn(prismaService.project, 'findFirst')
         .mockResolvedValue(mockProjectWithEmployees);
-      const updatedProject = { ...mockProjectWithEmployees, name: 'Updated Name' };
+      const updatedProject = {
+        ...mockProjectWithEmployees,
+        name: 'Updated Name',
+      };
       jest
         .spyOn(prismaService.project, 'update')
         .mockResolvedValue(updatedProject);
@@ -475,12 +478,10 @@ describe('ProjectsService', () => {
         .mockImplementation(async (callback: any) => callback(mockTx));
 
       // Mock findUnique for post-delete notifications
-      jest
-        .spyOn(prismaService.project, 'findUnique')
-        .mockResolvedValue({
-          ...mockProject,
-          employees: [],
-        } as any);
+      jest.spyOn(prismaService.project, 'findUnique').mockResolvedValue({
+        ...mockProject,
+        employees: [],
+      } as any);
 
       const result = await service.remove(
         'project-123',
@@ -531,12 +532,10 @@ describe('ProjectsService', () => {
         .mockImplementation(async (callback: any) => callback(mockTx));
 
       // Mock findUnique for post-delete notifications
-      jest
-        .spyOn(prismaService.project, 'findUnique')
-        .mockResolvedValue({
-          ...projectWithFiles,
-          employees: [],
-        } as any);
+      jest.spyOn(prismaService.project, 'findUnique').mockResolvedValue({
+        ...projectWithFiles,
+        employees: [],
+      } as any);
 
       await service.remove('project-123', 'admin-123', Role.ADMIN);
 

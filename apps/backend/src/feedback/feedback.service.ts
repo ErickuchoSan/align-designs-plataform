@@ -31,7 +31,7 @@ export class FeedbackService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   /**
    * Create a new feedback cycle for an employee
@@ -400,7 +400,10 @@ export class FeedbackService {
    * Employee can submit again
    * Also increments rejection count on linked files
    */
-  async rejectFeedbackCycle(cycleId: string, rejectionReason?: string): Promise<any> {
+  async rejectFeedbackCycle(
+    cycleId: string,
+    rejectionReason?: string,
+  ): Promise<any> {
     const cycle = await this.prisma.feedbackCycle.findUnique({
       where: { id: cycleId },
       select: { status: true },

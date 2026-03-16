@@ -21,6 +21,10 @@ import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
     },
   ],
   controllers: [UsersController],
-  exports: [INJECTION_TOKENS.USER_REPOSITORY, UsersService, UserAnalyticsService],
+  exports: [
+    INJECTION_TOKENS.USER_REPOSITORY,
+    UsersService,
+    UserAnalyticsService,
+  ],
 })
-export class UsersModule { }
+export class UsersModule {}

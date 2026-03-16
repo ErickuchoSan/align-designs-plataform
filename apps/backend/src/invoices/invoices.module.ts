@@ -8,9 +8,9 @@ import { InvoicePdfService } from './invoice-pdf.service';
 import { EmailModule } from '../email/email.module';
 
 @Module({
-    imports: [PrismaModule, NotificationsModule, AuthModule, EmailModule],
-    controllers: [InvoicesController],
-    providers: [InvoicesService, InvoicePdfService],
-    exports: [InvoicesService],
+  imports: [PrismaModule, NotificationsModule, AuthModule, EmailModule],
+  controllers: [InvoicesController],
+  providers: [InvoicesService, InvoicePdfService],
+  exports: [InvoicesService],
 })
-export class InvoicesModule { }
+export class InvoicesModule {}

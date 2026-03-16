@@ -50,7 +50,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly userAnalyticsService: UserAnalyticsService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   @Post()
   @ApiOperation({
@@ -215,7 +215,8 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Get client analytics',
-    description: 'Get comprehensive analytics for a specific client (Admin only)',
+    description:
+      'Get comprehensive analytics for a specific client (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Client UUID' })
   @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
@@ -229,10 +230,14 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Get project distribution for client',
-    description: 'Get project distribution by status for chart visualization (Admin only)',
+    description:
+      'Get project distribution by status for chart visualization (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Client UUID' })
-  @ApiResponse({ status: 200, description: 'Distribution data retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Distribution data retrieved successfully',
+  })
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   getProjectDistribution(@Param('id') id: string) {
     return this.userAnalyticsService.getProjectDistribution(id);
@@ -242,10 +247,14 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Get monthly activity for client',
-    description: 'Get monthly project activity for the last 12 months (Admin only)',
+    description:
+      'Get monthly project activity for the last 12 months (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Client UUID' })
-  @ApiResponse({ status: 200, description: 'Monthly activity data retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monthly activity data retrieved successfully',
+  })
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   getMonthlyActivity(@Param('id') id: string) {
     return this.userAnalyticsService.getMonthlyActivity(id);
@@ -291,11 +300,15 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Resend welcome email',
-    description: 'Admin-only: Resend welcome email to a user who has not set their password',
+    description:
+      'Admin-only: Resend welcome email to a user who has not set their password',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'Welcome email sent successfully' })
-  @ApiResponse({ status: 403, description: 'User has already set their password' })
+  @ApiResponse({
+    status: 403,
+    description: 'User has already set their password',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.OK)
@@ -359,7 +372,12 @@ export class UsersController {
     // Convert string 'true' to boolean if necessary
     const isHardDelete = hard === true || String(hard) === 'true';
     const isForceDelete = force === true || String(force) === 'true';
-    const result = await this.usersService.remove(id, user.userId, isHardDelete, isForceDelete);
+    const result = await this.usersService.remove(
+      id,
+      user.userId,
+      isHardDelete,
+      isForceDelete,
+    );
 
     // Audit log for user deletion (non-blocking)
     await safeAuditLog(

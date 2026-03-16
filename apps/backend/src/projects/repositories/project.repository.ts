@@ -89,8 +89,12 @@ export class ProjectRepository implements IProjectRepository {
         createdBy: data.createdBy,
         // Phase 1: Workflow fields
         initialAmountRequired: data.initialAmountRequired,
-        deadlineDate: data.deadlineDate ? new Date(data.deadlineDate) : undefined,
-        initialPaymentDeadline: data.initialPaymentDeadline ? new Date(data.initialPaymentDeadline) : undefined,
+        deadlineDate: data.deadlineDate
+          ? new Date(data.deadlineDate)
+          : undefined,
+        initialPaymentDeadline: data.initialPaymentDeadline
+          ? new Date(data.initialPaymentDeadline)
+          : undefined,
       },
       include: {
         client: true,

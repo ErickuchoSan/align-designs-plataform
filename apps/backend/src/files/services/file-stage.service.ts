@@ -31,7 +31,7 @@ export class FileStageService {
     private readonly prisma: PrismaService,
     private readonly timeTrackingService: TimeTrackingService,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   /**
    * Admin approves a SUBMITTED file (move to ADMIN_APPROVED stage)
@@ -255,7 +255,9 @@ export class FileStageService {
     // Stop Time Tracking for the linked cycle if exists
     if (file.feedbackCycleId) {
       await this.timeTrackingService.endTracking(file.feedbackCycleId, fileId);
-      this.logger.log(`Time tracking ended for cycle ${file.feedbackCycleId} via file approval ${fileId}`);
+      this.logger.log(
+        `Time tracking ended for cycle ${file.feedbackCycleId} via file approval ${fileId}`,
+      );
     }
 
     this.logger.log(

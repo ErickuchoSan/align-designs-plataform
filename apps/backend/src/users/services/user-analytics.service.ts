@@ -228,12 +228,7 @@ export class UserAnalyticsService {
     const analytics = await this.getClientAnalytics(clientId);
 
     return {
-      labels: [
-        'Waiting Payment',
-        'Active',
-        'Completed',
-        'Archived',
-      ],
+      labels: ['Waiting Payment', 'Active', 'Completed', 'Archived'],
       data: [
         analytics.projectStats.waitingPayment,
         analytics.projectStats.active,
@@ -287,7 +282,9 @@ export class UserAnalyticsService {
       const created = projects.filter((p) => {
         const projectMonth = p.createdAt.getMonth();
         const projectYear = p.createdAt.getFullYear();
-        return projectMonth === date.getMonth() && projectYear === date.getFullYear();
+        return (
+          projectMonth === date.getMonth() && projectYear === date.getFullYear()
+        );
       }).length;
 
       // Count projects completed in this month
@@ -295,7 +292,9 @@ export class UserAnalyticsService {
         if (p.status !== 'COMPLETED') return false;
         const projectMonth = p.updatedAt.getMonth();
         const projectYear = p.updatedAt.getFullYear();
-        return projectMonth === date.getMonth() && projectYear === date.getFullYear();
+        return (
+          projectMonth === date.getMonth() && projectYear === date.getFullYear()
+        );
       }).length;
 
       projectsCreated.push(created);

@@ -49,17 +49,27 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsNumber(
     { maxDecimalPlaces: 2 },
-    { message: 'Initial amount must be a number with maximum 2 decimal places' },
+    {
+      message: 'Initial amount must be a number with maximum 2 decimal places',
+    },
   )
   @IsPositive({ message: 'Initial amount must be positive' })
   @Type(() => Number)
   initialAmountRequired?: number;
 
   @IsOptional()
-  @IsDateString({}, { message: 'Deadline must be a valid ISO 8601 date string' })
+  @IsDateString(
+    {},
+    { message: 'Deadline must be a valid ISO 8601 date string' },
+  )
   deadlineDate?: string;
 
   @IsOptional()
-  @IsDateString({}, { message: 'Initial payment deadline must be a valid ISO 8601 date string' })
+  @IsDateString(
+    {},
+    {
+      message: 'Initial payment deadline must be a valid ISO 8601 date string',
+    },
+  )
   initialPaymentDeadline?: string;
 }

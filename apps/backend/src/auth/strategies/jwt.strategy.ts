@@ -25,7 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           if (!token) {
             const fs = require('fs');
             const log = `[JWT] Missing cookie. Cookies: ${JSON.stringify(request?.cookies)} URL: ${request?.url} Method: ${request?.method}\n`;
-            try { fs.appendFileSync('auth_debug.log', log); } catch (e) { }
+            try {
+              fs.appendFileSync('auth_debug.log', log);
+            } catch (e) {}
           }
           return token;
         },

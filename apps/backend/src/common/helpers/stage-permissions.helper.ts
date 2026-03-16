@@ -26,7 +26,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.EMPLOYEE, Role.CLIENT],
     canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Initial project scope, consultation notes, and client requirements.',
+    description:
+      'Initial project scope, consultation notes, and client requirements.',
   },
 
   /**
@@ -38,7 +39,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.EMPLOYEE],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
-    description: 'Preliminary designs, conceptual sketches, and initial layout proposals.',
+    description:
+      'Preliminary designs, conceptual sketches, and initial layout proposals.',
   },
 
   /**
@@ -50,7 +52,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.CLIENT],
     canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Client reviews designs and provides feedback. Admin responds.',
+    description:
+      'Client reviews designs and provides feedback. Admin responds.',
   },
 
   /**
@@ -62,7 +65,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.EMPLOYEE],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
-    description: 'Internal revision tracking. Employees read only. Hidden from clients.',
+    description:
+      'Internal revision tracking. Employees read only. Hidden from clients.',
   },
 
   /**
@@ -74,7 +78,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.EMPLOYEE],
     canWrite: [Role.EMPLOYEE],
     canDelete: [],
-    description: 'Construction plans submitted by employees. States: Drafting, Under Review, Submitted.',
+    description:
+      'Construction plans submitted by employees. States: Drafting, Under Review, Submitted.',
   },
 
   /**
@@ -86,7 +91,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.CLIENT],
     canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Client reviews complete plan set, leaves comments, and approves.',
+    description:
+      'Client reviews complete plan set, leaves comments, and approves.',
   },
 
   /**
@@ -98,7 +104,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.CLIENT],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
-    description: 'Final deliverables: PDF plans, CAD files, renders for download.',
+    description:
+      'Final deliverables: PDF plans, CAD files, renders for download.',
   },
 
   /**
@@ -128,7 +135,8 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.CLIENT, Role.EMPLOYEE],
     canWrite: [Role.ADMIN, Role.CLIENT],
     canDelete: [Role.ADMIN],
-    description: 'Invoices and payments. Strict privacy filtering by user and type.',
+    description:
+      'Invoices and payments. Strict privacy filtering by user and type.',
   },
 };
 
@@ -206,12 +214,12 @@ export function getStageName(stage: Stage): string {
 export function getStageIcon(stage: Stage): string {
   const icons: Record<Stage, string> = {
     BRIEF_PROJECT: '📋',
-    REFERENCES: '🎨',       // Concept Design
-    FEEDBACK_CLIENT: '💬',  // Design Review
+    REFERENCES: '🎨', // Concept Design
+    FEEDBACK_CLIENT: '💬', // Design Review
     FEEDBACK_EMPLOYEE: '📝', // Revision Tracking
-    SUBMITTED: '📐',        // Construction Plans
-    ADMIN_APPROVED: '👁️',   // Client Review
-    CLIENT_APPROVED: '📦',  // Final Deliverables
+    SUBMITTED: '📐', // Construction Plans
+    ADMIN_APPROVED: '👁️', // Client Review
+    CLIENT_APPROVED: '📦', // Final Deliverables
     PAYMENTS: '💰',
   };
   return icons[stage];

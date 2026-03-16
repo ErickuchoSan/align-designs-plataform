@@ -1,4 +1,18 @@
-import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards, UseInterceptors, Res, StreamableFile, ForbiddenException, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  Res,
+  StreamableFile,
+  ForbiddenException,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -14,97 +28,102 @@ import type { Response } from 'express';
 @Controller('invoices')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class InvoicesController {
-    constructor(
-        private readonly invoicesService: InvoicesService,
-        private readonly invoicePdfService: InvoicePdfService,
-    ) { }
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly invoicePdfService: InvoicePdfService,
+  ) {}
 
-    @Post()
-    @Roles(Role.ADMIN)
-    @UseInterceptors(IdempotencyInterceptor)
-    create(@Body() createInvoiceDto: CreateInvoiceDto) {
-        return this.invoicesService.create(createInvoiceDto);
+  @Post()
+  @Roles(Role.ADMIN)
+  @UseInterceptors(IdempotencyInterceptor)
+  create(@Body() createInvoiceDto: CreateInvoiceDto) {
+    return this.invoicesService.create(createInvoiceDto);
+  }
+
+  @Post(':id/resend')
+  @Roles(Role.ADMIN)
+  async resendEmail(@Param('id', ParseUUIDPipe) id: string) {
+    await this.invoicesService.resendInvoiceEmail(id);
+    return { message: 'Invoice email queued for sending' };
+  }
+
+  @Get()
+  findAll(
+    @CurrentUser() user: UserPayload,
+    @Query('projectId') projectId?: string,
+    @Query('clientId') clientId?: string,
+  ) {
+    // If user is CLIENT, force clientId to be their ID
+    const forcedClientId = user.role === Role.CLIENT ? user.userId : clientId;
+    return this.invoicesService.findAll({
+      projectId,
+      clientId: forcedClientId,
+    });
+  }
+
+  @Get('metrics')
+  @Roles(Role.ADMIN)
+  getMetrics() {
+    return this.invoicesService.getMetrics();
+  }
+
+  @Get('project/:projectId/has-unpaid')
+  @Roles(Role.ADMIN)
+  async checkUnpaidInvoices(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+  ) {
+    const hasUnpaid = await this.invoicesService.hasUnpaidInvoices(projectId);
+    return { hasUnpaidInvoices: hasUnpaid };
+  }
+
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    const invoice = await this.invoicesService.findOne(id);
+
+    // Ownership check: Clients can only view their own invoices
+    if (user.role === Role.CLIENT && invoice.clientId !== user.userId) {
+      throw new ForbiddenException('You do not have access to this invoice');
     }
 
-    @Post(':id/resend')
-    @Roles(Role.ADMIN)
-    async resendEmail(@Param('id', ParseUUIDPipe) id: string) {
-        await this.invoicesService.resendInvoiceEmail(id);
-        return { message: 'Invoice email queued for sending' };
+    return invoice;
+  }
+
+  @Patch(':id/status')
+  @Roles(Role.ADMIN)
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('status') status: InvoiceStatus,
+  ) {
+    return this.invoicesService.updateStatus(id, status);
+  }
+
+  @Get(':id/pdf')
+  async getInvoicePdf(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: UserPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Get invoice with all relations
+    const invoice = await this.invoicesService.findOne(id);
+
+    // Ownership check: Clients can only view their own invoice PDFs
+    if (user.role === Role.CLIENT && invoice.clientId !== user.userId) {
+      throw new ForbiddenException('You do not have access to this invoice');
     }
 
-    @Get()
-    findAll(
-        @CurrentUser() user: UserPayload,
-        @Query('projectId') projectId?: string,
-        @Query('clientId') clientId?: string
-    ) {
-        // If user is CLIENT, force clientId to be their ID
-        const forcedClientId = user.role === Role.CLIENT ? user.userId : clientId;
-        return this.invoicesService.findAll({ projectId, clientId: forcedClientId });
-    }
+    // Generate PDF
+    const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoice);
 
-    @Get('metrics')
-    @Roles(Role.ADMIN)
-    getMetrics() {
-        return this.invoicesService.getMetrics();
-    }
+    // Set headers for PDF download
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="Invoice-${invoice.invoiceNumber}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
 
-    @Get('project/:projectId/has-unpaid')
-    @Roles(Role.ADMIN)
-    async checkUnpaidInvoices(@Param('projectId', ParseUUIDPipe) projectId: string) {
-        const hasUnpaid = await this.invoicesService.hasUnpaidInvoices(projectId);
-        return { hasUnpaidInvoices: hasUnpaid };
-    }
-
-    @Get(':id')
-    async findOne(
-        @Param('id', ParseUUIDPipe) id: string,
-        @CurrentUser() user: UserPayload,
-    ) {
-        const invoice = await this.invoicesService.findOne(id);
-
-        // Ownership check: Clients can only view their own invoices
-        if (user.role === Role.CLIENT && invoice.clientId !== user.userId) {
-            throw new ForbiddenException('You do not have access to this invoice');
-        }
-
-        return invoice;
-    }
-
-    @Patch(':id/status')
-    @Roles(Role.ADMIN)
-    updateStatus(
-        @Param('id', ParseUUIDPipe) id: string,
-        @Body('status') status: InvoiceStatus,
-    ) {
-        return this.invoicesService.updateStatus(id, status);
-    }
-
-    @Get(':id/pdf')
-    async getInvoicePdf(
-        @Param('id', ParseUUIDPipe) id: string,
-        @CurrentUser() user: UserPayload,
-        @Res({ passthrough: true }) res: Response,
-    ) {
-        // Get invoice with all relations
-        const invoice = await this.invoicesService.findOne(id);
-
-        // Ownership check: Clients can only view their own invoice PDFs
-        if (user.role === Role.CLIENT && invoice.clientId !== user.userId) {
-            throw new ForbiddenException('You do not have access to this invoice');
-        }
-
-        // Generate PDF
-        const pdfBuffer = await this.invoicePdfService.generateInvoicePDF(invoice);
-
-        // Set headers for PDF download
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `inline; filename="Invoice-${invoice.invoiceNumber}.pdf"`,
-            'Content-Length': pdfBuffer.length,
-        });
-
-        return new StreamableFile(pdfBuffer);
-    }
+    return new StreamableFile(pdfBuffer);
+  }
 }

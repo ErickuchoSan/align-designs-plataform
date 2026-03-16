@@ -24,7 +24,11 @@ describe('FilesService', () => {
   let fileNotifications: any;
   let fileMaintenance: any;
 
-  const mockFileRecord = { id: 'file-123', filename: 'test.pdf', projectId: 'p-1' };
+  const mockFileRecord = {
+    id: 'file-123',
+    filename: 'test.pdf',
+    projectId: 'p-1',
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -88,11 +92,17 @@ describe('FilesService', () => {
 
     service = module.get<FilesService>(FilesService);
     permissions = module.get<FilePermissionsService>(FilePermissionsService);
-    storageCoordinator = module.get<FileStorageCoordinatorService>(FileStorageCoordinatorService);
+    storageCoordinator = module.get<FileStorageCoordinatorService>(
+      FileStorageCoordinatorService,
+    );
     transformer = module.get<FileTransformerService>(FileTransformerService);
     cacheManager = module.get<CacheManagerService>(CacheManagerService);
-    fileNotifications = module.get<FileNotificationService>(FileNotificationService);
-    fileMaintenance = module.get<FileMaintenanceService>(FileMaintenanceService);
+    fileNotifications = module.get<FileNotificationService>(
+      FileNotificationService,
+    );
+    fileMaintenance = module.get<FileMaintenanceService>(
+      FileMaintenanceService,
+    );
   });
 
   it('should be defined', () => {
@@ -101,20 +111,30 @@ describe('FilesService', () => {
 
   describe('uploadFile', () => {
     it('should upload file, notify, and invalidate cache', async () => {
-      storageCoordinator.uploadFileWithTransaction.mockResolvedValue(mockFileRecord);
+      storageCoordinator.uploadFileWithTransaction.mockResolvedValue(
+        mockFileRecord,
+      );
 
       const result = await service.uploadFile(
         'p-1',
         { originalname: 'test.pdf' } as any,
         'comment',
         'u-1',
-        Role.CLIENT
+        Role.CLIENT,
       );
 
       expect(permissions.verifyProjectAccess).toHaveBeenCalled();
       expect(storageCoordinator.uploadFileWithTransaction).toHaveBeenCalled();
-      expect(fileNotifications.sendProjectNotifications).toHaveBeenCalledWith('p-1', 'u-1', 'FILE', 'test.pdf');
-      expect(cacheManager.invalidateFileCaches).toHaveBeenCalledWith('p-1', 'file-123');
+      expect(fileNotifications.sendProjectNotifications).toHaveBeenCalledWith(
+        'p-1',
+        'u-1',
+        'FILE',
+        'test.pdf',
+      );
+      expect(cacheManager.invalidateFileCaches).toHaveBeenCalledWith(
+        'p-1',
+        'file-123',
+      );
       expect(result).toEqual(mockFileRecord);
     });
   });
@@ -128,12 +148,18 @@ describe('FilesService', () => {
   describe('Delegated Methods', () => {
     it('verifyStorageIntegrity delegation', async () => {
       await service.verifyStorageIntegrity('u-1', Role.ADMIN);
-      expect(fileMaintenance.verifyStorageIntegrity).toHaveBeenCalledWith('u-1', Role.ADMIN);
+      expect(fileMaintenance.verifyStorageIntegrity).toHaveBeenCalledWith(
+        'u-1',
+        Role.ADMIN,
+      );
     });
 
     it('cleanupOrphanedFiles delegation', async () => {
       await service.cleanupOrphanedFiles('u-1', Role.ADMIN);
-      expect(fileMaintenance.cleanupOrphanedFiles).toHaveBeenCalledWith('u-1', Role.ADMIN);
+      expect(fileMaintenance.cleanupOrphanedFiles).toHaveBeenCalledWith(
+        'u-1',
+        Role.ADMIN,
+      );
     });
   });
 });

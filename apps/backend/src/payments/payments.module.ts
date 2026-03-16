@@ -9,9 +9,15 @@ import { InvoicesModule } from '../invoices/invoices.module';
 import { PaymentApprovalService } from './services/payment-approval.service';
 
 @Module({
-    imports: [PrismaModule, ProjectsModule, AuthModule, StorageModule, InvoicesModule],
-    controllers: [PaymentsController],
-    providers: [PaymentsService, PaymentApprovalService],
-    exports: [PaymentsService, PaymentApprovalService],
+  imports: [
+    PrismaModule,
+    ProjectsModule,
+    AuthModule,
+    StorageModule,
+    InvoicesModule,
+  ],
+  controllers: [PaymentsController],
+  providers: [PaymentsService, PaymentApprovalService],
+  exports: [PaymentsService, PaymentApprovalService],
 })
-export class PaymentsModule { }
+export class PaymentsModule {}

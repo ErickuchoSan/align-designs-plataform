@@ -39,7 +39,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly cacheManager: CacheManagerService,
     private readonly mailService: EmailService,
-  ) { }
+  ) {}
 
   /**
    * Create a new client (Admin only)
@@ -47,7 +47,10 @@ export class UsersService {
   async createClient(createClientDto: CreateClientDto, origin?: string) {
     // Check if email already exists (only check active users, not soft-deleted)
     // Check for unique fields
-    await this.validateUniqueUserFields(createClientDto.email, createClientDto.phone);
+    await this.validateUniqueUserFields(
+      createClientDto.email,
+      createClientDto.phone,
+    );
 
     const client = await this.userRepo.create(createClientDto);
 
@@ -79,7 +82,10 @@ export class UsersService {
   ) {
     // Check if email already exists (only check active users, not soft-deleted)
     // Check for unique fields
-    await this.validateUniqueUserFields(createUserDto.email, createUserDto.phone);
+    await this.validateUniqueUserFields(
+      createUserDto.email,
+      createUserDto.phone,
+    );
 
     const user = await this.userRepo.createWithRole(createUserDto);
 
@@ -220,7 +226,11 @@ export class UsersService {
       hasPassword: !!passwordHash,
     };
 
-    await this.cacheManager.set(cacheKey, transformedUser, CACHE_TTL.FIVE_MINUTES);
+    await this.cacheManager.set(
+      cacheKey,
+      transformedUser,
+      CACHE_TTL.FIVE_MINUTES,
+    );
     return transformedUser;
   }
 
@@ -260,11 +270,7 @@ export class UsersService {
 
     // Check if phone is being updated and if it's already in use
     if (updateUserDto.phone && updateUserDto.phone !== user.phone) {
-      await this.validateUniqueUserFields(
-        undefined,
-        updateUserDto.phone,
-        id
-      );
+      await this.validateUniqueUserFields(undefined, updateUserDto.phone, id);
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -314,7 +320,12 @@ export class UsersService {
   /**
    * Soft delete a user (Admin only)
    */
-  async remove(id: string, deletedBy?: string, hardDelete = false, force = false) {
+  async remove(
+    id: string,
+    deletedBy?: string,
+    hardDelete = false,
+    force = false,
+  ) {
     const user = await this.prisma.user.findFirst({
       where: hardDelete ? { id } : getActiveRecordsWhereWith({ id }),
     });
@@ -331,7 +342,9 @@ export class UsersService {
     if (hardDelete) {
       // Hard delete: Permanently remove record
       await this.userRepo.hardDelete(id, force);
-      this.logger.log(`User ${id} HARD deleted by ${deletedBy || 'system'} (Force: ${force})`);
+      this.logger.log(
+        `User ${id} HARD deleted by ${deletedBy || 'system'} (Force: ${force})`,
+      );
     } else {
       // Soft delete: Set deletedAt and deletedBy instead of deleting
       await this.userRepo.softDelete(id);
@@ -403,7 +416,11 @@ export class UsersService {
       `Found ${total} available employees (not assigned to active projects)`,
     );
 
-    return PaginationHelper.buildPaginatedResult(employees, total, paginationDto);
+    return PaginationHelper.buildPaginatedResult(
+      employees,
+      total,
+      paginationDto,
+    );
   }
 
   /**

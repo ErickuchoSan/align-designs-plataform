@@ -20,7 +20,14 @@ import { FileMaintenanceService } from './services/file-maintenance.service';
 import { TrackingModule } from '../tracking/tracking.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuditModule, AuthModule, CacheModule, TrackingModule],
+  imports: [
+    PrismaModule,
+    StorageModule,
+    AuditModule,
+    AuthModule,
+    CacheModule,
+    TrackingModule,
+  ],
   providers: [
     FilesService,
     FilePermissionsService,
@@ -37,6 +44,13 @@ import { TrackingModule } from '../tracking/tracking.module';
     },
   ],
   controllers: [FilesController],
-  exports: [INJECTION_TOKENS.FILE_REPOSITORY, FileStageService, FileVersionService, FileCleanupService, FileNotificationService, FileMaintenanceService],
+  exports: [
+    INJECTION_TOKENS.FILE_REPOSITORY,
+    FileStageService,
+    FileVersionService,
+    FileCleanupService,
+    FileNotificationService,
+    FileMaintenanceService,
+  ],
 })
-export class FilesModule { }
+export class FilesModule {}

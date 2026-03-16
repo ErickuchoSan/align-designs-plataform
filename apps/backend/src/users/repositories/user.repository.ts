@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { User, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IUserRepository } from './user.repository.interface';
@@ -12,7 +16,7 @@ import { FindAllOptions } from '../../common/repositories/base.repository';
  */
 @Injectable()
 export class UserRepository implements IUserRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findFirst({
@@ -139,11 +143,7 @@ export class UserRepository implements IUserRepository {
         // Employee Payments (User as employee, creator, or approver)
         await tx.employeePayment.deleteMany({
           where: {
-            OR: [
-              { employeeId: id },
-              { createdBy: id },
-              { approvedBy: id },
-            ],
+            OR: [{ employeeId: id }, { createdBy: id }, { approvedBy: id }],
           },
         });
 
@@ -163,7 +163,9 @@ export class UserRepository implements IUserRepository {
         // Deleting projects where user is creator (if any)
         await tx.project.deleteMany({ where: { createdBy: id } });
         // Projects where user is client (will cascade from project delete usually, but doing explicit for safety)
-        const clientProjects = await tx.project.findMany({ where: { clientId: id } });
+        const clientProjects = await tx.project.findMany({
+          where: { clientId: id },
+        });
         if (clientProjects.length > 0) {
           await tx.project.deleteMany({ where: { clientId: id } });
         }
@@ -182,7 +184,7 @@ export class UserRepository implements IUserRepository {
     } catch (error: any) {
       if (error.code === 'P2003') {
         throw new ConflictException(
-          'Cannot delete user: This user has associated records (e.g., invoices) and cannot be permanently deleted.'
+          'Cannot delete user: This user has associated records (e.g., invoices) and cannot be permanently deleted.',
         );
       }
       throw error;

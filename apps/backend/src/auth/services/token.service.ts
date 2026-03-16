@@ -26,7 +26,7 @@ export class TokenService {
     private readonly config: ConfigService,
     private readonly jwtBlacklist: JwtBlacklistService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   /**
    * Generate a JWT access token for a user
@@ -51,7 +51,10 @@ export class TokenService {
    * Generate a new Refresh Token (opaque)
    * Hashes the token before storing in DB
    */
-  async generateRefreshToken(userId: string, ipAddress?: string): Promise<string> {
+  async generateRefreshToken(
+    userId: string,
+    ipAddress?: string,
+  ): Promise<string> {
     const token = crypto.randomBytes(40).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiresInDays = 7;
@@ -87,7 +90,9 @@ export class TokenService {
 
     // Reuse Detection: If token was already replaced (rotated), it means it's being reused (possible theft)
     if (tokenRecord.replacedByToken) {
-      this.logger.warn(`Refresh Token Reuse Detected! User: ${tokenRecord.userId}. Revoking all tokens.`);
+      this.logger.warn(
+        `Refresh Token Reuse Detected! User: ${tokenRecord.userId}. Revoking all tokens.`,
+      );
       await this.revokeAllRefreshTokens(tokenRecord.userId);
       throw new UnauthorizedException('Invalid refresh token (reused)');
     }
@@ -108,9 +113,15 @@ export class TokenService {
    * Invalidates the old token and issues a new one.
    * Links the old token to the new one for reuse detection.
    */
-  async rotateRefreshToken(oldTokenHash: string, userId: string): Promise<string> {
+  async rotateRefreshToken(
+    oldTokenHash: string,
+    userId: string,
+  ): Promise<string> {
     const newToken = crypto.randomBytes(40).toString('hex');
-    const newTokenHash = crypto.createHash('sha256').update(newToken).digest('hex');
+    const newTokenHash = crypto
+      .createHash('sha256')
+      .update(newToken)
+      .digest('hex');
     const expiresInDays = 7;
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
@@ -198,4 +209,3 @@ export class TokenService {
     }
   }
 }
-

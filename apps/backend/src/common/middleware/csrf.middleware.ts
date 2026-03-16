@@ -16,7 +16,7 @@ export class CsrfMiddleware implements NestMiddleware {
   private readonly csrfTokenCookie = 'csrf-token';
   private readonly csrfHeaderName = 'x-csrf-token';
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   // Public endpoints that don't require CSRF protection
   // Security: Use exact paths instead of prefixes to prevent bypass
@@ -29,7 +29,7 @@ export class CsrfMiddleware implements NestMiddleware {
     '/api/v1/auth/register',
     '/api/v1/auth/check-email',
     '/api/v1/auth/request-password-reset',
-    '/api/v1/auth/otp/request',  // Specific OTP endpoints
+    '/api/v1/auth/otp/request', // Specific OTP endpoints
     '/api/v1/auth/otp/verify',
   ];
 
@@ -40,8 +40,12 @@ export class CsrfMiddleware implements NestMiddleware {
       path: req.path,
       originalUrl: req.originalUrl,
       cookieHeader: req.headers.cookie ? 'present' : 'missing',
-      csrfCookie: req.cookies[this.csrfTokenCookie] ? `${req.cookies[this.csrfTokenCookie].substring(0, 20)}...` : 'missing',
-      csrfHeader: req.headers[this.csrfHeaderName] ? `${String(req.headers[this.csrfHeaderName]).substring(0, 30)}...` : 'missing',
+      csrfCookie: req.cookies[this.csrfTokenCookie]
+        ? `${req.cookies[this.csrfTokenCookie].substring(0, 20)}...`
+        : 'missing',
+      csrfHeader: req.headers[this.csrfHeaderName]
+        ? `${String(req.headers[this.csrfHeaderName]).substring(0, 30)}...`
+        : 'missing',
       xForwardedProto: req.headers['x-forwarded-proto'] || 'not set',
       host: req.headers.host,
       origin: req.headers.origin || 'not set',
@@ -80,7 +84,9 @@ export class CsrfMiddleware implements NestMiddleware {
 
     // Generate token if it doesn't exist
     if (!req.cookies[this.csrfTokenCookie]) {
-      this.logger.warn(`CSRF cookie missing, generating new token for ${req.method} ${req.path}`);
+      this.logger.warn(
+        `CSRF cookie missing, generating new token for ${req.method} ${req.path}`,
+      );
       this.generateAndSetToken(req, res);
     }
 
@@ -88,7 +94,9 @@ export class CsrfMiddleware implements NestMiddleware {
     const submittedToken = req.headers[this.csrfHeaderName] || req.body._csrf;
 
     // DEBUG: Log token comparison details
-    this.logger.debug(`CSRF Validation: cookie=${token ? 'present' : 'missing'}, header=${submittedToken ? 'present' : 'missing'}`);
+    this.logger.debug(
+      `CSRF Validation: cookie=${token ? 'present' : 'missing'}, header=${submittedToken ? 'present' : 'missing'}`,
+    );
 
     if (!submittedToken) {
       this.logger.warn(`CSRF token missing for ${req.method} ${req.path}`);
@@ -97,7 +105,9 @@ export class CsrfMiddleware implements NestMiddleware {
 
     if (!this.validateToken(token, submittedToken)) {
       this.logger.warn(`Invalid CSRF token for ${req.method} ${req.path}`);
-      this.logger.debug(`Token mismatch - Cookie secret: ${token ? token.substring(0, 10) + '...' : 'none'}, Header token: ${String(submittedToken).substring(0, 30)}...`);
+      this.logger.debug(
+        `Token mismatch - Cookie secret: ${token ? token.substring(0, 10) + '...' : 'none'}, Header token: ${String(submittedToken).substring(0, 30)}...`,
+      );
       throw new UnauthorizedException('Invalid CSRF token');
     }
 
@@ -142,11 +152,16 @@ export class CsrfMiddleware implements NestMiddleware {
     // Allow override from env for CSRF-specific sameSite setting
     const allowNgrok = process.env.ALLOW_NGROK === 'true';
     const configSameSite = this.configService.get<string>('CSRF_SAME_SITE');
-    const sameSite = configSameSite && ['strict', 'lax', 'none'].includes(configSameSite)
-      ? (configSameSite as 'strict' | 'lax' | 'none')
-      : (allowNgrok ? 'none' : config.sameSite);
+    const sameSite =
+      configSameSite && ['strict', 'lax', 'none'].includes(configSameSite)
+        ? (configSameSite as 'strict' | 'lax' | 'none')
+        : allowNgrok
+          ? 'none'
+          : config.sameSite;
 
-    this.logger.debug(`CSRF Cookie Settings: secure=${config.useSecureCookie}, sameSite=${sameSite}, isHttps=${config.isHttps}, host=${req.headers.host || 'not set'}`);
+    this.logger.debug(
+      `CSRF Cookie Settings: secure=${config.useSecureCookie}, sameSite=${sameSite}, isHttps=${config.isHttps}, host=${req.headers.host || 'not set'}`,
+    );
 
     res.cookie(this.csrfTokenCookie, secret, {
       httpOnly: true,

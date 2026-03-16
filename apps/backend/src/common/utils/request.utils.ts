@@ -1,10 +1,10 @@
 import type { Request } from 'express';
 
 export interface CookieSecurityConfig {
-    isProduction: boolean;
-    isHttps: boolean;
-    useSecureCookie: boolean;
-    sameSite: 'strict' | 'lax' | 'none';
+  isProduction: boolean;
+  isHttps: boolean;
+  useSecureCookie: boolean;
+  sameSite: 'strict' | 'lax' | 'none';
 }
 
 /**
@@ -15,31 +15,31 @@ export interface CookieSecurityConfig {
  * Note: X-Forwarded-Proto is unreliable when ngrok routes through nginx.
  */
 export function detectHttpsFromRequest(req?: Request): boolean {
-    if (!req) return false;
+  if (!req) return false;
 
-    const origin = req.headers.origin as string | undefined;
-    const referer = req.headers.referer as string | undefined;
-    const host = req.headers.host as string | undefined;
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  const host = req.headers.host;
 
-    if (origin) {
-        return origin.startsWith('https://');
-    }
-    if (referer) {
-        return referer.startsWith('https://');
-    }
-    if (host) {
-        // ngrok domains always use HTTPS, local domains use HTTP
-        return host.includes('.ngrok') || host.includes('.ngrok-free.dev');
-    }
+  if (origin) {
+    return origin.startsWith('https://');
+  }
+  if (referer) {
+    return referer.startsWith('https://');
+  }
+  if (host) {
+    // ngrok domains always use HTTPS, local domains use HTTP
+    return host.includes('.ngrok') || host.includes('.ngrok-free.dev');
+  }
 
-    return req.secure ?? false;
+  return req.secure ?? false;
 }
 
 /**
  * Check if running in production environment
  */
 export function isProduction(): boolean {
-    return process.env.NODE_ENV === 'production';
+  return process.env.NODE_ENV === 'production';
 }
 
 /**
@@ -47,41 +47,46 @@ export function isProduction(): boolean {
  * Centralizes cookie security logic to follow DRY principle
  */
 export function getCookieSecurityConfig(req?: Request): CookieSecurityConfig {
-    const isProd = isProduction();
-    const isHttps = detectHttpsFromRequest(req);
-    const useSecureCookie = isHttps || isProd;
+  const isProd = isProduction();
+  const isHttps = detectHttpsFromRequest(req);
+  const useSecureCookie = isHttps || isProd;
 
-    // When secure is true (HTTPS), we can use sameSite: 'none' for cross-origin
-    // When secure is false (HTTP), we must use 'lax' or 'strict'
-    const sameSite: 'strict' | 'lax' | 'none' = useSecureCookie
-        ? 'none'
-        : (isProd ? 'strict' : 'lax');
+  // When secure is true (HTTPS), we can use sameSite: 'none' for cross-origin
+  // When secure is false (HTTP), we must use 'lax' or 'strict'
+  const sameSite: 'strict' | 'lax' | 'none' = useSecureCookie
+    ? 'none'
+    : isProd
+      ? 'strict'
+      : 'lax';
 
-    return {
-        isProduction: isProd,
-        isHttps,
-        useSecureCookie,
-        sameSite
-    };
+  return {
+    isProduction: isProd,
+    isHttps,
+    useSecureCookie,
+    sameSite,
+  };
 }
 
 /**
  * Build cookie options for auth cookies
  */
-export function buildAuthCookieOptions(req?: Request, maxAge?: number): {
-    httpOnly: boolean;
-    secure: boolean;
-    sameSite: 'strict' | 'lax' | 'none';
-    maxAge?: number;
-    path: string;
+export function buildAuthCookieOptions(
+  req?: Request,
+  maxAge?: number,
+): {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: 'strict' | 'lax' | 'none';
+  maxAge?: number;
+  path: string;
 } {
-    const config = getCookieSecurityConfig(req);
+  const config = getCookieSecurityConfig(req);
 
-    return {
-        httpOnly: true,
-        secure: config.useSecureCookie,
-        sameSite: config.sameSite,
-        ...(maxAge && { maxAge }),
-        path: '/',
-    };
+  return {
+    httpOnly: true,
+    secure: config.useSecureCookie,
+    sameSite: config.sameSite,
+    ...(maxAge && { maxAge }),
+    path: '/',
+  };
 }
