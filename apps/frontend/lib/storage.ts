@@ -12,8 +12,8 @@ interface StorageResult<T> {
 }
 
 class SafeStorage {
-  private isAvailable: boolean;
-  private fallbackStorage: Map<string, string>;
+  private readonly isAvailable: boolean;
+  private readonly fallbackStorage: Map<string, string>;
   private readonly MAX_ITEM_SIZE = 5 * 1024 * 1024; // 5MB per item (localStorage total is ~5-10MB)
 
   constructor() {

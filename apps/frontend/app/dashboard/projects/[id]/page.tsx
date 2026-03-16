@@ -63,23 +63,13 @@ export default function ProjectDetailsPage() {
     fetchProjectDetails,
     fetchFiles,
     currentPage,
-    setCurrentPage,
     itemsPerPage,
-    setItemsPerPage,
-    totalItems,
-    totalPages,
-    // Filters (Server-Side)
-    nameFilter,
-    setNameFilter,
-    typeFilter,
-    setTypeFilter,
     refreshTypes,
   } = useProjectFiles(projectId);
 
   // UI state (modals)
   const modals = useFileModals();
   const paymentModals = usePaymentModals();
-  // const filters = useFileFilters(files); // Removed client-side filters
 
   // Stage selection state for upload/comment modals
   const [selectedStageForModal, setSelectedStageForModal] = useState<string | null>(null);
@@ -110,11 +100,6 @@ export default function ProjectDetailsPage() {
       fetchFiles();
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
-
-  // Handle page resets when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [nameFilter, typeFilter, setCurrentPage]);
 
   // File operation handlers
   const handleUpload = useCallback(

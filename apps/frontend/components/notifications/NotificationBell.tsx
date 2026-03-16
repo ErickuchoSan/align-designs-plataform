@@ -109,7 +109,7 @@ function NotificationBell() {
                     </div>
 
                     {/* Optimized scrolling container - uses native browser virtualization with max-height */}
-                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto" role="list">
+                    <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto">
                         {notifications.length === 0 ? (
                             <div className="px-4 py-8 text-center text-stone-500 text-sm">
                                 No notifications yet.
@@ -117,7 +117,7 @@ function NotificationBell() {
                         ) : (
                             <ul className="divide-y divide-stone-100">
                                 {notifications.map((notification) => (
-                                    <li key={notification.id} role="listitem">
+                                    <li key={notification.id}>
                                         <button
                                             onClick={() => handleNotificationClick(notification)}
                                             className={`w-full text-left px-3 sm:px-4 py-3 hover:bg-stone-50 transition-colors focus:outline-none focus:bg-stone-100 ${!notification.isRead ? 'bg-blue-50/50' : ''}`}

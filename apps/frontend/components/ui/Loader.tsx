@@ -45,9 +45,9 @@ export function ButtonLoader() {
  */
 export function InlineSpinner({ label = 'Loading' }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center py-12" role="status" aria-label={label}>
+    <output className="flex items-center justify-center py-12" aria-label={label}>
       <Loader size="xl" color="navy" />
-    </div>
+    </output>
   );
 }
 

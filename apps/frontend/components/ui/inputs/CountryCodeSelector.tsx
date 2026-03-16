@@ -13,15 +13,16 @@ interface CountryCodeSelectorProps {
 }
 
 // American continent countries only (North, Central, South America, and Caribbean)
-const AMERICAN_COUNTRIES = [
+const AMERICAN_COUNTRIES = new Set([
   'US', 'CA', 'MX', // North America
   'GT', 'BZ', 'SV', 'HN', 'NI', 'CR', 'PA', // Central America
   'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 'UY', 'VE', // South America
   'CU', 'DO', 'HT', 'JM', 'TT', 'BB', 'BS', 'AG', 'DM', 'GD', 'KN', 'LC', 'VC', // Caribbean
-];
+]);
 
 // Popular countries within Americas to show first (US first for US-based clients)
-const POPULAR_COUNTRY_CODES = ['US', 'CA', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
+const POPULAR_COUNTRY_CODES = new Set(['US', 'CA', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR']);
+const POPULAR_COUNTRY_CODES_ARRAY = ['US', 'CA', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'BR'];
 
 export default function CountryCodeSelector({ value, onChange, className = '' }: CountryCodeSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
   // Filter countries statically
   const countries = useMemo(() =>
-    allCountries.filter(c => AMERICAN_COUNTRIES.includes(c.code)),
+    allCountries.filter(c => AMERICAN_COUNTRIES.has(c.code)),
     []);
 
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
@@ -55,8 +56,8 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
     if (!searchTerm.trim()) {
       // No search: show popular countries first, then the rest
-      const popularCountries = countries.filter(c => POPULAR_COUNTRY_CODES.includes(c.code));
-      const otherCountries = countries.filter(c => !POPULAR_COUNTRY_CODES.includes(c.code));
+      const popularCountries = countries.filter(c => POPULAR_COUNTRY_CODES.has(c.code));
+      const otherCountries = countries.filter(c => !POPULAR_COUNTRY_CODES.has(c.code));
       return [...popularCountries, ...otherCountries];
     }
 
@@ -76,7 +77,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
     // Sort matches by relevance using a scoring function
     const getScore = (country: Country): number => {
       const name = country.name.toLowerCase();
-      const popularIdx = POPULAR_COUNTRY_CODES.indexOf(country.code);
+      const popularIdx = POPULAR_COUNTRY_CODES_ARRAY.indexOf(country.code);
 
       if (name === search) return 100;
       if (country.dialCode === searchWithPlus) return 90;
@@ -100,7 +101,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
     setSearchTerm('');
   };
 
-  const popularCountries = countries.filter(c => POPULAR_COUNTRY_CODES.includes(c.code));
+  const popularCountries = countries.filter(c => POPULAR_COUNTRY_CODES.has(c.code));
   const showingPopular = !searchTerm.trim() && popularCountries.length > 0;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, openUpward: false });
@@ -211,7 +212,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
             ) : (
               <>
                 {filteredCountries.map((country, index) => {
-                  const isPopular = POPULAR_COUNTRY_CODES.includes(country.code);
+                  const isPopular = POPULAR_COUNTRY_CODES.has(country.code);
                   const showDivider = showingPopular && index === popularCountries.length;
 
                   return (

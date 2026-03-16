@@ -63,7 +63,7 @@ function createDedupedRequest(config: InternalAxiosRequestConfig): Promise<any> 
   // Clean up after completion
   requestPromise.finally(() => {
     const current = pendingRequests.get(requestKey);
-    if (current && current.timestamp === now) {
+    if (current?.timestamp === now) {
       pendingRequests.delete(requestKey);
     }
   });

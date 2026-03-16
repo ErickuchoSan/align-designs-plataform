@@ -68,7 +68,7 @@ function DataTable<T>({
           {isLoading && data.length === 0 ? (
             <>
               {Array.from({ length: skeletonRows }).map((_, i) => (
-                <TableRowSkeleton key={i} />
+                <TableRowSkeleton key={`skeleton-${i}`} />
               ))}
             </>
           ) : data.length === 0 ? (

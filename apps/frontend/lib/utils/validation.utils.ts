@@ -13,7 +13,7 @@ export { PASSWORD_REQUIREMENTS };
  * RFC 5322 compliant email regex
  * Simplified but robust version that covers most valid emails
  */
-const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 /**
  * Validate email local part (before @)
@@ -53,7 +53,7 @@ export function isValidEmail(email: string): boolean {
  * Get validation error message for invalid email
  */
 export function getEmailValidationError(email: string): string | null {
-  if (!email || !email.trim()) {
+  if (!email?.trim()) {
     return 'Email is required';
   }
 
@@ -140,32 +140,16 @@ export function getPasswordStrength(password: string): {
 
   const score = Object.values(requirements).filter(Boolean).length;
 
-  let label = 'Very Weak';
-  let color = 'bg-red-500';
+  const strengthMap: Record<number, { label: string; color: string }> = {
+    0: { label: 'Very Weak', color: 'bg-red-500' },
+    1: { label: 'Very Weak', color: 'bg-red-500' },
+    2: { label: 'Weak', color: 'bg-orange-500' },
+    3: { label: 'Fair', color: 'bg-yellow-500' },
+    4: { label: 'Good', color: 'bg-blue-500' },
+    5: { label: 'Strong', color: 'bg-green-500' },
+  };
 
-  switch (score) {
-    case 0:
-    case 1:
-      label = 'Very Weak';
-      color = 'bg-red-500';
-      break;
-    case 2:
-      label = 'Weak';
-      color = 'bg-orange-500';
-      break;
-    case 3:
-      label = 'Fair';
-      color = 'bg-yellow-500';
-      break;
-    case 4:
-      label = 'Good';
-      color = 'bg-blue-500';
-      break;
-    case 5:
-      label = 'Strong';
-      color = 'bg-green-500';
-      break;
-  }
+  const { label, color } = strengthMap[score] || strengthMap[0];
 
   return { score, label, color, requirements };
 }

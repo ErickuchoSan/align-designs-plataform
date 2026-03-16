@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createInvoiceSchema = z.object({
     projectId: z.string().uuid({ message: 'Project is required' }),
     clientId: z.string().uuid({ message: 'Client ID is missing' }),
-    issueDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    issueDate: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
         message: 'Invalid issue date',
     }),
     paymentTermsDays: z.coerce.number().min(0, { message: 'Terms must be non-negative' }),

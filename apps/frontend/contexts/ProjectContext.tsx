@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import { Project } from '@/types';
 
 interface ProjectContextValue {
@@ -55,7 +55,7 @@ export function ProjectProvider({
     return Promise.resolve();
   }, [onUpdate]);
 
-  const value: ProjectContextValue = {
+  const value = useMemo<ProjectContextValue>(() => ({
     project,
     setProject,
     loading,
@@ -66,7 +66,7 @@ export function ProjectProvider({
     setSuccess,
     refreshProject,
     onProjectUpdate: onUpdate,
-  };
+  }), [project, loading, error, success, refreshProject, onUpdate]);
 
   return (
     <ProjectContext.Provider value={value}>

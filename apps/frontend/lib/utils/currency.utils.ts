@@ -28,7 +28,7 @@ function getFormatter(currency: string, locale: string = 'en-US'): Intl.NumberFo
  * @param locale - Locale string (en-US by default)
  */
 export const formatCurrency = (amount: number | string, currency: string = 'USD', locale: string = 'en-US'): string => {
-    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numericAmount = typeof amount === 'string' ? Number.parseFloat(amount) : amount;
     return getFormatter(currency, locale).format(numericAmount);
 };
 

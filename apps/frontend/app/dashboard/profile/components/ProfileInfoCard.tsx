@@ -86,36 +86,38 @@ function ProfileInfoCard({ user, onUpdateUser }: ProfileInfoCardProps) {
 // Display-only view of profile
 const ProfileDisplay = memo(function ProfileDisplay({ user }: { user: User }) {
   return (
-    <div className="space-y-4">
+    <dl className="space-y-4">
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">First Name</label>
-          <p className="text-lg text-navy-900 font-medium">{user.firstName}</p>
+          <dt className="block text-sm font-medium text-stone-700 mb-1">First Name</dt>
+          <dd className="text-lg text-navy-900 font-medium">{user.firstName}</dd>
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1">Last Name</label>
-          <p className="text-lg text-navy-900 font-medium">{user.lastName}</p>
+          <dt className="block text-sm font-medium text-stone-700 mb-1">Last Name</dt>
+          <dd className="text-lg text-navy-900 font-medium">{user.lastName}</dd>
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
-        <p className="text-lg text-navy-900 font-medium">{user.email}</p>
+        <dt className="block text-sm font-medium text-stone-700 mb-1">Email</dt>
+        <dd className="text-lg text-navy-900 font-medium">{user.email}</dd>
       </div>
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Phone</label>
-        <p className="text-lg text-navy-900 font-medium">{user.phone || 'Not specified'}</p>
+        <dt className="block text-sm font-medium text-stone-700 mb-1">Phone</dt>
+        <dd className="text-lg text-navy-900 font-medium">{user.phone || 'Not specified'}</dd>
       </div>
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Role</label>
-        <span
-          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-            user.role === 'ADMIN' ? 'bg-gold-100 text-gold-800' : 'bg-navy-100 text-navy-800'
-          }`}
-        >
-          {user.role === 'ADMIN' ? 'Administrator' : 'Client'}
-        </span>
+        <dt className="block text-sm font-medium text-stone-700 mb-1">Role</dt>
+        <dd>
+          <span
+            className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+              user.role === 'ADMIN' ? 'bg-gold-100 text-gold-800' : 'bg-navy-100 text-navy-800'
+            }`}
+          >
+            {user.role === 'ADMIN' ? 'Administrator' : 'Client'}
+          </span>
+        </dd>
       </div>
-    </div>
+    </dl>
   );
 });
 

@@ -464,7 +464,6 @@ export class FilesService {
         data: {
           rejectionCount: { increment: 1 },
           lastRejectedAt: new Date(),
-          // lastRejectionFeedbackId: feedbackFileId, // FIXME: Requires valid Feedback ID, not File ID.
         },
       });
       this.logger.log(

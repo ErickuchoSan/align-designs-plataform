@@ -128,7 +128,7 @@ function Pagination({
         </div>
 
         {/* Page navigation - always show page numbers, hide arrows if only 1 page */}
-        <div className="flex items-center gap-2" role="navigation" aria-label="Page navigation">
+        <div className="flex items-center gap-2">
           {/* Previous button - only show if more than 1 page */}
           {totalPages > 1 && (
             <button

@@ -23,7 +23,7 @@ interface ErrorModalData {
 type ErrorModalCallback = (data: ErrorModalData | null) => void;
 
 class ErrorModalManager {
-  private listeners: Set<ErrorModalCallback> = new Set();
+  private readonly listeners: Set<ErrorModalCallback> = new Set();
   private currentError: ErrorModalData | null = null;
 
   /**

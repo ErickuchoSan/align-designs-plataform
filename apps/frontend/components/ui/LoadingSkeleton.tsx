@@ -20,7 +20,7 @@ export const TableSkeleton = memo(function TableSkeleton({ rows = 5 }: { rows?: 
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex gap-4 p-4 bg-white border border-stone-200 rounded-lg">
+        <div key={`row-${i}`} className="flex gap-4 p-4 bg-white border border-stone-200 rounded-lg">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-20" />
@@ -88,7 +88,7 @@ interface PageLoadingProps {
 
 export default memo(function PageLoading({ title }: PageLoadingProps) {
   return (
-    <div className="p-6 space-y-6" role="status" aria-label={title ? `Loading ${title}` : 'Loading'}>
+    <output className="block p-6 space-y-6" aria-label={title ? `Loading ${title}` : 'Loading'}>
       <PageHeaderSkeleton />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <ProjectCardSkeleton />
@@ -96,6 +96,6 @@ export default memo(function PageLoading({ title }: PageLoadingProps) {
         <ProjectCardSkeleton />
       </div>
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
 });
