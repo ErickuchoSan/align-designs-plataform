@@ -54,8 +54,10 @@ export class MinioStorageService implements OnModuleInit {
     // When set, presigned URLs will use this endpoint instead of internal
     this.publicEndpoint =
       this.configService.get<string>('MINIO_PUBLIC_ENDPOINT') ?? null;
-    this.publicPort =
-      this.configService.get<number>('MINIO_PUBLIC_PORT') ?? 443;
+    this.publicPort = parseInt(
+      this.configService.get<string>('MINIO_PUBLIC_PORT') ?? '443',
+      10,
+    );
     this.publicUseSSL =
       this.configService.get<string>('MINIO_PUBLIC_USE_SSL', 'true') === 'true';
 
