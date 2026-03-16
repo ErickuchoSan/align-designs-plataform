@@ -70,11 +70,12 @@ export function PaymentProgressBar({ required, paid, pendingAmount = 0, classNam
 
         {!isFullyCovered && <span>Remaining: ${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>}
 
-        {isPaidComplete ? (
+        {isPaidComplete && (
           <span className="text-green-600 font-medium">✓ Complete</span>
-        ) : isFullyCovered ? (
+        )}
+        {!isPaidComplete && isFullyCovered && (
           <span className="text-amber-600 font-medium">⏳ Pending Approval</span>
-        ) : null}
+        )}
       </div>
     </div>
   );

@@ -98,8 +98,8 @@ export default function ConfirmModal({
               <div className="flex-1">
                 <h4 className="text-sm font-semibold text-amber-900 mb-2">This project contains important data that will be permanently deleted:</h4>
                 <ul className="space-y-2">
-                  {warningItems.map((item, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm text-amber-800">
+                  {warningItems.map((item) => (
+                    <li key={item.label} className="flex items-center gap-2 text-sm text-amber-800">
                       <span className="text-base">{item.icon || '•'}</span>
                       <span className="font-medium">{item.label}:</span>
                       <span className="font-semibold">{item.value}</span>

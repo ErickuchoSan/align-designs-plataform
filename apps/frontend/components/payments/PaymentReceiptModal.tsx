@@ -23,11 +23,14 @@ export default function PaymentReceiptModal({
         ? !!(payment.receiptFileId || payment.receiptFile)
         : !!(payment.receiptFileUrl);
 
-    const receiptUrl = hasReceipt
-        ? (isEmployeePayment(payment)
-            ? `${process.env.NEXT_PUBLIC_API_URL}/employee-payments/${payment.id}/receipt`
-            : `${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`)
-        : null;
+    const getReceiptUrl = (): string | null => {
+        if (!hasReceipt) return null;
+        if (isEmployeePayment(payment)) {
+            return `${process.env.NEXT_PUBLIC_API_URL}/employee-payments/${payment.id}/receipt`;
+        }
+        return `${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`;
+    };
+    const receiptUrl = getReceiptUrl();
 
     const amount = Number(payment.amount);
     const paymentDate = new Date(payment.paymentDate);

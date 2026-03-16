@@ -65,11 +65,11 @@ function EmployeeSelect({
   }, [onChange]);
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <fieldset className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-gray-700">
+        <legend className="block text-sm font-medium text-gray-700">
           Assigned Employees
-        </label>
+        </legend>
         <div className="flex gap-2">
           <button
             type="button"
@@ -91,7 +91,9 @@ function EmployeeSelect({
       </div>
 
       {/* Search input */}
+      <label htmlFor="employee-search" className="sr-only">Search employee</label>
       <input
+        id="employee-search"
         type="text"
         placeholder="Search employee..."
         value={searchTerm}
@@ -142,7 +144,7 @@ function EmployeeSelect({
           {selectedIds.length} employee{selectedIds.length !== 1 ? 's' : ''} selected
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }
 

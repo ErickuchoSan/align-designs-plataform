@@ -133,22 +133,23 @@ function StageContent({
   // Files list
   return (
     <div className="p-6">
-      <div className="space-y-3" role="list" aria-label={`Files in ${stage.name}`}>
+      <ul className="space-y-3 list-none" aria-label={`Files in ${stage.name}`}>
         {stageFiles.map((file) => (
-          <StageFileItem
-            key={file.id}
-            file={file}
-            stage={stage.stage}
-            userRole={userRole}
-            onDownload={onDownload}
-            onViewHistory={onViewHistory}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onOpenCommentModal={onOpenCommentModal}
-            canDeleteFile={canDeleteFile}
-          />
+          <li key={file.id}>
+            <StageFileItem
+              file={file}
+              stage={stage.stage}
+              userRole={userRole}
+              onDownload={onDownload}
+              onViewHistory={onViewHistory}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onOpenCommentModal={onOpenCommentModal}
+              canDeleteFile={canDeleteFile}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* Brief Approval Section for Clients */}
       {showBriefApproval && (

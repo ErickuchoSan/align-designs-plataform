@@ -83,13 +83,14 @@ export default function ProjectsList({
       )}
 
       {/* Projects grid */}
-      {projectsHook.loading ? (
+      {projectsHook.loading && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <ProjectCardSkeleton key={i} />
           ))}
         </div>
-      ) : projectsHook.projects.length === 0 ? (
+      )}
+      {!projectsHook.loading && projectsHook.projects.length === 0 && (
         <div className={`rounded-2xl bg-white p-12 text-center shadow-lg ${styles.cardBorder} animate-fadeIn`}>
           <div className={`mx-auto w-16 h-16 ${styles.emptyIcon} rounded-full flex items-center justify-center mb-4`} aria-hidden="true">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +102,8 @@ export default function ProjectsList({
             <p className={`text-sm ${styles.emptyText} mt-2`}>Create your first project to get started</p>
           )}
         </div>
-      ) : (
+      )}
+      {!projectsHook.loading && projectsHook.projects.length > 0 && (
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
             {projectsHook.projects.map((project) => (

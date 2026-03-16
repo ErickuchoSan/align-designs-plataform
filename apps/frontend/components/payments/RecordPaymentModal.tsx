@@ -202,10 +202,10 @@ export default function RecordPaymentModal({
                     </div>
                 </div>
 
-                <div>
-                    <label className="block mb-2 text-sm font-medium text-stone-700">Payment Method</label>
+                <fieldset>
+                    <legend className="block mb-2 text-sm font-medium text-stone-700">Payment Method</legend>
                     <PaymentMethodSelect value={method} onChange={setMethod} />
-                </div>
+                </fieldset>
 
                 <div>
                     <label htmlFor="record-payment-date" className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>

@@ -23,6 +23,13 @@ interface PaymentHistoryTableProps {
     isAdmin?: boolean;
 }
 
+// Get status badge class without nested ternary
+const getStatusBadgeClass = (status: string): string => {
+    if (status === 'CONFIRMED') return 'bg-green-100 text-green-800';
+    if (status === 'REJECTED') return 'bg-red-100 text-red-800';
+    return 'bg-yellow-100 text-yellow-800';
+};
+
 // Memoized payment row component to prevent unnecessary re-renders
 const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment; isAdmin?: boolean; onViewReceipt?: (payment: Payment) => void }) => {
     const formattedAmount = useMemo(() => formatCurrency(payment.amount), [payment.amount]);
@@ -43,13 +50,7 @@ const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment
                 ${formattedAmount}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    payment.status === 'CONFIRMED'
-                        ? 'bg-green-100 text-green-800'
-                        : payment.status === 'REJECTED'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(payment.status)}`}>
                     {PAYMENT_STATUS_LABELS[payment.status]}
                 </span>
             </td>

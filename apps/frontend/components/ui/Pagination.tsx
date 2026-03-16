@@ -149,10 +149,10 @@ function Pagination({
           )}
 
           {/* Page numbers - always show */}
-          {pageNumbers.map((page, index) => {
+          {pageNumbers.map((page) => {
             if (page === '...') {
               return (
-                <span key={`ellipsis-${index}`} className="px-3 py-2 text-stone-500 font-bold text-lg">
+                <span key={`ellipsis-${String(page)}-${Math.random()}`} className="px-3 py-2 text-stone-500 font-bold text-lg" aria-hidden="true">
                   ...
                 </span>
               );

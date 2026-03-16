@@ -70,6 +70,21 @@ interface PasswordRequirementsProps {
   className?: string;
 }
 
+const getStatusClass = (isEmpty: boolean, isMet: boolean): string => {
+  if (isEmpty) return 'text-gray-500';
+  return isMet ? 'text-green-600' : 'text-red-500';
+};
+
+const renderStatusIcon = (isEmpty: boolean, isMet: boolean) => {
+  if (isEmpty) {
+    return <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" /></svg>;
+  }
+  if (isMet) {
+    return <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>;
+  }
+  return <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" /></svg>;
+};
+
 export default function PasswordRequirements({
   password,
   className = '',
@@ -83,27 +98,9 @@ export default function PasswordRequirements({
           return (
             <li
               key={req.id}
-              className={`flex items-center gap-2 text-sm transition-colors ${
-                password.length === 0
-                  ? 'text-gray-500'
-                  : isMet
-                    ? 'text-green-600'
-                    : 'text-red-500'
-              }`}
+              className={`flex items-center gap-2 text-sm transition-colors ${getStatusClass(password.length === 0, isMet)}`}
             >
-              {password.length === 0 ? (
-                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" />
-                </svg>
-              ) : isMet ? (
-                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-                </svg>
-              )}
+              {renderStatusIcon(password.length === 0, isMet)}
               <span>{req.label}</span>
             </li>
           );

@@ -48,7 +48,6 @@ function EmployeePaymentsList({
   onReject,
 }: EmployeePaymentsListProps) {
   const isAdmin = userRole === 'ADMIN';
-  const title = isAdmin ? 'Employee Payments' : 'My Payments';
 
   if (payments.length === 0) {
     return (

@@ -180,7 +180,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
                 </button>
               )}
             </div>
-            {searchTerm && searchTerm.match(/^\d/) && (
+            {searchTerm?.match(/^\d/) && (
               <p className="mt-2 text-xs text-stone-600">
                 💡 Tip: Searching for <span className="font-semibold">+{searchTerm}</span>
               </p>
@@ -196,56 +196,54 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
           {/* Countries List */}
           <div className="max-h-80 overflow-y-auto">
-            {countries.length === 0 ? (
+            {countries.length === 0 && (
               <div className="p-6 text-center">
                 <div className="mx-auto w-12 h-12 mb-3 flex items-center justify-center">
                   <SpinnerIcon className="w-8 h-8 text-gold-600" />
                 </div>
                 <p className="text-sm font-medium text-stone-600">Loading countries...</p>
               </div>
-            ) : filteredCountries.length === 0 ? (
+            )}
+            {countries.length > 0 && filteredCountries.length === 0 && (
               <div className="p-6 text-center">
                 <SearchIcon className="mx-auto w-12 h-12 text-stone-300 mb-3" />
                 <p className="text-sm font-medium text-stone-600">No countries found</p>
                 <p className="text-xs text-stone-500 mt-1">Try searching with a different term</p>
               </div>
-            ) : (
-              <>
-                {filteredCountries.map((country, index) => {
-                  const isPopular = POPULAR_COUNTRY_CODES.has(country.code);
-                  const showDivider = showingPopular && index === popularCountries.length;
-
-                  return (
-                    <div key={country.code}>
-                      {showDivider && (
-                        <div className="border-t-2 border-stone-200 my-1">
-                          <p className="px-4 py-2 text-xs font-semibold text-stone-500 bg-stone-50">All American Countries</p>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => handleSelect(country)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gold-50 transition-colors text-left border-b border-stone-100 last:border-b-0 ${selectedCountry?.code === country.code ? 'bg-gold-50' : ''
-                          }`}
-                      >
-                        <span className="text-2xl">{country.flag}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-sm text-navy-900 truncate">{country.name}</p>
-                            {isPopular && !searchTerm && (
-                              <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium text-gold-700 bg-gold-100 rounded">
-                                Popular
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-stone-600 mt-0.5">{country.dialCode}</p>
-                        </div>
-                        <span className="text-xs font-mono text-stone-500 uppercase">{country.code}</span>
-                      </button>
-                    </div>
-                  );
-                })}
-              </>
             )}
+            {filteredCountries.length > 0 && filteredCountries.map((country, index) => {
+              const isPopular = POPULAR_COUNTRY_CODES.has(country.code);
+              const showDivider = showingPopular && index === popularCountries.length;
+
+              return (
+                <div key={country.code}>
+                  {showDivider && (
+                    <div className="border-t-2 border-stone-200 my-1">
+                      <p className="px-4 py-2 text-xs font-semibold text-stone-500 bg-stone-50">All American Countries</p>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleSelect(country)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gold-50 transition-colors text-left border-b border-stone-100 last:border-b-0 ${selectedCountry?.code === country.code ? 'bg-gold-50' : ''
+                      }`}
+                  >
+                    <span className="text-2xl">{country.flag}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm text-navy-900 truncate">{country.name}</p>
+                        {isPopular && !searchTerm && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium text-gold-700 bg-gold-100 rounded">
+                            Popular
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-stone-600 mt-0.5">{country.dialCode}</p>
+                    </div>
+                    <span className="text-xs font-mono text-stone-500 uppercase">{country.code}</span>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

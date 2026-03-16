@@ -104,11 +104,12 @@ export default function GenerateInvoiceModal({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Generate Invoice" size="sm">
-      {checkingUnpaid ? (
+      {checkingUnpaid && (
         <div className="flex justify-center items-center py-8">
           <SpinnerIcon size="lg" className="text-navy-800" />
         </div>
-      ) : hasUnpaid ? (
+      )}
+      {!checkingUnpaid && hasUnpaid && (
         <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg">
           <div className="flex items-start gap-3">
             <WarningIcon size="lg" className="text-amber-600 flex-shrink-0 mt-0.5" />
@@ -128,13 +129,15 @@ export default function GenerateInvoiceModal({
             </div>
           </div>
         </div>
-      ) : (
+      )}
+      {!checkingUnpaid && !hasUnpaid && (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className={FORM_LABEL}>Total Amount (USD)</label>
+            <label htmlFor="invoice-amount" className={FORM_LABEL}>Total Amount (USD)</label>
             <div className="relative">
               <span className="absolute left-3 top-2 text-stone-500">$</span>
               <input
+                id="invoice-amount"
                 type="number"
                 step="0.01"
                 {...register('amount', { required: 'Amount is required' })}
@@ -146,8 +149,9 @@ export default function GenerateInvoiceModal({
           </div>
 
           <div>
-            <label className={FORM_LABEL}>Due Date</label>
+            <label htmlFor="invoice-dueDate" className={FORM_LABEL}>Due Date</label>
             <input
+              id="invoice-dueDate"
               type="date"
               {...register('dueDate', { required: 'Due date is required' })}
               className={errors.dueDate ? inputErrorClass : inputClass}
@@ -156,8 +160,9 @@ export default function GenerateInvoiceModal({
           </div>
 
           <div>
-            <label className={FORM_LABEL}>Description / Concept</label>
+            <label htmlFor="invoice-description" className={FORM_LABEL}>Description / Concept</label>
             <textarea
+              id="invoice-description"
               rows={3}
               {...register('description')}
               className={inputClass}

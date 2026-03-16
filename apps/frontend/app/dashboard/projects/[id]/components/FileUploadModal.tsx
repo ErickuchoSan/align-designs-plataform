@@ -128,7 +128,8 @@ export default function FileUploadModal({
             disabled={uploading || selectedFiles.length === 0}
             className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
           >
-            {uploading ? <ButtonLoader /> : (selectedFiles.length > 1 ? 'Upload Files' : 'Upload File')}
+            {uploading && <ButtonLoader />}
+            {!uploading && (selectedFiles.length > 1 ? 'Upload Files' : 'Upload File')}
           </button>
         </div>
       </form>
