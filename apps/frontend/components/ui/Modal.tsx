@@ -26,6 +26,7 @@ const FOCUSABLE_SELECTORS = [
 export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const hasSetInitialFocus = useRef(false);
 
   // Get all focusable elements within the modal
   const getFocusableElements = useCallback(() => {
@@ -62,24 +63,33 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
 
   // Combined effect for body overflow, focus management, and keyboard handling
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // Reset initial focus flag when modal closes
+      hasSetInitialFocus.current = false;
+      return;
+    }
 
-    // Store currently focused element to restore later
-    previousActiveElement.current = document.activeElement as HTMLElement;
+    // Store currently focused element to restore later (only once)
+    if (!hasSetInitialFocus.current) {
+      previousActiveElement.current = document.activeElement as HTMLElement;
+    }
 
     // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
 
-    // Focus the first focusable element after modal opens
-    requestAnimationFrame(() => {
-      const focusableElements = getFocusableElements();
-      if (focusableElements.length > 0) {
-        focusableElements[0].focus();
-      } else {
-        // If no focusable elements, focus the modal container
-        modalRef.current?.focus();
-      }
-    });
+    // Focus the first focusable element after modal opens (only once)
+    if (!hasSetInitialFocus.current) {
+      hasSetInitialFocus.current = true;
+      requestAnimationFrame(() => {
+        const focusableElements = getFocusableElements();
+        if (focusableElements.length > 0) {
+          focusableElements[0].focus();
+        } else {
+          // If no focusable elements, focus the modal container
+          modalRef.current?.focus();
+        }
+      });
+    }
 
     // Add keyboard listener for focus trap
     document.addEventListener('keydown', handleKeyDown);
