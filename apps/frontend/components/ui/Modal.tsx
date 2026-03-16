@@ -135,13 +135,15 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
       ref={dialogRef}
       className="fixed inset-0 z-50 m-auto p-0 bg-transparent animate-fadeIn backdrop:bg-black/60 backdrop:transition-opacity open:flex open:items-center open:justify-center"
       aria-labelledby="modal-title"
-      onClick={(e) => {
-        // Close when clicking backdrop (the dialog element itself)
-        if (e.target === dialogRef.current) {
-          onClose();
-        }
-      }}
     >
+      {/* Invisible backdrop button for accessibility */}
+      <button
+        type="button"
+        className="fixed inset-0 w-full h-full cursor-default bg-transparent -z-10"
+        onClick={onClose}
+        aria-label="Close modal"
+        tabIndex={-1}
+      />
       {/* Modal - with max-height and scroll */}
       <div
         ref={modalRef}

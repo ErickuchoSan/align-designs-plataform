@@ -133,11 +133,13 @@ export default function PayEmployeeModal({
         {employeeId && (
           <fieldset className="border border-stone-200 rounded-lg p-3 bg-stone-50">
             <legend className={FORM_LABEL}>Client Approved Items (Unpaid)</legend>
-            {loadingItems ? (
+            {loadingItems && (
               <p className="text-xs text-stone-500">Loading pending items...</p>
-            ) : (pendingItems ?? []).length === 0 ? (
+            )}
+            {!loadingItems && (pendingItems ?? []).length === 0 && (
               <p className="text-xs text-stone-500 italic">No pending approved items found.</p>
-            ) : (
+            )}
+            {!loadingItems && (pendingItems ?? []).length > 0 && (
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {(pendingItems ?? []).map((item) => (
                   <div key={item.id} className="flex items-start gap-2">

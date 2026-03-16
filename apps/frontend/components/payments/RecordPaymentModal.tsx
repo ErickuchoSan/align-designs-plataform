@@ -154,11 +154,13 @@ export default function RecordPaymentModal({
                 {isEmployeePayment && selectedEmployeeId && (
                     <fieldset className="p-4 border rounded-lg border-stone-200 bg-stone-50">
                         <legend className="block mb-2 text-sm font-medium text-stone-700">Pending Jobs</legend>
-                        {isLoadingFiles ? (
+                        {isLoadingFiles && (
                             <div className="text-sm text-stone-500">Loading...</div>
-                        ) : (pendingFiles ?? []).length === 0 ? (
+                        )}
+                        {!isLoadingFiles && (pendingFiles ?? []).length === 0 && (
                             <div className="text-sm italic text-stone-400">No approved pending jobs</div>
-                        ) : (
+                        )}
+                        {!isLoadingFiles && (pendingFiles ?? []).length > 0 && (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
                                 {(pendingFiles ?? []).map(f => (
                                     <div key={f.id} className="flex items-center">
