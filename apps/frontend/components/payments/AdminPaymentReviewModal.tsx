@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from '@/lib/toast';
 import { Payment, PaymentStatus } from '@/types/payments';
 import { PaymentsService } from '@/services/payments.service';
@@ -6,6 +6,17 @@ import Modal from '@/components/ui/Modal';
 import { useAsyncOperation } from '@/hooks';
 import { CheckIcon } from '@/components/ui/icons';
 import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE } from '@/lib/styles';
+
+// Helper function to get payment status badge style
+function getStatusBadgeClass(status: PaymentStatus): string {
+  const statusStyles: Record<PaymentStatus, string> = {
+    [PaymentStatus.CONFIRMED]: 'bg-green-100 text-green-800',
+    [PaymentStatus.REJECTED]: 'bg-red-100 text-red-800',
+    [PaymentStatus.PENDING_APPROVAL]: 'bg-yellow-100 text-yellow-800',
+    [PaymentStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+  };
+  return statusStyles[status] || 'bg-gray-100 text-gray-800';
+}
 
 interface AdminPaymentReviewModalProps {
   isOpen: boolean;
@@ -101,10 +112,7 @@ export default function AdminPaymentReviewModal({
               </div>
               <div>
                 <p className="text-stone-500">Currently</p>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.status === PaymentStatus.CONFIRMED ? 'bg-green-100 text-green-800' :
-                  payment.status === PaymentStatus.REJECTED ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(payment.status)}`}>
                   {payment.status.replace('_', ' ')}
                 </span>
               </div>

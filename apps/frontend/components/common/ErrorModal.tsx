@@ -1,8 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AxiosRequestConfig } from 'axios';
 import { useAuthSafe } from '@/contexts/AuthContext';
+
+// Helper function to get status-based colors
+function getStatusColors(statusCode?: number | string): {
+  headerBg: string;
+  iconBg: string;
+  iconColor: string;
+} {
+  const code = Number(statusCode);
+  if (code === 401 || code === 403) {
+    return { headerBg: 'bg-red-50 border-red-200', iconBg: 'bg-red-100', iconColor: 'text-red-600' };
+  }
+  if (code >= 500) {
+    return { headerBg: 'bg-orange-50 border-orange-200', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' };
+  }
+  return { headerBg: 'bg-amber-50 border-amber-200', iconBg: 'bg-amber-100', iconColor: 'text-amber-600' };
+}
 
 interface ErrorObject {
   name?: string;
@@ -65,6 +81,9 @@ export default function ErrorModal({
   // Show technical details only in dev mode
   const showTechnicalDetails = isDevMode;
 
+  // Get status-based colors
+  const statusColors = useMemo(() => getStatusColors(statusCode), [statusCode]);
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -102,20 +121,11 @@ export default function ErrorModal({
       {/* Modal */}
       <div className={`relative bg-white rounded-xl shadow-2xl ${showTechnicalDetails ? 'max-w-4xl' : 'max-w-md'} w-full max-h-[90vh] overflow-hidden animate-slideUp`}>
         {/* Header */}
-        <div className={`px-6 py-4 border-b ${statusCode === 401 || statusCode === 403 ? 'bg-red-50 border-red-200' :
-          statusCode && Number(statusCode) >= 500 ? 'bg-orange-50 border-orange-200' :
-            'bg-amber-50 border-amber-200'
-          }`}>
+        <div className={`px-6 py-4 border-b ${statusColors.headerBg}`}>
           <div className="flex items-start gap-3">
-            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${statusCode === 401 || statusCode === 403 ? 'bg-red-100' :
-              statusCode && Number(statusCode) >= 500 ? 'bg-orange-100' :
-                'bg-amber-100'
-              }`}>
+            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${statusColors.iconBg}`}>
               <svg
-                className={`w-6 h-6 ${statusCode === 401 || statusCode === 403 ? 'text-red-600' :
-                  statusCode && Number(statusCode) >= 500 ? 'text-orange-600' :
-                    'text-amber-600'
-                  }`}
+                className={`w-6 h-6 ${statusColors.iconColor}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
