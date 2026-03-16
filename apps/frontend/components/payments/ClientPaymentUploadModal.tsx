@@ -41,7 +41,7 @@ export default function ClientPaymentUploadModal({
   const { loading: isSubmitting, execute } = useAsyncOperation();
 
   // DRY: Use useFetchOnOpen for automatic fetch when modal opens
-  const { data: invoices, loading: loadingInvoices } = useFetchOnOpen<Invoice[]>(
+  const { data: invoices } = useFetchOnOpen<Invoice[]>(
     isOpen,
     async () => {
       const data = await InvoicesService.getByProject(projectId);
@@ -149,12 +149,13 @@ export default function ClientPaymentUploadModal({
 
         {/* Amount */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-stone-700">Amount Paid</label>
+          <label htmlFor="payment-amount" className="block mb-2 text-sm font-medium text-stone-700">Amount Paid</label>
           <div className="relative rounded-md shadow-sm">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <span className="text-stone-500 sm:text-sm">$</span>
             </div>
             <input
+              id="payment-amount"
               type="number"
               step="0.01"
               required
@@ -167,15 +168,16 @@ export default function ClientPaymentUploadModal({
         </div>
 
         {/* Payment Method */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-stone-700">Payment Method</label>
+        <fieldset>
+          <legend className="block mb-2 text-sm font-medium text-stone-700">Payment Method</legend>
           <PaymentMethodSelect value={method} onChange={setMethod} />
-        </div>
+        </fieldset>
 
         {/* Date */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
+          <label htmlFor="payment-date" className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
           <input
+            id="payment-date"
             type="date"
             required
             value={date}
@@ -186,8 +188,9 @@ export default function ClientPaymentUploadModal({
 
         {/* Invoice Selection */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-stone-700">Link to Invoice (Optional)</label>
+          <label htmlFor="payment-invoice" className="block mb-2 text-sm font-medium text-stone-700">Link to Invoice (Optional)</label>
           <select
+            id="payment-invoice"
             value={invoiceId}
             onChange={(e) => setInvoiceId(e.target.value)}
             className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
@@ -203,8 +206,9 @@ export default function ClientPaymentUploadModal({
 
         {/* File Upload */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-stone-700">Receipt File</label>
+          <label htmlFor="payment-receipt" className="block mb-2 text-sm font-medium text-stone-700">Receipt File</label>
           <input
+            id="payment-receipt"
             type="file"
             accept="image/*,.pdf"
             onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
@@ -220,8 +224,9 @@ export default function ClientPaymentUploadModal({
 
         {/* Notes */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
+          <label htmlFor="payment-notes" className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
           <textarea
+            id="payment-notes"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

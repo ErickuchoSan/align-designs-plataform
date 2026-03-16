@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { AxiosRequestConfig } from 'axios';
-import { useAuthSafe } from '@/contexts/AuthContext';
 
 // Helper function to get status-based colors
 function getStatusColors(statusCode?: number | string): {
@@ -70,9 +69,6 @@ export default function ErrorModal({
   errorCode,
 }: ErrorModalProps) {
   // Use safe version to avoid errors when modal is rendered outside AuthProvider
-  const authContext = useAuthSafe();
-  const user = authContext?.user ?? null;
-  const isAdmin = user?.role === 'ADMIN';
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   // Check devMode from localStorage
@@ -113,9 +109,11 @@ export default function ErrorModal({
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fadeIn">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-default"
         onClick={onClose}
+        aria-label="Close modal"
       />
 
       {/* Modal */}
@@ -182,9 +180,9 @@ export default function ErrorModal({
                 Details:
               </p>
               <ul className="space-y-1">
-                {details.map((detail, index) => (
+                {details.map((detail) => (
                   <li
-                    key={index}
+                    key={detail}
                     className="text-sm text-stone-700 flex items-start gap-2"
                   >
                     <span className="text-red-500 flex-shrink-0 mt-0.5">•</span>

@@ -8,16 +8,15 @@
 export default function Loading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-stone-50 via-stone-100 to-stone-200">
-      <div className="text-center">
-        <div
+      <output className="text-center">
+        <span
           className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-navy-800 border-r-transparent"
-          role="status"
-          aria-label="Loading page"
+          aria-hidden="true"
         />
         <p className="mt-4 text-sm text-stone-600" aria-live="polite">
           Loading...
         </p>
-      </div>
+      </output>
     </div>
   );
 }

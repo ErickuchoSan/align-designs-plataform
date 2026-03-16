@@ -49,7 +49,7 @@ function DataTable<T>({
   };
 
   return (
-    <div className="overflow-x-auto" role="region" aria-label={ariaLabel}>
+    <section className="overflow-x-auto" aria-label={ariaLabel}>
       <table className="min-w-full divide-y divide-stone-200">
         <thead className="bg-gradient-to-r from-navy-50 to-stone-100">
           <tr>
@@ -65,39 +65,39 @@ function DataTable<T>({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-stone-200">
-          {isLoading && data.length === 0 ? (
+          {isLoading && data.length === 0 && (
             <>
               {Array.from({ length: skeletonRows }).map((_, i) => (
                 <TableRowSkeleton key={`skeleton-${i}`} />
               ))}
             </>
-          ) : data.length === 0 ? (
+          )}
+          {!isLoading && data.length === 0 && (
             <tr>
               <td colSpan={columns.length} className="px-6 py-12 text-center text-stone-500">
                 {emptyMessage}
               </td>
             </tr>
-          ) : (
-            data.map((item) => (
-              <tr
-                key={keyExtractor(item)}
-                className={getRowClassName(item)}
-                onClick={onRowClick ? () => onRowClick(item) : undefined}
-                onKeyDown={onRowClick ? (e) => handleRowKeyDown(e, item) : undefined}
-                tabIndex={onRowClick ? 0 : undefined}
-                role={onRowClick ? 'button' : undefined}
-              >
-                {columns.map((col) => (
-                  <td key={col.key} className={`px-6 py-4 whitespace-nowrap ${col.className || ''}`}>
-                    {col.render(item)}
-                  </td>
-                ))}
-              </tr>
-            ))
           )}
+          {data.length > 0 && data.map((item) => (
+            <tr
+              key={keyExtractor(item)}
+              className={getRowClassName(item)}
+              onClick={onRowClick ? () => onRowClick(item) : undefined}
+              onKeyDown={onRowClick ? (e) => handleRowKeyDown(e, item) : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              aria-label={onRowClick ? 'Click to view details' : undefined}
+            >
+              {columns.map((col) => (
+                <td key={col.key} className={`px-6 py-4 whitespace-nowrap ${col.className || ''}`}>
+                  {col.render(item)}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 }
 

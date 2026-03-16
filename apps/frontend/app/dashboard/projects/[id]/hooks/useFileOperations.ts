@@ -147,9 +147,12 @@ export function useFileOperations(
           ? await uploadFiles(files, comment, stage, relatedFileId)
           : await FilesService.createComment(projectId, comment, stage, relatedFileId).then(() => true);
 
-        const message = files.length > 0
-          ? (success ? 'Feedback created successfully' : 'Some files failed to upload')
-          : 'Comment created successfully';
+        let message: string;
+        if (files.length > 0) {
+          message = success ? 'Feedback created successfully' : 'Some files failed to upload';
+        } else {
+          message = 'Comment created successfully';
+        }
 
         if (success) onSuccessRef.current(message);
         else onErrorRef.current(message);

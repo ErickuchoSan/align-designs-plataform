@@ -60,9 +60,12 @@ class Logger {
    * Use for error conditions that need attention
    */
   error(message: string, error?: Error | unknown, context?: LogContext): void {
-    const errorDetails = error instanceof Error
-      ? { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined }
-      : error ? { error: String(error) } : {};
+    let errorDetails: Record<string, unknown> = {};
+    if (error instanceof Error) {
+      errorDetails = { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined };
+    } else if (error) {
+      errorDetails = { error: String(error) };
+    }
 
     const fullContext = { ...context, ...errorDetails };
     console.error(this.formatMessage('error', message, fullContext));

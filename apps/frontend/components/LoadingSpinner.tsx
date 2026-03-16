@@ -23,13 +23,13 @@ export function LoadingSpinner({
   className = '',
 }: LoadingSpinnerProps) {
   return (
-    <div
-      className={`animate-spin rounded-full ${color} border-t-transparent ${sizeClasses[size]} ${className}`}
-      role="status"
-      aria-label="Loading"
-    >
+    <output aria-label="Loading">
+      <span
+        className={`inline-block animate-spin rounded-full ${color} border-t-transparent ${sizeClasses[size]} ${className}`}
+        aria-hidden="true"
+      />
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import { formatDate } from '@/lib/utils/date.utils';
 import { FileData } from '@/app/dashboard/projects/[id]/hooks/useProjectFiles';
@@ -11,15 +11,7 @@ interface FileVersionHistoryModalProps {
 }
 
 export default function FileVersionHistoryModal({ isOpen, onClose, file, onDownload }: FileVersionHistoryModalProps) {
-    const [history, setHistory] = useState<FileData[]>([]);
-
-    // Kept useEffect if needed for future logic, but state update in render is safe if it was memoized.
-    // However, for now, we just mimic the existing logic.
-    useEffect(() => {
-        if (isOpen && file) {
-            setHistory([file]);
-        }
-    }, [isOpen, file]);
+    // File history is derived from the current file - no state needed
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Submission Comments: ${file.originalName}`} size="lg">

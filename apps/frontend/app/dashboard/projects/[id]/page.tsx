@@ -156,7 +156,7 @@ export default function ProjectDetailsPage() {
   const canDeleteFile = useCallback(
     (file: FileData) => {
       if (isAdmin) return true;
-      if (user && file.uploadedBy === user.id) return true;
+      if (file.uploadedBy === user?.id) return true;
       return false;
     },
     [isAdmin, user]

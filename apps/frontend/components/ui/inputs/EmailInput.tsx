@@ -13,10 +13,10 @@ interface EmailInputProps {
   id?: string;
 }
 
-const businessDomains = [
+const businessDomains = new Set([
   'microsoft.com', 'google.com', 'apple.com', 'amazon.com', 'meta.com',
   'linkedin.com', 'twitter.com', 'facebook.com', 'instagram.com', 'whatsapp.com'
-];
+]);
 
 export default function EmailInput({ value, onChange, className = '', required = false, placeholder = 'Email address', id }: EmailInputProps) {
   const [error, setError] = useState('');
@@ -72,7 +72,7 @@ export default function EmailInput({ value, onChange, className = '', required =
       return { isValid: true, warning: 'This appears to be a temporary email address' };
     }
 
-    if (businessDomains.includes(domain.toLowerCase())) {
+    if (businessDomains.has(domain.toLowerCase())) {
       return { isValid: true, warning: 'Business email detected - please ensure this is your email' };
     }
 
