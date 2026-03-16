@@ -140,6 +140,7 @@ model Project {
   deadlineDate             DateTime?     @map("deadline_date") @db.Date
   initialPaymentDeadline   DateTime?     @map("initial_payment_deadline") @db.Date // Deadline para completar pago inicial
   archivedAt               DateTime?     @map("archived_at") @db.Timestamptz(6)
+  briefApprovedAt          DateTime?     @map("brief_approved_at") @db.Timestamptz(6) // When client approved the project brief
 
   // Relations
   client           User              @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)

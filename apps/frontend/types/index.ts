@@ -60,6 +60,7 @@ export interface Project {
   deadlineDate?: string;
   initialPaymentDeadline?: string;
   archivedAt?: string;
+  briefApprovedAt?: string; // When client approved the project brief
 
   // Relations
   client?: {

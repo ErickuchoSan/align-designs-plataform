@@ -23,6 +23,11 @@ export class MinioStorageService implements OnModuleInit {
   private minioClient: Minio.Client;
   private bucketName: string;
   private readonly region: string;
+  private readonly internalEndpoint: string;
+  private readonly internalPort: number;
+  private readonly publicEndpoint: string | null;
+  private readonly publicPort: number;
+  private readonly publicUseSSL: boolean;
 
   constructor(
     private configService: ConfigService,
@@ -30,6 +35,7 @@ export class MinioStorageService implements OnModuleInit {
     private fileSecurityService: FileSecurityService,
   ) {
     // MinIO configuration - all required in production
+    // Internal endpoint for container-to-container communication
     const endpoint = this.configService.get<string>('MINIO_ENDPOINT') ?? '';
     const port = this.configService.get<number>('MINIO_PORT') ?? 0;
     const useSSL =
@@ -39,6 +45,19 @@ export class MinioStorageService implements OnModuleInit {
 
     this.bucketName = this.configService.get<string>('MINIO_BUCKET') ?? '';
     this.region = this.configService.get<string>('MINIO_REGION', 'us-east-1');
+
+    // Store internal endpoint info for URL replacement
+    this.internalEndpoint = endpoint;
+    this.internalPort = port;
+
+    // Public endpoint for presigned URLs (optional, defaults to internal)
+    // When set, presigned URLs will use this endpoint instead of internal
+    this.publicEndpoint =
+      this.configService.get<string>('MINIO_PUBLIC_ENDPOINT') ?? null;
+    this.publicPort =
+      this.configService.get<number>('MINIO_PUBLIC_PORT') ?? 443;
+    this.publicUseSSL =
+      this.configService.get<string>('MINIO_PUBLIC_USE_SSL', 'true') === 'true';
 
     // Validate required MinIO configuration
     // Note: These errors are intentionally generic to avoid information disclosure
@@ -60,7 +79,7 @@ export class MinioStorageService implements OnModuleInit {
     });
 
     this.logger.log(
-      `MinIO client initialized - Endpoint: ${endpoint}:${port}, Bucket: ${this.bucketName}`,
+      `MinIO client initialized - Internal: ${endpoint}:${port}, Public: ${this.publicEndpoint ?? 'same as internal'}, Bucket: ${this.bucketName}`,
     );
   }
 
@@ -222,11 +241,28 @@ export class MinioStorageService implements OnModuleInit {
         );
       }
 
-      const url = await this.minioClient.presignedGetObject(
+      let url = await this.minioClient.presignedGetObject(
         this.bucketName,
         storagePath,
         expirySeconds,
       );
+
+      // Replace internal endpoint with public endpoint if configured
+      // This allows presigned URLs to work from outside the Docker network
+      if (this.publicEndpoint) {
+        const internalUrl = `http://${this.internalEndpoint}:${this.internalPort}`;
+        const publicProtocol = this.publicUseSSL ? 'https' : 'http';
+        const publicUrl =
+          this.publicPort === 443 || this.publicPort === 80
+            ? `${publicProtocol}://${this.publicEndpoint}`
+            : `${publicProtocol}://${this.publicEndpoint}:${this.publicPort}`;
+
+        url = url.replace(internalUrl, publicUrl);
+        this.logger.debug(
+          `Replaced internal URL with public URL: ${internalUrl} -> ${publicUrl}`,
+        );
+      }
+
       return url;
     } catch (error) {
       // Re-throw BadRequestException (file not found)

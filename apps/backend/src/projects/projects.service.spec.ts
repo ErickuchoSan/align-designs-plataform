@@ -61,6 +61,7 @@ describe('ProjectsService', () => {
     deadlineDate: null,
     initialPaymentDeadline: null,
     archivedAt: null,
+    briefApprovedAt: null,
     client: mockUser,
     creator: { ...mockUser, role: Role.ADMIN },
     files: [],

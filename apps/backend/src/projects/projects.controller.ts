@@ -643,4 +643,55 @@ export class ProjectsController {
   async checkProjectDeletion(@Param('id') projectId: string) {
     return this.projectsService.checkProjectDeletionSafety(projectId);
   }
+
+  /**
+   * Approve project brief (Client action)
+   * Confirms the project scope before design work begins
+   */
+  @Post(':id/approve-brief')
+  @Roles(Role.CLIENT, Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Approve project brief',
+    description: 'Client approves the project brief, confirming the project scope. This action records the approval timestamp.',
+  })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiResponse({ status: 200, description: 'Brief approved successfully' })
+  @ApiResponse({ status: 400, description: 'Brief already approved' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Not the project client' })
+  @ApiResponse({ status: 404, description: 'Project not found' })
+  async approveBrief(
+    @Param('id') projectId: string,
+    @CurrentUser() user: UserPayload,
+    @IpAddress() ipAddress: string,
+    @UserAgent() userAgent: string,
+  ) {
+    const result = await this.projectsService.approveBrief(
+      projectId,
+      user.userId,
+      user.role,
+    );
+
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: user.userId,
+        action: AuditAction.PROJECT_UPDATE,
+        resourceType: 'project',
+        resourceId: projectId,
+        ipAddress,
+        userAgent,
+        details: {
+          action: 'approve_brief',
+        },
+      },
+      'brief approval',
+    );
+
+    return {
+      message: 'Project brief approved successfully',
+      project: result,
+      approvedAt: result.briefApprovedAt,
+    };
+  }
 }

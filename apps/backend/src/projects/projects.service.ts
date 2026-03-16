@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   Logger,
   Inject,
   forwardRef,
@@ -707,5 +708,53 @@ export class ProjectsService {
       userRole,
       stages,
     };
+  }
+
+  /**
+   * Approve the project brief
+   * Records the approval timestamp, confirming the project scope
+   * Only the project client or admin can approve
+   */
+  async approveBrief(projectId: string, userId: string, userRole: Role) {
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    // Check if user is the client or an admin
+    if (userRole === Role.CLIENT && project.clientId !== userId) {
+      throw new ForbiddenException('Only the project client can approve the brief');
+    }
+
+    // Check if already approved
+    if (project.briefApprovedAt) {
+      throw new BadRequestException(
+        `Project brief was already approved on ${project.briefApprovedAt.toISOString()}`,
+      );
+    }
+
+    // Update the project with approval timestamp
+    const updatedProject = await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        briefApprovedAt: new Date(),
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `Project brief approved for project ${project.name} by user ${userId}`,
+    );
+
+    return updatedProject;
   }
 }

@@ -158,6 +158,35 @@ function ClientWorkflowView({
         <ProjectStatusBadge status={project.status} />
       </div>
 
+      {/* Project Progress Bar */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-stone-600">Project Progress</span>
+          <span className="text-sm font-semibold text-navy-900">
+            {project.status === ProjectStatus.COMPLETED ? '100%' :
+             project.status === ProjectStatus.ACTIVE ? '50%' : '0%'}
+          </span>
+        </div>
+        <div className="h-3 bg-stone-200 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              project.status === ProjectStatus.COMPLETED ? 'bg-green-500' :
+              project.status === ProjectStatus.ACTIVE ? 'bg-navy-600' :
+              'bg-stone-300'
+            }`}
+            style={{
+              width: project.status === ProjectStatus.COMPLETED ? '100%' :
+                     project.status === ProjectStatus.ACTIVE ? '50%' : '0%'
+            }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-stone-500 mt-1">
+          <span>Start</span>
+          <span>In Progress</span>
+          <span>Complete</span>
+        </div>
+      </div>
+
       {/* Project Info Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Estimated Delivery */}

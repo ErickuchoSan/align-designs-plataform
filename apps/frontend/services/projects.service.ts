@@ -299,4 +299,17 @@ export class ProjectsService {
     const response = await api.get<ProjectDeletionCheck>(`${this.BASE_URL}/${projectId}/deletion-check`);
     return response.data;
   }
+
+  /**
+   * Approve project brief
+   * Client action to confirm the project scope
+   */
+  static async approveBrief(projectId: string): Promise<{
+    message: string;
+    project: Project;
+    approvedAt: string;
+  }> {
+    const response = await api.post(`${this.BASE_URL}/${projectId}/approve-brief`);
+    return response.data;
+  }
 }

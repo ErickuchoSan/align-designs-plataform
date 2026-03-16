@@ -32,10 +32,10 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
   /**
    * CONCEPT DESIGN (was REFERENCES)
    * Preliminary floor plan, conceptual sketches, initial layout
-   * First design proposal for client review
+   * Internal stage - clients see these files via Design Review (FEEDBACK_CLIENT)
    */
   REFERENCES: {
-    canView: [Role.ADMIN, Role.CLIENT],
+    canView: [Role.ADMIN, Role.EMPLOYEE],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
     description: 'Preliminary designs, conceptual sketches, and initial layout proposals.',

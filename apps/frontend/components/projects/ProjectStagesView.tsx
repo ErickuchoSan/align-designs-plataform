@@ -224,6 +224,7 @@ function ProjectStagesView({
             projectStatus={project.status}
             amountPaid={project.amountPaid || 0}
             paymentRefreshKey={paymentRefreshKey}
+            briefApprovedAt={project.briefApprovedAt}
             onDownload={onDownload}
             onViewHistory={onViewHistory}
             onEdit={onEdit}
@@ -234,6 +235,7 @@ function ProjectStagesView({
             onPayEmployee={handlePayEmployee}
             onUploadPaymentProof={handleUploadPaymentProof}
             onRefresh={onRefresh}
+            onBriefApproved={onRefresh}
           />
         </div>
       )}
