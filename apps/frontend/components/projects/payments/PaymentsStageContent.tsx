@@ -76,7 +76,7 @@ function PaymentsStageContent({
   const handleReviewSuccess = async () => {
     setReviewingPayment(null);
     await refetch();
-    if (onRefresh) await onRefresh();
+    if (onRefresh) onRefresh();
   };
 
   // Loading state

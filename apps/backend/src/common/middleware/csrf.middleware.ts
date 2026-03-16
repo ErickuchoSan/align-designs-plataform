@@ -34,7 +34,31 @@ export class CsrfMiddleware implements NestMiddleware {
   ];
 
   use(req: Request, res: Response, next: NextFunction) {
-    // DEBUG: Log all incoming CSRF-related data
+    this.logDebugInfo(req);
+
+    // Special case: /auth/csrf-token should generate token but not validate
+    if (req.originalUrl.includes('/auth/csrf-token')) {
+      this.generateAndSetToken(req, res);
+      return next();
+    }
+
+    // Skip CSRF validation for public endpoints
+    if (this.isPublicPath(req.originalUrl)) {
+      return next();
+    }
+
+    // Skip CSRF validation for safe HTTP methods
+    if (this.isSafeMethod(req.method)) {
+      this.handleSafeMethod(req, res);
+      return next();
+    }
+
+    // Validate CSRF for state-changing methods
+    this.validateCsrfRequest(req, res);
+    next();
+  }
+
+  private logDebugInfo(req: Request): void {
     const debugInfo = {
       method: req.method,
       path: req.path,
@@ -51,38 +75,23 @@ export class CsrfMiddleware implements NestMiddleware {
       origin: req.headers.origin || 'not set',
     };
     this.logger.debug(`CSRF Debug: ${JSON.stringify(debugInfo)}`);
+  }
 
-    // Special case: /auth/csrf-token should generate token but not validate
-    if (req.originalUrl.includes('/auth/csrf-token')) {
+  private isSafeMethod(method: string): boolean {
+    return ['GET', 'HEAD', 'OPTIONS'].includes(method);
+  }
+
+  private handleSafeMethod(req: Request, res: Response): void {
+    if (!req.cookies[this.csrfTokenCookie]) {
       this.generateAndSetToken(req, res);
-      return next();
+    } else {
+      const existingSecret = req.cookies[this.csrfTokenCookie];
+      const token = this.generateToken(existingSecret);
+      res.setHeader('X-CSRF-Token', token);
     }
+  }
 
-    // Skip CSRF validation for public endpoints
-    // Use exact match or proper prefix check to prevent bypass
-    // Use originalUrl to ensure we check the full path including global prefix
-    const isPublic = this.isPublicPath(req.originalUrl);
-
-    if (isPublic) {
-      return next();
-    }
-
-    // Skip CSRF validation for safe HTTP methods
-    // Only generate new token if one doesn't exist
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-      if (!req.cookies[this.csrfTokenCookie]) {
-        // No cookie exists, generate new token
-        this.generateAndSetToken(req, res);
-      } else {
-        // Cookie exists, reuse it and set the token header
-        const existingSecret = req.cookies[this.csrfTokenCookie];
-        const token = this.generateToken(existingSecret);
-        res.setHeader('X-CSRF-Token', token);
-      }
-      return next();
-    }
-
-    // Generate token if it doesn't exist
+  private validateCsrfRequest(req: Request, res: Response): void {
     if (!req.cookies[this.csrfTokenCookie]) {
       this.logger.warn(
         `CSRF cookie missing, generating new token for ${req.method} ${req.path}`,
@@ -93,7 +102,6 @@ export class CsrfMiddleware implements NestMiddleware {
     const token = req.cookies[this.csrfTokenCookie];
     const submittedToken = req.headers[this.csrfHeaderName] || req.body._csrf;
 
-    // DEBUG: Log token comparison details
     this.logger.debug(
       `CSRF Validation: cookie=${token ? 'present' : 'missing'}, header=${submittedToken ? 'present' : 'missing'}`,
     );
@@ -110,8 +118,6 @@ export class CsrfMiddleware implements NestMiddleware {
       );
       throw new UnauthorizedException('Invalid CSRF token');
     }
-
-    next();
   }
 
   /**

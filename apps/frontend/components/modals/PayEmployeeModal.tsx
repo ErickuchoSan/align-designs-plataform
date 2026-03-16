@@ -92,7 +92,7 @@ export default function PayEmployeeModal({
 
       await EmployeePaymentsService.create(projectId, payload);
       toast.success('Payment recorded successfully');
-      await onSuccess();
+      onSuccess();
       handleClose();
     } catch (err) {
       toast.error(handleApiError(err, 'Failed to record payment'));

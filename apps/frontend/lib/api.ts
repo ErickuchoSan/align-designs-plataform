@@ -330,7 +330,7 @@ api.interceptors.response.use(
         });
 
         // Don't reject the promise, we're handling it with redirect
-        return Promise.reject(error);
+        throw error;
       }
     }
 
@@ -418,7 +418,7 @@ api.interceptors.response.use(
       pendingRequests.delete(requestKey);
     }
 
-    return Promise.reject(error);
+    throw error;
   }
 );
 

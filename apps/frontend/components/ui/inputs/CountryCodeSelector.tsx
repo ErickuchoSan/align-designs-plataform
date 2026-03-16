@@ -73,32 +73,23 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
       return nameMatch || codeMatch || dialCodeMatch;
     });
 
-    // Sort matches by relevance
+    // Sort matches by relevance using a scoring function
+    const getScore = (country: Country): number => {
+      const name = country.name.toLowerCase();
+      const popularIdx = POPULAR_COUNTRY_CODES.indexOf(country.code);
+
+      if (name === search) return 100;
+      if (country.dialCode === searchWithPlus) return 90;
+      if (name.startsWith(search)) return 80;
+      if (popularIdx !== -1) return 70 - popularIdx;
+      return 0;
+    };
+
     return matches.sort((a, b) => {
-      const aName = a.name.toLowerCase();
-      const bName = b.name.toLowerCase();
-
-      // Exact name match first
-      if (aName === search) return -1;
-      if (bName === search) return 1;
-
-      // Name starts with search term
-      if (aName.startsWith(search) && !bName.startsWith(search)) return -1;
-      if (bName.startsWith(search) && !aName.startsWith(search)) return 1;
-
-      // Exact dial code match
-      if (a.dialCode === searchWithPlus && b.dialCode !== searchWithPlus) return -1;
-      if (b.dialCode === searchWithPlus && a.dialCode !== searchWithPlus) return 1;
-
-      // Popular countries get priority
-      const aPopular = POPULAR_COUNTRY_CODES.indexOf(a.code);
-      const bPopular = POPULAR_COUNTRY_CODES.indexOf(b.code);
-      if (aPopular !== -1 && bPopular === -1) return -1;
-      if (bPopular !== -1 && aPopular === -1) return 1;
-      if (aPopular !== -1 && bPopular !== -1) return aPopular - bPopular;
-
-      // Alphabetical fallback
-      return aName.localeCompare(bName);
+      const scoreA = getScore(a);
+      const scoreB = getScore(b);
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
     });
   }, [searchTerm, countries]);
 

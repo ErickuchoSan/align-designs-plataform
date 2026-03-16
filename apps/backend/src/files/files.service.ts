@@ -419,7 +419,7 @@ export class FilesService {
       }
     });
 
-    return Array.from(types).sort();
+    return Array.from(types).sort((a, b) => a.localeCompare(b));
   }
 
   async verifyStorageIntegrity(userId: string, userRole: Role) {

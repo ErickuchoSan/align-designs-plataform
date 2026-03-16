@@ -48,10 +48,11 @@ export function ProjectProvider({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const refreshProject = useCallback(async () => {
+  const refreshProject = useCallback(() => {
     if (onUpdate) {
-      await onUpdate();
+      onUpdate();
     }
+    return Promise.resolve();
   }, [onUpdate]);
 
   const value: ProjectContextValue = {

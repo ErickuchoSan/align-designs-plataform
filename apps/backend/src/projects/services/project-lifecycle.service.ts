@@ -164,28 +164,13 @@ export class ProjectLifecycleService {
 
     const hasAnyData = Object.values(hasData).some((v) => v);
 
-    const warnings = [];
-    if (hasData.files) {
-      warnings.push(`${filesCount} uploaded file${filesCount > 1 ? 's' : ''}`);
-    }
-    if (hasData.payments) {
-      warnings.push(
-        `${paymentsCount} payment record${paymentsCount > 1 ? 's' : ''}`,
-      );
-    }
-    if (hasData.invoices) {
-      warnings.push(`${invoicesCount} invoice${invoicesCount > 1 ? 's' : ''}`);
-    }
-    if (hasData.employees) {
-      warnings.push(
-        `${employeesCount} assigned employee${employeesCount > 1 ? 's' : ''}`,
-      );
-    }
-    if (hasData.feedbackCycles) {
-      warnings.push(
-        `${feedbackCyclesCount} active feedback cycle${feedbackCyclesCount > 1 ? 's' : ''}`,
-      );
-    }
+    const warnings = this.buildDeletionWarnings({
+      files: filesCount,
+      payments: paymentsCount,
+      invoices: invoicesCount,
+      employees: employeesCount,
+      feedbackCycles: feedbackCyclesCount,
+    });
 
     return {
       projectId,
@@ -207,6 +192,29 @@ export class ProjectLifecycleService {
           }
         : null,
     };
+  }
+
+  /**
+   * Build warning messages for deletion safety check
+   */
+  private buildDeletionWarnings(counts: {
+    files: number;
+    payments: number;
+    invoices: number;
+    employees: number;
+    feedbackCycles: number;
+  }): string[] {
+    const warningConfig = [
+      { count: counts.files, singular: 'uploaded file', plural: 'uploaded files' },
+      { count: counts.payments, singular: 'payment record', plural: 'payment records' },
+      { count: counts.invoices, singular: 'invoice', plural: 'invoices' },
+      { count: counts.employees, singular: 'assigned employee', plural: 'assigned employees' },
+      { count: counts.feedbackCycles, singular: 'active feedback cycle', plural: 'active feedback cycles' },
+    ];
+
+    return warningConfig
+      .filter(({ count }) => count > 0)
+      .map(({ count, singular, plural }) => `${count} ${count > 1 ? plural : singular}`);
   }
 
   /**

@@ -87,7 +87,7 @@ export default function GenerateInvoiceModal({
 
       await InvoicesService.create(payload as any);
       toast.success('Invoice created successfully');
-      await onSuccess();
+      onSuccess();
       handleClose();
     } catch (err) {
       toast.error(handleApiError(err, 'Failed to create invoice'));

@@ -65,7 +65,7 @@ export function useFileFilters(files: FileData[]): UseFileFiltersReturn {
         }
       }
     });
-    setAvailableTypes(Array.from(types).sort());
+    setAvailableTypes(Array.from(types).sort((a, b) => a.localeCompare(b)));
   }, [files]);
 
   // Clear all filters

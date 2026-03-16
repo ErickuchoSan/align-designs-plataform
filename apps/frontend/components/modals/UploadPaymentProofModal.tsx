@@ -101,7 +101,7 @@ export default function UploadPaymentProofModal({
 
             await PaymentsService.uploadClientPayment(formData);
             toast.success('Payment proof submitted successfully');
-            await onSuccess();
+            onSuccess();
             handleClose();
         } catch (err) {
             toast.error(handleApiError(err, 'Failed to submit payment proof'));
