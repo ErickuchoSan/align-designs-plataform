@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { InvoiceStatus, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AnalyticsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) { }
 
     async getClientFinancials(clientId: string) {
         const invoices = await this.prisma.invoice.findMany({

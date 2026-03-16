@@ -12,7 +12,6 @@ import {
   HttpCode,
   HttpStatus,
   Body,
-  ParseFilePipe,
   BadRequestException,
   Logger,
 } from '@nestjs/common';
@@ -46,7 +45,6 @@ import {
   RATE_LIMIT_FILES,
   MAX_FILE_SIZE_BYTES,
 } from '../common/constants/timeouts.constants';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { FileFiltersDto } from './dto/file-filters.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';

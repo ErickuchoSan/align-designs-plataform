@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role, Stage } from '@prisma/client';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/dto/pagination.dto';
 import { FileFiltersDto } from './dto/file-filters.dto';
 import { FileResponse } from '../common/interfaces/file-response.interface';
 import { UserContext } from '../common/interfaces/user-context.interface';

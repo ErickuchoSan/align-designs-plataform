@@ -12,8 +12,8 @@ export class EmployeePaymentsService {
   private readonly logger = new Logger(EmployeePaymentsService.name);
 
   constructor(
-    private prisma: PrismaService,
-    private storageService: StorageService,
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
   ) { }
 
   async create(createDto: CreateEmployeePaymentDto, createdBy: string) {

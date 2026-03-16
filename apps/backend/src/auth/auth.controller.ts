@@ -12,7 +12,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -40,8 +40,8 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
   constructor(
-    private authService: AuthService,
-    private auditService: AuditService,
+    private readonly authService: AuthService,
+    private readonly auditService: AuditService,
   ) { }
 
   /**

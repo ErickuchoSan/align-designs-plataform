@@ -19,7 +19,7 @@ export class EmailService implements OnModuleInit {
   private isHealthy: boolean = false;
   private emailFrom: string;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Initialize Resend client

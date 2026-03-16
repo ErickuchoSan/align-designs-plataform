@@ -1,8 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
-import { APP_GUARD, Reflector } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { CacheModule } from './cache/cache.module';
 import { UsersModule } from './users/users.module';

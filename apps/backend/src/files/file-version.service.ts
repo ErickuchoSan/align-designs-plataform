@@ -6,8 +6,8 @@ import { File } from '@prisma/client';
 @Injectable()
 export class FileVersionService {
     constructor(
-        private prisma: PrismaService,
-        private filesService: FilesService,
+        private readonly prisma: PrismaService,
+        private readonly filesService: FilesService,
     ) { }
 
     /**

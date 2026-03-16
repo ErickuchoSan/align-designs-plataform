@@ -14,11 +14,11 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private prisma: PrismaService,
-    private authDependencies: AuthDependenciesService,
-    private tokenService: TokenService,
-    private otpValidation: OtpValidationService,
-    private passwordManagement: PasswordManagementService,
+    private readonly prisma: PrismaService,
+    private readonly authDependencies: AuthDependenciesService,
+    private readonly tokenService: TokenService,
+    private readonly otpValidation: OtpValidationService,
+    private readonly passwordManagement: PasswordManagementService,
   ) { }
 
   /**

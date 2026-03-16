@@ -39,7 +39,7 @@ export interface AuditLogData {
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async log(auditData: AuditLogData): Promise<void> {
     try {

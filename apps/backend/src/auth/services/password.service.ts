@@ -63,7 +63,7 @@ export class PasswordService {
     userId: string,
     newPassword: string,
   ): Promise<void> {
-    const historyCount = parseInt(
+    const historyCount = Number.parseInt(
       this.configService.get<string>('PASSWORD_HISTORY_COUNT', '5'),
       10,
     );

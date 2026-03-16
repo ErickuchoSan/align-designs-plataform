@@ -40,11 +40,11 @@ export class AccountLockoutService {
    * @throws UnauthorizedException with appropriate message
    */
   async handleFailedLogin(user: User): Promise<never> {
-    const maxAttempts = parseInt(
+    const maxAttempts = Number.parseInt(
       this.configService.get<string>('MAX_LOGIN_ATTEMPTS', '5'),
       10,
     );
-    const lockoutDuration = parseInt(
+    const lockoutDuration = Number.parseInt(
       this.configService.get<string>('ACCOUNT_LOCKOUT_DURATION', '15'),
       10,
     );

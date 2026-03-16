@@ -5,7 +5,7 @@ import { JwtBlacklistService } from '../jwt-blacklist.service';
 import { User } from '../interfaces/user.interface';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { PrismaService } from '../../prisma/prisma.service';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 /**
  * Token Service - Handles JWT token generation, revocation, and Refresh Tokens

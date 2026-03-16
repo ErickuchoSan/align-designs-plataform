@@ -13,10 +13,10 @@ export class CacheManagerService {
   private readonly logger = new Logger(CacheManagerService.name);
 
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @Optional()
     @Inject('MetricsService')
-    private metricsService?: MetricsService,
+    private readonly metricsService?: MetricsService,
   ) {}
 
   /**

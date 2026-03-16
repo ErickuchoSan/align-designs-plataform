@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response, NextFunction } from 'express';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import { COOKIE_MAX_AGE_ONE_DAY } from '../constants/time.constants';
 import { getCookieSecurityConfig } from '../utils/request.utils';
 

@@ -129,9 +129,9 @@ function validateJwtSecret(): void {
  * Validates PORT is a valid number
  */
 function validatePort(): void {
-  const port = parseInt(process.env.PORT!, 10);
+  const port = Number.parseInt(process.env.PORT!, 10);
 
-  if (isNaN(port) || port < 1 || port > 65535) {
+  if (Number.isNaN(port) || port < 1 || port > 65535) {
     throw new Error('PORT must be a valid number between 1 and 65535');
   }
 }
@@ -154,9 +154,9 @@ function validateNodeEnv(): void {
  * Validates MINIO_PORT is a valid number
  */
 function validateMinioPort(): void {
-  const port = parseInt(process.env.MINIO_PORT!, 10);
+  const port = Number.parseInt(process.env.MINIO_PORT!, 10);
 
-  if (isNaN(port) || port < 1 || port > 65535) {
+  if (Number.isNaN(port) || port < 1 || port > 65535) {
     throw new Error('MINIO_PORT must be a valid number between 1 and 65535');
   }
 }
