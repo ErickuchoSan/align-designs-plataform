@@ -36,7 +36,7 @@ export class NotificationsService {
         select: { email: true, firstName: true },
       });
 
-      if (user && user.email) {
+      if (user?.email) {
         // Construct email subject and body
         const subject = createDto.title; // Simplified
         await this.emailService.sendNotificationEmail(

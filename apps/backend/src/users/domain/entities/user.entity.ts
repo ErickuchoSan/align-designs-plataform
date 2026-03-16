@@ -11,10 +11,10 @@ import { ForbiddenException } from '@nestjs/common';
 export class UserEntity {
   private constructor(
     private readonly id: string,
-    private email: Email,
+    private readonly email: Email,
     private firstName: string,
     private lastName: string,
-    private role: Role,
+    private readonly role: Role,
     private isActive: boolean,
     private emailVerified: boolean,
     private passwordHash?: Password,

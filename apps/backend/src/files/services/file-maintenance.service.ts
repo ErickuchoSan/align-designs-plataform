@@ -159,13 +159,14 @@ export class FileMaintenanceService {
       }
     }
 
+    const failureSuffix = failureCount > 0 ? `, ${failureCount} failures` : '';
     const result = {
       totalChecked: integrityCheck.totalFiles,
       orphansFound: integrityCheck.orphanedFiles,
       orphansDeleted: successCount,
       failures: failureCount,
       deletedFiles,
-      message: `Cleanup completed: ${successCount} orphaned files deleted${failureCount > 0 ? `, ${failureCount} failures` : ''}.`,
+      message: `Cleanup completed: ${successCount} orphaned files deleted${failureSuffix}.`,
     };
 
     this.logger.log(

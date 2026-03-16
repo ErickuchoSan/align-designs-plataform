@@ -143,7 +143,7 @@ export class HealthService {
           Array<{ count: bigint }>
         >`SELECT COUNT(*) as count FROM pg_stat_activity WHERE datname = current_database()`;
 
-        if (poolStats && poolStats[0]) {
+        if (poolStats?.[0]) {
           activeConnections = Number(poolStats[0].count);
         }
 
@@ -152,7 +152,7 @@ export class HealthService {
           Array<{ max_connections: string }>
         >`SHOW max_connections`;
 
-        if (maxConnections && maxConnections[0]) {
+        if (maxConnections?.[0]) {
           poolSize = Number.parseInt(maxConnections[0].max_connections, 10);
         }
       } catch (poolError) {

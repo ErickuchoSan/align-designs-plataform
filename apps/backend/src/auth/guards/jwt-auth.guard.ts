@@ -46,7 +46,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const authHeaderValue = Array.isArray(authHeader)
       ? authHeader[0]
       : authHeader;
-    if (authHeaderValue && authHeaderValue.startsWith('Bearer ')) {
+    if (authHeaderValue?.startsWith('Bearer ')) {
       return authHeaderValue.substring(7);
     }
 

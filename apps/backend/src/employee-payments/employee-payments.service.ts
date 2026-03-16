@@ -372,7 +372,7 @@ export class EmployeePaymentsService {
   ): Promise<string> {
     const payment = await this.findOne(paymentId, userId, userRole);
 
-    if (!payment.receiptFile || !payment.receiptFile.storagePath) {
+    if (!payment.receiptFile?.storagePath) {
       throw new BadRequestException('This payment has no receipt file');
     }
 

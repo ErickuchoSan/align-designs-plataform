@@ -95,8 +95,9 @@ export class ClientPermissionStrategy implements PermissionStrategy {
 /**
  * Permission strategy for EMPLOYEE role
  * Employees have restricted access - verified by assignment in service layer
+ * Extends ClientPermissionStrategy to reuse verifyUserAccess logic
  */
-export class EmployeePermissionStrategy implements PermissionStrategy {
+export class EmployeePermissionStrategy extends ClientPermissionStrategy {
   verifyProjectAccess(
     userId: string,
     projectClientId: string,
@@ -106,19 +107,8 @@ export class EmployeePermissionStrategy implements PermissionStrategy {
     // This is a placeholder - actual verification happens in ProjectsService
   }
 
-  verifyUserAccess(
-    requestUserId: string,
-    targetUserId: string,
-    errorMessage = 'You do not have permission to access this user',
-  ): void {
-    if (requestUserId !== targetUserId) {
-      throw new ForbiddenException(errorMessage);
-    }
-  }
-
-  isAdmin(): boolean {
-    return false;
-  }
+  // verifyUserAccess is inherited from ClientPermissionStrategy
+  // isAdmin is inherited from ClientPermissionStrategy
 }
 
 /**

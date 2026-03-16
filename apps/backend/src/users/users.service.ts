@@ -115,15 +115,10 @@ export class UsersService {
     paginationDto: PaginationDto,
     role?: Role,
   ): Promise<PaginatedResult<UserResponse>> {
-    const { page, limit, skip } =
+    const { limit, skip } =
       PaginationHelper.extractPaginationParams(paginationDto);
 
-    // Try cache first
-    // DISABLE CACHE TEMPORARILY: Cache invalidation logic is missing for lists
-    // const cacheKey = CACHE_KEYS.USERS.LIST(page, limit);
-    // const cached =
-    //   await this.cacheManager.get<PaginatedResult<UserResponse>>(cacheKey);
-    // if (cached) return cached;
+    // Note: Caching disabled - cache invalidation logic needs implementation
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -151,7 +146,6 @@ export class UsersService {
       total,
       paginationDto,
     );
-    // await this.cacheManager.set(cacheKey, result, CACHE_TTL.FIVE_MINUTES);
     return result;
   }
 

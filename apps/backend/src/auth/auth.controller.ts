@@ -481,7 +481,7 @@ export class AuthController {
   ): string | null {
     // Check Authorization header first
     const authHeader = request.headers['authorization'];
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       return authHeader.substring(7);
     }
 

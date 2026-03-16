@@ -42,10 +42,11 @@ export class FileNotificationService {
       const uploaderName = `${uploader.firstName} ${uploader.lastName}`;
       const title =
         triggerType === 'FILE' ? 'New File Uploaded' : 'New Comment';
-      const message =
-        triggerType === 'FILE'
-          ? `${uploaderName} uploaded a new file: ${resourceName || 'Unknown file'}`
-          : `${uploaderName} commented: "${resourceName ? resourceName.substring(0, 50) + (resourceName.length > 50 ? '...' : '') : 'New comment'}"`;
+      const message = this.buildNotificationMessage(
+        triggerType,
+        uploaderName,
+        resourceName,
+      );
 
       const link = `/dashboard/projects/${projectId}/files`;
 
@@ -87,5 +88,29 @@ export class FileNotificationService {
     } catch (error) {
       this.logger.error('Failed to send project notifications', error);
     }
+  }
+
+  /**
+   * Build notification message based on trigger type
+   */
+  private buildNotificationMessage(
+    triggerType: 'FILE' | 'COMMENT',
+    uploaderName: string,
+    resourceName: string | undefined,
+  ): string {
+    if (triggerType === 'FILE') {
+      return `${uploaderName} uploaded a new file: ${resourceName || 'Unknown file'}`;
+    }
+    const commentPreview = this.truncateComment(resourceName);
+    return `${uploaderName} commented: "${commentPreview}"`;
+  }
+
+  /**
+   * Truncate comment for preview
+   */
+  private truncateComment(comment: string | undefined): string {
+    if (!comment) return 'New comment';
+    if (comment.length <= 50) return comment;
+    return comment.substring(0, 50) + '...';
   }
 }

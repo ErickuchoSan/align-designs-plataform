@@ -33,7 +33,7 @@ export class FileTransformerService {
     };
 
     // Handle deleted user references
-    if (transformed.uploader && transformed.uploader.deletedAt) {
+    if (transformed.uploader?.deletedAt) {
       transformed.uploader = {
         ...transformed.uploader,
         firstName: 'Deleted',
