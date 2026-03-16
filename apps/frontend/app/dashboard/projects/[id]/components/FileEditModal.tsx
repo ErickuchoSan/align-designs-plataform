@@ -56,10 +56,11 @@ export default function FileEditModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="editComment" className="block text-sm font-medium text-navy-900 mb-2">
             Comment
           </label>
           <textarea
+            id="editComment"
             value={editComment}
             onChange={(e) => setEditComment(e.target.value)}
             placeholder="Write a comment..."

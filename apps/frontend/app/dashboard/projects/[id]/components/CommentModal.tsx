@@ -50,10 +50,11 @@ export default function CommentModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="commentText" className="block text-sm font-medium text-navy-900 mb-2">
             Comment
           </label>
           <textarea
+            id="commentText"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="Write your feedback..."
@@ -63,10 +64,11 @@ export default function CommentModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="attachments" className="block text-sm font-medium text-navy-900 mb-2">
             Attachments (Optional)
           </label>
           <input
+            id="attachments"
             type="file"
             multiple
             onChange={handleFileChange}

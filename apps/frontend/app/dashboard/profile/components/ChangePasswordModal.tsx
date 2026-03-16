@@ -56,8 +56,9 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswordModal
         </p>
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">Current Password</label>
+          <label htmlFor="currentPassword" className="block text-sm font-medium text-navy-900 mb-2">Current Password</label>
           <input
+            id="currentPassword"
             type="password"
             required
             value={passwordData.currentPassword}
@@ -68,7 +69,7 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswordModal
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">New Password</label>
+          <label htmlFor="newPassword" className="block text-sm font-medium text-navy-900 mb-2">New Password</label>
           <PasswordInput
             value={passwordData.newPassword}
             onChange={(newPassword) => setPasswordData({ ...passwordData, newPassword })}
@@ -88,7 +89,7 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswordModal
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-navy-900 mb-2">
             Confirm New Password
           </label>
           <PasswordInput

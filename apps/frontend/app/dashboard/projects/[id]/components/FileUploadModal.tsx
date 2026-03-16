@@ -61,10 +61,11 @@ export default function FileUploadModal({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="uploadFiles" className="block text-sm font-medium text-navy-900 mb-2">
             Select files
           </label>
           <FileInput
+            id="uploadFiles"
             onChange={(files) => setSelectedFiles(files || [])}
             required
             multiple={true}
@@ -84,10 +85,11 @@ export default function FileUploadModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="uploadComment" className="block text-sm font-medium text-navy-900 mb-2">
             Comment (optional)
           </label>
           <textarea
+            id="uploadComment"
             value={uploadComment}
             onChange={(e) => setUploadComment(e.target.value)}
             placeholder="Add a comment about this file..."
