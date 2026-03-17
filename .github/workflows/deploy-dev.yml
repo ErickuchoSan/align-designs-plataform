@@ -6,6 +6,41 @@ on:
       - main
 
 jobs:
+  # Job 1: Build Validation + Security Audit
+  validate:
+    name: Build & Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Frontend
+        run: pnpm --filter frontend build
+        env:
+          NEXT_PUBLIC_API_URL: /api/v1
+
+      - name: Build Backend
+        run: pnpm --filter backend build
+
+      - name: Security audit
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+  # Job 2: SonarCloud Analysis
   sonarcloud:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
@@ -21,10 +56,35 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+  # Job 3: Database Backup
+  backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup PostgreSQL
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 45.55.71.127
+          username: root
+          port: 29
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            # Create backup directory if not exists
+            mkdir -p /var/www/align-designs/backups
+
+            # Backup database with timestamp
+            docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > /var/www/align-designs/backups/db_$(date +%Y%m%d_%H%M%S).sql
+
+            # Keep only last 5 backups
+            cd /var/www/align-designs/backups && ls -t *.sql | tail -n +6 | xargs -r rm --
+
+            echo "Backup completed at $(date)"
+
+  # Job 4: Deploy
   deploy:
     name: Deploy to Dev Server
     runs-on: ubuntu-latest
-    needs: sonarcloud
+    needs: [validate, sonarcloud, backup]
     steps:
       - name: Deploy to Dev Server
         uses: appleboy/ssh-action@v1.0.3
@@ -42,3 +102,49 @@ jobs:
 
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
             echo "Deployed at $(date)"
+
+  # Job 5: Health Check
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for containers to start
+        run: sleep 45
+
+      - name: Check Backend Health
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127/api/health)
+          if [ "$response" != "200" ]; then
+            echo "::error::Backend health check failed! Status: $response"
+            exit 1
+          fi
+          echo "Backend health check passed! Status: $response"
+
+      - name: Check Frontend Health
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127)
+          if [ "$response" != "200" ]; then
+            echo "::error::Frontend health check failed! Status: $response"
+            exit 1
+          fi
+          echo "Frontend health check passed! Status: $response"
+
+  # Job 6: Lighthouse Performance Audit
+  lighthouse:
+    name: Lighthouse Audit
+    runs-on: ubuntu-latest
+    needs: health-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            http://45.55.71.127
+            http://45.55.71.127/login
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        continue-on-error: true
