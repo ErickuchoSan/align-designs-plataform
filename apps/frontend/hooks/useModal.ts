@@ -70,8 +70,8 @@ export function useModalWithData<T = any>() {
   const [data, setData] = useState<T | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const open = useCallback((item: T) => {
-    setData(item);
+  const open = useCallback((item?: T) => {
+    setData(item ?? null);
     setIsOpen(true);
   }, []);
 
