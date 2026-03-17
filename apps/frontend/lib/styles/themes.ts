@@ -4,6 +4,19 @@
  */
 
 // =============================================================================
+// SHARED STYLES (used by multiple themes)
+// =============================================================================
+
+const SHARED_STYLES = {
+  // Error styles are consistent across all themes
+  errorBg: 'bg-red-50',
+  errorBorder: 'border-red-200',
+  errorIcon: 'text-red-600',
+  errorText: 'text-red-800',
+  iconDeleteButton: 'text-red-600 hover:bg-red-50',
+} as const;
+
+// =============================================================================
 // PROJECT THEME STYLES
 // =============================================================================
 
@@ -14,10 +27,7 @@ export const PROJECT_THEMES = {
     successBorder: 'border-forest-200',
     successIcon: 'text-forest-600',
     successText: 'text-forest-800',
-    errorBg: 'bg-red-50',
-    errorBorder: 'border-red-200',
-    errorIcon: 'text-red-600',
-    errorText: 'text-red-800',
+    ...SHARED_STYLES,
 
     // Typography
     title: 'text-navy-900',
@@ -29,7 +39,6 @@ export const PROJECT_THEMES = {
     cancelButton: 'text-navy-900 bg-stone-200 hover:bg-stone-300',
     editButton: 'bg-gold-600 hover:bg-gold-500 text-white',
     iconEditButton: 'text-navy-700 hover:bg-navy-50',
-    iconDeleteButton: 'text-red-600 hover:bg-red-50',
 
     // Card styles
     card: 'bg-white shadow-lg border border-stone-200 hover:shadow-2xl',
@@ -55,10 +64,7 @@ export const PROJECT_THEMES = {
     successBorder: 'border-green-200',
     successIcon: 'text-green-600',
     successText: 'text-green-800',
-    errorBg: 'bg-red-50',
-    errorBorder: 'border-red-200',
-    errorIcon: 'text-red-600',
-    errorText: 'text-red-800',
+    ...SHARED_STYLES,
 
     // Typography
     title: 'text-gray-900',
@@ -70,7 +76,6 @@ export const PROJECT_THEMES = {
     cancelButton: 'text-gray-800 bg-gray-200 hover:bg-gray-300',
     editButton: 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white',
     iconEditButton: 'text-blue-600 hover:bg-blue-50',
-    iconDeleteButton: 'text-red-600 hover:bg-red-50',
 
     // Card styles
     card: 'bg-white shadow-md border border-gray-100 hover:shadow-2xl',
