@@ -2,6 +2,26 @@
  * Password validation utilities
  * Extracted from validation.utils.ts for better maintainability
  */
+
+// Shared regex patterns - used by both strength calculation and validation
+const PASSWORD_PATTERNS = {
+  UPPERCASE: /[A-Z]/,
+  LOWERCASE: /[a-z]/,
+  NUMBER: /\d/,
+  SPECIAL_CHAR: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
+} as const;
+
+const PASSWORD_MIN_LENGTH = 12;
+
+const STRENGTH_MAP: Record<number, { label: string; color: string }> = {
+  0: { label: 'Very Weak', color: 'bg-red-500' },
+  1: { label: 'Very Weak', color: 'bg-red-500' },
+  2: { label: 'Weak', color: 'bg-orange-500' },
+  3: { label: 'Fair', color: 'bg-yellow-500' },
+  4: { label: 'Good', color: 'bg-blue-500' },
+  5: { label: 'Strong', color: 'bg-green-500' },
+};
+
 export class PasswordValidationUtils {
   /**
    * Password strength calculation
@@ -19,25 +39,15 @@ export class PasswordValidationUtils {
     };
   } {
     const requirements = {
-      length: password.length >= 12,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
-      symbol: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+      length: password.length >= PASSWORD_MIN_LENGTH,
+      uppercase: PASSWORD_PATTERNS.UPPERCASE.test(password),
+      lowercase: PASSWORD_PATTERNS.LOWERCASE.test(password),
+      number: PASSWORD_PATTERNS.NUMBER.test(password),
+      symbol: PASSWORD_PATTERNS.SPECIAL_CHAR.test(password),
     };
 
     const score = Object.values(requirements).filter(Boolean).length;
-
-    const strengthMap: Record<number, { label: string; color: string }> = {
-      0: { label: 'Very Weak', color: 'bg-red-500' },
-      1: { label: 'Very Weak', color: 'bg-red-500' },
-      2: { label: 'Weak', color: 'bg-orange-500' },
-      3: { label: 'Fair', color: 'bg-yellow-500' },
-      4: { label: 'Good', color: 'bg-blue-500' },
-      5: { label: 'Strong', color: 'bg-green-500' },
-    };
-
-    const { label, color } = strengthMap[score] ?? strengthMap[0];
+    const { label, color } = STRENGTH_MAP[score] ?? STRENGTH_MAP[0];
 
     return { score, label, color, requirements };
   }
@@ -45,7 +55,6 @@ export class PasswordValidationUtils {
   /**
    * Individual password validators - small, focused, testable
    */
-  private static readonly PASSWORD_MIN_LENGTH = 12;
   private static readonly COMMON_PATTERNS = [
     '123456',
     'password',
@@ -64,31 +73,31 @@ export class PasswordValidationUtils {
   }
 
   private static validatePasswordLength(password: string): string | null {
-    return password.length >= this.PASSWORD_MIN_LENGTH
+    return password.length >= PASSWORD_MIN_LENGTH
       ? null
-      : `Password must be at least ${this.PASSWORD_MIN_LENGTH} characters long`;
+      : `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`;
   }
 
   private static validatePasswordUppercase(password: string): string | null {
-    return /[A-Z]/.test(password)
+    return PASSWORD_PATTERNS.UPPERCASE.test(password)
       ? null
       : 'Password must contain at least one uppercase letter';
   }
 
   private static validatePasswordLowercase(password: string): string | null {
-    return /[a-z]/.test(password)
+    return PASSWORD_PATTERNS.LOWERCASE.test(password)
       ? null
       : 'Password must contain at least one lowercase letter';
   }
 
   private static validatePasswordNumber(password: string): string | null {
-    return /\d/.test(password)
+    return PASSWORD_PATTERNS.NUMBER.test(password)
       ? null
       : 'Password must contain at least one number';
   }
 
   private static validatePasswordSpecialChar(password: string): string | null {
-    return /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
+    return PASSWORD_PATTERNS.SPECIAL_CHAR.test(password)
       ? null
       : 'Password must contain at least one special character';
   }
