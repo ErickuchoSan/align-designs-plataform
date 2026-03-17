@@ -72,3 +72,13 @@ export function ApiProjectWorkflowResponses(
     ApiBadRequestResponse(errorMessage),
   );
 }
+
+// Combined admin endpoint with project ID param
+export function ApiAdminProjectEndpoint(successMessage: string) {
+  return applyDecorators(
+    ApiProjectIdParam(),
+    ApiSuccessResponse(successMessage),
+    ApiAdminWriteResponses(),
+    ApiNotFoundResponse('Project'),
+  );
+}

@@ -29,6 +29,7 @@ import {
   ApiCreatedResponse,
   ApiProjectWorkflowResponses,
   ApiForbiddenResponse,
+  ApiAdminProjectEndpoint,
 } from '../common/decorators/api-responses.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { ProjectsService } from './projects.service';
@@ -201,10 +202,7 @@ export class ProjectsController {
     summary: 'Update project',
     description: 'Updates an existing project. Only accessible by admins.',
   })
-  @ApiProjectIdParam()
-  @ApiSuccessResponse('Project successfully updated')
-  @ApiAdminWriteResponses()
-  @ApiNotFoundResponse('Project')
+  @ApiAdminProjectEndpoint('Project successfully updated')
   async update(
     @Param('id') id: string,
     @Body() updateProjectDto: UpdateProjectDto,
@@ -239,10 +237,7 @@ export class ProjectsController {
     summary: 'Delete project',
     description: 'Soft deletes a project. Only accessible by admins.',
   })
-  @ApiProjectIdParam()
-  @ApiSuccessResponse('Project successfully deleted')
-  @ApiAdminWriteResponses()
-  @ApiNotFoundResponse('Project')
+  @ApiAdminProjectEndpoint('Project successfully deleted')
   async remove(
     @Param('id') id: string,
     @CurrentUser() user: UserPayload,
