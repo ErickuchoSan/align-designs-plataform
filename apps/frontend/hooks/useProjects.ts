@@ -66,7 +66,7 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
       const availableEmployees = await UsersService.getAvailableEmployees();
       setEmployees(availableEmployees);
 
-    } catch (err) {
+    } catch {
       // Silent error - employee loading is non-critical for project display
     }
   };

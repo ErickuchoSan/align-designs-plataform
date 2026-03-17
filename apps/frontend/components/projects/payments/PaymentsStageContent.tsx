@@ -104,7 +104,6 @@ function PaymentsStageContent({
 
   const isAdmin = userRole === 'ADMIN';
   const isClient = userRole === 'CLIENT';
-  const isEmployee = userRole === 'EMPLOYEE';
 
   return (
     <div className="space-y-6">
