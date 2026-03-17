@@ -26,6 +26,8 @@ function StageHeader({
   onOpenCommentModal,
   onDownload,
 }: Readonly<StageHeaderProps>) {
+  console.log('StageHeader rendered:', { stage: stage.stage, userRole, hasOnOpenCommentModal: !!onOpenCommentModal });
+
   const isAdmin = userRole === 'ADMIN';
   const isEmployee = userRole === 'EMPLOYEE';
 
@@ -72,7 +74,10 @@ function StageHeader({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           {showCommentButton && (
             <button
-              onClick={() => onOpenCommentModal(stage.stage)}
+              onClick={() => {
+                console.log('StageHeader: Create Comment clicked!', stage.stage);
+                onOpenCommentModal(stage.stage);
+              }}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
               aria-label={`Create comment in ${stage.name}`}
             >
