@@ -101,7 +101,26 @@ jobs:
             # Create frontend .env.local (not tracked by git)
             echo 'NEXT_PUBLIC_API_URL=http://45.55.71.127/api' > apps/frontend/.env.local
 
+            # Build and start containers
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+
+            # Ensure backend is running (sometimes doesn't start after build)
+            sleep 5
+            if [ "$(docker inspect -f '{{.State.Running}}' backend-dev 2>/dev/null)" != "true" ]; then
+              echo "Backend not running, starting it..."
+              docker compose -f docker-compose.dev.yml --env-file .env.dev up -d backend-dev
+            fi
+
+            # Wait for backend to be ready
+            echo "Waiting for backend to start..."
+            for i in {1..30}; do
+              if curl -s http://localhost:3001/api/v1/health > /dev/null 2>&1; then
+                echo "Backend is healthy!"
+                break
+              fi
+              sleep 2
+            done
+
             echo "Deployed at $(date)"
 
   # Job 5: Health Check
