@@ -269,7 +269,7 @@ function shouldSkipAuthRedirect(url: string): boolean {
 }
 
 // Handle CSRF error retry
-async function handleCsrfRetry(config: ExtendedConfig, errorMessage: string): Promise<any | null> {
+async function handleCsrfRetry(config: ExtendedConfig, errorMessage: string): Promise<unknown> {
   const isCsrfError = errorMessage.toLowerCase().includes('csrf');
 
   if (isCsrfError && !config.csrfRetry) {
@@ -376,7 +376,7 @@ function handleNetworkError(error: AxiosError, config: ExtendedConfig): void {
 }
 
 // Execute retry logic
-async function executeRetry(error: AxiosError, config: ExtendedConfig): Promise<any | null> {
+async function executeRetry(error: AxiosError, config: ExtendedConfig): Promise<unknown> {
   if (!shouldRetry(error)) return null;
 
   config.retryCount = config.retryCount || 0;
