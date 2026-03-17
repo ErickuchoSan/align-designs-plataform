@@ -3,7 +3,7 @@ import type { FileData } from '../hooks/useProjectFiles';
 
 // Lazy load modals with dynamic imports for better code splitting
 // These modals are only loaded when they are actually shown to the user
-const FileUploadModal = dynamic(() => import('./FileUploadModal'), {
+const StageContentModal = dynamic(() => import('./StageContentModal'), {
   loading: () => null, // Don't show loader for modals
   ssr: false, // Modals don't need SSR
 });
@@ -34,19 +34,20 @@ const UploadNewVersionModal = dynamic(() => import('@/components/dashboard/Uploa
 });
 
 interface FileModalsGroupProps {
-  // Upload Modal
-  showUploadModal: boolean;
-  onCloseUploadModal: () => void;
-  onUpload: (files: File[], comment: string) => Promise<boolean>;
+  // Content Modal (unified: comment, file, or both)
+  showContentModal: boolean;
+  onCloseContentModal: () => void;
+  onSubmitContent: (data: { comment: string; files: File[] }) => Promise<boolean>;
   uploading: boolean;
   uploadProgress: number;
   uploadError: string;
   onClearError: () => void;
+  selectedStageName?: string;
 
-  // Comment Modal
-  showCommentModal: boolean;
-  onCloseCommentModal: () => void;
-  onSubmitComment: (comment: string, files: File[]) => Promise<boolean>;
+  // Reject Modal (for admin rejecting submitted work)
+  showRejectModal: boolean;
+  onCloseRejectModal: () => void;
+  onSubmitReject: (comment: string, files: File[]) => Promise<boolean>;
 
   // Edit Modal
   showEditModal: boolean;
@@ -76,16 +77,17 @@ interface FileModalsGroupProps {
  * Reduces complexity in the main ProjectDetailsPage component
  */
 export default function FileModalsGroup({
-  showUploadModal,
-  onCloseUploadModal,
-  onUpload,
+  showContentModal,
+  onCloseContentModal,
+  onSubmitContent,
   uploading,
   uploadProgress,
   uploadError,
   onClearError,
-  showCommentModal,
-  onCloseCommentModal,
-  onSubmitComment,
+  selectedStageName,
+  showRejectModal,
+  onCloseRejectModal,
+  onSubmitReject,
   showEditModal,
   onCloseEditModal,
   onEdit,
@@ -105,22 +107,25 @@ export default function FileModalsGroup({
 }: Readonly<FileModalsGroupProps>) {
   return (
     <>
-      <FileUploadModal
-        show={showUploadModal}
+      {/* Unified Content Modal (comment, file, or both) */}
+      <StageContentModal
+        show={showContentModal}
         onClose={() => {
-          onCloseUploadModal();
+          onCloseContentModal();
           onClearError();
         }}
-        onUpload={onUpload}
+        onSubmit={onSubmitContent}
         uploading={uploading}
         uploadProgress={uploadProgress}
         error={uploadError}
+        stageName={selectedStageName}
       />
 
+      {/* Reject Modal (for admin rejecting submitted work) */}
       <CommentModal
-        show={showCommentModal}
-        onClose={onCloseCommentModal}
-        onSubmit={onSubmitComment}
+        show={showRejectModal}
+        onClose={onCloseRejectModal}
+        onSubmit={onSubmitReject}
         uploading={uploading}
       />
 

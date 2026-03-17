@@ -3,13 +3,13 @@ import { useModal, useModalWithData } from '@/hooks/useModal';
 import type { FileData } from './useProjectFiles';
 
 export interface FileModalsState {
-  showUploadModal: boolean;
-  showCommentModal: boolean;
+  showContentModal: boolean;
+  showRejectModal: boolean;
   showEditModal: boolean;
   showDeleteModal: boolean;
   showHistoryModal: boolean;
   showUploadVersionModal: boolean;
-  relatedFile: FileData | null; // Context for the comment (e.g. file being rejected)
+  fileToReject: FileData | null;
   fileToEdit: FileData | null;
   fileToDelete: FileData | null;
   fileToViewHistory: FileData | null;
@@ -17,10 +17,10 @@ export interface FileModalsState {
 }
 
 export interface FileModalsActions {
-  openUploadModal: () => void;
-  closeUploadModal: () => void;
-  openCommentModal: (file?: FileData) => void;
-  closeCommentModal: () => void;
+  openContentModal: () => void;
+  closeContentModal: () => void;
+  openRejectModal: (file: FileData) => void;
+  closeRejectModal: () => void;
   openEditModal: (file: FileData) => void;
   closeEditModal: () => void;
   openDeleteModal: (file: FileData) => void;
@@ -36,8 +36,8 @@ export interface UseFileModalsReturn extends FileModalsState, FileModalsActions 
 
 export function useFileModals(): UseFileModalsReturn {
   // Use generic modal hooks to reduce boilerplate
-  const uploadModal = useModal();
-  const commentModal = useModalWithData<FileData>(); // Now supports data
+  const contentModal = useModal();
+  const rejectModal = useModalWithData<FileData>();
   const editModal = useModalWithData<FileData>();
   const deleteModal = useModalWithData<FileData>();
   const historyModal = useModalWithData<FileData>();
@@ -45,30 +45,30 @@ export function useFileModals(): UseFileModalsReturn {
 
   // Close all modals utility
   const closeAllModals = useCallback(() => {
-    uploadModal.close();
-    commentModal.close();
+    contentModal.close();
+    rejectModal.close();
     editModal.close();
     deleteModal.close();
-  }, [uploadModal, commentModal, editModal, deleteModal]);
+  }, [contentModal, rejectModal, editModal, deleteModal]);
 
   return {
     // State
-    showUploadModal: uploadModal.isOpen,
-    showCommentModal: commentModal.isOpen,
+    showContentModal: contentModal.isOpen,
+    showRejectModal: rejectModal.isOpen,
     showEditModal: editModal.isOpen,
     showDeleteModal: deleteModal.isOpen,
     showHistoryModal: historyModal.isOpen,
     showUploadVersionModal: uploadVersionModal.isOpen,
-    relatedFile: commentModal.data,
+    fileToReject: rejectModal.data,
     fileToEdit: editModal.data,
     fileToDelete: deleteModal.data,
     fileToViewHistory: historyModal.data,
     fileToVersion: uploadVersionModal.data,
     // Actions
-    openUploadModal: uploadModal.open,
-    closeUploadModal: uploadModal.close,
-    openCommentModal: commentModal.open,
-    closeCommentModal: commentModal.close,
+    openContentModal: contentModal.open,
+    closeContentModal: contentModal.close,
+    openRejectModal: rejectModal.open,
+    closeRejectModal: rejectModal.close,
     openEditModal: editModal.open,
     closeEditModal: editModal.close,
     openDeleteModal: deleteModal.open,

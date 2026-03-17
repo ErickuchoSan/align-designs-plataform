@@ -8,8 +8,7 @@ interface StageHeaderProps {
   stage: StageInfo;
   stageFiles: File[];
   userRole: string;
-  onOpenUploadModal: (stage: Stage) => void;
-  onOpenCommentModal: (stage: Stage) => void;
+  onOpenContentModal: (stage: Stage) => void;
   onDownload: (fileId: string, fileName: string) => void;
 }
 
@@ -22,28 +21,19 @@ function StageHeader({
   stage,
   stageFiles,
   userRole,
-  onOpenUploadModal,
-  onOpenCommentModal,
+  onOpenContentModal,
   onDownload,
 }: Readonly<StageHeaderProps>) {
-  console.log('StageHeader rendered:', { stage: stage.stage, userRole, hasOnOpenCommentModal: !!onOpenCommentModal });
-
   const isAdmin = userRole === 'ADMIN';
   const isEmployee = userRole === 'EMPLOYEE';
 
-  // Determine button visibility based on stage and role
-  const showCommentButton = !(
-    stage.stage === Stage.SUBMITTED ||
-    stage.stage === Stage.FEEDBACK_EMPLOYEE ||
-    stage.stage === Stage.PAYMENTS ||
-    (stage.stage === Stage.BRIEF_PROJECT && isEmployee)
-  );
-
-  const showUploadButton =
+  // Determine if content can be added to this stage
+  const canAddContent =
     stage.permissions.canWrite &&
-    !(isAdmin && stage.stage === Stage.SUBMITTED) &&
     stage.stage !== Stage.FEEDBACK_EMPLOYEE &&
-    stage.stage !== Stage.PAYMENTS;
+    stage.stage !== Stage.PAYMENTS &&
+    !(stage.stage === Stage.BRIEF_PROJECT && isEmployee) &&
+    !(isAdmin && stage.stage === Stage.SUBMITTED);
 
   const downloadableFiles = stageFiles.filter(f => f.filename);
   const showBulkDownload = downloadableFiles.length > 1;
@@ -54,6 +44,12 @@ function StageHeader({
         onDownload(file.id, file.originalName || `file-${index}`);
       }, index * 500);
     });
+  };
+
+  // Get appropriate button label based on stage
+  const getButtonLabel = (): string => {
+    if (stage.stage === Stage.SUBMITTED) return 'Submit Work';
+    return 'Add Content';
   };
 
   return (
@@ -72,22 +68,6 @@ function StageHeader({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-          {showCommentButton && (
-            <button
-              onClick={() => {
-                console.log('StageHeader: Create Comment clicked!', stage.stage);
-                onOpenCommentModal(stage.stage);
-              }}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
-              aria-label={`Create comment in ${stage.name}`}
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              <span className="whitespace-nowrap">Create Comment</span>
-            </button>
-          )}
-
           {showBulkDownload && (
             <button
               onClick={handleBulkDownload}
@@ -101,18 +81,16 @@ function StageHeader({
             </button>
           )}
 
-          {showUploadButton && (
+          {canAddContent && (
             <button
-              onClick={() => onOpenUploadModal(stage.stage)}
+              onClick={() => onOpenContentModal(stage.stage)}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
-              aria-label={stage.stage === Stage.SUBMITTED ? 'Submit work' : `Upload file to ${stage.name}`}
+              aria-label={`Add content to ${stage.name}`}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="whitespace-nowrap">
-                {stage.stage === Stage.SUBMITTED ? 'Submit Work' : 'Upload File'}
-              </span>
+              <span className="whitespace-nowrap">{getButtonLabel()}</span>
             </button>
           )}
         </div>

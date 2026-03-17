@@ -24,7 +24,7 @@ interface StageContentProps {
   onViewHistory: (file: File) => void;
   onEdit: (file: File) => void;
   onDelete: (file: File) => void;
-  onOpenCommentModal: (stage: Stage, file?: File) => void;
+  onOpenRejectModal: (stage: Stage, file: File) => void;
   canDeleteFile: (file: File) => boolean;
   onGenerateInvoice: () => void;
   onPayEmployee: () => void;
@@ -53,7 +53,7 @@ function StageContent({
   onViewHistory,
   onEdit,
   onDelete,
-  onOpenCommentModal,
+  onOpenRejectModal,
   canDeleteFile,
   onGenerateInvoice,
   onPayEmployee,
@@ -143,7 +143,7 @@ function StageContent({
               onViewHistory={onViewHistory}
               onEdit={onEdit}
               onDelete={onDelete}
-              onOpenCommentModal={onOpenCommentModal}
+              onOpenRejectModal={onOpenRejectModal}
               canDeleteFile={canDeleteFile}
             />
           </li>

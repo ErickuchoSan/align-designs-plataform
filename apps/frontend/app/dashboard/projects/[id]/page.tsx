@@ -100,27 +100,40 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId, isAuthenticated, currentPage, itemsPerPage, fetchProjectDetails, fetchFiles]);
 
-  // File operation handlers
-  const handleUpload = useCallback(
-    async (files: File[], comment: string) => {
-      const success = await handleFileUpload(files, comment, selectedStageForModal || undefined);
+  // Unified content submission handler (handles comment only, file only, or both)
+  const handleContentSubmit = useCallback(
+    async (data: { comment: string; files: File[] }) => {
+      const { comment, files: uploadFiles } = data;
+      const hasFiles = uploadFiles.length > 0;
+      const hasComment = comment.trim().length > 0;
+
+      let success = false;
+
+      if (hasFiles) {
+        // Upload files with optional comment
+        success = await handleFileUpload(uploadFiles, comment, selectedStageForModal || undefined);
+      } else if (hasComment) {
+        // Comment only (no files)
+        success = await handleCreateComment(comment, [], selectedStageForModal || undefined);
+      }
+
       if (success) {
-        modals.closeUploadModal();
+        modals.closeContentModal();
         setSelectedStageForModal(null);
       }
       return success;
     },
-    [handleFileUpload, modals, selectedStageForModal]
+    [handleFileUpload, handleCreateComment, modals, selectedStageForModal]
   );
 
-  const handleComment = useCallback(
-    async (comment: string, files: File[]) => {
-      // Use relatedFile from modals if available (for rejections), or fallback to simple stage selection
-      const relatedFileId = modals.relatedFile?.id;
-      const success = await handleCreateComment(comment, files, selectedStageForModal || undefined, relatedFileId);
+  // Reject file handler (for admin rejecting submitted work)
+  const handleRejectSubmit = useCallback(
+    async (comment: string, uploadFiles: File[]) => {
+      const relatedFileId = modals.fileToReject?.id;
+      const success = await handleCreateComment(comment, uploadFiles, selectedStageForModal || undefined, relatedFileId);
 
       if (success) {
-        modals.closeCommentModal();
+        modals.closeRejectModal();
         setSelectedStageForModal(null);
       }
       return success;
@@ -220,15 +233,13 @@ export default function ProjectDetailsPage() {
                 projectName={project.name}
                 project={project}
                 files={files}
-                onOpenUploadModal={(stage) => {
+                onOpenContentModal={(stage) => {
                   setSelectedStageForModal(stage);
-                  modals.openUploadModal();
+                  modals.openContentModal();
                 }}
-                onOpenCommentModal={(stage, file) => {
-                  console.log('onOpenCommentModal called:', { stage, file });
+                onOpenRejectModal={(stage, file) => {
                   setSelectedStageForModal(stage);
-                  modals.openCommentModal(file);
-                  console.log('Modal state after open:', modals.showCommentModal);
+                  modals.openRejectModal(file);
                 }}
                 onDownload={handleDownload}
                 onEdit={modals.openEditModal}
@@ -248,16 +259,16 @@ export default function ProjectDetailsPage() {
       </div>
 
       <FileModalsGroup
-        showUploadModal={modals.showUploadModal}
-        onCloseUploadModal={modals.closeUploadModal}
-        onUpload={handleUpload}
+        showContentModal={modals.showContentModal}
+        onCloseContentModal={modals.closeContentModal}
+        onSubmitContent={handleContentSubmit}
         uploading={uploading}
         uploadProgress={uploadProgress}
         uploadError={error}
         onClearError={() => setError('')}
-        showCommentModal={modals.showCommentModal}
-        onCloseCommentModal={modals.closeCommentModal}
-        onSubmitComment={handleComment}
+        showRejectModal={modals.showRejectModal}
+        onCloseRejectModal={modals.closeRejectModal}
+        onSubmitReject={handleRejectSubmit}
         showEditModal={modals.showEditModal}
         onCloseEditModal={modals.closeEditModal}
         onEdit={handleEdit}
@@ -277,6 +288,7 @@ export default function ProjectDetailsPage() {
           modals.closeUploadVersionModal();
         }}
         fileToVersion={modals.fileToVersion}
+        selectedStageName={selectedStageForModal || undefined}
       />
 
       <PaymentModalsGroup

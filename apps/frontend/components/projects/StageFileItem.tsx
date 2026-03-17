@@ -13,7 +13,7 @@ interface StageFileItemProps {
   onViewHistory: (file: File) => void;
   onEdit: (file: File) => void;
   onDelete: (file: File) => void;
-  onOpenCommentModal: (stage: Stage, file?: File) => void;
+  onOpenRejectModal: (stage: Stage, file: File) => void;
   canDeleteFile: (file: File) => boolean;
 }
 
@@ -25,7 +25,7 @@ function StageFileItem({
   onViewHistory,
   onEdit,
   onDelete,
-  onOpenCommentModal,
+  onOpenRejectModal,
   canDeleteFile,
 }: Readonly<StageFileItemProps>) {
   const isAdmin = userRole === 'ADMIN';
@@ -138,7 +138,7 @@ function StageFileItem({
             <button
               onClick={() => {
                 if (!hasRejections) {
-                  onOpenCommentModal(Stage.FEEDBACK_EMPLOYEE, file);
+                  onOpenRejectModal(Stage.FEEDBACK_EMPLOYEE, file);
                 }
               }}
               className={`p-2 rounded-lg transition-colors ${

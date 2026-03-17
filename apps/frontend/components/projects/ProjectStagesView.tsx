@@ -16,8 +16,8 @@ interface ProjectStagesViewProps {
   projectName: string;
   project: Project;
   files: File[];
-  onOpenUploadModal: (stage: Stage) => void;
-  onOpenCommentModal: (stage: Stage, file?: File) => void;
+  onOpenContentModal: (stage: Stage) => void;
+  onOpenRejectModal: (stage: Stage, file: File) => void;
   onDownload: (fileId: string, fileName: string) => void;
   onEdit: (file: File) => void;
   onDelete: (file: File) => void;
@@ -50,8 +50,8 @@ function ProjectStagesView({
   projectName,
   project,
   files,
-  onOpenUploadModal,
-  onOpenCommentModal,
+  onOpenContentModal,
+  onOpenRejectModal,
   onDownload,
   onEdit,
   onDelete,
@@ -212,8 +212,7 @@ function ProjectStagesView({
             stage={currentStage}
             stageFiles={stageFiles}
             userRole={user.role}
-            onOpenUploadModal={onOpenUploadModal}
-            onOpenCommentModal={onOpenCommentModal}
+            onOpenContentModal={onOpenContentModal}
             onDownload={onDownload}
           />
 
@@ -232,7 +231,7 @@ function ProjectStagesView({
             onViewHistory={onViewHistory}
             onEdit={onEdit}
             onDelete={onDelete}
-            onOpenCommentModal={onOpenCommentModal}
+            onOpenRejectModal={onOpenRejectModal}
             canDeleteFile={canDeleteFile}
             onGenerateInvoice={handleGenerateInvoice}
             onPayEmployee={handlePayEmployee}
