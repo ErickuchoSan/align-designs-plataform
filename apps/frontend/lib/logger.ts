@@ -63,10 +63,15 @@ class Logger {
     let errorDetails: Record<string, unknown> = {};
     if (error instanceof Error) {
       errorDetails = { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined };
-    } else if (error) {
-      // For objects, stringify them; for primitives, convert to string
-      const errorValue = typeof error === 'object' ? JSON.stringify(error) : String(error);
-      errorDetails = { error: errorValue };
+    } else if (error !== null && error !== undefined) {
+      // Explicitly handle different types to avoid [object Object]
+      if (typeof error === 'object') {
+        errorDetails = { error: JSON.stringify(error) };
+      } else {
+        errorDetails = { error: String(error) };
+      }
+    } else if (error === null) {
+      errorDetails = { error: 'null' };
     }
 
     const fullContext = { ...context, ...errorDetails };
