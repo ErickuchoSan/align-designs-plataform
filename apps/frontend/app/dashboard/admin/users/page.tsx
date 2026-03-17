@@ -33,6 +33,43 @@ export default function UsersManagementPage() {
     [usersHook.users]
   );
 
+  // Shared props for UsersTable and UsersCards to avoid duplication
+  const usersListProps = useMemo(() => ({
+    users: filteredUsers,
+    isLoading: usersHook.isLoading,
+    activeTab,
+    togglingUserId: usersHook.togglingUserId,
+    deletingUserId: usersHook.deletingUserId,
+    resendingUserId: usersHook.resendingUserId,
+    currentPage: usersHook.currentPage,
+    totalPages: usersHook.totalPages,
+    totalItems: usersHook.totalItems,
+    itemsPerPage: usersHook.itemsPerPage,
+    onToggleStatus: usersHook.openToggleConfirm,
+    onEdit: usersHook.openEditModal,
+    onDelete: usersHook.openDeleteConfirm,
+    onResendEmail: usersHook.handleResendWelcomeEmail,
+    onPageChange: usersHook.setCurrentPage,
+    onItemsPerPageChange: usersHook.setItemsPerPage,
+  }), [
+    filteredUsers,
+    usersHook.isLoading,
+    activeTab,
+    usersHook.togglingUserId,
+    usersHook.deletingUserId,
+    usersHook.resendingUserId,
+    usersHook.currentPage,
+    usersHook.totalPages,
+    usersHook.totalItems,
+    usersHook.itemsPerPage,
+    usersHook.openToggleConfirm,
+    usersHook.openEditModal,
+    usersHook.openDeleteConfirm,
+    usersHook.handleResendWelcomeEmail,
+    usersHook.setCurrentPage,
+    usersHook.setItemsPerPage,
+  ]);
+
   if (loading || (usersHook.isLoading && usersHook.users.length === 0)) {
     return <PageLoader text="Loading users..." />;
   }
@@ -69,43 +106,9 @@ export default function UsersManagementPage() {
             onCreateUser={handleOpenCreateModal}
           />
 
-          <UsersTable
-            users={filteredUsers}
-            isLoading={usersHook.isLoading}
-            activeTab={activeTab}
-            togglingUserId={usersHook.togglingUserId}
-            deletingUserId={usersHook.deletingUserId}
-            resendingUserId={usersHook.resendingUserId}
-            currentPage={usersHook.currentPage}
-            totalPages={usersHook.totalPages}
-            totalItems={usersHook.totalItems}
-            itemsPerPage={usersHook.itemsPerPage}
-            onToggleStatus={usersHook.openToggleConfirm}
-            onEdit={usersHook.openEditModal}
-            onDelete={usersHook.openDeleteConfirm}
-            onResendEmail={usersHook.handleResendWelcomeEmail}
-            onPageChange={usersHook.setCurrentPage}
-            onItemsPerPageChange={usersHook.setItemsPerPage}
-          />
+          <UsersTable {...usersListProps} />
 
-          <UsersCards
-            users={filteredUsers}
-            isLoading={usersHook.isLoading}
-            activeTab={activeTab}
-            togglingUserId={usersHook.togglingUserId}
-            deletingUserId={usersHook.deletingUserId}
-            resendingUserId={usersHook.resendingUserId}
-            currentPage={usersHook.currentPage}
-            totalPages={usersHook.totalPages}
-            totalItems={usersHook.totalItems}
-            itemsPerPage={usersHook.itemsPerPage}
-            onToggleStatus={usersHook.openToggleConfirm}
-            onEdit={usersHook.openEditModal}
-            onDelete={usersHook.openDeleteConfirm}
-            onResendEmail={usersHook.handleResendWelcomeEmail}
-            onPageChange={usersHook.setCurrentPage}
-            onItemsPerPageChange={usersHook.setItemsPerPage}
-          />
+          <UsersCards {...usersListProps} />
         </main>
       </div>
 
