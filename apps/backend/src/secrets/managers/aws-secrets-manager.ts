@@ -6,10 +6,10 @@ export class AwsSecretsManager implements ISecretsManager {
   private readonly logger = new Logger(AwsSecretsManager.name);
 
   async getSecret(key: string): Promise<string | undefined> {
-    // TODO: Implement AWS Secrets Manager integration
-    // This would typically use aws-sdk to fetch secrets
+    // AWS Secrets Manager integration not implemented - using EnvSecretsManager instead
+    // To enable: set USE_AWS_SECRETS=true and implement aws-sdk integration
     this.logger.warn(
-      `AWS Secrets Manager not yet implemented. Returning undefined for ${key}`,
+      `AWS Secrets Manager not configured. Returning undefined for ${key}`,
     );
     return undefined;
   }

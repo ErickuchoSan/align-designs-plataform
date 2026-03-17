@@ -73,10 +73,8 @@ class Logger {
     const fullContext = { ...context, ...errorDetails };
     console.error(this.formatMessage('error', message, fullContext));
 
-    // TODO: Send to error tracking service (Sentry) in production
-    // if (!isDevelopment) {
-    //   sendToErrorTracking(message, error, context);
-    // }
+    // Production error tracking (Sentry) can be added here when needed
+    // See: https://docs.sentry.io/platforms/javascript/guides/nextjs/
   }
 
   /**
