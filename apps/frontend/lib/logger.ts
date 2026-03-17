@@ -64,7 +64,9 @@ class Logger {
     if (error instanceof Error) {
       errorDetails = { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined };
     } else if (error) {
-      errorDetails = { error: String(error) };
+      // For objects, stringify them; for primitives, convert to string
+      const errorValue = typeof error === 'object' ? JSON.stringify(error) : String(error);
+      errorDetails = { error: errorValue };
     }
 
     const fullContext = { ...context, ...errorDetails };

@@ -269,7 +269,9 @@ function shouldSkipAuthRedirect(url: string): boolean {
 }
 
 // Handle CSRF error retry
-async function handleCsrfRetry(config: ExtendedConfig, errorMessage: string): Promise<unknown> {
+async function handleCsrfRetry(config: ExtendedConfig | undefined, errorMessage: string): Promise<unknown> {
+  if (!config) return null;
+
   const isCsrfError = errorMessage.toLowerCase().includes('csrf');
 
   if (isCsrfError && !config.csrfRetry) {
@@ -307,7 +309,7 @@ function showAuthErrorModal(url: string, errorMessage: string, method?: string):
 }
 
 // Handle 401 authentication errors
-async function handle401Error(error: AxiosError, config: ExtendedConfig): Promise<any> {
+async function handle401Error(error: AxiosError, config: ExtendedConfig | undefined): Promise<unknown> {
   const errorMessage = (error.response?.data as { message?: string })?.message || '';
   const url = config?.url || '';
 
@@ -327,7 +329,7 @@ async function handle401Error(error: AxiosError, config: ExtendedConfig): Promis
 }
 
 // Handle 4xx client errors (excluding 401 and 409)
-function handle4xxError(error: AxiosError, config: ExtendedConfig): void {
+function handle4xxError(error: AxiosError, config: ExtendedConfig | undefined): void {
   const status = error.response?.status;
   if (!status || status < 400 || status >= 500 || status === 401 || status === 409) return;
   if (config?._errorShown) return;
@@ -337,7 +339,7 @@ function handle4xxError(error: AxiosError, config: ExtendedConfig): void {
 }
 
 // Handle 5xx server errors
-function handle5xxError(error: AxiosError, config: ExtendedConfig): void {
+function handle5xxError(error: AxiosError, config: ExtendedConfig | undefined): void {
   const status = error.response?.status;
   if (!status || status < 500 || config?._errorShown) return;
 
@@ -361,7 +363,7 @@ function handle5xxError(error: AxiosError, config: ExtendedConfig): void {
 }
 
 // Handle network errors (no response)
-function handleNetworkError(error: AxiosError, config: ExtendedConfig): void {
+function handleNetworkError(error: AxiosError, config: ExtendedConfig | undefined): void {
   if (error.response || config?._errorShown) return;
 
   logger.error('Network Error - Cannot connect to server', error, { url: config?.url, code: error.code });
@@ -405,7 +407,7 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const config = error.config as ExtendedConfig;
+    const config: ExtendedConfig | undefined = error.config;
     const isClientSide = typeof globalThis !== 'undefined';
 
     // Handle 401 authentication errors

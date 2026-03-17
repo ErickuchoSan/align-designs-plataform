@@ -93,7 +93,7 @@ const FileRow = memo(({
           {file.filename && (
             <>
               <button
-                onClick={() => onDownload(file.id, file.originalName!)}
+                onClick={() => onDownload(file.id, file.originalName ?? '')}
                 className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
                 title="Download"
               >

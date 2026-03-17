@@ -43,7 +43,7 @@ function getStatusMessage(status: number): string | null {
  */
 function buildDevModeDetails(error: AxiosError<ApiErrorResponse>): string {
   const details: string[] = [];
-  const config = error.config as InternalAxiosRequestConfig | undefined;
+  const config: InternalAxiosRequestConfig | undefined = error.config;
   const response = error.response;
 
   if (response?.data?.message) {

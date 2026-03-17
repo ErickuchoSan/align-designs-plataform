@@ -117,7 +117,7 @@ function MobileFileCard({
         {file.filename && (
           <>
             <ActionButton
-              onClick={() => onDownload(file.id, file.originalName!)}
+              onClick={() => onDownload(file.id, file.originalName ?? '')}
               icon="download"
               label="Download"
               ariaLabel={`Download ${file.originalName}`}

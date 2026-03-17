@@ -152,8 +152,8 @@ function PaymentsStageContent({
         </section>
       )}
 
-      {/* Employee Payments Section */}
-      {(isAdmin || isEmployee) && (
+      {/* Employee Payments Section - Only visible to ADMIN and EMPLOYEE */}
+      {userRole !== 'CLIENT' && (
         <section className="bg-white rounded-lg border border-stone-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-navy-900">
@@ -163,7 +163,7 @@ function PaymentsStageContent({
           </div>
           <EmployeePaymentsList
             payments={employeePayments}
-            userRole={userRole as 'ADMIN' | 'EMPLOYEE'}
+            userRole={userRole}
             onViewReceipt={setViewingPayment}
             onApprove={isAdmin ? setConfirmApprovePayment : undefined}
             onReject={isAdmin ? setRejectingPaymentId : undefined}

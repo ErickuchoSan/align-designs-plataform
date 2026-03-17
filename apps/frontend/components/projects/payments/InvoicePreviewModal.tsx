@@ -114,130 +114,129 @@ function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalPr
   }, [isOpen]);
 
   const handlePrint = () => {
-    // Create a printable version
-    const printContent = document.getElementById('invoice-print-content');
-    if (!printContent) return;
-
-    // Clone and prepare for print
-    const printWindow = globalThis.open('', '_blank');
-    if (!printWindow) return;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Invoice Preview - Align Designs</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-            .page { padding: 40px; page-break-after: always; }
-            .page:last-child { page-break-after: auto; }
-            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-            .company-name { font-size: 24px; font-weight: bold; color: #D4A843; }
-            .contact { font-size: 12px; color: #333; }
-            .logo { text-align: center; }
-            .logo-text { font-size: 12px; font-weight: bold; letter-spacing: 2px; }
-            .separator { border-top: 1px solid #E5E5E5; margin: 20px 0; }
-            .bill-section { display: flex; justify-content: space-between; margin-bottom: 20px; }
-            .label { font-size: 12px; font-weight: bold; color: #D4A843; }
-            .value { font-size: 12px; color: #333; margin-top: 4px; }
-            .table-header { background: #D4A843; display: flex; padding: 10px; }
-            .table-header span { color: white; font-weight: bold; font-size: 12px; }
-            .table-body { border: 1px solid #E5E5E5; border-top: none; display: flex; }
-            .desc-col { flex: 1; padding: 15px; border-right: 1px solid #E5E5E5; }
-            .amount-col { width: 100px; padding: 15px; }
-            .totals { display: flex; justify-content: flex-end; margin-top: 20px; }
-            .totals-box { width: 200px; }
-            .total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
-            .total-row.main { font-weight: bold; border-top: 1px solid #E5E5E5; padding-top: 10px; }
-            .balance-due { color: #C53030; font-weight: bold; }
-            .terms-title { font-size: 14px; font-weight: bold; color: #D4A843; border-bottom: 1px solid #E5E5E5; padding-bottom: 15px; margin-bottom: 15px; }
-            .terms-text { font-size: 12px; color: #333; line-height: 1.6; }
-            .vertical-text { position: absolute; left: 10px; top: 50%; transform: rotate(-90deg) translateX(-50%); font-size: 12px; font-weight: bold; color: #D4A843; white-space: nowrap; }
-            @media print { .page { padding: 30px; } }
-          </style>
-        </head>
-        <body>
-          <!-- Page 1: Invoice -->
-          <div class="page" style="position: relative;">
-            <div class="vertical-text">Invoice ${SAMPLE_INVOICE.invoiceNumber}</div>
-            <div style="margin-left: 30px;">
-              <div class="header">
-                <div>
-                  <div class="company-name">${COMPANY_INFO.name}</div>
-                  <div class="contact">${COMPANY_INFO.phone}</div>
-                  <div class="contact">${COMPANY_INFO.email}</div>
-                </div>
-                <div class="logo">
-                  <svg width="60" height="50" viewBox="0 0 60 50">
-                    <path d="M30 5 L10 40" stroke="#333" stroke-width="2.5" fill="none"/>
-                    <path d="M30 5 L50 40" stroke="#333" stroke-width="2.5" fill="none"/>
-                    <path d="M18 28 L42 28" stroke="#333" stroke-width="2.5" fill="none"/>
-                  </svg>
-                  <div class="logo-text">ALIGN</div>
-                </div>
-              </div>
-              <div class="separator"></div>
-              <div class="bill-section">
-                <div>
-                  <div class="label">Bill To</div>
-                  <div class="value">${SAMPLE_INVOICE.client.company}</div>
-                </div>
-                <div style="text-align: right;">
-                  <span class="label">Invoice Date </span>
-                  <span class="value">${SAMPLE_INVOICE.issueDate}</span>
-                </div>
-              </div>
-              <div class="table-header">
-                <span style="flex: 1;">Description</span>
-                <span style="width: 100px;">Amount</span>
-              </div>
-              <div class="table-body">
-                <div class="desc-col">${SAMPLE_INVOICE.description.replaceAll('\n', '<br>')}</div>
-                <div class="amount-col">${formatCurrency(SAMPLE_INVOICE.subtotal)}</div>
-              </div>
-              <div class="totals">
-                <div class="totals-box">
-                  <div class="total-row main">
-                    <span>Total</span>
-                    <span>${formatCurrency(SAMPLE_INVOICE.totalAmount)}</span>
-                  </div>
-                  ${SAMPLE_INVOICE.amountPaid > 0 ? `
-                  <div class="total-row">
-                    <span>Amount Paid</span>
-                    <span>${formatCurrency(SAMPLE_INVOICE.amountPaid)}</span>
-                  </div>
-                  <div class="total-row balance-due">
-                    <span>Balance Due</span>
-                    <span>${formatCurrency(balanceDue)}</span>
-                  </div>
-                  ` : ''}
-                </div>
-              </div>
-            </div>
+    // Build print HTML content
+    const htmlContent = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Invoice Preview - Align Designs</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .page { padding: 40px; page-break-after: always; }
+      .page:last-child { page-break-after: auto; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+      .company-name { font-size: 24px; font-weight: bold; color: #D4A843; }
+      .contact { font-size: 12px; color: #333; }
+      .logo { text-align: center; }
+      .logo-text { font-size: 12px; font-weight: bold; letter-spacing: 2px; }
+      .separator { border-top: 1px solid #E5E5E5; margin: 20px 0; }
+      .bill-section { display: flex; justify-content: space-between; margin-bottom: 20px; }
+      .label { font-size: 12px; font-weight: bold; color: #D4A843; }
+      .value { font-size: 12px; color: #333; margin-top: 4px; }
+      .table-header { background: #D4A843; display: flex; padding: 10px; }
+      .table-header span { color: white; font-weight: bold; font-size: 12px; }
+      .table-body { border: 1px solid #E5E5E5; border-top: none; display: flex; }
+      .desc-col { flex: 1; padding: 15px; border-right: 1px solid #E5E5E5; }
+      .amount-col { width: 100px; padding: 15px; }
+      .totals { display: flex; justify-content: flex-end; margin-top: 20px; }
+      .totals-box { width: 200px; }
+      .total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
+      .total-row.main { font-weight: bold; border-top: 1px solid #E5E5E5; padding-top: 10px; }
+      .balance-due { color: #C53030; font-weight: bold; }
+      .terms-title { font-size: 14px; font-weight: bold; color: #D4A843; border-bottom: 1px solid #E5E5E5; padding-bottom: 15px; margin-bottom: 15px; }
+      .terms-text { font-size: 12px; color: #333; line-height: 1.6; }
+      .vertical-text { position: absolute; left: 10px; top: 50%; transform: rotate(-90deg) translateX(-50%); font-size: 12px; font-weight: bold; color: #D4A843; white-space: nowrap; }
+      @media print { .page { padding: 30px; } }
+    </style>
+  </head>
+  <body>
+    <div class="page" style="position: relative;">
+      <div class="vertical-text">Invoice ${SAMPLE_INVOICE.invoiceNumber}</div>
+      <div style="margin-left: 30px;">
+        <div class="header">
+          <div>
+            <div class="company-name">${COMPANY_INFO.name}</div>
+            <div class="contact">${COMPANY_INFO.phone}</div>
+            <div class="contact">${COMPANY_INFO.email}</div>
           </div>
-
-          <!-- Page 2: Terms -->
-          <div class="page">
-            <div class="terms-title">Terms & Conditions</div>
-            <div class="terms-text">
-              <p>Any additional items requested beyond the scope of this package will be subject to separate charges. Feel free to reach out if you have any questions or if you require further customization. Engineering and permitting is not included.</p>
-              <p style="margin-top: 15px;">Payment is due within 15 days.</p>
-              <p style="margin-top: 15px; font-weight: 500;">Thank you for your business!</p>
-            </div>
+          <div class="logo">
+            <svg width="60" height="50" viewBox="0 0 60 50">
+              <path d="M30 5 L10 40" stroke="#333" stroke-width="2.5" fill="none"/>
+              <path d="M30 5 L50 40" stroke="#333" stroke-width="2.5" fill="none"/>
+              <path d="M18 28 L42 28" stroke="#333" stroke-width="2.5" fill="none"/>
+            </svg>
+            <div class="logo-text">ALIGN</div>
           </div>
-        </body>
-      </html>
-    `);
+        </div>
+        <div class="separator"></div>
+        <div class="bill-section">
+          <div>
+            <div class="label">Bill To</div>
+            <div class="value">${SAMPLE_INVOICE.client.company}</div>
+          </div>
+          <div style="text-align: right;">
+            <span class="label">Invoice Date </span>
+            <span class="value">${SAMPLE_INVOICE.issueDate}</span>
+          </div>
+        </div>
+        <div class="table-header">
+          <span style="flex: 1;">Description</span>
+          <span style="width: 100px;">Amount</span>
+        </div>
+        <div class="table-body">
+          <div class="desc-col">${SAMPLE_INVOICE.description.replaceAll('\n', '<br>')}</div>
+          <div class="amount-col">${formatCurrency(SAMPLE_INVOICE.subtotal)}</div>
+        </div>
+        <div class="totals">
+          <div class="totals-box">
+            <div class="total-row main">
+              <span>Total</span>
+              <span>${formatCurrency(SAMPLE_INVOICE.totalAmount)}</span>
+            </div>
+            ${SAMPLE_INVOICE.amountPaid > 0 ? `
+            <div class="total-row">
+              <span>Amount Paid</span>
+              <span>${formatCurrency(SAMPLE_INVOICE.amountPaid)}</span>
+            </div>
+            <div class="total-row balance-due">
+              <span>Balance Due</span>
+              <span>${formatCurrency(balanceDue)}</span>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page">
+      <div class="terms-title">Terms &amp; Conditions</div>
+      <div class="terms-text">
+        <p>Any additional items requested beyond the scope of this package will be subject to separate charges. Feel free to reach out if you have any questions or if you require further customization. Engineering and permitting is not included.</p>
+        <p style="margin-top: 15px;">Payment is due within 15 days.</p>
+        <p style="margin-top: 15px; font-weight: 500;">Thank you for your business!</p>
+      </div>
+    </div>
+  </body>
+</html>`;
 
-    printWindow.document.close();
-    printWindow.focus();
+    // Create Blob URL and open in new window for printing
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    const printWindow = globalThis.open(blobUrl, '_blank');
 
-    // Wait for content to load then print
-    setTimeout(() => {
+    if (!printWindow) {
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+
+    // Print and cleanup after window loads
+    printWindow.onload = () => {
+      printWindow.focus();
       printWindow.print();
-      printWindow.close();
-    }, 250);
+      printWindow.onafterprint = () => {
+        printWindow.close();
+        URL.revokeObjectURL(blobUrl);
+      };
+    };
   };
 
   return (

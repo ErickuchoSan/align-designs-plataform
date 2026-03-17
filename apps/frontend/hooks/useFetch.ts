@@ -66,7 +66,7 @@ export function useFetch<T>(
     enabled = true,
   } = options;
 
-  const [data, setData] = useState<T | null>(initialData as T | null);
+  const [data, setData] = useState<T | null>(initialData ?? null);
   const [loading, setLoading] = useState(immediate && enabled);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,7 +103,7 @@ export function useFetch<T>(
   }, [fetchFn, enabled, errorPrefix, onSuccess, onError]);
 
   const reset = useCallback(() => {
-    setData(initialData as T | null);
+    setData(initialData ?? null);
     setLoading(false);
     setError(null);
   }, [initialData]);

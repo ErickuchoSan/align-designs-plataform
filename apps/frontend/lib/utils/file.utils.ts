@@ -116,5 +116,5 @@ export function sanitizeFilename(filename: string): string {
   const basename = filename.replace(/^.*[\\/]/, '');
 
   // Replace unsafe characters
-  return basename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  return basename.replaceAll(/[^a-zA-Z0-9._-]/g, '_');
 }

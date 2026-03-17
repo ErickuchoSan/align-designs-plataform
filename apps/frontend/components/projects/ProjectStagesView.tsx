@@ -104,18 +104,21 @@ function ProjectStagesView({
   };
 
   const updateFileCounts = () => {
-    setStages((prevStages) =>
-      prevStages.map((stage) => {
-        // For PAYMENTS stage, preserve the count from the server (handled by backend)
-        if (stage.stage === Stage.PAYMENTS) {
-          return stage;
-        }
+    // Pre-compute file counts per stage to reduce function nesting depth
+    const fileCounts = new Map<Stage, number>();
+    for (const file of files) {
+      if (file.stage) {
+        fileCounts.set(file.stage, (fileCounts.get(file.stage) || 0) + 1);
+      }
+    }
 
-        return {
-          ...stage,
-          fileCount: files.filter((file) => file.stage === stage.stage).length,
-        };
-      })
+    setStages((prevStages) =>
+      prevStages.map((stage) =>
+        // For PAYMENTS stage, preserve the count from the server (handled by backend)
+        stage.stage === Stage.PAYMENTS
+          ? stage
+          : { ...stage, fileCount: fileCounts.get(stage.stage) || 0 }
+      )
     );
   };
 
