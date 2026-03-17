@@ -79,7 +79,7 @@ export default function GenerateInvoiceModal({
         clientId,
         issueDate: issueDate.toISOString(),
         dueDate: due.toISOString(),
-        paymentTermsDays: diffDays > 0 ? diffDays : 0,
+        paymentTermsDays: Math.max(diffDays, 0),
         subtotal: Number(data.amount),
         totalAmount: Number(data.amount),
         notes: data.description || undefined,

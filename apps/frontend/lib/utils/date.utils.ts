@@ -89,11 +89,11 @@ export function formatRelativeTime(date: string | Date): string {
     if (diffSecs < 60) {
       return 'just now';
     } else if (diffMins < 60) {
-      return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+      return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
     } else if (diffDays < 7) {
-      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+      return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
     } else {
       return formatDate(dateObj);
     }

@@ -34,8 +34,8 @@ export default function PaymentReceiptModal({
 
     const amount = Number(payment.amount);
     const paymentDate = new Date(payment.paymentDate);
-    const method = payment.paymentMethod.replace(/_/g, ' ');
-    const status = payment.status.replace(/_/g, ' ');
+    const method = payment.paymentMethod.replaceAll('_', ' ');
+    const status = payment.status.replaceAll('_', ' ');
 
     const notes = isEmployeePayment(payment) ? payment.description : payment.notes;
     const rejectionReason = payment.rejectionReason;

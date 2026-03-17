@@ -42,8 +42,8 @@ function SearchableSelect({
   const filteredOptions = useMemo(() => {
     if (query === '') return options;
 
-    const normalizedQuery = query.toLowerCase().replace(/\s+/g, '');
-    return options.filter((option) => option.name.toLowerCase().replace(/\s+/g, '').includes(normalizedQuery));
+    const normalizedQuery = query.toLowerCase().replaceAll(/\s+/g, '');
+    return options.filter((option) => option.name.toLowerCase().replaceAll(/\s+/g, '').includes(normalizedQuery));
   }, [query, options]);
 
   return (

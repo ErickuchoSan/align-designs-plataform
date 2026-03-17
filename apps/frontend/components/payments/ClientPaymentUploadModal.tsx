@@ -70,7 +70,7 @@ export default function ClientPaymentUploadModal({
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
         const remaining = Number(invoice.totalAmount) - Number(invoice.amountPaid || 0);
-        setAmount(remaining > 0 ? remaining : 0);
+        setAmount(Math.max(remaining, 0));
       }
     }
   }, [invoiceId, invoices]);

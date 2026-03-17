@@ -72,7 +72,7 @@ export default function ErrorModal({
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   // Check devMode from localStorage
-  const isDevMode = typeof window !== 'undefined' && localStorage.getItem('devMode') === 'true';
+  const isDevMode = typeof globalThis !== 'undefined' && globalThis.localStorage?.getItem('devMode') === 'true';
 
   // Show technical details only in dev mode
   const showTechnicalDetails = isDevMode;

@@ -16,7 +16,7 @@ export function sanitizeText(text: string): string {
     '/': '&#x2F;',
   };
 
-  return text.replace(/[&<>"'/]/g, (char) => htmlEscapeMap[char]);
+  return text.replaceAll(/[&<>"'/]/g, (char) => htmlEscapeMap[char]);
 }
 
 /**

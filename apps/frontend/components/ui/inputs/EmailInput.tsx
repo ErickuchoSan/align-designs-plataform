@@ -62,7 +62,7 @@ export default function EmailInput({ value, onChange, className = '', required =
       return { isValid: false, error: 'Domain must have at least one dot' };
     }
 
-    const tld = domainParts[domainParts.length - 1];
+    const tld = domainParts.at(-1)!;
     if (tld.length < 2 || tld.length > 6) {
       return { isValid: false, error: 'Top-level domain must be 2-6 characters' };
     }

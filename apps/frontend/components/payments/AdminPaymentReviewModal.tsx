@@ -128,9 +128,35 @@ export default function AdminPaymentReviewModal({
           {/* Actions */}
           {payment.status === PaymentStatus.PENDING_APPROVAL && (
             <div className="space-y-4">
-              {!rejecting ? (
+              {rejecting ? (
+                <div className="bg-red-50 p-4 rounded-lg border border-red-100 animate-in fade-in slide-in-from-top-2">
+                  <h5 className="font-semibold text-red-800 mb-2">Rejection Reason</h5>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Please explain why this payment is being rejected..."
+                    className={cn(TEXTAREA_BASE, 'border-red-200 focus:ring-red-500 focus:border-red-500 mb-3')}
+                    rows={3}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setRejecting(false)}
+                      className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleReject}
+                      disabled={processing || !rejectionReason.trim()}
+                      className="px-4 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {processing ? 'Rejecting...' : 'Confirm Rejection'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <div className="space-y-3">
-                  {isEditingAmount ? (
+                  {isEditingAmount && (
                     <div className="p-4 border rounded-lg bg-navy-50 border-navy-100 animate-in fade-in slide-in-from-top-2">
                       <h5 className="mb-2 text-sm font-semibold text-navy-800">Correct Payment Amount</h5>
                       <p className="mb-2 text-xs text-navy-600">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
@@ -145,7 +171,7 @@ export default function AdminPaymentReviewModal({
                         />
                       </div>
                     </div>
-                  ) : null}
+                  )}
 
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <button
@@ -194,32 +220,6 @@ export default function AdminPaymentReviewModal({
                       </button>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="bg-red-50 p-4 rounded-lg border border-red-100 animate-in fade-in slide-in-from-top-2">
-                  <h5 className="font-semibold text-red-800 mb-2">Rejection Reason</h5>
-                  <textarea
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Please explain why this payment is being rejected..."
-                    className={cn(TEXTAREA_BASE, 'border-red-200 focus:ring-red-500 focus:border-red-500 mb-3')}
-                    rows={3}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setRejecting(false)}
-                      className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-800"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleReject}
-                      disabled={processing || !rejectionReason.trim()}
-                      className="px-4 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50"
-                    >
-                      {processing ? 'Rejecting...' : 'Confirm Rejection'}
-                    </button>
-                  </div>
                 </div>
               )}
             </div>

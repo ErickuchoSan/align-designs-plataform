@@ -213,7 +213,7 @@ function buildErrorDetails(errorData: any): string[] {
 
 // Helper function to show error modal to user
 function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, willRedirect = false): void {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis === 'undefined') return;
 
   // Only show detailed error modal in developer mode
   // Regular users will see simple error messages inline

@@ -16,7 +16,7 @@ export interface ApiErrorResponse {
  * Check if dev mode is enabled (only for ADMIN users)
  */
 function isDevModeEnabled(): boolean {
-  return typeof window !== 'undefined' && localStorage.getItem('devMode') === 'true';
+  return typeof globalThis !== 'undefined' && globalThis.localStorage?.getItem('devMode') === 'true';
 }
 
 /**

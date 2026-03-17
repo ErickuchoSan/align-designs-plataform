@@ -26,7 +26,7 @@ export class AuthStorage {
     accessToken: string, // Parameter kept for API compatibility
     user: User
   ): { success: boolean; errors?: string[] } {
-    if (typeof window === 'undefined') {
+    if (typeof globalThis === 'undefined') {
       return { success: false, errors: ['Storage not available on server'] };
     }
 
@@ -65,7 +65,7 @@ export class AuthStorage {
    * @returns User data if available, null otherwise
    */
   static loadAuthData(): User | null {
-    if (typeof window === 'undefined') {
+    if (typeof globalThis === 'undefined') {
       return null;
     }
 
@@ -91,7 +91,7 @@ export class AuthStorage {
    * The httpOnly cookie is cleared by the backend on logout.
    */
   static clearAuthData(): void {
-    if (typeof window === 'undefined') {
+    if (typeof globalThis === 'undefined') {
       return;
     }
 
@@ -103,7 +103,7 @@ export class AuthStorage {
    * @returns User data if available, null otherwise
    */
   static getCurrentUser(): User | null {
-    if (typeof window === 'undefined') {
+    if (typeof globalThis === 'undefined') {
       return null;
     }
 
@@ -126,7 +126,7 @@ export class AuthStorage {
    * @returns True if user data exists in storage
    */
   static hasUserData(): boolean {
-    if (typeof window === 'undefined') {
+    if (typeof globalThis === 'undefined') {
       return false;
     }
 

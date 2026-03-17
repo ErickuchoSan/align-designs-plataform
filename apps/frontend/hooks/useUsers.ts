@@ -86,7 +86,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     try {
       await UsersService.toggleStatus(userToToggle.id, !userToToggle.isActive);
       toast.success(
-        `User ${!userToToggle.isActive ? 'activated' : 'deactivated'} successfully`
+        `User ${userToToggle.isActive ? 'deactivated' : 'activated'} successfully`
       );
       setShowToggleConfirm(false);
       setUserToToggle(null);

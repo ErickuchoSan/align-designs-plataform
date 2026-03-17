@@ -120,13 +120,13 @@ function NotificationBell() {
                                     <li key={notification.id}>
                                         <button
                                             onClick={() => handleNotificationClick(notification)}
-                                            className={`w-full text-left px-3 sm:px-4 py-3 hover:bg-stone-50 transition-colors focus:outline-none focus:bg-stone-100 ${!notification.isRead ? 'bg-blue-50/50' : ''}`}
+                                            className={`w-full text-left px-3 sm:px-4 py-3 hover:bg-stone-50 transition-colors focus:outline-none focus:bg-stone-100 ${notification.isRead ? '' : 'bg-blue-50/50'}`}
                                             aria-label={`${notification.title}. ${notification.message}. ${formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}${!notification.isRead ? '. Unread' : ''}`}
                                         >
                                             <div className="flex gap-2 sm:gap-3">
                                                 {getIcon(notification.type)}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`text-xs sm:text-sm font-medium line-clamp-2 ${!notification.isRead ? 'text-navy-900' : 'text-stone-600'}`}>
+                                                    <p className={`text-xs sm:text-sm font-medium line-clamp-2 ${notification.isRead ? 'text-stone-600' : 'text-navy-900'}`}>
                                                         {notification.title}
                                                     </p>
                                                     <p className="text-[11px] sm:text-xs text-stone-500 mt-1 line-clamp-2">

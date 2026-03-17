@@ -96,6 +96,6 @@ export const env = {
 } as const;
 
 // Run validation on module load (only in browser or during build)
-if (typeof window !== 'undefined' || process.env.NODE_ENV !== 'test') {
+if (typeof globalThis !== 'undefined' || process.env.NODE_ENV !== 'test') {
   validateEnv();
 }

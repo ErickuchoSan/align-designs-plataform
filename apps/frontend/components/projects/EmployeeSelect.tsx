@@ -142,7 +142,7 @@ function EmployeeSelect({
       {/* Selected count */}
       {selectedIds.length > 0 && (
         <div className="text-sm text-gray-600">
-          {selectedIds.length} employee{selectedIds.length !== 1 ? 's' : ''} selected
+          {selectedIds.length} employee{selectedIds.length === 1 ? '' : 's'} selected
         </div>
       )}
     </fieldset>

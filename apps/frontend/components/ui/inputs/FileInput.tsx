@@ -40,8 +40,7 @@ export default function FileInput({
       const names: string[] = [];
 
       // Validate each file
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (const file of files) {
         if (file.size > maxSizeBytes) {
           const fileSizeGB = (file.size / 1024 / 1024 / 1024).toFixed(2);
           const maxSizeGB = (maxSizeMB / 1000).toFixed(0);

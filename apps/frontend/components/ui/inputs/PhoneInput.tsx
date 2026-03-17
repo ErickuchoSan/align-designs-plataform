@@ -56,7 +56,7 @@ export default function PhoneInput({
   };
 
   const handlePhoneChange = (newPhone: string) => {
-    const cleanedPhone = newPhone.replace(/\D/g, '');
+    const cleanedPhone = newPhone.replaceAll(/\D/g, '');
     const limitedPhone = cleanedPhone.slice(0, 10);
 
     setPhoneNumber(limitedPhone);

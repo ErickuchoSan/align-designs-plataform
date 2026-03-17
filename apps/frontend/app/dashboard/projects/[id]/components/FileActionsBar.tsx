@@ -86,7 +86,7 @@ export default function FileActionsBar({
                 ? 'bg-gold-600 text-white hover:bg-gold-700 hover:shadow-xl'
                 : 'bg-stone-300 text-stone-500 cursor-not-allowed'
               }`}
-            title={!isProjectActive ? 'Project must be active to create comments' : ''}
+            title={isProjectActive ? '' : 'Project must be active to create comments'}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
@@ -100,7 +100,7 @@ export default function FileActionsBar({
                 ? 'bg-navy-800 text-white hover:bg-navy-700 hover:shadow-xl'
                 : 'bg-stone-300 text-stone-500 cursor-not-allowed'
               }`}
-            title={!isProjectActive ? 'Project must be active to upload files' : ''}
+            title={isProjectActive ? '' : 'Project must be active to upload files'}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />

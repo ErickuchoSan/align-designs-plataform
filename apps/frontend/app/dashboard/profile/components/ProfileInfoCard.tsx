@@ -68,9 +68,7 @@ function ProfileInfoCard({ user, onUpdateUser }: Readonly<ProfileInfoCardProps>)
         )}
       </div>
 
-      {!editingProfile ? (
-        <ProfileDisplay user={user} />
-      ) : (
+      {editingProfile ? (
         <ProfileForm
           profileData={profileData}
           setProfileData={setProfileData}
@@ -78,6 +76,8 @@ function ProfileInfoCard({ user, onUpdateUser }: Readonly<ProfileInfoCardProps>)
           onCancel={handleCancelEdit}
           isSaving={savingProfile}
         />
+      ) : (
+        <ProfileDisplay user={user} />
       )}
     </div>
   );

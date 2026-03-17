@@ -48,7 +48,7 @@ export function formatDateTime(dateString: string | Date, locale: string = 'en-U
  * Helper to pluralize time units
  */
 function pluralize(value: number, unit: string): string {
-  return `${value} ${unit}${value !== 1 ? 's' : ''}`;
+  return `${value} ${unit}${value === 1 ? '' : 's'}`;
 }
 
 /**

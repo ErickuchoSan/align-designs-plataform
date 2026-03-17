@@ -118,7 +118,20 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
       title="Recover Password"
       size="sm"
     >
-      {!isSuccess ? (
+      {isSuccess ? (
+        <div className="text-center py-4">
+          <div className="mx-auto w-16 h-16 bg-forest-100 rounded-full flex items-center justify-center mb-4">
+            <CheckIcon size="lg" className="w-8 h-8 text-forest-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-navy-900 mb-2">Password updated!</h3>
+          <p className="text-sm text-stone-700 mb-6">
+            Your password has been reset successfully. You can now log in with your new password.
+          </p>
+          <button onClick={handleClose} className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}>
+            Got it
+          </button>
+        </div>
+      ) : (
         <>
           {/* Step 1: Enter Email */}
           {step === 'email' && (
@@ -172,7 +185,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                   required
                   maxLength={8}
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setOtp(e.target.value.replaceAll(/\D/g, ''))}
                   className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'py-4 text-center text-3xl font-mono tracking-widest')}
                   placeholder="00000000"
                   autoFocus
@@ -271,19 +284,6 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
             </form>
           )}
         </>
-      ) : (
-        <div className="text-center py-4">
-          <div className="mx-auto w-16 h-16 bg-forest-100 rounded-full flex items-center justify-center mb-4">
-            <CheckIcon size="lg" className="w-8 h-8 text-forest-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-navy-900 mb-2">Password updated!</h3>
-          <p className="text-sm text-stone-700 mb-6">
-            Your password has been reset successfully. You can now log in with your new password.
-          </p>
-          <button onClick={handleClose} className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}>
-            Got it
-          </button>
-        </div>
       )}
     </Modal>
   );

@@ -193,7 +193,7 @@ function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalPr
                 <span style="width: 100px;">Amount</span>
               </div>
               <div class="table-body">
-                <div class="desc-col">${SAMPLE_INVOICE.description.replace(/\n/g, '<br>')}</div>
+                <div class="desc-col">${SAMPLE_INVOICE.description.replaceAll('\n', '<br>')}</div>
                 <div class="amount-col">${formatCurrency(SAMPLE_INVOICE.subtotal)}</div>
               </div>
               <div class="totals">
