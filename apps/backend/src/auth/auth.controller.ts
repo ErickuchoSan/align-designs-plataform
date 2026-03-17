@@ -13,6 +13,10 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiUnauthorizedResponse,
+  ApiTooManyRequestsResponse,
+} from '../common/decorators/api-responses.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -141,14 +145,8 @@ export class AuthController {
       },
     },
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Invalid credentials or inactive user',
-  })
-  @ApiResponse({
-    status: 429,
-    description: 'Too many login attempts',
-  })
+  @ApiUnauthorizedResponse()
+  @ApiTooManyRequestsResponse()
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
