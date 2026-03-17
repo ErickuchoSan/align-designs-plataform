@@ -31,6 +31,9 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: /api/v1
 
+      - name: Generate Prisma Client
+        run: pnpm --filter backend exec prisma generate
+
       - name: Build Backend
         run: pnpm --filter backend build
 
