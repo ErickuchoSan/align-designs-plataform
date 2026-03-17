@@ -115,7 +115,7 @@ jobs:
 
       - name: Check Backend Health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127/api/health)
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127/api/v1/health)
           if [ "$response" != "200" ]; then
             echo "::error::Backend health check failed! Status: $response"
             exit 1
