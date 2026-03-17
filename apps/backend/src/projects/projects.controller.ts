@@ -12,13 +12,23 @@ import {
   Query,
   Logger,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 import {
   ApiProjectIdParam,
   ApiAdminWriteResponses,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
+  ApiSuccessResponse,
+  ApiCreatedResponse,
+  ApiProjectWorkflowResponses,
+  ApiForbiddenResponse,
 } from '../common/decorators/api-responses.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { ProjectsService } from './projects.service';
@@ -34,7 +44,11 @@ import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { RATE_LIMIT_PROJECTS } from '../common/constants/timeouts.constants';
-import { AuditService, AuditAction, AuditDetailsValue } from '../audit/audit.service';
+import {
+  AuditService,
+  AuditAction,
+  AuditDetailsValue,
+} from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
@@ -94,7 +108,7 @@ export class ProjectsController {
     summary: 'Create a new project',
     description: 'Creates a new project. Only accessible by admins.',
   })
-  @ApiResponse({ status: 201, description: 'Project successfully created' })
+  @ApiCreatedResponse('Project successfully created')
   @ApiAdminWriteResponses()
   async create(
     @Body() createProjectDto: CreateProjectDto,
@@ -150,11 +164,8 @@ export class ProjectsController {
     type: Number,
     description: 'Items per page (default: 10, max: 100)',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Projects retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiSuccessResponse('Projects retrieved successfully')
+  @ApiUnauthorizedResponse()
   findAll(
     @CurrentUser() user: UserPayload,
     @Query() paginationDto: PaginationDto,
@@ -175,9 +186,9 @@ export class ProjectsController {
     description: 'Retrieves a single project by ID',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Project retrieved successfully' })
+  @ApiSuccessResponse('Project retrieved successfully')
   @ApiUnauthorizedResponse()
-  @ApiResponse({ status: 403, description: 'Forbidden - No access to this project' })
+  @ApiForbiddenResponse('Forbidden - No access to this project')
   @ApiNotFoundResponse('Project')
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.projectsService.findOne(id, user.userId, user.role);
@@ -191,7 +202,7 @@ export class ProjectsController {
     description: 'Updates an existing project. Only accessible by admins.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Project successfully updated' })
+  @ApiSuccessResponse('Project successfully updated')
   @ApiAdminWriteResponses()
   @ApiNotFoundResponse('Project')
   async update(
@@ -229,7 +240,7 @@ export class ProjectsController {
     description: 'Soft deletes a project. Only accessible by admins.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Project successfully deleted' })
+  @ApiSuccessResponse('Project successfully deleted')
   @ApiAdminWriteResponses()
   @ApiNotFoundResponse('Project')
   async remove(
@@ -269,12 +280,9 @@ export class ProjectsController {
       'Assigns one or more employees to a project. Validates that employees are not already assigned to another active project.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Employees assigned successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input or employee already assigned',
-  })
-  @ApiResponse({ status: 404, description: 'Project or employee not found' })
+  @ApiSuccessResponse('Employees assigned successfully')
+  @ApiBadRequestResponse('Invalid input or employee already assigned')
+  @ApiNotFoundResponse('Project or employee')
   async assignEmployees(
     @Param('id') projectId: string,
     @Body() assignEmployeesDto: AssignEmployeesDto,
@@ -318,8 +326,8 @@ export class ProjectsController {
   })
   @ApiProjectIdParam()
   @ApiParam({ name: 'employeeId', description: 'Employee ID to remove' })
-  @ApiResponse({ status: 200, description: 'Employee removed successfully' })
-  @ApiResponse({ status: 404, description: 'Assignment not found' })
+  @ApiSuccessResponse('Employee removed successfully')
+  @ApiNotFoundResponse('Assignment')
   async removeEmployee(
     @Param('id') projectId: string,
     @Param('employeeId') employeeId: string,
@@ -357,7 +365,7 @@ export class ProjectsController {
     description: 'Returns all employees assigned to a project.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Employees retrieved successfully' })
+  @ApiSuccessResponse('Employees retrieved successfully')
   async getProjectEmployees(@Param('id') projectId: string) {
     return this.projectEmployeeService.getProjectEmployees(projectId);
   }
@@ -374,7 +382,7 @@ export class ProjectsController {
       'Records a payment for a project. If payment completes the initial amount required, project will auto-activate.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Payment recorded successfully' })
+  @ApiSuccessResponse('Payment recorded successfully')
   @ApiBadRequestResponse('Invalid payment amount')
   async recordPayment(
     @Param('id') projectId: string,
@@ -422,11 +430,10 @@ export class ProjectsController {
       'Manually activates a project. Checks payment requirements before activation.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Project activated successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Payment requirements not met or invalid status',
-  })
+  @ApiProjectWorkflowResponses(
+    'Project activated successfully',
+    'Payment requirements not met or invalid status',
+  )
   async activateProject(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
@@ -460,11 +467,10 @@ export class ProjectsController {
     description: 'Marks an active project as completed.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Project completed successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Project must be ACTIVE to complete',
-  })
+  @ApiProjectWorkflowResponses(
+    'Project completed successfully',
+    'Project must be ACTIVE to complete',
+  )
   async completeProject(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
@@ -498,11 +504,10 @@ export class ProjectsController {
     description: 'Archives a completed project.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Project archived successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Project must be COMPLETED to archive',
-  })
+  @ApiProjectWorkflowResponses(
+    'Project archived successfully',
+    'Project must be COMPLETED to archive',
+  )
   async archiveProject(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
@@ -535,10 +540,7 @@ export class ProjectsController {
       'Returns detailed status information including payment progress and activation eligibility.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({
-    status: 200,
-    description: 'Status summary retrieved successfully',
-  })
+  @ApiSuccessResponse('Status summary retrieved successfully')
   async getProjectStatus(@Param('id') projectId: string) {
     return this.projectStatusService.getProjectStatusSummary(projectId);
   }
@@ -566,7 +568,7 @@ export class ProjectsController {
       'Returns stages that the current user can access based on their role and permissions',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Stages retrieved successfully' })
+  @ApiSuccessResponse('Stages retrieved successfully')
   async getProjectStages(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
@@ -589,7 +591,7 @@ export class ProjectsController {
       'Returns information about project data to warn admin before deletion',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Deletion check completed' })
+  @ApiSuccessResponse('Deletion check completed')
   async checkProjectDeletion(@Param('id') projectId: string) {
     return this.projectsService.checkProjectDeletionSafety(projectId);
   }
@@ -607,12 +609,9 @@ export class ProjectsController {
       'Client approves the project brief, confirming the project scope. This action records the approval timestamp.',
   })
   @ApiProjectIdParam()
-  @ApiResponse({ status: 200, description: 'Brief approved successfully' })
-  @ApiResponse({ status: 400, description: 'Brief already approved' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Not the project client',
-  })
+  @ApiSuccessResponse('Brief approved successfully')
+  @ApiBadRequestResponse('Brief already approved')
+  @ApiForbiddenResponse('Forbidden - Not the project client')
   @ApiNotFoundResponse('Project')
   async approveBrief(
     @Param('id') projectId: string,
