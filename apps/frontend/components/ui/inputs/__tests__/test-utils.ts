@@ -100,3 +100,74 @@ export function getInputByPlaceholder(placeholder: string) {
 export function changeInput(input: HTMLElement, value: string) {
   fireEvent.change(input, { target: { value } });
 }
+
+/**
+ * Render component and return input element - reduces render + getInput pattern
+ */
+export function renderAndGetInput<P extends BaseInputProps>(
+  Component: ComponentType<P>,
+  mockOnChange: ReturnType<typeof vi.fn>,
+  placeholder: string,
+  value = '',
+  additionalProps?: Partial<P>,
+) {
+  const props = { value, onChange: mockOnChange, ...additionalProps } as P;
+  render(<Component {...props} /> as ReactElement);
+  return getInputByPlaceholder(placeholder);
+}
+
+/**
+ * Test async validation - common pattern for email validation tests
+ * Renders component, changes input, waits for expected message
+ */
+export async function testAsyncValidationMessage<P extends BaseInputProps>(
+  Component: ComponentType<P>,
+  mockOnChange: ReturnType<typeof vi.fn>,
+  placeholder: string,
+  inputValue: string,
+  expectedMessage: string,
+) {
+  const { waitFor } = await import('@testing-library/react');
+  const input = renderAndGetInput(Component, mockOnChange, placeholder);
+  changeInput(input, inputValue);
+  await waitFor(() => {
+    expect(screen.getByText(expectedMessage)).toBeInTheDocument();
+  });
+}
+
+/**
+ * Test that a message does NOT appear after input
+ */
+export async function testAsyncValidationNoMessage<P extends BaseInputProps>(
+  Component: ComponentType<P>,
+  mockOnChange: ReturnType<typeof vi.fn>,
+  placeholder: string,
+  inputValue: string,
+  unexpectedMessage: string,
+) {
+  const { waitFor } = await import('@testing-library/react');
+  const input = renderAndGetInput(Component, mockOnChange, placeholder);
+  changeInput(input, inputValue);
+  await waitFor(() => {
+    expect(screen.queryByText(unexpectedMessage)).not.toBeInTheDocument();
+  });
+}
+
+/**
+ * Password strength test data
+ */
+export const PASSWORD_STRENGTH_TESTS = [
+  { password: 'abc', strength: 'Very Weak' },
+  { password: 'Abc123', strength: 'Weak' },
+  { password: 'Abc123!', strength: 'Fair' },
+  { password: 'Abc123!@', strength: 'Good' },
+  { password: 'MyP@ssw0rd123!', strength: 'Strong' },
+] as const;
+
+export const PASSWORD_REQUIREMENTS = [
+  'At least 12 characters',
+  'One uppercase letter',
+  'One lowercase letter',
+  'One number',
+  'One special character',
+] as const;
