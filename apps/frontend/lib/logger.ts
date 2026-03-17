@@ -59,7 +59,7 @@ class Logger {
    * Log error messages (all environments)
    * Use for error conditions that need attention
    */
-  error(message: string, error?: Error | unknown, context?: LogContext): void {
+  error(message: string, error?: unknown, context?: LogContext): void {
     let errorDetails: Record<string, unknown> = {};
     if (error instanceof Error) {
       errorDetails = { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined };

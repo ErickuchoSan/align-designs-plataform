@@ -4,10 +4,11 @@
  */
 
 import { PASSWORD_REGEX } from '../constants/password-regex.constants';
+// Import for local use
 import { PASSWORD_REQUIREMENTS } from '../constants/validation.constants';
 
 // Re-export PASSWORD_REQUIREMENTS for backward compatibility
-export { PASSWORD_REQUIREMENTS };
+export { PASSWORD_REQUIREMENTS } from '../constants/validation.constants';
 
 /**
  * RFC 5322 compliant email regex

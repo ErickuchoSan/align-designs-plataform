@@ -155,7 +155,7 @@ export default function CompletionChecklistModal({
     );
 }
 
-function StatusIcon({ success }: { success: boolean }) {
+function StatusIcon({ success }: Readonly<{ success: boolean }>) {
     if (success) {
         return (
             <div className="mt-0.5 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600">

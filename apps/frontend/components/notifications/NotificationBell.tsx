@@ -121,7 +121,7 @@ function NotificationBell() {
                                         <button
                                             onClick={() => handleNotificationClick(notification)}
                                             className={`w-full text-left px-3 sm:px-4 py-3 hover:bg-stone-50 transition-colors focus:outline-none focus:bg-stone-100 ${notification.isRead ? '' : 'bg-blue-50/50'}`}
-                                            aria-label={`${notification.title}. ${notification.message}. ${formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}${!notification.isRead ? '. Unread' : ''}`}
+                                            aria-label={`${notification.title}. ${notification.message}. ${formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}${notification.isRead ? '' : '. Unread'}`}
                                         >
                                             <div className="flex gap-2 sm:gap-3">
                                                 {getIcon(notification.type)}

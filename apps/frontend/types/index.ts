@@ -2,32 +2,31 @@
 // PHASE 1: WORKFLOW SYSTEM TYPES
 // ============================================================================
 
-// Re-export enums from centralized enums file
+// Import enums for local use in interfaces below
 import {
   Role,
   ProjectStatus,
   Stage,
   FeedbackStatus,
   FeedbackAudience,
-  ROLE_LABELS,
-  PROJECT_STATUS_LABELS,
-  PROJECT_STATUS_COLORS,
-  STAGE_LABELS,
-  STAGE_COLORS,
 } from './enums';
 
+// Re-export all enums and constants for consumers
 export {
   Role,
   ProjectStatus,
   Stage,
   FeedbackStatus,
   FeedbackAudience,
+} from './enums';
+
+export {
   ROLE_LABELS,
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_COLORS,
   STAGE_LABELS,
   STAGE_COLORS,
-};
+} from './enums';
 
 export interface User {
   id: string;

@@ -165,12 +165,12 @@ export default function UsersPage() {
                 ))}
               </>
             )}
-            {!usersHook.isLoading && usersHook.users.filter((usr) => usr.role === 'CLIENT').length === 0 && (
+            {!usersHook.isLoading && !usersHook.users.some((usr) => usr.role === 'CLIENT') && (
               <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 text-center text-stone-500">
                 No clients found.
               </div>
             )}
-            {usersHook.users.filter((usr) => usr.role === 'CLIENT').length > 0 &&
+            {usersHook.users.some((usr) => usr.role === 'CLIENT') &&
               usersHook.users
                 .filter((usr) => usr.role === 'CLIENT')
                 .map((usr) => (

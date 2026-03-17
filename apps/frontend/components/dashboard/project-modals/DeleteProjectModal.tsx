@@ -59,16 +59,18 @@ function DeleteProjectModal({
     }
 
     if (amountPaid > 0) {
-      items.push({
-        label: 'Payment History',
-        value: 'All payment records',
-        icon: '📋',
-      });
-      items.push({
-        label: 'Invoices',
-        value: 'All invoice records',
-        icon: '🧾',
-      });
+      items.push(
+        {
+          label: 'Payment History',
+          value: 'All payment records',
+          icon: '📋',
+        },
+        {
+          label: 'Invoices',
+          value: 'All invoice records',
+          icon: '🧾',
+        }
+      );
     }
 
     return items;

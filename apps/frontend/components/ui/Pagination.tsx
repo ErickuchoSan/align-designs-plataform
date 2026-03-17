@@ -149,10 +149,12 @@ function Pagination({
           )}
 
           {/* Page numbers - always show */}
-          {pageNumbers.map((page, index) => {
+          {pageNumbers.map((page, idx) => {
             if (page === '...') {
+              // Use position-based key: first ellipsis is 'start', second is 'end'
+              const ellipsisKey = idx < pageNumbers.length / 2 ? 'ellipsis-start' : 'ellipsis-end';
               return (
-                <span key={`ellipsis-${index}`} className="px-3 py-2 text-stone-500 font-bold text-lg" aria-hidden="true">
+                <span key={ellipsisKey} className="px-3 py-2 text-stone-500 font-bold text-lg" aria-hidden="true">
                   ...
                 </span>
               );
