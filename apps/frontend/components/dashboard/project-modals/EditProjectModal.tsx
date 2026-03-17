@@ -108,7 +108,7 @@ function EditProjectModal({
             idPrefix="edit"
             onFormChange={onFormChange}
             clientDisabled={!canChangeClient}
-            clientWarning={!canChangeClient ? 'Client cannot be changed: current client has uploaded files or comments' : undefined}
+            clientWarning={canChangeClient ? undefined : 'Client cannot be changed: current client has uploaded files or comments'}
           />
 
           <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
