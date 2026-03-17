@@ -42,5 +42,10 @@
     "minio"
   ],
   "author": "Erick Rodríguez Bores Isaías",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "pnpm": {
+    "overrides": {
+      "flatted": ">=3.4.0"
+    }
+  }
 }
