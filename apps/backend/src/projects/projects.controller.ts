@@ -12,14 +12,14 @@ import {
   Query,
   Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+  ApiProjectIdParam,
+  ApiAdminWriteResponses,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+} from '../common/decorators/api-responses.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -34,7 +34,7 @@ import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { RATE_LIMIT_PROJECTS } from '../common/constants/timeouts.constants';
-import { AuditService, AuditAction } from '../audit/audit.service';
+import { AuditService, AuditAction, AuditDetailsValue } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
@@ -69,7 +69,7 @@ export class ProjectsController {
     action: AuditAction,
     projectId: string,
     description: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, AuditDetailsValue>,
   ): Promise<void> {
     await safeAuditLog(
       this.auditService,
@@ -94,14 +94,8 @@ export class ProjectsController {
     summary: 'Create a new project',
     description: 'Creates a new project. Only accessible by admins.',
   })
-  @ApiResponse({
-    status: 201,
-    description: 'Project successfully created',
-  })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 201, description: 'Project successfully created' })
+  @ApiAdminWriteResponses()
   async create(
     @Body() createProjectDto: CreateProjectDto,
     @CurrentUser() user: UserPayload,
@@ -180,21 +174,11 @@ export class ProjectsController {
     summary: 'Get project by ID',
     description: 'Retrieves a single project by ID',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'Project UUID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Project retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - No access to this project',
-  })
-  @ApiResponse({ status: 404, description: 'Project not found' })
+  @ApiProjectIdParam()
+  @ApiResponse({ status: 200, description: 'Project retrieved successfully' })
+  @ApiUnauthorizedResponse()
+  @ApiResponse({ status: 403, description: 'Forbidden - No access to this project' })
+  @ApiNotFoundResponse('Project')
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.projectsService.findOne(id, user.userId, user.role);
   }
@@ -206,20 +190,10 @@ export class ProjectsController {
     summary: 'Update project',
     description: 'Updates an existing project. Only accessible by admins.',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'Project UUID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Project successfully updated',
-  })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiProjectIdParam()
+  @ApiResponse({ status: 200, description: 'Project successfully updated' })
+  @ApiAdminWriteResponses()
+  @ApiNotFoundResponse('Project')
   async update(
     @Param('id') id: string,
     @Body() updateProjectDto: UpdateProjectDto,
@@ -254,19 +228,10 @@ export class ProjectsController {
     summary: 'Delete project',
     description: 'Soft deletes a project. Only accessible by admins.',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'Project UUID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Project successfully deleted',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiProjectIdParam()
+  @ApiResponse({ status: 200, description: 'Project successfully deleted' })
+  @ApiAdminWriteResponses()
+  @ApiNotFoundResponse('Project')
   async remove(
     @Param('id') id: string,
     @CurrentUser() user: UserPayload,
@@ -303,7 +268,7 @@ export class ProjectsController {
     description:
       'Assigns one or more employees to a project. Validates that employees are not already assigned to another active project.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Employees assigned successfully' })
   @ApiResponse({
     status: 400,
@@ -351,7 +316,7 @@ export class ProjectsController {
     summary: 'Remove employee from project',
     description: 'Removes an employee assignment from a project.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiParam({ name: 'employeeId', description: 'Employee ID to remove' })
   @ApiResponse({ status: 200, description: 'Employee removed successfully' })
   @ApiResponse({ status: 404, description: 'Assignment not found' })
@@ -391,7 +356,7 @@ export class ProjectsController {
     summary: 'Get project employees',
     description: 'Returns all employees assigned to a project.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Employees retrieved successfully' })
   async getProjectEmployees(@Param('id') projectId: string) {
     return this.projectEmployeeService.getProjectEmployees(projectId);
@@ -408,9 +373,9 @@ export class ProjectsController {
     description:
       'Records a payment for a project. If payment completes the initial amount required, project will auto-activate.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Payment recorded successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid payment amount' })
+  @ApiBadRequestResponse('Invalid payment amount')
   async recordPayment(
     @Param('id') projectId: string,
     @Body() recordPaymentDto: RecordPaymentDto,
@@ -456,7 +421,7 @@ export class ProjectsController {
     description:
       'Manually activates a project. Checks payment requirements before activation.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Project activated successfully' })
   @ApiResponse({
     status: 400,
@@ -494,7 +459,7 @@ export class ProjectsController {
     summary: 'Complete project',
     description: 'Marks an active project as completed.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Project completed successfully' })
   @ApiResponse({
     status: 400,
@@ -532,7 +497,7 @@ export class ProjectsController {
     summary: 'Archive project',
     description: 'Archives a completed project.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Project archived successfully' })
   @ApiResponse({
     status: 400,
@@ -569,7 +534,7 @@ export class ProjectsController {
     description:
       'Returns detailed status information including payment progress and activation eligibility.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({
     status: 200,
     description: 'Status summary retrieved successfully',
@@ -600,7 +565,7 @@ export class ProjectsController {
     description:
       'Returns stages that the current user can access based on their role and permissions',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Stages retrieved successfully' })
   async getProjectStages(
     @Param('id') projectId: string,
@@ -623,7 +588,7 @@ export class ProjectsController {
     description:
       'Returns information about project data to warn admin before deletion',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Deletion check completed' })
   async checkProjectDeletion(@Param('id') projectId: string) {
     return this.projectsService.checkProjectDeletionSafety(projectId);
@@ -641,14 +606,14 @@ export class ProjectsController {
     description:
       'Client approves the project brief, confirming the project scope. This action records the approval timestamp.',
   })
-  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiProjectIdParam()
   @ApiResponse({ status: 200, description: 'Brief approved successfully' })
   @ApiResponse({ status: 400, description: 'Brief already approved' })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Not the project client',
   })
-  @ApiResponse({ status: 404, description: 'Project not found' })
+  @ApiNotFoundResponse('Project')
   async approveBrief(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
