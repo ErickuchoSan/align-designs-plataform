@@ -3,6 +3,13 @@
 import { useState } from 'react';
 import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
 import { CheckCircleIcon, ErrorCircleIcon, WarningIcon, SpinnerIcon } from '@/components/ui/icons';
+import {
+  EMAIL_CONSTRAINTS,
+  EMAIL_REGEX,
+  LOCAL_PART_REGEX,
+  SUSPICIOUS_EMAIL_DOMAINS,
+  BUSINESS_EMAIL_DOMAINS,
+} from '@/lib/constants/validation.constants';
 
 interface EmailInputProps {
   value: string;
@@ -13,39 +20,31 @@ interface EmailInputProps {
   id?: string;
 }
 
-const businessDomains = new Set([
-  'microsoft.com', 'google.com', 'apple.com', 'amazon.com', 'meta.com',
-  'linkedin.com', 'twitter.com', 'facebook.com', 'instagram.com', 'whatsapp.com'
-]);
-
 export default function EmailInput({ value, onChange, className = '', required = false, placeholder = 'Email address', id }: Readonly<EmailInputProps>) {
   const [error, setError] = useState('');
   const [warning, setWarning] = useState('');
   const [isValidating, setIsValidating] = useState(false);
 
   const validateEmail = (email: string): { isValid: boolean; error?: string; warning?: string } => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
     if (!email) {
       return { isValid: false, error: required ? 'Email is required' : undefined };
     }
 
-    if (!emailRegex.test(email)) {
+    if (!EMAIL_REGEX.test(email)) {
       return { isValid: false, error: 'Please enter a valid email address' };
     }
 
     const [localPart, domain] = email.split('@');
 
-    if (localPart.length > 64) {
-      return { isValid: false, error: 'Username is too long (max 64 characters)' };
+    if (localPart.length > EMAIL_CONSTRAINTS.LOCAL_PART_MAX_LENGTH) {
+      return { isValid: false, error: `Username is too long (max ${EMAIL_CONSTRAINTS.LOCAL_PART_MAX_LENGTH} characters)` };
     }
 
-    if (domain.length > 255) {
-      return { isValid: false, error: 'Domain is too long (max 255 characters)' };
+    if (domain.length > EMAIL_CONSTRAINTS.DOMAIN_MAX_LENGTH) {
+      return { isValid: false, error: `Domain is too long (max ${EMAIL_CONSTRAINTS.DOMAIN_MAX_LENGTH} characters)` };
     }
 
-    const localPartRegex = /^[a-zA-Z0-9._%+-]+$/;
-    if (!localPartRegex.test(localPart)) {
+    if (!LOCAL_PART_REGEX.test(localPart)) {
       return { isValid: false, error: 'Username contains invalid characters' };
     }
 
@@ -63,16 +62,16 @@ export default function EmailInput({ value, onChange, className = '', required =
     }
 
     const tld = domainParts.at(-1)!;
-    if (tld.length < 2 || tld.length > 6) {
-      return { isValid: false, error: 'Top-level domain must be 2-6 characters' };
+    if (tld.length < EMAIL_CONSTRAINTS.TLD_MIN_LENGTH || tld.length > EMAIL_CONSTRAINTS.TLD_MAX_LENGTH) {
+      return { isValid: false, error: `Top-level domain must be ${EMAIL_CONSTRAINTS.TLD_MIN_LENGTH}-${EMAIL_CONSTRAINTS.TLD_MAX_LENGTH} characters` };
     }
 
-    const suspiciousDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com', 'mailinator.com'];
-    if (suspiciousDomains.some(d => domain.toLowerCase().includes(d))) {
+    const domainLower = domain.toLowerCase();
+    if (SUSPICIOUS_EMAIL_DOMAINS.some(d => domainLower.includes(d))) {
       return { isValid: true, warning: 'This appears to be a temporary email address' };
     }
 
-    if (businessDomains.has(domain.toLowerCase())) {
+    if (BUSINESS_EMAIL_DOMAINS.has(domainLower)) {
       return { isValid: true, warning: 'Business email detected - please ensure this is your email' };
     }
 

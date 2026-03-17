@@ -2,6 +2,7 @@
 
 import { memo } from 'react';
 import Pagination from '@/components/ui/Pagination';
+import ToggleSwitch from '@/components/ui/ToggleSwitch';
 import { formatDate } from '@/lib/utils/date.utils';
 import { User } from '@/types';
 
@@ -77,16 +78,12 @@ function UsersCards({
                   Created {formatDate(usr.createdAt)}
                 </div>
               </div>
-              <button
-                onClick={() => onToggleStatus(usr)}
+              <ToggleSwitch
+                isActive={usr.isActive}
                 disabled={togglingUserId === usr.id}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${usr.isActive ? 'bg-emerald-600' : 'bg-stone-300'}`}
-                aria-label={`${usr.isActive ? 'Deactivate' : 'Activate'} user ${usr.firstName} ${usr.lastName}`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${usr.isActive ? 'translate-x-6' : 'translate-x-1'}`}
-                />
-              </button>
+                onToggle={() => onToggleStatus(usr)}
+                ariaLabel={`${usr.isActive ? 'Deactivate' : 'Activate'} user ${usr.firstName} ${usr.lastName}`}
+              />
             </div>
 
             <div className="space-y-2 text-sm mb-3">
