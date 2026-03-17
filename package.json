@@ -45,7 +45,11 @@
   "license": "UNLICENSED",
   "pnpm": {
     "overrides": {
-      "flatted": ">=3.4.0"
+      "flatted": ">=3.4.0",
+      "qs": ">=6.15.0",
+      "diff": ">=4.0.4",
+      "lodash": ">=4.17.23",
+      "ajv@>=7": ">=8.18.0"
     }
   }
 }
