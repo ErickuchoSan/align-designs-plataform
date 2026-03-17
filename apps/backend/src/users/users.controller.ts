@@ -17,10 +17,16 @@ import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import {
+  ApiSuccessResponse,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiForbiddenResponse,
+} from '../common/decorators/api-responses.decorator';
 import { UsersService } from './users.service';
 import { UserAnalyticsService } from './services/user-analytics.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -56,11 +62,8 @@ export class UsersController {
     summary: 'Create new user',
     description: 'Admin-only: Create a new user (client or employee)',
   })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input or email already exists',
-  })
+  @ApiCreatedResponse('User created successfully')
+  @ApiBadRequestResponse('Invalid input or email already exists')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
@@ -105,7 +108,7 @@ export class UsersController {
     summary: 'Get all users',
     description: 'Admin-only: Retrieve paginated list of all users',
   })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  @ApiSuccessResponse('Users retrieved successfully')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
   findAll(@Query() queryDto: QueryUsersDto) {
@@ -117,10 +120,7 @@ export class UsersController {
     summary: 'Get available employees',
     description: 'Admin-only: Get employees not assigned to any active project',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Available employees retrieved successfully',
-  })
+  @ApiSuccessResponse('Available employees retrieved successfully')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
   getAvailableEmployees(@Query() paginationDto: PaginationDto) {
@@ -132,7 +132,7 @@ export class UsersController {
     summary: 'Get current user profile',
     description: 'Retrieve the profile of the currently authenticated user',
   })
-  @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
+  @ApiSuccessResponse('Profile retrieved successfully')
   @Throttle({ default: RATE_LIMIT_USERS.GET_PROFILE })
   getProfile(@CurrentUser() user: UserPayload) {
     return this.usersService.findOne(user.userId, user.userId, user.role);
@@ -160,9 +160,9 @@ export class UsersController {
     description: 'Admin-only: Update any user by their ID',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 409, description: 'Phone number already registered' })
+  @ApiSuccessResponse('User updated successfully')
+  @ApiNotFoundResponse('User')
+  @ApiBadRequestResponse('Phone number already registered')
   @Throttle({ default: RATE_LIMIT_USERS.UPDATE })
   @HttpCode(HttpStatus.OK)
   async updateUser(
@@ -203,8 +203,8 @@ export class UsersController {
     description: 'Retrieve a specific user by their ID',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiSuccessResponse('User retrieved successfully')
+  @ApiNotFoundResponse('User')
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   findOne(@Param('id') id: string, @CurrentUser() user: UserPayload) {
     return this.usersService.findOne(id, user.userId, user.role);
@@ -218,8 +218,8 @@ export class UsersController {
       'Get comprehensive analytics for a specific client (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Client UUID' })
-  @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Client not found' })
+  @ApiSuccessResponse('Analytics retrieved successfully')
+  @ApiNotFoundResponse('Client')
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   getClientAnalytics(@Param('id') id: string) {
     return this.userAnalyticsService.getClientAnalytics(id);
@@ -233,10 +233,7 @@ export class UsersController {
       'Get project distribution by status for chart visualization (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Client UUID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Distribution data retrieved successfully',
-  })
+  @ApiSuccessResponse('Distribution data retrieved successfully')
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   getProjectDistribution(@Param('id') id: string) {
     return this.userAnalyticsService.getProjectDistribution(id);
@@ -250,10 +247,7 @@ export class UsersController {
       'Get monthly project activity for the last 12 months (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Client UUID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Monthly activity data retrieved successfully',
-  })
+  @ApiSuccessResponse('Monthly activity data retrieved successfully')
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   getMonthlyActivity(@Param('id') id: string) {
     return this.userAnalyticsService.getMonthlyActivity(id);
@@ -303,12 +297,9 @@ export class UsersController {
       'Admin-only: Resend welcome email to a user who has not set their password',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'Welcome email sent successfully' })
-  @ApiResponse({
-    status: 403,
-    description: 'User has already set their password',
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiSuccessResponse('Welcome email sent successfully')
+  @ApiForbiddenResponse('User has already set their password')
+  @ApiNotFoundResponse('User')
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.OK)
   async resendWelcomeEmail(
@@ -355,8 +346,8 @@ export class UsersController {
     description: 'Admin-only: Soft delete a user account',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiSuccessResponse('User deleted successfully')
+  @ApiNotFoundResponse('User')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.DELETE })
   @HttpCode(HttpStatus.OK)

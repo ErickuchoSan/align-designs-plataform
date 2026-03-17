@@ -26,6 +26,12 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import {
+  ApiSuccessResponse,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+} from '../common/decorators/api-responses.decorator';
 import { FilesService } from './files.service';
 import { FileVersionService } from './file-version.service';
 import { FileStageService } from './services/file-stage.service';
@@ -73,12 +79,9 @@ export class FilesController {
   })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid file or missing required fields',
-  })
-  @ApiResponse({ status: 404, description: 'Project not found' })
+  @ApiCreatedResponse('File uploaded successfully')
+  @ApiBadRequestResponse('Invalid file or missing required fields')
+  @ApiNotFoundResponse('Project')
   @Throttle({ default: RATE_LIMIT_FILES.UPLOAD })
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
@@ -144,7 +147,7 @@ export class FilesController {
   })
   @ApiParam({ name: 'id', description: 'Parent File UUID' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ status: 201, description: 'Version uploaded successfully' })
+  @ApiCreatedResponse('Version uploaded successfully')
   @Throttle({ default: RATE_LIMIT_FILES.UPLOAD })
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
@@ -205,8 +208,8 @@ export class FilesController {
     description: 'Create a comment for a project without uploading a file',
   })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
-  @ApiResponse({ status: 201, description: 'Comment created successfully' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
+  @ApiCreatedResponse('Comment created successfully')
+  @ApiNotFoundResponse('Project')
   @Throttle({ default: RATE_LIMIT_FILES.CREATE_COMMENT })
   @HttpCode(HttpStatus.CREATED)
   async createComment(
@@ -243,11 +246,8 @@ export class FilesController {
   })
   @ApiParam({ name: 'id', description: 'File record UUID' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({
-    status: 200,
-    description: 'File/comment updated successfully',
-  })
-  @ApiResponse({ status: 404, description: 'File record not found' })
+  @ApiSuccessResponse('File/comment updated successfully')
+  @ApiNotFoundResponse('File record')
   @Throttle({ default: RATE_LIMIT_FILES.UPDATE })
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
@@ -280,8 +280,8 @@ export class FilesController {
       'Retrieve paginated and filtered list of files for a specific project',
   })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
-  @ApiResponse({ status: 200, description: 'Files retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
+  @ApiSuccessResponse('Files retrieved successfully')
+  @ApiNotFoundResponse('Project')
   async findAllByProject(
     @Param('projectId') projectId: string,
     @Query() fileFilters: FileFiltersDto,
@@ -299,7 +299,7 @@ export class FilesController {
     description: 'Get list of unique file extensions in the project',
   })
   @ApiParam({ name: 'projectId', description: 'Project UUID' })
-  @ApiResponse({ status: 200, description: 'Types retrieved successfully' })
+  @ApiSuccessResponse('Types retrieved successfully')
   async getProjectFileTypes(@Param('projectId') projectId: string) {
     return this.filesService.getProjectFileTypes(projectId);
   }
@@ -324,11 +324,8 @@ export class FilesController {
     description: 'Generate a presigned URL for downloading a file',
   })
   @ApiParam({ name: 'id', description: 'File UUID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Download URL generated successfully',
-  })
-  @ApiResponse({ status: 404, description: 'File not found' })
+  @ApiSuccessResponse('Download URL generated successfully')
+  @ApiNotFoundResponse('File')
   @Throttle({ default: RATE_LIMIT_FILES.DOWNLOAD })
   async getFileUrl(
     @Param('id') id: string,
@@ -460,11 +457,8 @@ export class FilesController {
     description: 'Move a SUBMITTED file to ADMIN_APPROVED stage (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'File UUID' })
-  @ApiResponse({ status: 200, description: 'File approved successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'File not in SUBMITTED stage or has no content',
-  })
+  @ApiSuccessResponse('File approved successfully')
+  @ApiBadRequestResponse('File not in SUBMITTED stage or has no content')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   async approveFile(
@@ -512,8 +506,8 @@ export class FilesController {
       required: ['reason'],
     },
   })
-  @ApiResponse({ status: 200, description: 'File rejected successfully' })
-  @ApiResponse({ status: 400, description: 'File not in SUBMITTED stage' })
+  @ApiSuccessResponse('File rejected successfully')
+  @ApiBadRequestResponse('File not in SUBMITTED stage')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   async rejectFile(
@@ -560,8 +554,8 @@ export class FilesController {
       'Move an ADMIN_APPROVED file to CLIENT_APPROVED stage (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'File UUID' })
-  @ApiResponse({ status: 200, description: 'File marked as client approved' })
-  @ApiResponse({ status: 400, description: 'File not in ADMIN_APPROVED stage' })
+  @ApiSuccessResponse('File marked as client approved')
+  @ApiBadRequestResponse('File not in ADMIN_APPROVED stage')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   async clientApproveFile(
@@ -598,8 +592,8 @@ export class FilesController {
     description: 'Soft delete a file record',
   })
   @ApiParam({ name: 'id', description: 'File UUID' })
-  @ApiResponse({ status: 200, description: 'File deleted successfully' })
-  @ApiResponse({ status: 404, description: 'File not found' })
+  @ApiSuccessResponse('File deleted successfully')
+  @ApiNotFoundResponse('File')
   @Throttle({ default: RATE_LIMIT_FILES.DELETE })
   @HttpCode(HttpStatus.OK)
   async deleteFile(
