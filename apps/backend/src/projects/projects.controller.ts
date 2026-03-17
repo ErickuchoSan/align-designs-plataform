@@ -41,6 +41,12 @@ import { ProjectStatusService } from './services/project-status.service';
 import { AssignEmployeesDto } from './dto/assign-employees.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 
+interface AuditContext {
+  user: UserPayload;
+  ipAddress: string;
+  userAgent: string;
+}
+
 @ApiTags('projects')
 @ApiBearerAuth('JWT-auth')
 @Controller('projects')
@@ -54,6 +60,31 @@ export class ProjectsController {
     private readonly projectEmployeeService: ProjectEmployeeService,
     private readonly projectStatusService: ProjectStatusService,
   ) {}
+
+  /**
+   * Helper to create audit log with common project fields
+   */
+  private async auditProjectAction(
+    ctx: AuditContext,
+    action: AuditAction,
+    projectId: string,
+    description: string,
+    details?: Record<string, unknown>,
+  ): Promise<void> {
+    await safeAuditLog(
+      this.auditService,
+      {
+        userId: ctx.user.userId,
+        action,
+        resourceType: 'project',
+        resourceId: projectId,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+        details,
+      },
+      description,
+    );
+  }
 
   @Post()
   @Roles(Role.ADMIN)
@@ -95,21 +126,12 @@ export class ProjectsController {
     }
 
     // Audit log for project creation (non-blocking)
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_CREATE,
-        resourceType: 'project',
-        resourceId: project.id,
-        ipAddress,
-        userAgent,
-        details: {
-          name: createProjectDto.name,
-          clientId: createProjectDto.clientId,
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_CREATE,
+      project.id,
       'project creation',
+      { name: createProjectDto.name, clientId: createProjectDto.clientId },
     );
 
     return project;
@@ -213,20 +235,12 @@ export class ProjectsController {
     );
 
     // Audit log for project update (non-blocking)
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: id,
-        ipAddress,
-        userAgent,
-        details: {
-          updatedFields: Object.keys(updateProjectDto).join(', '),
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      id,
       'project update',
+      { updatedFields: Object.keys(updateProjectDto).join(', ') },
     );
 
     return project;
@@ -266,16 +280,10 @@ export class ProjectsController {
     );
 
     // Audit log for project deletion (non-blocking)
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_DELETE,
-        resourceType: 'project',
-        resourceId: id,
-        ipAddress,
-        userAgent,
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_DELETE,
+      id,
       'project deletion',
     );
 
@@ -314,22 +322,16 @@ export class ProjectsController {
       assignEmployeesDto.employeeIds,
     );
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'assign_employees',
-          employeeCount: assignEmployeesDto.employeeIds.length,
-          employeeIdsList: assignEmployeesDto.employeeIds.join(', '),
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'employee assignment',
+      {
+        action: 'assign_employees',
+        employeeCount: assignEmployeesDto.employeeIds.length,
+        employeeIdsList: assignEmployeesDto.employeeIds.join(', '),
+      },
     );
 
     return {
@@ -365,21 +367,12 @@ export class ProjectsController {
       employeeId,
     );
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'remove_employee',
-          employeeId,
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'employee removal',
+      { action: 'remove_employee', employeeId },
     );
 
     return {
@@ -430,23 +423,17 @@ export class ProjectsController {
       recordPaymentDto.amount,
     );
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'record_payment',
-          amount: recordPaymentDto.amount,
-          notes: recordPaymentDto.notes ?? null,
-          activated: result.activated,
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'payment recording',
+      {
+        action: 'record_payment',
+        amount: recordPaymentDto.amount,
+        notes: recordPaymentDto.notes ?? null,
+        activated: result.activated,
+      },
     );
 
     return {
@@ -483,20 +470,12 @@ export class ProjectsController {
   ) {
     const project = await this.projectStatusService.activateProject(projectId);
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'activate_project',
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'project activation',
+      { action: 'activate_project' },
     );
 
     return {
@@ -529,20 +508,12 @@ export class ProjectsController {
   ) {
     const project = await this.projectStatusService.completeProject(projectId);
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'complete_project',
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'project completion',
+      { action: 'complete_project' },
     );
 
     return {
@@ -575,20 +546,12 @@ export class ProjectsController {
   ) {
     const project = await this.projectStatusService.archiveProject(projectId);
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'archive_project',
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'project archival',
+      { action: 'archive_project' },
     );
 
     return {
@@ -698,20 +661,12 @@ export class ProjectsController {
       user.role,
     );
 
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.PROJECT_UPDATE,
-        resourceType: 'project',
-        resourceId: projectId,
-        ipAddress,
-        userAgent,
-        details: {
-          action: 'approve_brief',
-        },
-      },
+    await this.auditProjectAction(
+      { user, ipAddress, userAgent },
+      AuditAction.PROJECT_UPDATE,
+      projectId,
       'brief approval',
+      { action: 'approve_brief' },
     );
 
     return {
