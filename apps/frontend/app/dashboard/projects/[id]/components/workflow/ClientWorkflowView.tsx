@@ -3,16 +3,13 @@
 import { memo, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Project, ProjectStatus } from '@/types';
+import type { InvoiceDeadline } from '@/types/payments';
 import { ProjectStatusBadge } from '@/components/projects/ProjectStatusBadge';
-import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
+import {
+  PaymentLoadingSpinner,
+  PaymentStatusDisplay,
+} from '@/components/payments/PaymentWorkflowShared';
 import { CalendarIcon } from '@heroicons/react/24/outline';
-
-interface InvoiceDeadline {
-  date: Date;
-  label: string;
-  invoiceId: string;
-  amount: number;
-}
 
 interface ClientWorkflowViewProps {
   project: Project;
@@ -317,108 +314,18 @@ function ClientWorkflowView({
         </div>
 
         {loadingInvoices ? (
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800" />
-          </div>
+          <PaymentLoadingSpinner />
         ) : (
-          <PaymentStatusContent
+          <PaymentStatusDisplay
             project={project}
             invoiceDeadlines={invoiceDeadlines}
             pendingAmount={pendingAmount}
+            variant="client"
           />
         )}
       </div>
     </div>
   );
 }
-
-// Extracted payment status content for cleaner code
-const PaymentStatusContent = memo(function PaymentStatusContent({
-  project,
-  invoiceDeadlines,
-  pendingAmount,
-}: {
-  project: Project;
-  invoiceDeadlines: InvoiceDeadline[];
-  pendingAmount: number;
-}) {
-  const router = useRouter();
-
-  if (invoiceDeadlines.length > 0) {
-    const totalPending = invoiceDeadlines.reduce((sum, item) => sum + item.amount, 0);
-
-    return (
-      <div>
-        <div className="mb-3">
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">
-            Total Outstanding
-          </p>
-          <p className="text-2xl font-bold text-navy-900">
-            ${totalPending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {invoiceDeadlines.map((invoice) => (
-            <div
-              key={invoice.invoiceId}
-              className="bg-white border border-stone-200 rounded-lg p-3 shadow-sm"
-            >
-              <div className="flex justify-between items-start mb-1">
-                <span className="font-semibold text-navy-800 text-sm">{invoice.label}</span>
-                <span className="font-bold text-navy-900 text-sm">
-                  ${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span
-                  className={`${invoice.date < new Date() ? 'text-red-600 font-medium' : 'text-stone-500'}`}
-                >
-                  Due: {invoice.date.toLocaleDateString()}
-                  {invoice.date < new Date() && ' (Overdue)'}
-                </span>
-                <button
-                  onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
-                  className="text-navy-600 hover:text-navy-800 hover:underline"
-                >
-                  Pay Now
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const initialPaid = Number(project.amountPaid || 0);
-  const initialRequired = Number(project.initialAmountRequired || 0);
-  const isInitialPaymentComplete = initialRequired > 0 && initialPaid >= initialRequired;
-
-  if (isInitialPaymentComplete && invoiceDeadlines.length === 0) {
-    return (
-      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-        <p className="text-sm font-medium text-green-800">All Payments Up to Date</p>
-        <p className="text-xs text-green-700 mt-1">No pending invoices.</p>
-      </div>
-    );
-  }
-
-  if (project.initialAmountRequired !== null && project.initialAmountRequired !== undefined) {
-    return (
-      <PaymentProgressBar
-        paid={Number(project.amountPaid)}
-        required={Number(project.initialAmountRequired)}
-        pendingAmount={pendingAmount}
-      />
-    );
-  }
-
-  return (
-    <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
-      <p className="text-sm font-medium text-stone-700">No payment required yet</p>
-    </div>
-  );
-});
 
 export default memo(ClientWorkflowView);

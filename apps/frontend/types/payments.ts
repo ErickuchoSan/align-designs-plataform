@@ -36,5 +36,23 @@ export interface Payment {
     };
 }
 
-// Note: PAYMENT_METHOD_LABELS, PAYMENT_TYPE_LABELS, and PAYMENT_STATUS_LABELS
-// are now exported from ./enums.ts (see re-exports at top of file)
+/**
+ * Invoice deadline for workflow views
+ * Shared between AdminWorkflowView and ClientWorkflowView
+ */
+export interface InvoiceDeadline {
+  date: Date;
+  label: string;
+  invoiceId: string;
+  amount: number;
+}
+
+/**
+ * Payment progress tracking
+ */
+export interface PaymentProgress {
+  paid: number;
+  total: number;
+  percentage: number;
+  pendingInvoiceCount: number;
+}
