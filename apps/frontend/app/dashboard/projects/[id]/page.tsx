@@ -225,8 +225,10 @@ export default function ProjectDetailsPage() {
                   modals.openUploadModal();
                 }}
                 onOpenCommentModal={(stage, file) => {
+                  console.log('onOpenCommentModal called:', { stage, file });
                   setSelectedStageForModal(stage);
                   modals.openCommentModal(file);
+                  console.log('Modal state after open:', modals.showCommentModal);
                 }}
                 onDownload={handleDownload}
                 onEdit={modals.openEditModal}
