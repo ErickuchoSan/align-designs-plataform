@@ -129,8 +129,9 @@ export class AuthService {
   static async logout(): Promise<void> {
     try {
       await api.post(`${this.BASE_URL}/logout`);
-    } catch (error) {
-      // Ignore errors during logout (e.g. if token is already invalid)
+    } catch {
+      // Logout errors are non-critical - session cleanup happens in finally block
+      // No action needed as we clear auth data regardless of API response
     } finally {
       AuthStorage.clearAuthData();
       refreshCsrfToken(); // Refresh CSRF token after logout

@@ -64,12 +64,8 @@ class Logger {
     if (error instanceof Error) {
       errorDetails = { name: error.name, message: error.message, stack: isDevelopment ? error.stack : undefined };
     } else if (error !== null && error !== undefined) {
-      // Explicitly handle different types to avoid [object Object]
-      if (typeof error === 'object') {
-        errorDetails = { error: JSON.stringify(error) };
-      } else {
-        errorDetails = { error: String(error) };
-      }
+      // Always use JSON.stringify to safely convert any type to string
+      errorDetails = { error: JSON.stringify(error) };
     } else if (error === null) {
       errorDetails = { error: 'null' };
     }
