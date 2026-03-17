@@ -37,7 +37,7 @@ function ClientPaymentsView({
   isFullyCovered,
   onViewInvoice,
   onRefresh,
-}: ClientPaymentsViewProps) {
+}: Readonly<ClientPaymentsViewProps>) {
   const [isClientUploadModalOpen, setIsClientUploadModalOpen] = useState(false);
 
   return (

@@ -24,7 +24,7 @@ function MobileFileCard({
   canDelete,
   onViewHistory,
   onUploadVersion,
-}: MobileFileCardProps) {
+}: Readonly<MobileFileCardProps>) {
   const formattedDate = useMemo(() => formatDate(file.uploadedAt), [file.uploadedAt]);
   const formattedSize = useMemo(() => formatFileSize(file.sizeBytes || 0), [file.sizeBytes]);
   const fileExtension = useMemo(() => getFileExtension(file.originalName || ''), [file.originalName]);

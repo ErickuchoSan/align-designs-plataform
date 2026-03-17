@@ -42,7 +42,7 @@ export function ProjectProvider({
   children,
   initialProject = null,
   onUpdate,
-}: ProjectProviderProps) {
+}: Readonly<ProjectProviderProps>) {
   const [project, setProject] = useState<Project | null>(initialProject);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

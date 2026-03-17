@@ -27,7 +27,7 @@ export default function Loader({ size = 'md', color = 'blue', text }: Readonly<L
   );
 }
 
-export function PageLoader({ text = 'Loading...' }: { text?: string }) {
+export function PageLoader({ text = 'Loading...' }: Readonly<{ text?: string }>) {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Loader size="lg" text={text} />
@@ -43,7 +43,7 @@ export function ButtonLoader() {
  * Inline spinner for content areas - uses navy color by default
  * Use this instead of duplicating spinner styles
  */
-export function InlineSpinner({ label = 'Loading' }: { label?: string }) {
+export function InlineSpinner({ label = 'Loading' }: Readonly<{ label?: string }>) {
   return (
     <output className="flex items-center justify-center py-12" aria-label={label}>
       <Loader size="xl" color="navy" />

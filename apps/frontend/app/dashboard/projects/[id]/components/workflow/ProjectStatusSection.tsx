@@ -19,7 +19,7 @@ export function ProjectStatusSection({
   onActivate,
   onComplete,
   processing = false,
-}: ProjectStatusSectionProps) {
+}: Readonly<ProjectStatusSectionProps>) {
   const canActivate = isAdmin &&
     project.status === ProjectStatus.WAITING_PAYMENT &&
     project.amountPaid >= (project.initialAmountRequired ?? 0);

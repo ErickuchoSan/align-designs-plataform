@@ -102,7 +102,7 @@ export default function FileModalsGroup({
   onCloseUploadVersionModal,
   onUploadVersion,
   fileToVersion,
-}: FileModalsGroupProps) {
+}: Readonly<FileModalsGroupProps>) {
   return (
     <>
       <FileUploadModal

@@ -6,7 +6,7 @@ interface DeveloperSettingsCardProps {
   isAdmin: boolean;
 }
 
-function DeveloperSettingsCard({ isAdmin }: DeveloperSettingsCardProps) {
+function DeveloperSettingsCard({ isAdmin }: Readonly<DeveloperSettingsCardProps>) {
   const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {

@@ -16,7 +16,7 @@ interface SetPasswordStepProps {
 export default function SetPasswordStep({
   onSubmit,
   loading
-}: SetPasswordStepProps) {
+}: Readonly<SetPasswordStepProps>) {
   const {
     control,
     handleSubmit,

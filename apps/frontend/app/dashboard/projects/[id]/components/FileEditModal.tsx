@@ -20,7 +20,7 @@ export default function FileEditModal({
   onEdit,
   file,
   uploading,
-}: FileEditModalProps) {
+}: Readonly<FileEditModalProps>) {
   const [editComment, setEditComment] = useState('');
   const [editFiles, setEditFiles] = useState<File[]>([]);
 

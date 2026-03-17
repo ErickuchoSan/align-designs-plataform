@@ -157,7 +157,7 @@ function FileList({
   canDelete,
   onViewHistory,
   onUploadVersion,
-}: FileListProps) {
+}: Readonly<FileListProps>) {
   if (files.length === 0) {
     return (
       <div className="rounded-2xl bg-white p-12 text-center shadow-lg border border-stone-200">

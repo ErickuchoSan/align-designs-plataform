@@ -24,7 +24,7 @@ function ProjectWorkflowSection({
   isAdmin,
   onUpdate,
   userRole,
-}: ProjectWorkflowSectionProps) {
+}: Readonly<ProjectWorkflowSectionProps>) {
   const workflowData = useWorkflowData(project, onUpdate);
   const isClient = userRole === 'CLIENT';
 

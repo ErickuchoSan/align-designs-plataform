@@ -18,7 +18,7 @@ function UsersTabs({
   employeeCount,
   onTabChange,
   onCreateUser,
-}: UsersTabsProps) {
+}: Readonly<UsersTabsProps>) {
   return (
     <div className="mb-6">
       <div className="flex flex-wrap items-center justify-between border-b border-stone-300">

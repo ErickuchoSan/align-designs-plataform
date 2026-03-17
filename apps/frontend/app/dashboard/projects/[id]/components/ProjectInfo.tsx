@@ -9,7 +9,7 @@ interface ProjectInfoProps {
  * Displays project information including client details and file/comment counts
  * Extracted from ProjectDetailsPage for better maintainability
  */
-export default function ProjectInfo({ project }: ProjectInfoProps) {
+export default function ProjectInfo({ project }: Readonly<ProjectInfoProps>) {
   if (!project.client) {
     return null;
   }

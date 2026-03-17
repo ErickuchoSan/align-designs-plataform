@@ -25,7 +25,7 @@ export default function FileActionsBar({
   onOpenCommentModal,
   onOpenUploadModal,
   project,
-}: FileActionsBarProps) {
+}: Readonly<FileActionsBarProps>) {
   const isProjectActive = project?.status === ProjectStatus.ACTIVE;
   const isWaitingPayment = project?.status === ProjectStatus.WAITING_PAYMENT;
 

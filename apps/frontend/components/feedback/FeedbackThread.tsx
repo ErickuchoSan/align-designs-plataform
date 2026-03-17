@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Feedback, FeedbackCycle } from '@/types/feedback';
+import { FeedbackCycle } from '@/types/feedback';
 import { FeedbackService } from '@/services/feedback.service';
-import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
 import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';

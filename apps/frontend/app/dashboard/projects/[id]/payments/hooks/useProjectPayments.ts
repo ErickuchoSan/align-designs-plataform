@@ -67,8 +67,8 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
   const handleViewInvoice = async (invoiceId: string) => {
     try {
       const blob = await InvoicesService.downloadPdf(invoiceId);
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const url = globalThis.URL.createObjectURL(blob);
+      globalThis.open(url, '_blank');
     } catch (error) {
       toast.error(handleApiError(error, 'Could not download invoice'));
     }

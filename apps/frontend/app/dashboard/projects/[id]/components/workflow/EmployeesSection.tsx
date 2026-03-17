@@ -14,7 +14,7 @@ export function EmployeesSection({
   project,
   isAdmin,
   onManageEmployees,
-}: EmployeesSectionProps) {
+}: Readonly<EmployeesSectionProps>) {
   const hasEmployees = project.employees && project.employees.length > 0;
 
   return (

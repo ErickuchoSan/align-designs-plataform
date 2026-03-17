@@ -9,7 +9,7 @@ interface PasswordSuccessModalProps {
   onConfirm: () => void;
 }
 
-function PasswordSuccessModal({ isOpen, onConfirm }: PasswordSuccessModalProps) {
+function PasswordSuccessModal({ isOpen, onConfirm }: Readonly<PasswordSuccessModalProps>) {
   return (
     <Modal
       isOpen={isOpen}

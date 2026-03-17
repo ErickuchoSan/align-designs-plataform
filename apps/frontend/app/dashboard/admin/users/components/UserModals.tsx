@@ -78,7 +78,7 @@ function UserModals({
   isDeleting,
   showForceDeleteConfirm,
   onForceDeleteConfirm,
-}: UserModalsProps) {
+}: Readonly<UserModalsProps>) {
   const userTypeLabel = userRole === 'CLIENT' ? 'Client' : 'Employee';
   const getCreateButtonText = () => {
     if (isCreating) return <ButtonLoader />;

@@ -14,7 +14,7 @@ export default function FileFilters({
   typeFilter,
   setTypeFilter,
   availableTypes,
-}: FileFiltersProps) {
+}: Readonly<FileFiltersProps>) {
   return (
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
       <input

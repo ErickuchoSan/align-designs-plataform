@@ -111,7 +111,7 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const dropdownHeight = 400; // Estimated max height of dropdown
-      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceBelow = globalThis.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
       // Open upward if not enough space below and more space above
@@ -119,9 +119,9 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
       setDropdownPosition({
         top: shouldOpenUpward
-          ? rect.top + window.scrollY - dropdownHeight - 4 // Reduced gap from 8 to 4
-          : rect.bottom + window.scrollY + 4, // Reduced gap from 8 to 4
-        left: rect.left + window.scrollX,
+          ? rect.top + globalThis.scrollY - dropdownHeight - 4 // Reduced gap from 8 to 4
+          : rect.bottom + globalThis.scrollY + 4, // Reduced gap from 8 to 4
+        left: rect.left + globalThis.scrollX,
         width: rect.width,
         openUpward: shouldOpenUpward,
       });

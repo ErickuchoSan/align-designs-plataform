@@ -6,7 +6,7 @@ interface SecurityCardProps {
   onChangePassword: () => void;
 }
 
-function SecurityCard({ onChangePassword }: SecurityCardProps) {
+function SecurityCard({ onChangePassword }: Readonly<SecurityCardProps>) {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
       <h2 className="text-2xl font-bold text-navy-900 mb-4">Security</h2>

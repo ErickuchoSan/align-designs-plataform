@@ -16,7 +16,7 @@ interface DeadlinesSectionProps {
  * Deadlines Section
  * Displays upcoming invoice deadlines
  */
-export function DeadlinesSection({ deadlines, loading = false }: DeadlinesSectionProps) {
+export function DeadlinesSection({ deadlines, loading = false }: Readonly<DeadlinesSectionProps>) {
   // Sort and format deadlines
   const sortedDeadlines = useMemo(() => {
     return [...deadlines]

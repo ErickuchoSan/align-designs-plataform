@@ -43,7 +43,7 @@ function PaymentModalsGroup({
     showUploadPaymentProofModal,
     onCloseUploadPaymentProofModal,
     onSuccess,
-}: PaymentModalsGroupProps) {
+}: Readonly<PaymentModalsGroupProps>) {
     return (
         <>
             {showGenerateInvoiceModal && (

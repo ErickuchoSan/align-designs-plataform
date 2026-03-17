@@ -125,7 +125,7 @@ export async function refreshCsrfToken(): Promise<void> {
 // Initialize CSRF token on client-side
 // Note: This runs asynchronously in the background. CSRF token will be
 // available for subsequent requests after initial fetch completes.
-if (typeof window !== 'undefined') {
+if (typeof globalThis !== 'undefined') {
   void (async () => {
     try {
       await fetchCsrfToken();
@@ -167,7 +167,7 @@ api.interceptors.request.use(
     const method = config.method?.toUpperCase();
 
     // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
-    if (typeof window !== 'undefined') {
+    if (typeof globalThis !== 'undefined') {
       if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
         // If CSRF token is not available, fetch it
         if (!csrfToken) {
@@ -195,7 +195,7 @@ api.interceptors.request.use(
 
 // Check if dev mode is enabled
 function isDevModeEnabled(): boolean {
-  return typeof window !== 'undefined' && localStorage.getItem('devMode') === 'true';
+  return typeof globalThis !== 'undefined' && globalThis.localStorage.getItem('devMode') === 'true';
 }
 
 // Build error details from error data
@@ -246,7 +246,7 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
     errorCode: error.code,
     onClose: willRedirect ? () => {
       AuthStorage.clearAuthData();
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     } : undefined,
   });
 }
@@ -264,7 +264,7 @@ function shouldSkipAuthRedirect(url: string): boolean {
     url.includes('/auth/change-password') ||
     url.includes('/auth/reset-password') ||
     url.includes('/auth/logout') ||
-    (typeof window !== 'undefined' && window.location.pathname.includes('/login'))
+    (typeof globalThis !== 'undefined' && globalThis.location.pathname.includes('/login'))
   );
 }
 
@@ -301,7 +301,7 @@ function showAuthErrorModal(url: string, errorMessage: string, method?: string):
     willRedirect: true,
     onClose: () => {
       AuthStorage.clearAuthData();
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     },
   });
 }
@@ -406,7 +406,7 @@ api.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const config = error.config as ExtendedConfig;
-    const isClientSide = typeof window !== 'undefined';
+    const isClientSide = typeof globalThis !== 'undefined';
 
     // Handle 401 authentication errors
     if (isClientSide && error.response?.status === 401) {

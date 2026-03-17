@@ -34,7 +34,7 @@ function AdminPaymentsView({
   remainingAmount,
   onViewInvoice,
   onRefresh,
-}: AdminPaymentsViewProps) {
+}: Readonly<AdminPaymentsViewProps>) {
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);

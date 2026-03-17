@@ -47,8 +47,8 @@ function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
     setLoadingInvoiceId(invoice.id);
     try {
       const blob = await InvoicesService.downloadPdf(invoice.id);
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const url = globalThis.URL.createObjectURL(blob);
+      globalThis.open(url, '_blank');
     } catch (error) {
       toast.error(handleApiError(error, 'Could not load invoice PDF'));
     } finally {

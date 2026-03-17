@@ -119,7 +119,7 @@ function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalPr
     if (!printContent) return;
 
     // Clone and prepare for print
-    const printWindow = window.open('', '_blank');
+    const printWindow = globalThis.open('', '_blank');
     if (!printWindow) return;
 
     printWindow.document.write(`

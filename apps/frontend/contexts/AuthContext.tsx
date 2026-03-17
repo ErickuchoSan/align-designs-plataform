@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { User, LoginCredentials, OTPRequest, OTPVerify, AuthResponse } from '@/types';
+import { User, LoginCredentials, OTPRequest, OTPVerify } from '@/types';
 import { logger } from '@/lib/logger';
 import { AuthStorage } from '@/lib/auth-storage';
 import { AuthService } from '@/services/auth.service';
@@ -20,7 +20,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 

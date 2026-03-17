@@ -42,7 +42,7 @@ function UsersTable({
   onResendEmail,
   onPageChange,
   onItemsPerPageChange,
-}: UsersTableProps) {
+}: Readonly<UsersTableProps>) {
   const renderLoadingRows = () => (
     <>
       {[1, 2, 3].map((i) => (

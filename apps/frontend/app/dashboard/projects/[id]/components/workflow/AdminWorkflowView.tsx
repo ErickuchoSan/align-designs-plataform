@@ -68,7 +68,7 @@ function AdminWorkflowView({
   onFetchCompletionStatus,
   onCompleteProject,
   onArchiveProject,
-}: AdminWorkflowViewProps) {
+}: Readonly<AdminWorkflowViewProps>) {
   // Modal states
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);

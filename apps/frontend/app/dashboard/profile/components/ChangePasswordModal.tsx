@@ -17,7 +17,7 @@ interface ChangePasswordModalProps {
   onSuccess: () => void;
 }
 
-function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswordModalProps) {
+function ChangePasswordModal({ isOpen, onClose, onSuccess }: Readonly<ChangePasswordModalProps>) {
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',

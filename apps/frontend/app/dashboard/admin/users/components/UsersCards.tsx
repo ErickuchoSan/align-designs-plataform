@@ -41,7 +41,7 @@ function UsersCards({
   onResendEmail,
   onPageChange,
   onItemsPerPageChange,
-}: UsersCardsProps) {
+}: Readonly<UsersCardsProps>) {
   const renderLoadingState = () => (
     <>
       {[1, 2, 3].map((i) => (

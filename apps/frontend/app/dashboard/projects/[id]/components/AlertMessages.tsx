@@ -9,7 +9,7 @@ interface AlertMessagesProps {
  * Displays success and error alert messages
  * Extracted from ProjectDetailsPage for better reusability
  */
-export default function AlertMessages({ success, error }: AlertMessagesProps) {
+export default function AlertMessages({ success, error }: Readonly<AlertMessagesProps>) {
   if (!success && !error) return null;
 
   return (

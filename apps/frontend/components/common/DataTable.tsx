@@ -33,7 +33,7 @@ function DataTable<T>({
   onRowClick,
   rowClassName,
   ariaLabel,
-}: DataTableProps<T>) {
+}: Readonly<DataTableProps<T>>) {
   const getRowClassName = (item: T) => {
     const base = 'hover:bg-stone-50 transition-colors';
     const clickable = onRowClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-inset' : '';

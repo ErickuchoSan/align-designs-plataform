@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User, CreateClientDto, CreateUserDto, Role } from '@/types';
+import { User, CreateUserDto, Role } from '@/types';
 import { handleApiError } from '@/lib/errors';
 import { usePagination } from './usePagination';
 import { toast } from '@/lib/toast';

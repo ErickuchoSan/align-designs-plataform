@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { cn, MODAL_CONTAINER, MODAL_CONTENT, MODAL_SIZES, MODAL_HEADER, MODAL_TITLE, MODAL_BODY } from '@/lib/styles';
+import { cn, MODAL_CONTENT, MODAL_SIZES, MODAL_HEADER, MODAL_TITLE, MODAL_BODY } from '@/lib/styles';
 import { CloseIcon } from './icons';
 
 interface ModalProps {

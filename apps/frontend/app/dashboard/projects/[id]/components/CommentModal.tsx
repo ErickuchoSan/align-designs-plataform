@@ -15,7 +15,7 @@ export default function CommentModal({
   onClose,
   onSubmit,
   uploading,
-}: CommentModalProps) {
+}: Readonly<CommentModalProps>) {
   const [commentText, setCommentText] = useState('');
   const [files, setFiles] = useState<File[]>([]);
 

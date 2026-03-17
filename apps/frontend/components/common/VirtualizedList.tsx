@@ -37,7 +37,7 @@ export function VirtualizedList<T>({
   overscan = 3,
   className = '',
   emptyMessage = 'No items to display',
-}: VirtualizedListProps<T>) {
+}: Readonly<VirtualizedListProps<T>>) {
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 

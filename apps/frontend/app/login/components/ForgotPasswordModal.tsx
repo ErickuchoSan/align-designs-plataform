@@ -22,7 +22,7 @@ interface ForgotPasswordModalProps {
 
 type ForgotPasswordStep = 'email' | 'otp' | 'password';
 
-export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }: ForgotPasswordModalProps) {
+export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }: Readonly<ForgotPasswordModalProps>) {
   const [step, setStep] = useState<ForgotPasswordStep>('email');
   const [email, setEmail] = useState(initialEmail);
   const [otp, setOtp] = useState('');

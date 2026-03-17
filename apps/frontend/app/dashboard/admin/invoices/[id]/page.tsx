@@ -81,7 +81,7 @@ export default function InvoiceDetailPage() {
                         </button>
                     )}
                     <button
-                        onClick={() => window.print()}
+                        onClick={() => globalThis.print()}
                         className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'border border-gray-300 shadow-sm')}
                     >
                         Print / Download PDF

@@ -16,7 +16,7 @@ export default function FileDeleteModal({
   onDelete,
   file,
   deleting,
-}: FileDeleteModalProps) {
+}: Readonly<FileDeleteModalProps>) {
   const handleDelete = async () => {
     if (!file) return;
 

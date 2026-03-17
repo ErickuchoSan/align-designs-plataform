@@ -12,7 +12,7 @@ interface EmailStepProps {
   loading: boolean;
 }
 
-export default function EmailStep({ email, onSubmit, loading }: EmailStepProps) {
+export default function EmailStep({ email, onSubmit, loading }: Readonly<EmailStepProps>) {
   const {
     register,
     handleSubmit,

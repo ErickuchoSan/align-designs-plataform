@@ -22,7 +22,7 @@ export default function PasswordStep({
   onLoginWithOTP,
   loading,
   onBack
-}: PasswordStepProps) {
+}: Readonly<PasswordStepProps>) {
   const {
     register,
     handleSubmit,
