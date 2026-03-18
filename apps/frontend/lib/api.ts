@@ -88,16 +88,23 @@ export const api = axios.create({
         (data && typeof data === 'object' && data.constructor?.name === 'FormData') ||
         (data && typeof data.append === 'function' && typeof data.get === 'function');
 
+      console.log('[DEBUG transformRequest] data type:', typeof data);
+      console.log('[DEBUG transformRequest] data constructor:', data?.constructor?.name);
+      console.log('[DEBUG transformRequest] isFormData:', isFormData);
+      console.log('[DEBUG transformRequest] instanceof FormData:', data instanceof FormData);
+
       // If data is FormData, return it as-is without transformation
       // This prevents axios from JSON-serializing the FormData
       if (isFormData) {
         // Don't set Content-Type - let browser set it with correct boundary
         delete headers['Content-Type'];
+        console.log('[DEBUG transformRequest] Returning FormData as-is');
         return data;
       }
       // For non-FormData, use axios default transform (JSON stringify)
       if (data && typeof data === 'object' && !(data instanceof URLSearchParams)) {
         headers['Content-Type'] = 'application/json';
+        console.log('[DEBUG transformRequest] JSON stringifying data');
         return JSON.stringify(data);
       }
       return data;
@@ -191,9 +198,16 @@ api.interceptors.request.use(
       (config.data && typeof config.data === 'object' && config.data.constructor?.name === 'FormData') ||
       (config.data && typeof config.data.append === 'function' && typeof config.data.get === 'function');
 
+    console.log('[DEBUG interceptor] URL:', config.url);
+    console.log('[DEBUG interceptor] Method:', method);
+    console.log('[DEBUG interceptor] data type:', typeof config.data);
+    console.log('[DEBUG interceptor] data constructor:', config.data?.constructor?.name);
+    console.log('[DEBUG interceptor] isFormData:', isFormData);
+
     // Remove Content-Type for FormData - let browser set it with correct boundary
     // Must completely delete the header, not just set to undefined
     if (isFormData) {
+      console.log('[DEBUG interceptor] Clearing Content-Type headers for FormData');
       // Delete from all possible header locations
       delete config.headers['Content-Type'];
       delete config.headers['content-type'];

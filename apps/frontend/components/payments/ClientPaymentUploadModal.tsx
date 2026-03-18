@@ -99,6 +99,10 @@ export default function ClientPaymentUploadModal({
 
         if (file) {
           formData.append('file', file);
+          console.log('[DEBUG] File object:', file);
+          console.log('[DEBUG] File name:', file.name);
+          console.log('[DEBUG] File size:', file.size);
+          console.log('[DEBUG] File type:', file.type);
         }
 
         formData.append('projectId', projectId);
@@ -108,6 +112,14 @@ export default function ClientPaymentUploadModal({
         formData.append('type', invoiceId ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT);
         if (invoiceId) formData.append('invoiceId', invoiceId);
         if (notes) formData.append('notes', notes);
+
+        // Debug: Log FormData entries
+        console.log('[DEBUG] FormData entries:');
+        for (const [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value instanceof File ? `File(${value.name}, ${value.size} bytes)` : value);
+        }
+        console.log('[DEBUG] FormData instanceof FormData:', formData instanceof FormData);
+        console.log('[DEBUG] FormData constructor name:', formData.constructor?.name);
 
         await PaymentsService.uploadClientPayment(formData);
       },

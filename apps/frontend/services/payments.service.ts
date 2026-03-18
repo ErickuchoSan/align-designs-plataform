@@ -13,6 +13,10 @@ export class PaymentsService {
     static async uploadClientPayment(data: FormData): Promise<Payment> {
         // Axios auto-detects FormData and sets correct Content-Type with boundary
         // Don't override headers to preserve CSRF token from interceptor
+        console.log('[DEBUG PaymentsService] Received data type:', data.constructor?.name);
+        console.log('[DEBUG PaymentsService] data instanceof FormData:', data instanceof FormData);
+        console.log('[DEBUG PaymentsService] Has file?', data.get('file'));
+
         const response = await api.post<Payment>(`${this.BASE_URL}/client-upload`, data);
         return response.data;
     }
