@@ -163,6 +163,11 @@ api.interceptors.request.use(
 
     const method = config.method?.toUpperCase();
 
+    // Remove Content-Type for FormData - let browser set it with correct boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
     if (typeof globalThis !== 'undefined') {
       if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
