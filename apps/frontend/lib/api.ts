@@ -80,6 +80,29 @@ export const api = axios.create({
   timeout: LOADING_DELAY.TIMEOUT,
   // Enable sending cookies with requests (required for httpOnly cookies)
   withCredentials: true,
+  // Custom transformRequest to preserve FormData without serialization
+  transformRequest: [
+    (data, headers) => {
+      // Check for FormData using multiple methods (instanceof can fail across contexts)
+      const isFormData = data instanceof FormData ||
+        (data && typeof data === 'object' && data.constructor?.name === 'FormData') ||
+        (data && typeof data.append === 'function' && typeof data.get === 'function');
+
+      // If data is FormData, return it as-is without transformation
+      // This prevents axios from JSON-serializing the FormData
+      if (isFormData) {
+        // Don't set Content-Type - let browser set it with correct boundary
+        delete headers['Content-Type'];
+        return data;
+      }
+      // For non-FormData, use axios default transform (JSON stringify)
+      if (data && typeof data === 'object' && !(data instanceof URLSearchParams)) {
+        headers['Content-Type'] = 'application/json';
+        return JSON.stringify(data);
+      }
+      return data;
+    },
+  ],
 });
 
 // Function to fetch CSRF token
@@ -163,15 +186,32 @@ api.interceptors.request.use(
 
     const method = config.method?.toUpperCase();
 
+    // Check for FormData using multiple methods (instanceof can fail across contexts)
+    const isFormData = config.data instanceof FormData ||
+      (config.data && typeof config.data === 'object' && config.data.constructor?.name === 'FormData') ||
+      (config.data && typeof config.data.append === 'function' && typeof config.data.get === 'function');
+
     // Remove Content-Type for FormData - let browser set it with correct boundary
-    // Must delete from all header levels (common, method-specific, and direct)
-    if (config.data instanceof FormData) {
-      config.headers['Content-Type'] = undefined;
+    // Must completely delete the header, not just set to undefined
+    if (isFormData) {
+      // Delete from all possible header locations
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
       if (config.headers.common) {
         delete config.headers.common['Content-Type'];
+        delete config.headers.common['content-type'];
       }
       if (config.headers.post) {
         delete config.headers.post['Content-Type'];
+        delete config.headers.post['content-type'];
+      }
+      if (config.headers.patch) {
+        delete config.headers.patch['Content-Type'];
+        delete config.headers.patch['content-type'];
+      }
+      if (config.headers.put) {
+        delete config.headers.put['Content-Type'];
+        delete config.headers.put['content-type'];
       }
     }
 
