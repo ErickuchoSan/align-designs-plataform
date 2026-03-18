@@ -301,15 +301,16 @@ export class ProjectsService {
   }
 
   /**
-   * Approve project brief
-   * Client action to confirm the project scope
+   * Close project brief
+   * Admin action to lock the brief section and enable work to begin
    */
-  static async approveBrief(projectId: string): Promise<{
+  static async closeBrief(projectId: string): Promise<{
     message: string;
     project: Project;
-    approvedAt: string;
+    closedAt: string;
+    activated: boolean;
   }> {
-    const response = await api.post(`${this.BASE_URL}/${projectId}/approve-brief`);
+    const response = await api.post(`${this.BASE_URL}/${projectId}/close-brief`);
     return response.data;
   }
 }

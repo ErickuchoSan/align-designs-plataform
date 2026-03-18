@@ -141,9 +141,8 @@ export const CLIENT_STAGE_LABELS: Record<Stage, string> = {
 };
 
 // Stages visible to clients (simplified portal)
-// Per client doc: Project Brief, Design Review, Plan Set Review, Final Deliverables, Payments
+// Project Brief is internal (for employees to understand scope), clients don't see it
 export const CLIENT_VISIBLE_STAGES: Stage[] = [
-  Stage.BRIEF_PROJECT,
   Stage.FEEDBACK_CLIENT, // Design Review
   Stage.ADMIN_APPROVED, // Plan Set Review
   Stage.CLIENT_APPROVED, // Final Deliverables
@@ -152,6 +151,7 @@ export const CLIENT_VISIBLE_STAGES: Stage[] = [
 
 // Stages hidden from clients (internal only)
 export const ADMIN_ONLY_STAGES: Stage[] = [
+  Stage.BRIEF_PROJECT, // Project Brief - internal scope for employees
   Stage.REFERENCES, // Concept Design - clients see files via Design Review
   Stage.FEEDBACK_EMPLOYEE, // Revision Tracking - internal
   Stage.SUBMITTED, // Construction Plans - employee work area

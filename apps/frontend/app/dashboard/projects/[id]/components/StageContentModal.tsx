@@ -158,7 +158,7 @@ export default function StageContentModal({
             <FileInput
               id="uploadFiles"
               onChange={(files) => setSelectedFiles(files || [])}
-              required={contentMode !== 'comment'}
+              required
               multiple={true}
             />
             {selectedFiles.length > 0 && (

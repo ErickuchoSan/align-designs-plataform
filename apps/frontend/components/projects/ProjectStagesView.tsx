@@ -212,6 +212,7 @@ function ProjectStagesView({
             stage={currentStage}
             stageFiles={stageFiles}
             userRole={user.role}
+            briefApprovedAt={project.briefApprovedAt}
             onOpenContentModal={onOpenContentModal}
             onDownload={onDownload}
           />

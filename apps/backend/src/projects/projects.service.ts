@@ -720,31 +720,24 @@ export class ProjectsService {
   }
 
   /**
-   * Approve the project brief
-   * Records the approval timestamp, confirming the project scope
-   * Only the project client or admin can approve
+   * Close the project brief (Admin only)
+   * Locks the brief section and allows employees to start work
+   * May auto-activate the project if all requirements are met
    */
-  async approveBrief(projectId: string, userId: string, userRole: Role) {
+  async closeBrief(projectId: string): Promise<{ project: any; activated: boolean }> {
     const project = await this.projectRepo.findById(projectId);
     if (!project) {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
 
-    // Check if user is the client or an admin
-    if (userRole === Role.CLIENT && project.clientId !== userId) {
-      throw new ForbiddenException(
-        'Only the project client can approve the brief',
-      );
-    }
-
-    // Check if already approved
+    // Check if already closed
     if (project.briefApprovedAt) {
       throw new BadRequestException(
-        `Project brief was already approved on ${project.briefApprovedAt.toISOString()}`,
+        `Project brief was already closed on ${project.briefApprovedAt.toISOString()}`,
       );
     }
 
-    // Update the project with approval timestamp
+    // Update the project with closure timestamp
     const updatedProject = await this.prisma.project.update({
       where: { id: projectId },
       data: {
@@ -762,10 +755,21 @@ export class ProjectsService {
       },
     });
 
-    this.logger.log(
-      `Project brief approved for project ${project.name} by user ${userId}`,
-    );
+    this.logger.log(`Project brief closed for project ${project.name}`);
 
-    return updatedProject;
+    // Try to auto-activate if all requirements are met
+    let activated = false;
+    try {
+      const validation = await this.projectStatusService.canActivateProject(projectId);
+      if (validation.canActivate) {
+        await this.projectStatusService.activateProject(projectId);
+        activated = true;
+        this.logger.log(`Project ${project.name} auto-activated after brief closure`);
+      }
+    } catch (error) {
+      this.logger.warn(`Auto-activation check failed for project ${projectId}: ${error}`);
+    }
+
+    return { project: updatedProject, activated };
   }
 }

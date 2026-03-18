@@ -20,14 +20,15 @@ export interface StagePermissions {
 export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
   /**
    * PROJECT BRIEF
-   * Initial project scope, consultation notes, client questionnaire, inspiration images
+   * Internal scope document for employees - admin defines project requirements
+   * Clients don't see this section; it's for internal team coordination
    */
   BRIEF_PROJECT: {
-    canView: [Role.ADMIN, Role.EMPLOYEE, Role.CLIENT],
-    canWrite: [Role.ADMIN, Role.CLIENT],
+    canView: [Role.ADMIN, Role.EMPLOYEE],
+    canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
     description:
-      'Initial project scope, consultation notes, and client requirements.',
+      'Internal project scope and requirements for the team.',
   },
 
   /**

@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ProjectStatus, NotificationType, Stage } from '@prisma/client';
+import { ProjectStatus, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../../notifications/notifications.service';
 
 export interface ProjectStatusSummary {
@@ -42,7 +42,7 @@ export class ProjectStatusService {
    * Requirements:
    * - Must be in WAITING_PAYMENT status
    * - Must have at least one employee assigned
-   * - Must have Project Brief defined (at least one file in BRIEF_PROJECT stage)
+   * - Must have Project Brief closed (briefApprovedAt must be set)
    * - If initialAmountRequired is set, amountPaid must be >= initialAmountRequired
    */
   async canActivateProject(projectId: string): Promise<{
@@ -63,6 +63,7 @@ export class ProjectStatusService {
         status: true,
         initialAmountRequired: true,
         amountPaid: true,
+        briefApprovedAt: true,
       },
     });
 
@@ -91,18 +92,10 @@ export class ProjectStatusService {
       );
     }
 
-    // Check #2: Project Brief (at least one file in BRIEF_PROJECT stage)
-    const briefFileCount = await this.prisma.file.count({
-      where: {
-        projectId,
-        stage: Stage.BRIEF_PROJECT,
-        deletedAt: null,
-      },
-    });
-
-    if (briefFileCount === 0) {
+    // Check #2: Project Brief must be closed by admin
+    if (!project.briefApprovedAt) {
       missingRequirements.push(
-        'No Project Brief. Please upload at least one file to the Brief stage.',
+        'Project Brief not closed. Please close the Project Brief to proceed.',
       );
     }
 

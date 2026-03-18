@@ -8,6 +8,7 @@ interface StageHeaderProps {
   stage: StageInfo;
   stageFiles: File[];
   userRole: string;
+  briefApprovedAt?: string;
   onOpenContentModal: (stage: Stage) => void;
   onDownload: (fileId: string, fileName: string) => void;
 }
@@ -21,19 +22,30 @@ function StageHeader({
   stage,
   stageFiles,
   userRole,
+  briefApprovedAt,
   onOpenContentModal,
   onDownload,
 }: Readonly<StageHeaderProps>) {
   const isAdmin = userRole === 'ADMIN';
   const isEmployee = userRole === 'EMPLOYEE';
+  const isBriefClosed = Boolean(briefApprovedAt);
 
   // Determine if content can be added to this stage
+  // Rules:
+  // 1. User must have write permission for the stage
+  // 2. FEEDBACK_EMPLOYEE and PAYMENTS are not directly uploadable
+  // 3. Employees cannot upload to BRIEF_PROJECT
+  // 4. Admins cannot upload to SUBMITTED
+  // 5. Brief section is locked once closed (for admin)
+  // 6. Employees cannot upload until brief is closed
   const canAddContent =
     stage.permissions.canWrite &&
     stage.stage !== Stage.FEEDBACK_EMPLOYEE &&
     stage.stage !== Stage.PAYMENTS &&
     !(stage.stage === Stage.BRIEF_PROJECT && isEmployee) &&
-    !(isAdmin && stage.stage === Stage.SUBMITTED);
+    !(isAdmin && stage.stage === Stage.SUBMITTED) &&
+    !(stage.stage === Stage.BRIEF_PROJECT && isBriefClosed) &&
+    !(isEmployee && !isBriefClosed);
 
   const downloadableFiles = stageFiles.filter(f => f.filename);
   const showBulkDownload = downloadableFiles.length > 1;

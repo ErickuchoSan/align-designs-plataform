@@ -592,46 +592,42 @@ export class ProjectsController {
   }
 
   /**
-   * Approve project brief (Client action)
-   * Confirms the project scope before design work begins
+   * Close project brief (Admin action)
+   * Locks the brief section and allows employees to start uploading files
    */
-  @Post(':id/approve-brief')
-  @Roles(Role.CLIENT, Role.ADMIN)
+  @Post(':id/close-brief')
+  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Approve project brief',
+    summary: 'Close project brief',
     description:
-      'Client approves the project brief, confirming the project scope. This action records the approval timestamp.',
+      'Admin closes the project brief, locking the section and allowing employees to start work. May auto-activate the project if payment is complete.',
   })
   @ApiProjectIdParam()
-  @ApiSuccessResponse('Brief approved successfully')
-  @ApiBadRequestResponse('Brief already approved')
-  @ApiForbiddenResponse('Forbidden - Not the project client')
+  @ApiSuccessResponse('Brief closed successfully')
+  @ApiBadRequestResponse('Brief already closed')
   @ApiNotFoundResponse('Project')
-  async approveBrief(
+  async closeBrief(
     @Param('id') projectId: string,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
-    const result = await this.projectsService.approveBrief(
-      projectId,
-      user.userId,
-      user.role,
-    );
+    const result = await this.projectsService.closeBrief(projectId);
 
     await this.auditProjectAction(
       { user, ipAddress, userAgent },
       AuditAction.PROJECT_UPDATE,
       projectId,
-      'brief approval',
-      { action: 'approve_brief' },
+      'brief closed',
+      { action: 'close_brief' },
     );
 
     return {
-      message: 'Project brief approved successfully',
-      project: result,
-      approvedAt: result.briefApprovedAt,
+      message: 'Project brief closed successfully',
+      project: result.project,
+      closedAt: result.project.briefApprovedAt,
+      activated: result.activated,
     };
   }
 }

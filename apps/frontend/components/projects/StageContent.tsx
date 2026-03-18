@@ -61,20 +61,20 @@ function StageContent({
   onRefresh,
   onBriefApproved,
 }: Readonly<StageContentProps>) {
-  const [approvingBrief, setApprovingBrief] = useState(false);
+  const [closingBrief, setClosingBrief] = useState(false);
   const [briefError, setBriefError] = useState<string | null>(null);
 
-  const handleApproveBrief = async () => {
-    setApprovingBrief(true);
+  const handleCloseBrief = async () => {
+    setClosingBrief(true);
     setBriefError(null);
     try {
-      await ProjectsService.approveBrief(projectId);
+      await ProjectsService.closeBrief(projectId);
       onBriefApproved?.();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to approve brief';
+      const message = error instanceof Error ? error.message : 'Failed to close brief';
       setBriefError(message);
     } finally {
-      setApprovingBrief(false);
+      setClosingBrief(false);
     }
   };
   // Special handling for PAYMENTS stage
@@ -124,10 +124,8 @@ function StageContent({
     );
   }
 
-  // Check if this is BRIEF_PROJECT stage and should show approval button
-  const showBriefApproval = stage.stage === Stage.BRIEF_PROJECT &&
-    userRole === 'CLIENT' &&
-    stageFiles.length > 0;
+  // Check if this is BRIEF_PROJECT stage and should show close brief button (admin only)
+  const showCloseBrief = stage.stage === Stage.BRIEF_PROJECT && userRole === 'ADMIN';
 
   // Files list
   return (
@@ -150,16 +148,16 @@ function StageContent({
         ))}
       </ul>
 
-      {/* Brief Approval Section for Clients */}
-      {showBriefApproval && (
+      {/* Close Brief Section for Admin */}
+      {showCloseBrief && (
         <div className="mt-6 pt-6 border-t border-stone-200">
           {briefApprovedAt ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
               <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
               <div>
-                <p className="font-medium text-green-800">Project Brief Approved</p>
+                <p className="font-medium text-green-800">Project Brief Closed</p>
                 <p className="text-sm text-green-700">
-                  Approved on {new Date(briefApprovedAt).toLocaleDateString('en-US', {
+                  Closed on {new Date(briefApprovedAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -168,30 +166,30 @@ function StageContent({
               </div>
             </div>
           ) : (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-medium text-amber-900">Confirm Project Scope</p>
-                  <p className="text-sm text-amber-800 mt-1">
-                    Please review the project brief above and approve to confirm the project scope.
-                    This action confirms that you agree with the project requirements.
+                  <p className="font-medium text-blue-900">Close Project Brief</p>
+                  <p className="text-sm text-blue-800 mt-1">
+                    Once closed, this section becomes read-only and employees can start uploading their work.
+                    The project will activate automatically if payment is complete.
                   </p>
                   {briefError && (
                     <p className="text-sm text-red-600 mt-2">{briefError}</p>
                   )}
                 </div>
                 <button
-                  onClick={handleApproveBrief}
-                  disabled={approvingBrief}
+                  onClick={handleCloseBrief}
+                  disabled={closingBrief}
                   className="flex-shrink-0 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {approvingBrief ? (
+                  {closingBrief ? (
                     <span className="flex items-center gap-2">
                       <InlineSpinner label="" />
-                      Approving...
+                      Closing...
                     </span>
                   ) : (
-                    'Approve Project Brief'
+                    'Close Project Brief'
                   )}
                 </button>
               </div>
