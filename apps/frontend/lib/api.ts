@@ -73,9 +73,9 @@ function createDedupedRequest(config: InternalAxiosRequestConfig): Promise<any> 
 
 export const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Note: Don't set Content-Type here - axios auto-detects:
+  // - FormData → multipart/form-data (with boundary)
+  // - Object → application/json
   // Set timeout to prevent hanging requests (30 seconds)
   timeout: LOADING_DELAY.TIMEOUT,
   // Enable sending cookies with requests (required for httpOnly cookies)
@@ -164,8 +164,15 @@ api.interceptors.request.use(
     const method = config.method?.toUpperCase();
 
     // Remove Content-Type for FormData - let browser set it with correct boundary
+    // Must delete from all header levels (common, method-specific, and direct)
     if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
+      config.headers['Content-Type'] = undefined;
+      if (config.headers.common) {
+        delete config.headers.common['Content-Type'];
+      }
+      if (config.headers.post) {
+        delete config.headers.post['Content-Type'];
+      }
     }
 
     // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
