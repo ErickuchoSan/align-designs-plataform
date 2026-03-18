@@ -145,8 +145,74 @@ function ClientWorkflowView({
 
   // Waiting for initial payment
   if (project.status === ProjectStatus.WAITING_PAYMENT) {
-    const isPendingCoverage =
-      Number(project.amountPaid || 0) + pendingAmount >= Number(project.initialAmountRequired || 0);
+    const amountPaid = Number(project.amountPaid || 0);
+    const amountRequired = Number(project.initialAmountRequired || 0);
+    const isPendingCoverage = amountPaid + pendingAmount >= amountRequired;
+    const isPaymentConfirmed = amountPaid >= amountRequired && amountRequired > 0;
+
+    // Payment confirmed but project not yet activated (missing brief or employee)
+    if (isPaymentConfirmed) {
+      return (
+        <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 mb-6">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg
+                className="w-10 h-10 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+
+            <h2 className="text-2xl font-bold text-navy-900 mb-3">Payment Approved</h2>
+
+            <p className="text-base text-stone-600 mb-6">
+              Your payment has been confirmed. We are now setting up your project and will notify you once work begins.
+            </p>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 inline-block">
+              <p className="text-sm text-green-700 mb-1">Amount Paid</p>
+              <p className="text-3xl font-bold text-green-800">
+                ${amountPaid.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+
+            <div className="w-full px-8 py-3 bg-blue-50 text-blue-700 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2 border border-blue-200 mx-auto max-w-md">
+              <svg
+                className="w-5 h-5 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Awaiting Project Setup
+            </div>
+
+            <p className="text-xs text-stone-500 mt-6">
+              💡 The project will be activated shortly. You will receive a notification when it starts.
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 mb-6">
@@ -178,7 +244,7 @@ function ClientWorkflowView({
             <div className="bg-navy-50 border border-navy-200 rounded-lg p-4 mb-6 inline-block">
               <p className="text-sm text-navy-700 mb-1">Amount Required</p>
               <p className="text-3xl font-bold text-navy-900">
-                ${Number(project.initialAmountRequired).toLocaleString('en-US', {
+                ${amountRequired.toLocaleString('en-US', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -201,9 +267,9 @@ function ClientWorkflowView({
           )}
 
           {isPendingCoverage ? (
-            <div className="w-full px-8 py-3 bg-gray-100 text-gray-500 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2 border border-gray-200 cursor-not-allowed mx-auto max-w-md">
+            <div className="w-full px-8 py-3 bg-amber-50 text-amber-700 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2 border border-amber-200 mx-auto max-w-md">
               <svg
-                className="w-5 h-5 text-gray-400"
+                className="w-5 h-5 text-amber-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -216,7 +282,7 @@ function ClientWorkflowView({
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Waiting for Approval
+              Payment Pending Approval
             </div>
           ) : (
             <button
