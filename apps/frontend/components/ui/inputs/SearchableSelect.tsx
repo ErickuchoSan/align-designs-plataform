@@ -22,6 +22,7 @@ interface SearchableSelectProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  error?: string;
 }
 
 function SearchableSelect({
@@ -34,6 +35,7 @@ function SearchableSelect({
   required = false,
   disabled = false,
   className = '',
+  error,
 }: Readonly<SearchableSelectProps>) {
   const [query, setQuery] = useState('');
 
@@ -55,7 +57,10 @@ function SearchableSelect({
       )}
       <Combobox value={selectedOption} onChange={(opt) => onChange(opt ? opt.id : '')} disabled={disabled}>
         <div className="relative mt-1">
-          <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-stone-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-gold-300 sm:text-sm">
+          <div className={cn(
+            "relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-gold-300 sm:text-sm",
+            error ? "border-red-500" : "border-stone-300"
+          )}>
             <Combobox.Input
               className="w-full border-none py-2.5 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
               displayValue={(option: Option) => (option ? option.name : '')}
@@ -120,6 +125,9 @@ function SearchableSelect({
           </Transition>
         </div>
       </Combobox>
+      {error && (
+        <p className="mt-1 text-sm text-red-600">{error}</p>
+      )}
     </div>
   );
 }

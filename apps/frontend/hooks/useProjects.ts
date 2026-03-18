@@ -5,6 +5,7 @@ import { useProjectsList } from './useProjectsList';
 import { useProjectModals } from './useProjectModals';
 import { useProjectActions } from './useProjectActions';
 import { useAutoResetMessage } from './useAutoResetMessage';
+import { toast } from '@/lib/toast';
 
 // Client type derived from Project interface to avoid duplication
 // Uses TypeScript utility type to extract the client property type
@@ -74,6 +75,17 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   // Simplified handlers using composed hooks
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields before submission
+    if (!modals.createFormData.name.trim()) {
+      toast.error('Please enter a project name');
+      return;
+    }
+    if (!modals.createFormData.clientId) {
+      toast.error('Please select a client for this project');
+      return;
+    }
+
     const result = await actions.createProject(modals.createFormData);
     if (result) {
       modals.closeCreateModal();
@@ -83,6 +95,17 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const handleEditProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!modals.editingProject) return;
+
+    // Validate required fields before submission
+    if (!modals.editFormData.name.trim()) {
+      toast.error('Please enter a project name');
+      return;
+    }
+    if (!modals.editFormData.clientId) {
+      toast.error('Please select a client for this project');
+      return;
+    }
+
     const result = await actions.updateProject(modals.editingProject.id, modals.editFormData);
     if (result) {
       modals.closeEditModal();
