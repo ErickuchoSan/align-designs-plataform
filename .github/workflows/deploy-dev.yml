@@ -101,8 +101,13 @@ jobs:
             # Create frontend .env.local (not tracked by git)
             echo 'NEXT_PUBLIC_API_URL=http://45.55.71.127/api' > apps/frontend/.env.local
 
-            # Build and start containers
+            # Stop old containers, rebuild and start
+            docker compose -f docker-compose.dev.yml --env-file .env.dev down
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+
+            # Clean up old Docker images to free disk space
+            echo "Cleaning up unused Docker images..."
+            docker image prune -af --filter "until=24h"
 
             # Ensure backend is running (sometimes doesn't start after build)
             sleep 5
