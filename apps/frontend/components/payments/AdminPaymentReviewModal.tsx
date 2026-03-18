@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from '@/lib/toast';
 import { Payment, PaymentStatus } from '@/types/payments';
 import { PaymentsService } from '@/services/payments.service';
@@ -6,6 +6,7 @@ import Modal from '@/components/ui/Modal';
 import { useAsyncOperation } from '@/hooks';
 import { CheckIcon } from '@/components/ui/icons';
 import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE } from '@/lib/styles';
+import { handleApiError } from '@/lib/errors';
 
 // Helper function to get payment status badge style
 function getStatusBadgeClass(status: PaymentStatus): string {
@@ -37,6 +38,44 @@ export default function AdminPaymentReviewModal({
   const [rejectionReason, setRejectionReason] = useState('');
   const [isEditingAmount, setIsEditingAmount] = useState(false);
   const [correctedAmount, setCorrectedAmount] = useState<string>('');
+
+  // Receipt blob URL state
+  const [receiptBlobUrl, setReceiptBlobUrl] = useState<string | null>(null);
+  const [loadingReceipt, setLoadingReceipt] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  // Ref to track current blob URL for cleanup
+  const blobUrlRef = useRef<string | null>(null);
+
+  // Load receipt as blob when modal opens
+  const loadReceipt = useCallback(async (paymentId: string) => {
+    setLoadingReceipt(true);
+    setReceiptError(null);
+    try {
+      const blob = await PaymentsService.downloadReceipt(paymentId);
+      const url = globalThis.URL.createObjectURL(blob);
+      blobUrlRef.current = url;
+      setReceiptBlobUrl(url);
+    } catch (error) {
+      setReceiptError(handleApiError(error, 'Could not load receipt'));
+    } finally {
+      setLoadingReceipt(false);
+    }
+  }, []);
+
+  // Load receipt when modal opens
+  useEffect(() => {
+    if (isOpen && payment?.id) {
+      loadReceipt(payment.id);
+    }
+    // Cleanup blob URL when modal closes
+    return () => {
+      if (blobUrlRef.current) {
+        globalThis.URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+        setReceiptBlobUrl(null);
+      }
+    };
+  }, [isOpen, payment?.id, loadReceipt]);
 
   if (!payment) return null;
 
@@ -84,7 +123,15 @@ export default function AdminPaymentReviewModal({
     }
   };
 
-  const receiptUrl = `${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`;
+  const handleOpenReceiptNewTab = async () => {
+    try {
+      const blob = await PaymentsService.downloadReceipt(payment.id);
+      const url = globalThis.URL.createObjectURL(blob);
+      globalThis.open(url, '_blank');
+    } catch (error) {
+      toast.error(handleApiError(error, 'Could not open receipt'));
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Review Payment" size="2xl">
@@ -120,7 +167,7 @@ export default function AdminPaymentReviewModal({
             {payment.notes && (
               <div className="pt-3 mt-3 border-t border-stone-200">
                 <p className="mb-1 text-stone-500">Customer Notes:</p>
-                <p className="italic text-stone-700">"{payment.notes}"</p>
+                <p className="italic text-stone-700">&ldquo;{payment.notes}&rdquo;</p>
               </div>
             )}
           </div>
@@ -173,41 +220,48 @@ export default function AdminPaymentReviewModal({
                     </div>
                   )}
 
-                  <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="flex flex-col gap-3">
+                    {/* Primary action: Approve */}
                     <button
                       onClick={handleApprove}
                       disabled={processing}
-                      className="flex items-center justify-center flex-1 gap-2 py-2.5 font-semibold text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 disabled:opacity-50 sm:py-3"
+                      className="flex items-center justify-center w-full gap-2 px-4 py-3 font-semibold text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 disabled:opacity-50"
                     >
                       {processing ? 'Processing...' : (
                         <>
                           <CheckIcon size="md" />
-                          <span className="hidden sm:inline">{isEditingAmount ? 'Confirm with Changes' : 'Approve Payment'}</span>
-                          <span className="sm:hidden">{isEditingAmount ? 'Confirm' : 'Approve'}</span>
+                          <span>{isEditingAmount ? 'Confirm with Changes' : 'Approve Payment'}</span>
                         </>
                       )}
                     </button>
 
-                    {!isEditingAmount && (
-                      <button
-                        onClick={toggleEditAmount}
-                        disabled={processing}
-                        className="flex items-center justify-center gap-2 px-3 py-2.5 font-medium transition-colors border rounded-lg shadow-sm text-navy-700 bg-navy-50 border-navy-200 sm:px-4 sm:py-3 hover:bg-navy-100 disabled:opacity-50 tooltip-trigger"
-                        aria-label="Edit payment amount before approval"
-                      >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                    )}
+                    {/* Secondary actions row */}
+                    <div className="flex gap-2">
+                      {!isEditingAmount && (
+                        <button
+                          onClick={toggleEditAmount}
+                          disabled={processing}
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 font-medium transition-colors border rounded-lg shadow-sm text-navy-700 bg-navy-50 border-navy-200 hover:bg-navy-100 disabled:opacity-50"
+                          aria-label="Edit payment amount before approval"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          <span className="hidden sm:inline">Edit Amount</span>
+                        </button>
+                      )}
 
-                    <button
-                      onClick={() => setRejecting(true)}
-                      disabled={processing}
-                      className="px-4 py-2.5 font-semibold text-red-600 transition-colors bg-white border border-red-300 rounded-lg shadow-sm sm:px-6 sm:py-3 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
+                      <button
+                        onClick={() => setRejecting(true)}
+                        disabled={processing}
+                        className={cn(
+                          "flex-1 px-4 py-2.5 font-semibold text-red-600 transition-colors bg-white border border-red-300 rounded-lg shadow-sm hover:bg-red-50 disabled:opacity-50",
+                          isEditingAmount && "w-full"
+                        )}
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </div>
 
                   {isEditingAmount && (
@@ -230,10 +284,9 @@ export default function AdminPaymentReviewModal({
         <div className="flex flex-col overflow-hidden border rounded-lg bg-stone-100 border-stone-200 lg:col-span-3 min-h-[400px] lg:min-h-[600px]">
           <div className="flex items-center justify-between px-4 py-2 border-b bg-stone-200 border-stone-300">
             <span className="text-sm font-medium text-stone-700">Receipt Preview</span>
-            <a
-              href={receiptUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleOpenReceiptNewTab}
               className="flex items-center text-xs font-medium gap-1 text-navy-600 hover:text-navy-800"
               aria-label="Open receipt in new tab"
             >
@@ -241,14 +294,41 @@ export default function AdminPaymentReviewModal({
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-            </a>
+            </button>
           </div>
-          <div className="flex-1 bg-white">
-            <iframe
-              src={receiptUrl}
-              className="w-full h-full border-0"
-              title="Receipt Preview"
-            />
+          <div className="flex-1 bg-white flex items-center justify-center overflow-auto p-4">
+            {loadingReceipt && (
+              <div className="flex flex-col items-center gap-2 text-stone-500">
+                <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="text-sm">Loading receipt...</span>
+              </div>
+            )}
+            {receiptError && (
+              <div className="flex flex-col items-center gap-2 text-red-500 text-center p-4">
+                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span className="text-sm">{receiptError}</span>
+                <button
+                  type="button"
+                  onClick={() => loadReceipt(payment.id)}
+                  className="text-xs text-navy-600 hover:text-navy-800 underline"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+            {receiptBlobUrl && !loadingReceipt && !receiptError && (
+              // eslint-disable-next-line @next/next/no-img-element -- blob URL with unknown dimensions
+              <img
+                src={receiptBlobUrl}
+                alt="Payment Receipt"
+                className="max-w-full max-h-full object-contain rounded shadow-sm"
+              />
+            )}
           </div>
         </div>
       </div>

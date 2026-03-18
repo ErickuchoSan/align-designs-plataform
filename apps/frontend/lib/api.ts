@@ -31,6 +31,62 @@ function getRequestKey(config: InternalAxiosRequestConfig): string {
   return `${method}:${url}:${JSON.stringify(params || {})}`;
 }
 
+// Helper to check if data is FormData (instanceof can fail across contexts)
+function isFormDataInstance(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  if (data instanceof FormData) return true;
+  if ((data as { constructor?: { name?: string } }).constructor?.name === 'FormData') return true;
+  const formLike = data as { append?: unknown; get?: unknown };
+  return typeof formLike.append === 'function' && typeof formLike.get === 'function';
+}
+
+// Helper to remove Content-Type headers for FormData requests
+function clearContentTypeHeaders(headers: InternalAxiosRequestConfig['headers']): void {
+  const headerKeys = ['Content-Type', 'content-type'];
+  const headerLocations = ['common', 'post', 'patch', 'put'] as const;
+
+  // Delete from main headers
+  for (const key of headerKeys) {
+    delete headers[key];
+  }
+
+  // Delete from method-specific headers
+  for (const location of headerLocations) {
+    const locationHeaders = headers[location] as Record<string, unknown> | undefined;
+    if (locationHeaders) {
+      for (const key of headerKeys) {
+        delete locationHeaders[key];
+      }
+    }
+  }
+}
+
+// Helper to add CSRF token to request
+async function addCsrfTokenIfNeeded(
+  config: InternalAxiosRequestConfig,
+  method: string | undefined
+): Promise<void> {
+  if (typeof globalThis === 'undefined') return;
+  if (!method || ['GET', 'HEAD', 'OPTIONS'].includes(method)) return;
+
+  // Fetch CSRF token if not available
+  if (!csrfToken) {
+    logger.debug('No CSRF token available, fetching...');
+    await fetchCsrfToken();
+  }
+
+  if (csrfToken) {
+    config.headers['X-CSRF-Token'] = csrfToken;
+    logger.debug('Sending request with CSRF token', {
+      method,
+      url: config.url,
+      tokenPreview: csrfToken.substring(0, 20) + '...'
+    });
+  } else {
+    logger.warn('No CSRF token available for request', { method, url: config.url });
+  }
+}
+
 // Helper to create deduplicatable request wrapper
 function createDedupedRequest(config: InternalAxiosRequestConfig): Promise<any> {
   const requestKey = getRequestKey(config);
@@ -83,19 +139,13 @@ export const api = axios.create({
   // Custom transformRequest to preserve FormData without serialization
   transformRequest: [
     (data, headers) => {
-      // Check for FormData using multiple methods (instanceof can fail across contexts)
-      const isFormData = data instanceof FormData ||
-        (data && typeof data === 'object' && data.constructor?.name === 'FormData') ||
-        (data && typeof data.append === 'function' && typeof data.get === 'function');
-
       // If data is FormData, return it as-is without transformation
-      // This prevents axios from JSON-serializing the FormData
-      if (isFormData) {
+      if (isFormDataInstance(data)) {
         // Don't set Content-Type - let browser set it with correct boundary
         delete headers['Content-Type'];
         return data;
       }
-      // For non-FormData, use axios default transform (JSON stringify)
+      // For non-FormData objects, use axios default transform (JSON stringify)
       if (data && typeof data === 'object' && !(data instanceof URLSearchParams)) {
         headers['Content-Type'] = 'application/json';
         return JSON.stringify(data);
@@ -176,70 +226,24 @@ const shouldRetry = (error: AxiosError): boolean => {
   );
 };
 
-// Interceptor to add CSRF token and handle request deduplication
+// Interceptor to add CSRF token and handle FormData headers
 // NOTE: JWT authentication is handled exclusively via httpOnly cookies
 // sent automatically with withCredentials: true
 api.interceptors.request.use(
   async (config) => {
-    // Request deduplication logic removed due to type incompatibility in interceptor
-    // and incomplete implementation.
-
     const method = config.method?.toUpperCase();
 
-    // Check for FormData using multiple methods (instanceof can fail across contexts)
-    const isFormData = config.data instanceof FormData ||
-      (config.data && typeof config.data === 'object' && config.data.constructor?.name === 'FormData') ||
-      (config.data && typeof config.data.append === 'function' && typeof config.data.get === 'function');
-
     // Remove Content-Type for FormData - let browser set it with correct boundary
-    // Must completely delete the header, not just set to undefined
-    if (isFormData) {
-      // Delete from all possible header locations
-      delete config.headers['Content-Type'];
-      delete config.headers['content-type'];
-      if (config.headers.common) {
-        delete config.headers.common['Content-Type'];
-        delete config.headers.common['content-type'];
-      }
-      if (config.headers.post) {
-        delete config.headers.post['Content-Type'];
-        delete config.headers.post['content-type'];
-      }
-      if (config.headers.patch) {
-        delete config.headers.patch['Content-Type'];
-        delete config.headers.patch['content-type'];
-      }
-      if (config.headers.put) {
-        delete config.headers.put['Content-Type'];
-        delete config.headers.put['content-type'];
-      }
+    if (isFormDataInstance(config.data)) {
+      clearContentTypeHeaders(config.headers);
     }
 
     // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
-    if (typeof globalThis !== 'undefined') {
-      if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
-        // If CSRF token is not available, fetch it
-        if (!csrfToken) {
-          logger.debug('No CSRF token available, fetching...');
-          await fetchCsrfToken();
-        }
-        if (csrfToken) {
-          config.headers['X-CSRF-Token'] = csrfToken;
-          logger.debug('Sending request with CSRF token', {
-            method,
-            url: config.url,
-            tokenPreview: csrfToken.substring(0, 20) + '...'
-          });
-        } else {
-          logger.warn('No CSRF token available for request', { method, url: config.url });
-        }
-      }
-    }
+    await addCsrfTokenIfNeeded(config, method);
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Check if dev mode is enabled
