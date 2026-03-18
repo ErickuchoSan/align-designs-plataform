@@ -31,7 +31,13 @@ export default function RootLayout({
           <OfflineIndicator />
           <GlobalErrorModal />
           <AuthProvider>
-            <Toaster position="top-right" />
+            <Toaster
+              position="top-right"
+              containerStyle={{ zIndex: 9999 }}
+              toastOptions={{
+                style: { zIndex: 9999 },
+              }}
+            />
             {children}
           </AuthProvider>
         </ErrorBoundary>

@@ -18,6 +18,7 @@ export interface UseProjectPaymentsReturn {
   isFullyCovered: boolean;
   loadData: () => Promise<void>;
   handleViewInvoice: (invoiceId: string) => Promise<void>;
+  handleViewReceipt: (payment: Payment) => Promise<void>;
 }
 
 export function useProjectPayments(projectId: string): UseProjectPaymentsReturn {
@@ -74,6 +75,16 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
     }
   };
 
+  const handleViewReceipt = async (payment: Payment) => {
+    try {
+      const blob = await PaymentsService.downloadReceipt(payment.id);
+      const url = globalThis.URL.createObjectURL(blob);
+      globalThis.open(url, '_blank');
+    } catch (error) {
+      toast.error(handleApiError(error, 'Could not view receipt'));
+    }
+  };
+
   return {
     payments,
     invoices,
@@ -84,5 +95,6 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
     isFullyCovered,
     loadData,
     handleViewInvoice,
+    handleViewReceipt,
   };
 }

@@ -13,10 +13,6 @@ export class PaymentsService {
     static async uploadClientPayment(data: FormData): Promise<Payment> {
         // Axios auto-detects FormData and sets correct Content-Type with boundary
         // Don't override headers to preserve CSRF token from interceptor
-        console.log('[DEBUG PaymentsService] Received data type:', data.constructor?.name);
-        console.log('[DEBUG PaymentsService] data instanceof FormData:', data instanceof FormData);
-        console.log('[DEBUG PaymentsService] Has file?', data.get('file'));
-
         const response = await api.post<Payment>(`${this.BASE_URL}/client-upload`, data);
         return response.data;
     }
@@ -43,5 +39,19 @@ export class PaymentsService {
     static async getReceiptUrl(paymentId: string): Promise<string> {
         const response = await api.get<{ url: string }>(`${this.BASE_URL}/${paymentId}/receipt-url`);
         return response.data.url;
+    }
+
+    /**
+     * Download receipt file as blob for viewing
+     * Uses the presigned URL to fetch the file and return as blob
+     */
+    static async downloadReceipt(paymentId: string): Promise<Blob> {
+        const presignedUrl = await this.getReceiptUrl(paymentId);
+        // Fetch the file from the presigned URL
+        const response = await fetch(presignedUrl);
+        if (!response.ok) {
+            throw new Error('Failed to download receipt');
+        }
+        return response.blob();
     }
 }

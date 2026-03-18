@@ -76,16 +76,12 @@ export function useProjects(isAuthenticated: boolean, userRole?: string) {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('[DEBUG handleCreateProject] Form data:', modals.createFormData);
-
     // Validate required fields before submission
     if (!modals.createFormData.name.trim()) {
-      console.log('[DEBUG] Validation failed: name is empty');
       toast.error('Please enter a project name');
       return;
     }
     if (!modals.createFormData.clientId) {
-      console.log('[DEBUG] Validation failed: clientId is empty');
       toast.error('Please select a client for this project');
       return;
     }
