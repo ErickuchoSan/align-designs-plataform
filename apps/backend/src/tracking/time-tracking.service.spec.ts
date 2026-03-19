@@ -151,7 +151,11 @@ describe('TimeTrackingService', () => {
       };
       prismaService.timeTracking.update.mockResolvedValue(updatedTracking);
 
-      const result = await service.endTracking(mockCycleId, 'file-123', endTime);
+      const result = await service.endTracking(
+        mockCycleId,
+        'file-123',
+        endTime,
+      );
 
       expect(result).toEqual(updatedTracking);
       expect(prismaService.timeTracking.update).toHaveBeenCalledWith(
@@ -178,12 +182,28 @@ describe('TimeTrackingService', () => {
     it('should return project statistics for admin', async () => {
       prismaService.project.findUnique.mockResolvedValue(mockProject);
       prismaService.timeTracking.findMany.mockResolvedValue([
-        { durationDays: 2, approvedFileId: 'f1', cycle: { status: 'approved' } },
-        { durationDays: 3, approvedFileId: 'f2', cycle: { status: 'approved' } },
-        { durationDays: 1, approvedFileId: null, cycle: { status: 'rejected' } },
+        {
+          durationDays: 2,
+          approvedFileId: 'f1',
+          cycle: { status: 'approved' },
+        },
+        {
+          durationDays: 3,
+          approvedFileId: 'f2',
+          cycle: { status: 'approved' },
+        },
+        {
+          durationDays: 1,
+          approvedFileId: null,
+          cycle: { status: 'rejected' },
+        },
       ]);
 
-      const result = await service.getProjectStats(mockProjectId, 'admin-1', 'ADMIN');
+      const result = await service.getProjectStats(
+        mockProjectId,
+        'admin-1',
+        'ADMIN',
+      );
 
       expect(result.totalCycles).toBe(3);
       expect(result.totalRejections).toBe(1);
@@ -194,7 +214,11 @@ describe('TimeTrackingService', () => {
     it('should return stats for assigned employee', async () => {
       prismaService.project.findUnique.mockResolvedValue(mockProject);
       prismaService.timeTracking.findMany.mockResolvedValue([
-        { durationDays: 2, approvedFileId: 'f1', cycle: { status: 'approved' } },
+        {
+          durationDays: 2,
+          approvedFileId: 'f1',
+          cycle: { status: 'approved' },
+        },
       ]);
 
       const result = await service.getProjectStats(
@@ -220,9 +244,9 @@ describe('TimeTrackingService', () => {
     it('should throw error if project not found', async () => {
       prismaService.project.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.getProjectStats(mockProjectId),
-      ).rejects.toThrow(`Project ${mockProjectId} not found`);
+      await expect(service.getProjectStats(mockProjectId)).rejects.toThrow(
+        `Project ${mockProjectId} not found`,
+      );
     });
 
     it('should calculate duration for completed project', async () => {

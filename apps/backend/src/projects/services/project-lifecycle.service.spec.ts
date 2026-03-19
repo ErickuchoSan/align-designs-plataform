@@ -8,9 +8,9 @@ import { Role, NotificationType } from '@prisma/client';
 
 // Mock the transaction helper
 jest.mock('../../common/helpers/transaction.helpers', () => ({
-  executeTransactionWithRetry: jest.fn().mockImplementation(
-    async (prisma, callback) => callback(prisma),
-  ),
+  executeTransactionWithRetry: jest
+    .fn()
+    .mockImplementation(async (prisma, callback) => callback(prisma)),
 }));
 
 describe('ProjectLifecycleService', () => {
@@ -30,9 +30,7 @@ describe('ProjectLifecycleService', () => {
     clientId: mockClientId,
     deletedAt: null,
     client: { id: mockClientId },
-    employees: [
-      { employee: { id: mockEmployeeId } },
-    ],
+    employees: [{ employee: { id: mockEmployeeId } }],
   };
 
   beforeEach(async () => {
@@ -87,7 +85,8 @@ describe('ProjectLifecycleService', () => {
     service = module.get<ProjectLifecycleService>(ProjectLifecycleService);
     prismaService = module.get<PrismaService>(PrismaService);
     cacheManager = module.get<CacheManagerService>(CacheManagerService);
-    notificationsService = module.get<NotificationsService>(NotificationsService);
+    notificationsService =
+      module.get<NotificationsService>(NotificationsService);
 
     jest.clearAllMocks();
   });
@@ -101,10 +100,16 @@ describe('ProjectLifecycleService', () => {
       prismaService.project.findFirst.mockResolvedValue(mockProject);
       prismaService.project.findUnique.mockResolvedValue(mockProject);
 
-      const result = await service.softDelete(mockProjectId, mockAdminId, Role.ADMIN);
+      const result = await service.softDelete(
+        mockProjectId,
+        mockAdminId,
+        Role.ADMIN,
+      );
 
       expect(result.message).toContain('deleted');
-      expect(cacheManager.invalidateProjectCaches).toHaveBeenCalledWith(mockProjectId);
+      expect(cacheManager.invalidateProjectCaches).toHaveBeenCalledWith(
+        mockProjectId,
+      );
     });
 
     it('should throw NotFoundException if project not found', async () => {
@@ -190,9 +195,9 @@ describe('ProjectLifecycleService', () => {
     it('should throw NotFoundException if project not found', async () => {
       prismaService.project.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.checkDeletionSafety(mockProjectId),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.checkDeletionSafety(mockProjectId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should build proper warning messages', async () => {

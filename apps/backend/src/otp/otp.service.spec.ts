@@ -114,7 +114,10 @@ describe('OtpService', () => {
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       };
       prismaService.otpToken.findFirst.mockResolvedValue(mockOtpRecord);
-      prismaService.otpToken.update.mockResolvedValue({ ...mockOtpRecord, used: true });
+      prismaService.otpToken.update.mockResolvedValue({
+        ...mockOtpRecord,
+        used: true,
+      });
 
       const result = await service.verifyOtp(mockUserId, '12345678');
 
@@ -172,7 +175,9 @@ describe('OtpService', () => {
     });
 
     it('should handle cleanup errors gracefully', async () => {
-      prismaService.otpToken.deleteMany.mockRejectedValue(new Error('DB error'));
+      prismaService.otpToken.deleteMany.mockRejectedValue(
+        new Error('DB error'),
+      );
 
       // Should not throw
       await expect(service.cleanupExpiredTokens()).resolves.not.toThrow();

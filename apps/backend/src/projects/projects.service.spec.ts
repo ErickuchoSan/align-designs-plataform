@@ -100,7 +100,9 @@ describe('ProjectsService', () => {
     closeBrief: jest.fn(),
     archiveProject: jest.fn(),
     reopenProject: jest.fn(),
-    softDelete: jest.fn().mockResolvedValue({ message: 'Project deleted successfully' }),
+    softDelete: jest
+      .fn()
+      .mockResolvedValue({ message: 'Project deleted successfully' }),
   };
 
   const mockInvoicesService = {

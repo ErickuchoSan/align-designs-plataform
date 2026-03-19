@@ -105,7 +105,9 @@ describe('EmployeePaymentsService', () => {
         projectId: mockProjectId,
         employeeId: mockEmployeeId,
       });
-      prismaService.employeePayment.create.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.create.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       const result = await service.create(createDto, mockAdminId);
 
@@ -137,7 +139,9 @@ describe('EmployeePaymentsService', () => {
 
   describe('findAll', () => {
     it('should return all payments for admin', async () => {
-      prismaService.employeePayment.findMany.mockResolvedValue([mockEmployeePayment]);
+      prismaService.employeePayment.findMany.mockResolvedValue([
+        mockEmployeePayment,
+      ]);
 
       const result = await service.findAll(mockAdminId, Role.ADMIN);
 
@@ -150,7 +154,9 @@ describe('EmployeePaymentsService', () => {
     });
 
     it('should return only own payments for employee', async () => {
-      prismaService.employeePayment.findMany.mockResolvedValue([mockEmployeePayment]);
+      prismaService.employeePayment.findMany.mockResolvedValue([
+        mockEmployeePayment,
+      ]);
 
       const result = await service.findAll(mockEmployeeId, Role.EMPLOYEE);
 
@@ -163,13 +169,15 @@ describe('EmployeePaymentsService', () => {
     });
 
     it('should throw ForbiddenException for clients', async () => {
-      await expect(
-        service.findAll('client-123', Role.CLIENT),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.findAll('client-123', Role.CLIENT)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should filter by projectId when provided', async () => {
-      prismaService.employeePayment.findMany.mockResolvedValue([mockEmployeePayment]);
+      prismaService.employeePayment.findMany.mockResolvedValue([
+        mockEmployeePayment,
+      ]);
 
       await service.findAll(mockAdminId, Role.ADMIN, mockProjectId);
 
@@ -183,17 +191,29 @@ describe('EmployeePaymentsService', () => {
 
   describe('findOne', () => {
     it('should return payment for admin', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
-      const result = await service.findOne(mockPaymentId, mockAdminId, Role.ADMIN);
+      const result = await service.findOne(
+        mockPaymentId,
+        mockAdminId,
+        Role.ADMIN,
+      );
 
       expect(result).toEqual(mockEmployeePayment);
     });
 
     it('should return payment for own employee', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
-      const result = await service.findOne(mockPaymentId, mockEmployeeId, Role.EMPLOYEE);
+      const result = await service.findOne(
+        mockPaymentId,
+        mockEmployeeId,
+        Role.EMPLOYEE,
+      );
 
       expect(result).toEqual(mockEmployeePayment);
     });
@@ -207,7 +227,9 @@ describe('EmployeePaymentsService', () => {
     });
 
     it('should throw ForbiddenException for different employee', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       await expect(
         service.findOne(mockPaymentId, 'other-employee', Role.EMPLOYEE),
@@ -215,7 +237,9 @@ describe('EmployeePaymentsService', () => {
     });
 
     it('should throw ForbiddenException for clients', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       await expect(
         service.findOne(mockPaymentId, 'client-123', Role.CLIENT),
@@ -227,11 +251,17 @@ describe('EmployeePaymentsService', () => {
     const updateDto = { amount: 600, description: 'Updated payment' };
 
     it('should update pending payment', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
       const updatedPayment = { ...mockEmployeePayment, ...updateDto };
       prismaService.employeePayment.update.mockResolvedValue(updatedPayment);
 
-      const result = await service.update(mockPaymentId, updateDto, mockAdminId);
+      const result = await service.update(
+        mockPaymentId,
+        updateDto,
+        mockAdminId,
+      );
 
       expect(result.amount).toBe(600);
       expect(prismaService.employeePayment.update).toHaveBeenCalled();
@@ -265,8 +295,12 @@ describe('EmployeePaymentsService', () => {
     } as Express.Multer.File;
 
     it('should approve payment with receipt', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
-      storageService.uploadFile.mockResolvedValue({ storagePath: 'receipts/file.pdf' });
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
+      storageService.uploadFile.mockResolvedValue({
+        storagePath: 'receipts/file.pdf',
+      });
       prismaService.file.create.mockResolvedValue({ id: 'file-123' });
       const approvedPayment = {
         ...mockEmployeePayment,
@@ -274,7 +308,11 @@ describe('EmployeePaymentsService', () => {
       };
       prismaService.employeePayment.update.mockResolvedValue(approvedPayment);
 
-      const result = await service.approve(mockPaymentId, mockAdminId, mockFile);
+      const result = await service.approve(
+        mockPaymentId,
+        mockAdminId,
+        mockFile,
+      );
 
       expect(result.status).toBe(EmployeePaymentStatus.APPROVED);
       expect(storageService.uploadFile).toHaveBeenCalled();
@@ -309,7 +347,9 @@ describe('EmployeePaymentsService', () => {
     });
 
     it('should throw BadRequestException if no receipt file provided', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       await expect(
         service.approve(mockPaymentId, mockAdminId, undefined),
@@ -319,7 +359,9 @@ describe('EmployeePaymentsService', () => {
 
   describe('reject', () => {
     it('should reject pending payment', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
       const rejectedPayment = {
         ...mockEmployeePayment,
         status: EmployeePaymentStatus.REJECTED,
@@ -327,7 +369,11 @@ describe('EmployeePaymentsService', () => {
       };
       prismaService.employeePayment.update.mockResolvedValue(rejectedPayment);
 
-      const result = await service.reject(mockPaymentId, 'Invalid amount', mockAdminId);
+      const result = await service.reject(
+        mockPaymentId,
+        'Invalid amount',
+        mockAdminId,
+      );
 
       expect(result.status).toBe(EmployeePaymentStatus.REJECTED);
       expect(prismaService.employeePayment.update).toHaveBeenCalledWith(
@@ -362,8 +408,12 @@ describe('EmployeePaymentsService', () => {
 
   describe('remove', () => {
     it('should delete pending payment', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
-      prismaService.employeePayment.delete.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
+      prismaService.employeePayment.delete.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       const result = await service.remove(mockPaymentId);
 
@@ -378,7 +428,9 @@ describe('EmployeePaymentsService', () => {
         ...mockEmployeePayment,
         status: EmployeePaymentStatus.REJECTED,
       });
-      prismaService.employeePayment.delete.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.delete.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       const result = await service.remove(mockPaymentId);
 
@@ -412,7 +464,10 @@ describe('EmployeePaymentsService', () => {
       ];
       prismaService.file.findMany.mockResolvedValue(mockItems);
 
-      const result = await service.getPendingPaymentItems(mockProjectId, mockEmployeeId);
+      const result = await service.getPendingPaymentItems(
+        mockProjectId,
+        mockEmployeeId,
+      );
 
       expect(result).toEqual(mockItems);
       expect(prismaService.file.findMany).toHaveBeenCalledWith(
@@ -435,8 +490,12 @@ describe('EmployeePaymentsService', () => {
         ...mockEmployeePayment,
         receiptFile: { storagePath: 'receipts/file.pdf' },
       };
-      prismaService.employeePayment.findUnique.mockResolvedValue(paymentWithReceipt);
-      storageService.getDownloadUrl.mockResolvedValue('https://signed.url/file.pdf');
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        paymentWithReceipt,
+      );
+      storageService.getDownloadUrl.mockResolvedValue(
+        'https://signed.url/file.pdf',
+      );
 
       const result = await service.getReceiptDownloadUrl(
         mockPaymentId,
@@ -445,11 +504,15 @@ describe('EmployeePaymentsService', () => {
       );
 
       expect(result).toBe('https://signed.url/file.pdf');
-      expect(storageService.getDownloadUrl).toHaveBeenCalledWith('receipts/file.pdf');
+      expect(storageService.getDownloadUrl).toHaveBeenCalledWith(
+        'receipts/file.pdf',
+      );
     });
 
     it('should throw BadRequestException if no receipt file', async () => {
-      prismaService.employeePayment.findUnique.mockResolvedValue(mockEmployeePayment);
+      prismaService.employeePayment.findUnique.mockResolvedValue(
+        mockEmployeePayment,
+      );
 
       await expect(
         service.getReceiptDownloadUrl(mockPaymentId, mockAdminId, Role.ADMIN),

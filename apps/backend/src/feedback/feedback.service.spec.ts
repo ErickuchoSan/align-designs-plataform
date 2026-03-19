@@ -62,7 +62,9 @@ describe('FeedbackService', () => {
                   updateMany: jest.fn(),
                 },
                 feedbackCycle: {
-                  update: jest.fn().mockResolvedValue({ ...mockCycle, status: 'open' }),
+                  update: jest
+                    .fn()
+                    .mockResolvedValue({ ...mockCycle, status: 'open' }),
                 },
               };
               return callback(mockTx);

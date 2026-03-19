@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CacheManagerService } from '../../cache/services/cache-manager.service';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -204,16 +200,35 @@ export class ProjectLifecycleService {
     feedbackCycles: number;
   }): string[] {
     const warningConfig = [
-      { count: counts.files, singular: 'uploaded file', plural: 'uploaded files' },
-      { count: counts.payments, singular: 'payment record', plural: 'payment records' },
+      {
+        count: counts.files,
+        singular: 'uploaded file',
+        plural: 'uploaded files',
+      },
+      {
+        count: counts.payments,
+        singular: 'payment record',
+        plural: 'payment records',
+      },
       { count: counts.invoices, singular: 'invoice', plural: 'invoices' },
-      { count: counts.employees, singular: 'assigned employee', plural: 'assigned employees' },
-      { count: counts.feedbackCycles, singular: 'active feedback cycle', plural: 'active feedback cycles' },
+      {
+        count: counts.employees,
+        singular: 'assigned employee',
+        plural: 'assigned employees',
+      },
+      {
+        count: counts.feedbackCycles,
+        singular: 'active feedback cycle',
+        plural: 'active feedback cycles',
+      },
     ];
 
     return warningConfig
       .filter(({ count }) => count > 0)
-      .map(({ count, singular, plural }) => `${count} ${count > 1 ? plural : singular}`);
+      .map(
+        ({ count, singular, plural }) =>
+          `${count} ${count > 1 ? plural : singular}`,
+      );
   }
 
   /**

@@ -165,7 +165,9 @@ describe('UsersService', () => {
 
       // Service adds hasPassword field and removes passwordHash for security
       const { passwordHash, ...userWithoutPassword } = mockUser;
-      expect(result.data).toEqual([{ ...userWithoutPassword, hasPassword: false }]);
+      expect(result.data).toEqual([
+        { ...userWithoutPassword, hasPassword: false },
+      ]);
       expect(result.meta.total).toBe(1);
     });
 

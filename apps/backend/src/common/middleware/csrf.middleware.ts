@@ -160,7 +160,11 @@ export class CsrfMiddleware implements NestMiddleware {
     // Allow override from env for CSRF-specific sameSite setting
     const allowNgrok = process.env.ALLOW_NGROK === 'true';
     const configSameSite = this.configService.get<string>('CSRF_SAME_SITE');
-    const sameSite = this.resolveSameSite(configSameSite, allowNgrok, config.sameSite);
+    const sameSite = this.resolveSameSite(
+      configSameSite,
+      allowNgrok,
+      config.sameSite,
+    );
 
     this.logger.debug(
       `CSRF Cookie Settings: secure=${config.useSecureCookie}, sameSite=${sameSite}, isHttps=${config.isHttps}, host=${req.headers.host || 'not set'}`,
@@ -190,7 +194,10 @@ export class CsrfMiddleware implements NestMiddleware {
     defaultValue: SameSitePolicy,
   ): SameSitePolicy {
     const validValues: SameSitePolicy[] = ['strict', 'lax', 'none'];
-    if (configSameSite && validValues.includes(configSameSite as SameSitePolicy)) {
+    if (
+      configSameSite &&
+      validValues.includes(configSameSite as SameSitePolicy)
+    ) {
       return configSameSite as SameSitePolicy;
     }
     return allowNgrok ? 'none' : defaultValue;

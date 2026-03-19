@@ -254,7 +254,12 @@ describe('PasswordManagementService', () => {
       otpService.verifyOtp.mockResolvedValue(false);
 
       await expect(
-        service.resetPassword('test@test.com', 'invalid', newPassword, confirmPassword),
+        service.resetPassword(
+          'test@test.com',
+          'invalid',
+          newPassword,
+          confirmPassword,
+        ),
       ).rejects.toThrow(UnauthorizedException);
     });
 

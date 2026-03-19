@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ProjectEmployeeService } from './project-employee.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -72,7 +69,8 @@ describe('ProjectEmployeeService', () => {
 
     service = module.get<ProjectEmployeeService>(ProjectEmployeeService);
     prismaService = module.get<PrismaService>(PrismaService);
-    notificationsService = module.get<NotificationsService>(NotificationsService);
+    notificationsService =
+      module.get<NotificationsService>(NotificationsService);
 
     jest.clearAllMocks();
   });
@@ -218,8 +216,12 @@ describe('ProjectEmployeeService', () => {
 
   describe('removeEmployeeFromProject', () => {
     it('should remove employee from project', async () => {
-      prismaService.projectEmployee.findUnique.mockResolvedValue(mockProjectEmployee);
-      prismaService.projectEmployee.delete.mockResolvedValue(mockProjectEmployee);
+      prismaService.projectEmployee.findUnique.mockResolvedValue(
+        mockProjectEmployee,
+      );
+      prismaService.projectEmployee.delete.mockResolvedValue(
+        mockProjectEmployee,
+      );
 
       await service.removeEmployeeFromProject(mockProjectId, mockEmployeeId);
 
@@ -244,7 +246,9 @@ describe('ProjectEmployeeService', () => {
 
   describe('getProjectEmployees', () => {
     it('should return all employees for project', async () => {
-      prismaService.projectEmployee.findMany.mockResolvedValue([mockProjectEmployee]);
+      prismaService.projectEmployee.findMany.mockResolvedValue([
+        mockProjectEmployee,
+      ]);
 
       const result = await service.getProjectEmployees(mockProjectId);
 

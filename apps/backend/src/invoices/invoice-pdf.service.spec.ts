@@ -169,7 +169,9 @@ describe('InvoicePdfService', () => {
         items: [{ description: 'Service', amount: 1000 }],
       } as any;
 
-      const result = await service.generateInvoicePDF(invoiceWithNumericAmounts);
+      const result = await service.generateInvoicePDF(
+        invoiceWithNumericAmounts,
+      );
 
       expect(result).toBeInstanceOf(Buffer);
     });

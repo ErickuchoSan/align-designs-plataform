@@ -83,8 +83,10 @@ describe('PaymentApprovalService', () => {
 
     service = module.get<PaymentApprovalService>(PaymentApprovalService);
     prismaService = module.get<PrismaService>(PrismaService);
-    projectStatusService = module.get<ProjectStatusService>(ProjectStatusService);
-    notificationsService = module.get<NotificationsService>(NotificationsService);
+    projectStatusService =
+      module.get<ProjectStatusService>(ProjectStatusService);
+    notificationsService =
+      module.get<NotificationsService>(NotificationsService);
 
     jest.clearAllMocks();
   });

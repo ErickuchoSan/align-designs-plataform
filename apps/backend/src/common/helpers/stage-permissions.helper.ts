@@ -27,8 +27,7 @@ export const STAGE_PERMISSIONS: Record<Stage, StagePermissions> = {
     canView: [Role.ADMIN, Role.EMPLOYEE],
     canWrite: [Role.ADMIN],
     canDelete: [Role.ADMIN],
-    description:
-      'Internal project scope and requirements for the team.',
+    description: 'Internal project scope and requirements for the team.',
   },
 
   /**

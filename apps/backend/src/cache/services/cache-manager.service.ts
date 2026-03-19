@@ -138,6 +138,8 @@ export class CacheManagerService {
     await this.del(CACHE_KEYS.PROJECTS.DETAIL(projectId));
 
     const fileDetail = fileId ? ` and file ${fileId}` : '';
-    this.logger.debug(`File caches invalidated for project ${projectId}${fileDetail}`);
+    this.logger.debug(
+      `File caches invalidated for project ${projectId}${fileDetail}`,
+    );
   }
 }

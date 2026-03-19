@@ -122,7 +122,9 @@ describe('PaymentsService', () => {
     notificationsService =
       module.get<NotificationsService>(NotificationsService);
     storageService = module.get<StorageService>(StorageService);
-    paymentApprovalService = module.get<PaymentApprovalService>(PaymentApprovalService);
+    paymentApprovalService = module.get<PaymentApprovalService>(
+      PaymentApprovalService,
+    );
   });
 
   it('should be defined', () => {

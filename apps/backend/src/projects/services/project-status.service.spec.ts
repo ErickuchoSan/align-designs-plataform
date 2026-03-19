@@ -70,7 +70,8 @@ describe('ProjectStatusService', () => {
 
     service = module.get<ProjectStatusService>(ProjectStatusService);
     prismaService = module.get<PrismaService>(PrismaService);
-    notificationsService = module.get<NotificationsService>(NotificationsService);
+    notificationsService =
+      module.get<NotificationsService>(NotificationsService);
 
     jest.clearAllMocks();
   });
@@ -174,9 +175,9 @@ describe('ProjectStatusService', () => {
     it('should throw BadRequestException if project not found', async () => {
       prismaService.project.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.canActivateProject(mockProjectId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.canActivateProject(mockProjectId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -223,9 +224,9 @@ describe('ProjectStatusService', () => {
       prismaService.project.findUnique.mockResolvedValue(mockProject);
       prismaService.projectEmployee.count.mockResolvedValue(0);
 
-      await expect(
-        service.activateProject(mockProjectId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.activateProject(mockProjectId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -248,17 +249,17 @@ describe('ProjectStatusService', () => {
     it('should throw BadRequestException if project not active', async () => {
       prismaService.project.findUnique.mockResolvedValue(mockProject);
 
-      await expect(
-        service.completeProject(mockProjectId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.completeProject(mockProjectId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if project not found', async () => {
       prismaService.project.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.completeProject(mockProjectId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.completeProject(mockProjectId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -285,9 +286,9 @@ describe('ProjectStatusService', () => {
     it('should throw BadRequestException if project not completed', async () => {
       prismaService.project.findUnique.mockResolvedValue(mockProject);
 
-      await expect(
-        service.archiveProject(mockProjectId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.archiveProject(mockProjectId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

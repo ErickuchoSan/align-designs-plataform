@@ -28,11 +28,9 @@ jobs:
 
       - name: Lint Backend
         run: pnpm --filter backend lint
-        continue-on-error: true  # TODO: Fix 1316 ESLint errors then remove this
 
       - name: Lint Frontend
         run: pnpm --filter frontend lint
-        continue-on-error: true  # TODO: Fix ESLint errors then remove this
 
       - name: Generate Prisma Client
         run: pnpm --filter backend exec prisma generate

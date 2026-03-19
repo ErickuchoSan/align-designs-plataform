@@ -297,7 +297,9 @@ export class PaymentsService {
       },
     });
 
-    const invoiceSuffix = openInvoice ? ` (linked to invoice ${openInvoice.id})` : '';
+    const invoiceSuffix = openInvoice
+      ? ` (linked to invoice ${openInvoice.id})`
+      : '';
     this.logger.log(
       `Client payment uploaded: ${payment.id} for project ${projectId} amount ${amount} - PENDING_APPROVAL${invoiceSuffix}`,
     );

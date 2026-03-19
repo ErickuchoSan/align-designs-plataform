@@ -724,7 +724,9 @@ export class ProjectsService {
    * Locks the brief section and allows employees to start work
    * May auto-activate the project if all requirements are met
    */
-  async closeBrief(projectId: string): Promise<{ project: any; activated: boolean }> {
+  async closeBrief(
+    projectId: string,
+  ): Promise<{ project: any; activated: boolean }> {
     const project = await this.projectRepo.findById(projectId);
     if (!project) {
       throw new NotFoundException(`Project ${projectId} not found`);
@@ -760,14 +762,19 @@ export class ProjectsService {
     // Try to auto-activate if all requirements are met
     let activated = false;
     try {
-      const validation = await this.projectStatusService.canActivateProject(projectId);
+      const validation =
+        await this.projectStatusService.canActivateProject(projectId);
       if (validation.canActivate) {
         await this.projectStatusService.activateProject(projectId);
         activated = true;
-        this.logger.log(`Project ${project.name} auto-activated after brief closure`);
+        this.logger.log(
+          `Project ${project.name} auto-activated after brief closure`,
+        );
       }
     } catch (error) {
-      this.logger.warn(`Auto-activation check failed for project ${projectId}: ${error}`);
+      this.logger.warn(
+        `Auto-activation check failed for project ${projectId}: ${error}`,
+      );
     }
 
     return { project: updatedProject, activated };

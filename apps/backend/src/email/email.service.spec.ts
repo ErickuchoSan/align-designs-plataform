@@ -56,7 +56,7 @@ describe('EmailService', () => {
     it('should not throw when API key is missing (graceful degradation)', async () => {
       mockConfigService.get.mockReturnValue(undefined);
 
-      const newService = new EmailService(configService as any);
+      const newService = new EmailService(configService);
       await newService.onModuleInit();
 
       expect(newService.isServiceHealthy()).toBe(false);
@@ -68,7 +68,7 @@ describe('EmailService', () => {
         return 'Test <test@resend.dev>';
       });
 
-      const newService = new EmailService(configService as any);
+      const newService = new EmailService(configService);
       await newService.onModuleInit();
 
       expect(newService.isServiceHealthy()).toBe(false);

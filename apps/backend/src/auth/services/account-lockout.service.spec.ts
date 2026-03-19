@@ -78,7 +78,9 @@ describe('AccountLockoutService', () => {
         accountLockedUntil: new Date(Date.now() - 1000), // 1 second ago
       };
 
-      expect(() => service.validateAccountNotLocked(expiredLockUser)).not.toThrow();
+      expect(() =>
+        service.validateAccountNotLocked(expiredLockUser),
+      ).not.toThrow();
     });
 
     it('should throw UnauthorizedException if account is locked', () => {

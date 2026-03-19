@@ -76,9 +76,15 @@ describe('PasswordService', () => {
     it('should compare passwords using bcrypt', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.comparePassword(mockPassword, mockHashedPassword);
+      const result = await service.comparePassword(
+        mockPassword,
+        mockHashedPassword,
+      );
 
-      expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        mockPassword,
+        mockHashedPassword,
+      );
       expect(result).toBe(true);
     });
 
@@ -94,7 +100,9 @@ describe('PasswordService', () => {
   describe('validatePasswordFormat', () => {
     it('should not throw for valid password', () => {
       // Password must avoid: common patterns, 3-consecutive letters (abc, pqr), 3-consecutive numbers (123)
-      expect(() => service.validatePasswordFormat('Xa3!Zm8@Kf5$Wp')).not.toThrow();
+      expect(() =>
+        service.validatePasswordFormat('Xa3!Zm8@Kf5$Wp'),
+      ).not.toThrow();
     });
 
     it('should throw BadRequestException for password without uppercase', () => {
