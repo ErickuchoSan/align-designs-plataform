@@ -1235,4 +1235,4 @@ Time_Tracking
 
 **End of System Workflow v2.0**
 
-> For implementation details and code examples, see `docs/final_requirements.md`
+> For implementation details, see the Prisma schema at `apps/backend/prisma/schema.prisma`

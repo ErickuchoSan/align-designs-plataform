@@ -1178,4 +1178,4 @@ Seguimiento_Tiempo
 
 **Fin del Flujo del Sistema v2.0**
 
-> Para detalles de implementación y ejemplos de código, ver `docs/final_requirements.md`
+> Para detalles de implementación, ver el schema de Prisma en `apps/backend/prisma/schema.prisma`
