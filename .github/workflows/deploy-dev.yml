@@ -6,9 +6,9 @@ on:
       - main
 
 jobs:
-  # Job 1: Build Validation + Security Audit
+  # Job 1: Build Validation + Tests + Security Audit
   validate:
-    name: Build & Security
+    name: Build, Test & Security
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,13 +26,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint Backend
+        run: pnpm --filter backend lint
+
+      - name: Lint Frontend
+        run: pnpm --filter frontend lint
+
+      - name: Generate Prisma Client
+        run: pnpm --filter backend exec prisma generate
+
+      - name: Run Backend Tests
+        run: pnpm --filter backend test
+
       - name: Build Frontend
         run: pnpm --filter frontend build
         env:
           NEXT_PUBLIC_API_URL: /api/v1
-
-      - name: Generate Prisma Client
-        run: pnpm --filter backend exec prisma generate
 
       - name: Build Backend
         run: pnpm --filter backend build
@@ -105,6 +114,10 @@ jobs:
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
 
+            # Run Prisma migrations inside backend container
+            echo "Running database migrations..."
+            docker exec backend-dev npx prisma migrate deploy || echo "Migration failed or no pending migrations"
+
             # Clean up old Docker images to free disk space
             echo "Cleaning up unused Docker images..."
             docker image prune -af --filter "until=24h"
@@ -138,28 +151,75 @@ jobs:
         run: sleep 45
 
       - name: Check Backend Health
+        id: backend_health
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127/api/v1/health)
           if [ "$response" != "200" ]; then
             echo "::error::Backend health check failed! Status: $response"
+            echo "backend_failed=true" >> $GITHUB_OUTPUT
             exit 1
           fi
           echo "Backend health check passed! Status: $response"
 
       - name: Check Frontend Health
+        id: frontend_health
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127)
           if [ "$response" != "200" ]; then
             echo "::error::Frontend health check failed! Status: $response"
+            echo "frontend_failed=true" >> $GITHUB_OUTPUT
             exit 1
           fi
           echo "Frontend health check passed! Status: $response"
 
-  # Job 6: Lighthouse Performance Audit
+  # Job 5b: Rollback on Health Check Failure
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: failure()
+    steps:
+      - name: Rollback to Previous Version
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 45.55.71.127
+          username: root
+          port: 29
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/align-designs
+            echo "::warning::Health check failed! Rolling back..."
+
+            # Get the previous commit
+            PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+            echo "Rolling back to commit: $PREVIOUS_COMMIT"
+
+            # Rollback to previous commit
+            git checkout $PREVIOUS_COMMIT
+
+            # Rebuild and restart containers
+            docker compose -f docker-compose.dev.yml --env-file .env.dev down
+            docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+
+            # Wait for services
+            sleep 30
+
+            # Verify rollback worked
+            if curl -s http://localhost:3001/api/v1/health > /dev/null 2>&1; then
+              echo "Rollback successful! Services are healthy."
+            else
+              echo "::error::Rollback failed! Manual intervention required."
+              exit 1
+            fi
+
+            echo "Rolled back at $(date)"
+
+  # Job 6: Lighthouse Performance Audit (only runs if health check passed)
   lighthouse:
     name: Lighthouse Audit
     runs-on: ubuntu-latest
     needs: health-check
+    if: success()
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
