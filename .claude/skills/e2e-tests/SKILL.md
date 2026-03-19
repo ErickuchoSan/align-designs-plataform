@@ -31,15 +31,28 @@ pnpm test:e2e -g "should login successfully"
 ```
 e2e/
 ├── fixtures/
-│   └── test-data.ts      # Datos de prueba y credenciales
+│   └── test-data.ts           # Datos de prueba y credenciales
 ├── helpers/
-│   └── auth.ts           # Funciones helper (login, logout)
-├── auth.spec.ts          # Tests de login/logout
-├── users.spec.ts         # Tests de crear empleados/clientes
-├── projects.spec.ts      # Tests de proyectos y project brief
-└── payments.spec.ts      # Tests de flujo de pagos
+│   └── auth.ts                # Funciones helper (login, logout)
+├── auth.spec.ts               # Tests de login/logout
+├── users.spec.ts              # Tests de crear empleados/clientes
+├── projects.spec.ts           # Tests de proyectos y project brief
+├── payments.spec.ts           # Tests de flujo de pagos
+├── invoices.spec.ts           # Tests de facturas
+├── file-uploads.spec.ts       # Tests de subida de archivos
+├── feedback-cycle.spec.ts     # Tests de ciclo de feedback
+├── project-lifecycle.spec.ts  # Tests de estados del proyecto
+├── password-reset.spec.ts     # Tests de reset de contraseña
+├── employee-assignment.spec.ts # Tests de asignación de empleados
+├── time-tracking.spec.ts      # Tests de registro de horas
+├── user-profile.spec.ts       # Tests de perfil de usuario
+├── notifications.spec.ts      # Tests de notificaciones
+├── search-filter.spec.ts      # Tests de búsqueda y filtros
+├── full-project-flow.spec.ts  # Tests de flujo completo
+├── multi-role.spec.ts         # Tests de roles múltiples
+└── payment-approval.spec.ts   # Tests de aprobación de pagos
 
-playwright.config.ts      # Configuración de Playwright
+playwright.config.ts           # Configuración de Playwright
 ```
 
 ## Archivos de Tests
@@ -50,6 +63,19 @@ playwright.config.ts      # Configuración de Playwright
 | `users.spec.ts` | Crear empleado, crear cliente, modales |
 | `projects.spec.ts` | Crear proyecto, project brief, stages |
 | `payments.spec.ts` | Pago inicial, métodos de pago, modal |
+| `invoices.spec.ts` | Crear factura, ver lista, descargar PDF |
+| `file-uploads.spec.ts` | Subir archivos a stages del proyecto |
+| `feedback-cycle.spec.ts` | Ciclo de diseño, aprobar/rechazar |
+| `project-lifecycle.spec.ts` | Estados: waiting → active → completed → archived |
+| `password-reset.spec.ts` | Forgot password, OTP, nueva contraseña |
+| `employee-assignment.spec.ts` | Asignar empleados a proyectos |
+| `time-tracking.spec.ts` | Registrar horas, editar, reportes |
+| `user-profile.spec.ts` | Ver/editar perfil, cambiar contraseña |
+| `notifications.spec.ts` | Lista de notificaciones, marcar leído |
+| `search-filter.spec.ts` | Búsqueda global, filtros, paginación |
+| `full-project-flow.spec.ts` | Flujo completo de proyecto start-to-end |
+| `multi-role.spec.ts` | Permisos por rol (admin/employee/client) |
+| `payment-approval.spec.ts` | Aprobar/rechazar pagos pendientes |
 
 ## Escribir un Nuevo Test
 
