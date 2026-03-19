@@ -15,12 +15,9 @@ The `.claude/` folder contains:
 docs/
 ├── architecture/     # System design and workflow
 ├── changelog/        # Version history
-├── development/      # CONTRIBUTING.md
-├── implementation/   # Current status
-├── improvements/     # Performance/security docs
-├── references/       # Technical references
-├── setup/            # PNPM migration
-└── archive/          # Historical docs
+├── development/      # Contributing guidelines
+├── references/       # Technical references (payment privacy matrix)
+└── setup/            # PNPM migration guide
 ```
 
 ## Key Documents
@@ -28,9 +25,11 @@ docs/
 | Document | Description |
 |----------|-------------|
 | [architecture/system_workflow_v2.md](./architecture/system_workflow_v2.md) | Complete system workflow |
+| [architecture/flujo_sistema_v2.md](./architecture/flujo_sistema_v2.md) | Flujo del sistema (español) |
 | [changelog/CHANGELOG.md](./changelog/CHANGELOG.md) | Version history |
-| [implementation/IMPLEMENTATION_STATUS.md](./implementation/IMPLEMENTATION_STATUS.md) | Current status |
 | [development/CONTRIBUTING.md](./development/CONTRIBUTING.md) | Contributing guidelines |
+| [references/payments-privacy-matrix.md](./references/payments-privacy-matrix.md) | Payment permissions reference |
+| [setup/PNPM_MIGRATION.md](./setup/PNPM_MIGRATION.md) | PNPM setup guide |
 
 ## Quick Commands
 
