@@ -14,14 +14,13 @@ The `.claude/` folder contains:
 ```
 docs/
 ├── architecture/     # System design and workflow
-├── changelog/        # Version history (CHANGELOG.md)
+├── changelog/        # Version history
 ├── development/      # CONTRIBUTING.md
-├── implementation/   # Current implementation status
-├── improvements/     # Performance and security improvements
-├── references/       # Technical reference materials
-├── setup/            # PNPM migration guide
-├── dev/              # (gitignored) Local development notes
-└── archive/          # Historical docs from completed phases
+├── implementation/   # Current status
+├── improvements/     # Performance/security docs
+├── references/       # Technical references
+├── setup/            # PNPM migration
+└── archive/          # Historical docs
 ```
 
 ## Key Documents
