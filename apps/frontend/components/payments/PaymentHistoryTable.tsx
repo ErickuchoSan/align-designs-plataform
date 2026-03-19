@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { Payment, PAYMENT_METHOD_LABELS, PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS } from '../../types/payments';
 import MobilePaymentCard from './MobilePaymentCard';
+import { useReceiptViewer } from '@/hooks';
 
 // Create a simple format date if it doesn't exist or use Intl
 const formatDateSimple = (dateString: string) => {
@@ -30,8 +31,15 @@ const getStatusBadgeClass = (status: string): string => {
     return 'bg-yellow-100 text-yellow-800';
 };
 
+interface PaymentRowProps {
+    payment: Payment;
+    isAdmin?: boolean;
+    onViewReceipt?: (payment: Payment) => void;
+    onOpenReceipt?: (paymentId: string) => void;
+}
+
 // Memoized payment row component to prevent unnecessary re-renders
-const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment; isAdmin?: boolean; onViewReceipt?: (payment: Payment) => void }) => {
+const PaymentRow = memo(({ payment, isAdmin, onViewReceipt, onOpenReceipt }: PaymentRowProps) => {
     const formattedAmount = useMemo(() => formatCurrency(payment.amount), [payment.amount]);
     const formattedDate = useMemo(() => formatDateSimple(payment.paymentDate), [payment.paymentDate]);
 
@@ -69,18 +77,16 @@ const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment
                                 </svg>
                             </button>
                         ) : (
-                            <a
-                                href={`${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-blue-50 inline-block"
+                            <button
+                                onClick={() => onOpenReceipt?.(payment.id)}
+                                className="text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-blue-50"
                                 aria-label="View payment receipt (opens in new tab)"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 5 8.268 7.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
-                            </a>
+                            </button>
                         )}
                     </div>
                 ) : (
@@ -94,6 +100,7 @@ const PaymentRow = memo(({ payment, isAdmin, onViewReceipt }: { payment: Payment
 PaymentRow.displayName = 'PaymentRow';
 
 function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Readonly<PaymentHistoryTableProps>) {
+    const { openReceipt } = useReceiptViewer();
     // Use regular table for small lists (< 50 items), virtualized for large lists
     // This prevents unnecessary complexity for most use cases
     const useVirtualization = payments.length > 50;
@@ -131,6 +138,7 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Re
                                     payment={payment}
                                     isAdmin={isAdmin}
                                     onViewReceipt={onViewReceipt}
+                                    onOpenReceipt={openReceipt}
                                 />
                             ))}
                         </tbody>
@@ -145,6 +153,7 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Re
                             payment={payment}
                             isAdmin={isAdmin}
                             onViewReceipt={onViewReceipt}
+                            onOpenReceipt={openReceipt}
                         />
                     ))}
                 </div>
@@ -179,6 +188,7 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Re
                                     payment={payment}
                                     isAdmin={isAdmin}
                                     onViewReceipt={onViewReceipt}
+                                    onOpenReceipt={openReceipt}
                                 />
                             ))}
                         </tbody>

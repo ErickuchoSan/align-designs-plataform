@@ -58,4 +58,22 @@ export const EmployeePaymentsService = {
     });
     return response.data;
   },
+
+  async getReceiptUrl(paymentId: string): Promise<string> {
+    const response = await api.get<{ url: string }>(`/employee-payments/${paymentId}/receipt-url`);
+    return response.data.url;
+  },
+
+  /**
+   * Download receipt file as blob for viewing
+   * Uses the presigned URL to fetch the file and return as blob
+   */
+  async downloadReceipt(paymentId: string): Promise<Blob> {
+    const presignedUrl = await this.getReceiptUrl(paymentId);
+    const response = await fetch(presignedUrl);
+    if (!response.ok) {
+      throw new Error('Failed to download receipt');
+    }
+    return response.blob();
+  },
 };

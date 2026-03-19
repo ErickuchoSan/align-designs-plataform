@@ -19,9 +19,10 @@ interface MobilePaymentCardProps {
   payment: Payment;
   isAdmin?: boolean;
   onViewReceipt?: (payment: Payment) => void;
+  onOpenReceipt?: (paymentId: string) => void;
 }
 
-function MobilePaymentCard({ payment, isAdmin, onViewReceipt }: Readonly<MobilePaymentCardProps>) {
+function MobilePaymentCard({ payment, isAdmin, onViewReceipt, onOpenReceipt }: Readonly<MobilePaymentCardProps>) {
   const formattedAmount = useMemo(() => formatCurrency(payment.amount), [payment.amount]);
   const formattedDate = useMemo(() => formatDateSimple(payment.paymentDate), [payment.paymentDate]);
 
@@ -91,10 +92,8 @@ function MobilePaymentCard({ payment, isAdmin, onViewReceipt }: Readonly<MobileP
               <span className="text-sm font-medium">View Receipt</span>
             </button>
           ) : (
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_URL}/payments/${payment.id}/receipt`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => onOpenReceipt?.(payment.id)}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
               aria-label="View payment receipt (opens in new tab)"
             >
@@ -120,7 +119,7 @@ function MobilePaymentCard({ payment, isAdmin, onViewReceipt }: Readonly<MobileP
                 />
               </svg>
               <span className="text-sm font-medium">View Receipt</span>
-            </a>
+            </button>
           )}
         </div>
       )}
