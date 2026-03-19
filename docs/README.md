@@ -1,77 +1,47 @@
 # Align Designs Platform - Documentation
 
-## Quick Links
+## Source of Truth
 
-| Need to... | Go to... |
-|------------|----------|
-| Set up locally | [setup/PNPM_MIGRATION.md](./setup/PNPM_MIGRATION.md) |
-| Understand the system | [architecture/system_workflow_v2.md](./architecture/system_workflow_v2.md) |
-| Check implementation status | [implementation/IMPLEMENTATION_STATUS.md](./implementation/IMPLEMENTATION_STATUS.md) |
-| Contribute code | [development/CONTRIBUTING.md](./development/CONTRIBUTING.md) |
-| See changelog | [changelog/CHANGELOG.md](./changelog/CHANGELOG.md) |
+**For operations and credentials:** See `.claude/PROJECT.md` and `.claude/skills/`
 
-## Folder Structure
+The `.claude/` folder contains:
+- Server credentials and connection info
+- SSH commands and deployment procedures
+- Skills for common operations (`/deploy-status`, `/docker-logs`, `/prisma-ops`, etc.)
+
+## Documentation Structure
 
 ```
 docs/
 ├── architecture/     # System design and workflow
-├── changelog/        # Version history
-├── development/      # Contributing guidelines
+├── changelog/        # Version history (CHANGELOG.md)
+├── development/      # CONTRIBUTING.md
 ├── implementation/   # Current implementation status
 ├── improvements/     # Performance and security improvements
 ├── references/       # Technical reference materials
-├── setup/            # Installation and setup guides
-├── dev/              # Private docs with credentials (gitignored)
-├── prod/             # Sanitized templates for sharing
+├── setup/            # PNPM migration guide
+├── dev/              # (gitignored) Local development notes
 └── archive/          # Historical docs from completed phases
 ```
 
-## Current Status
+## Key Documents
 
-**Platform Status:** Production Ready
-- All core features implemented (authentication, projects, files, payments, invoices)
-- CI/CD pipeline active with GitHub Actions
-- Deployed to Digital Ocean
+| Document | Description |
+|----------|-------------|
+| [architecture/system_workflow_v2.md](./architecture/system_workflow_v2.md) | Complete system workflow |
+| [changelog/CHANGELOG.md](./changelog/CHANGELOG.md) | Version history |
+| [implementation/IMPLEMENTATION_STATUS.md](./implementation/IMPLEMENTATION_STATUS.md) | Current status |
+| [development/CONTRIBUTING.md](./development/CONTRIBUTING.md) | Contributing guidelines |
 
-## Key Documentation
+## Quick Commands
 
-### Architecture
-- [system_workflow_v2.md](./architecture/system_workflow_v2.md) - Complete system workflow
-- [flujo_sistema_v2.md](./architecture/flujo_sistema_v2.md) - Flujo del sistema (Spanish)
-- [final_requirements.md](./architecture/final_requirements.md) - Project requirements
-- [priority_features.md](./architecture/priority_features.md) - Feature priorities
-
-### Setup
-- [PNPM_MIGRATION.md](./setup/PNPM_MIGRATION.md) - Package manager setup
-- [AUTO-START-GUIDE.md](./setup/AUTO-START-GUIDE.md) - Windows auto-start
-
-### Improvements
-- [PERFORMANCE_OPTIMIZATIONS.md](./improvements/PERFORMANCE_OPTIMIZATIONS.md) - 31 optimizations
-- [SECURITY_IMPROVEMENTS.md](./improvements/SECURITY_IMPROVEMENTS.md) - Security enhancements
-- [DEPENDENCIES_UPDATE.md](./improvements/DEPENDENCIES_UPDATE.md) - Dependency updates
-
-### References
-- [payments-privacy-matrix.md](./references/payments-privacy-matrix.md) - Payment data privacy rules
-
-## Private vs Public Docs
-
-### docs/dev/ (Gitignored)
-Contains sensitive data for local development:
-- Server IPs and credentials
-- Database connection strings
-- Local configuration
-
-### docs/prod/
-Sanitized templates safe for sharing:
-- Placeholder credentials
-- Deployment guides
-- Configuration templates
-
-## Archive
-
-Historical documentation from completed phases is in [archive/](./archive/). These are kept for reference but are no longer actively maintained.
+See `.claude/PROJECT.md` for SSH commands, or use skills:
+- `/deploy-status` - Check server health
+- `/docker-logs` - View container logs
+- `/prisma-ops` - Database operations
 
 ---
 
 **Tech Stack:** Next.js 15 + NestJS + PostgreSQL + Prisma + pnpm
-**Last Updated:** March 2026
+**Deployment:** Digital Ocean (45.55.71.127)
+**CI/CD:** GitHub Actions → SonarCloud → Auto-deploy
