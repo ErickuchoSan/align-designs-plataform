@@ -46,40 +46,14 @@ Ver [PNPM_MIGRATION.md](./PNPM_MIGRATION.md) para más detalles.
 ## Estructura del Proyecto (Monorepo)
 
 ```
-align-designs-demo/                 # Monorepo raíz
+align-designs-plataform/
 ├── apps/
-│   ├── backend/                    # Backend API (NestJS)
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma      # Esquema de base de datos
-│   │   │   └── seed.ts            # Datos iniciales
-│   │   ├── src/
-│   │   │   ├── auth/              # Módulo de autenticación
-│   │   │   │   ├── guards/        # Guards JWT y Roles
-│   │   │   │   ├── decorators/    # Decoradores personalizados
-│   │   │   │   └── strategies/    # Estrategia JWT
-│   │   │   ├── otp/               # Módulo de OTP
-│   │   │   ├── users/             # CRUD de usuarios
-│   │   │   ├── projects/          # CRUD de proyectos
-│   │   │   ├── files/             # Gestión de archivos
-│   │   │   ├── storage/           # Servicio de MinIO
-│   │   │   └── prisma/            # Servicio de Prisma
-│   │   └── .env                   # Variables de entorno backend
-│   └── frontend/                   # Frontend Web (Next.js)
-│       ├── app/
-│       │   ├── login/             # Página de login
-│       │   └── dashboard/         # Dashboard principal
-│       ├── contexts/              # Contextos de React
-│       │   └── AuthContext.tsx    # Contexto de autenticación
-│       ├── lib/
-│       │   └── api.ts             # Cliente API con Axios
-│       ├── types/
-│       │   └── index.ts           # Tipos TypeScript
-│       └── .env.local             # Variables de entorno frontend
-├── docs/                          # Documentación completa
-├── infra/                         # Infraestructura (Docker, VM)
-├── package.json                   # Configuración del monorepo
-└── .gitignore                     # Gitignore global
-
+│   ├── backend/              # API NestJS
+│   └── frontend/             # Web Next.js 15
+├── docs/                     # Documentación
+├── .claude/                  # Configuración y skills de Claude
+├── docker-compose.*.yml      # Configuraciones Docker
+└── scripts/                  # Scripts de utilidad
 ```
 
 ## Características Implementadas
@@ -130,43 +104,11 @@ align-designs-demo/                 # Monorepo raíz
 
 ## Configuración
 
-### Base de Datos (PostgreSQL)
+### Variables de Entorno
 
-```env
-DATABASE_URL="postgresql://Alfonso:NoloseBaseDeDatos12345@@192.168.0.139:5432/AlignDesignsPlatform?schema=aligndesigns"
-```
+Ver `apps/backend/.env.example` para la configuración completa.
 
-### MinIO
-
-```env
-MINIO_ENDPOINT=192.168.0.139
-MINIO_PORT=9000
-MINIO_USE_SSL=false
-MINIO_ACCESS_KEY=aligndesigns
-MINIO_SECRET_KEY=NoloseMinIO12345!
-MINIO_BUCKET=align-designs
-```
-
-### JWT
-
-```env
-JWT_SECRET=your-super-secret-key-change-in-production
-JWT_EXPIRES_IN=1d
-JWT_AUDIENCE=align-designs-client
-JWT_ISSUER=align-designs-api
-```
-
-## Usuarios de Prueba
-
-### Administrador
-- **Email**: e.bores.i@outlook.com
-- **Password**: NoloseAlfonso136!
-- **Rol**: ADMIN
-
-### Cliente
-- **Email**: erickuchoxd@gmail.com
-- **Autenticación**: OTP de 8 dígitos (enviado por email)
-- **Rol**: CLIENT
+Las credenciales reales están en `.claude/PROJECT.md` (no subir a git).
 
 ## Instalación y Ejecución
 
@@ -243,33 +185,15 @@ pnpm lint:frontend
 pnpm clean
 ```
 
-### Scripts de Gestión (Windows)
+### Scripts Útiles
 
-El proyecto incluye scripts de PowerShell/Batch para facilitar el desarrollo:
+```bash
+# SSH al servidor
+.\scripts\ssh-tunnel.ps1      # Túnel SSH para desarrollo local
 
-```batch
-# Desarrollo Manual
-.\scripts\manual\start.ps1     # Inicia Nginx + Backend + Frontend
-.\scripts\manual\stop.ps1      # Detiene todos los servicios
-
-# Servicios de Windows (Auto-start)
-.\scripts\services\install-all-services.ps1      # Instala servicios auto-start
-.\scripts\services\uninstall-all-services.ps1    # Desinstala servicios
-
-# Utilidades
-.\scripts\utils\restart-services.bat      # Reinicia servicios rápidamente
-.\scripts\utils\view-logs.bat             # Ver logs en tiempo real
-.\scripts\utils\configure-nginx.bat       # Configurar Nginx en PC nueva
-
-# Acceso Remoto con Ngrok
-.\scripts\utils\share-with-ngrok.bat      # Compartir app remotamente
-.\scripts\utils\stop-ngrok.bat            # Detener túnel ngrok
-.\scripts\utils\get-ngrok-url.ps1         # Obtener URL pública activa
+# Ver estado del servidor
+# Usar skill /deploy-status en Claude
 ```
-
-**Documentación completa**:
-- [Scripts README](./scripts/README.md) - Guía completa de scripts
-- [Ngrok Setup](./docs/dev/NGROK.md) - Configuración de acceso remoto
 
 ## Endpoints del API
 
@@ -350,71 +274,15 @@ DELETE /files/:id                     # Eliminar archivo o comentario
 - Eliminar solo archivos de sus proyectos
 - Actualizar su perfil (campos limitados)
 
-## Próximos Pasos Sugeridos
-
-1. Implementar páginas completas de gestión en frontend:
-   - Lista de proyectos con filtros
-   - Detalle de proyecto con galería de archivos
-   - Gestión de usuarios (admin)
-   - Perfil de usuario editable
-
-2. Mejorar la experiencia de usuario:
-   - Notificaciones toast
-   - Modales de confirmación
-   - Paginación de listados
-   - Búsqueda y filtros
-
-3. Funcionalidades adicionales:
-   - Preview de imágenes
-   - Descarga múltiple de archivos
-   - Comentarios en proyectos
-   - Historial de cambios
-   - Notificaciones por email
-
-4. Testing:
-   - Tests unitarios (Jest)
-   - Tests E2E (Playwright)
-   - Tests de integración
-
-5. DevOps:
-   - Docker Compose para desarrollo
-   - CI/CD con GitHub Actions
-   - Deploy en producción
-
 ## 📚 Documentación
 
-Para documentación completa y detallada del proyecto, consulta el **[Índice de Documentación](./docs/README.md)**.
-
-### Documentación Destacada
-
-- **[Guía de Configuración](./docs/setup/PNPM_MIGRATION.md)** - Instalación y configuración del proyecto
-- **[Arquitectura del Sistema](./docs/architecture/system_workflow_v2.md)** - Flujo completo del sistema
-- **[Guía de Contribución](./docs/development/CONTRIBUTING.md)** - Cómo contribuir al proyecto
-- **[Estado de Implementación](./docs/implementation/IMPLEMENTATION_STATUS.md)** - Progreso del proyecto
-- **[Mejoras de Seguridad](./docs/improvements/SECURITY_IMPROVEMENTS.md)** - Auditoría de seguridad
-- **[Optimizaciones de Rendimiento](./docs/improvements/PERFORMANCE_OPTIMIZATIONS.md)** - Mejoras de performance
-
-### Estructura de Documentación
-
-```
-docs/
-├── setup/              # Instalación y configuración
-├── development/        # Guías de desarrollo
-├── architecture/       # Diseño del sistema
-├── implementation/     # Estado de implementación
-├── audits/            # Reportes de auditoría
-├── improvements/      # Mejoras y optimizaciones
-├── references/        # Documentación de referencia
-└── changelog/         # Historial de cambios
-```
-
-Para más detalles, consulta el **[README completo de documentación](./docs/README.md)**.
+- **[docs/](./docs/README.md)** - Documentación del proyecto
+- **[.claude/PROJECT.md](./.claude/PROJECT.md)** - Credenciales y configuración del servidor
 
 ---
 
-## Licencia
+## Deployment
 
-Este es la plataforma oficial para Align Designs.
-# Auto-deploy test: vie., 13 de feb. de 2026 11:13:40 p. m.
-
-
+- **Server:** Digital Ocean (45.55.71.127)
+- **CI/CD:** GitHub Actions → SonarCloud → Auto-deploy
+- **Push to main** triggers automatic deployment
