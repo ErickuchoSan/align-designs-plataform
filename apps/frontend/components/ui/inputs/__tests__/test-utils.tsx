@@ -154,14 +154,16 @@ export async function testAsyncValidationNoMessage<P extends BaseInputProps>(
 }
 
 /**
- * Password strength test data
+ * Password strength test data - NOT real credentials, just test fixtures
+ * for validating the password strength indicator component
  */
+// NOSONAR: These are test fixtures for password strength validation, not real credentials
 export const PASSWORD_STRENGTH_TESTS = [
   { password: 'abc', strength: 'Very Weak' },
   { password: 'Abc123', strength: 'Weak' },
   { password: 'Abc123!', strength: 'Fair' },
   { password: 'Abc123!@', strength: 'Good' },
-  { password: 'MyP@ssw0rd123!', strength: 'Strong' },
+  { password: 'MyP@ssw0rd123!', strength: 'Strong' }, // NOSONAR
 ] as const;
 
 export const PASSWORD_REQUIREMENTS = [
