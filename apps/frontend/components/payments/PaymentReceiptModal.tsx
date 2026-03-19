@@ -18,6 +18,14 @@ function isEmployeePayment(payment: Payment | EmployeePayment): payment is Emplo
     return 'employeeId' in payment;
 }
 
+function checkHasReceipt(payment?: Payment | EmployeePayment): boolean {
+    if (!payment) return false;
+    if (isEmployeePayment(payment)) {
+        return !!(payment.receiptFileId || payment.receiptFile);
+    }
+    return !!(payment.receiptFileUrl);
+}
+
 export default function PaymentReceiptModal({
     isOpen,
     onClose,
@@ -30,11 +38,7 @@ export default function PaymentReceiptModal({
     const [receiptError, setReceiptError] = useState<string | null>(null);
     const blobUrlRef = useRef<string | null>(null);
 
-    const hasReceipt = payment
-        ? isEmployeePayment(payment)
-            ? !!(payment.receiptFileId || payment.receiptFile)
-            : !!(payment.receiptFileUrl)
-        : false;
+    const hasReceipt = checkHasReceipt(payment);
 
     // Load receipt (as blob or presigned URL based on config)
     const loadReceipt = useCallback(async () => {
