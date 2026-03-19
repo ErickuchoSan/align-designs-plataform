@@ -44,6 +44,7 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'warn',
       '@typescript-eslint/no-namespace': 'warn',
       '@typescript-eslint/no-unsafe-function-type': 'warn',
+      '@typescript-eslint/no-redundant-type-constituents': 'warn',
       'prefer-const': 'warn',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
