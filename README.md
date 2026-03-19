@@ -19,7 +19,7 @@ npm install -g pnpm
 - 🔒 **Más estricto** - detecta mejor dependencias faltantes
 - 🏗️ **Optimizado para monorepos**
 
-Ver [PNPM_MIGRATION.md](./PNPM_MIGRATION.md) para más detalles.
+Ver [PNPM_MIGRATION.md](./docs/setup/PNPM_MIGRATION.md) para más detalles.
 
 ## Tecnologías Utilizadas
 
