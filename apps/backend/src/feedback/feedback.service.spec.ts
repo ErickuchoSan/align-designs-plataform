@@ -52,7 +52,21 @@ describe('FeedbackService', () => {
             },
             file: {
               update: jest.fn(),
+              findMany: jest.fn().mockResolvedValue([]),
+              updateMany: jest.fn(),
             },
+            $transaction: jest.fn().mockImplementation((callback) => {
+              // Execute the callback with a mock transaction that mirrors prisma
+              const mockTx = {
+                file: {
+                  updateMany: jest.fn(),
+                },
+                feedbackCycle: {
+                  update: jest.fn().mockResolvedValue({ ...mockCycle, status: 'open' }),
+                },
+              };
+              return callback(mockTx);
+            }),
           },
         },
         {
@@ -206,8 +220,24 @@ describe('FeedbackService', () => {
       const submittedCycle = { ...mockCycle, status: 'submitted' };
       prismaService.feedbackCycle.findUnique.mockResolvedValue(submittedCycle);
 
-      const approvedCycle = { ...mockCycle, status: 'approved' };
-      prismaService.feedbackCycle.update.mockResolvedValue(approvedCycle);
+      // Mock that there's at least one file in SUBMITTED stage
+      prismaService.file.findMany.mockResolvedValue([{ id: 'file-1' }]);
+
+      const approvedCycle = {
+        ...mockCycle,
+        status: 'approved',
+        employee: { id: mockEmployeeId },
+        project: { id: mockProjectId, name: 'Test Project' },
+      };
+
+      // Mock $transaction to return approved cycle
+      prismaService.$transaction.mockImplementation(async (callback) => {
+        const mockTx = {
+          file: { updateMany: jest.fn() },
+          feedbackCycle: { update: jest.fn().mockResolvedValue(approvedCycle) },
+        };
+        return callback(mockTx);
+      });
 
       const result = await service.approveFeedbackCycle(mockCycleId);
 
@@ -230,6 +260,16 @@ describe('FeedbackService', () => {
         BadRequestException,
       );
     });
+
+    it('should throw BadRequest if no files in SUBMITTED stage', async () => {
+      const submittedCycle = { ...mockCycle, status: 'submitted' };
+      prismaService.feedbackCycle.findUnique.mockResolvedValue(submittedCycle);
+      prismaService.file.findMany.mockResolvedValue([]); // No files
+
+      await expect(service.approveFeedbackCycle(mockCycleId)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
   });
 
   describe('rejectFeedbackCycle', () => {
@@ -237,8 +277,21 @@ describe('FeedbackService', () => {
       const submittedCycle = { ...mockCycle, status: 'submitted' };
       prismaService.feedbackCycle.findUnique.mockResolvedValue(submittedCycle);
 
-      const openCycle = { ...mockCycle, status: 'open' };
-      prismaService.feedbackCycle.update.mockResolvedValue(openCycle);
+      const openCycle = {
+        ...mockCycle,
+        status: 'open',
+        employee: { id: mockEmployeeId },
+        project: { id: mockProjectId, name: 'Test Project' },
+      };
+
+      // Mock $transaction to return reopened cycle
+      prismaService.$transaction.mockImplementation(async (callback) => {
+        const mockTx = {
+          file: { updateMany: jest.fn() },
+          feedbackCycle: { update: jest.fn().mockResolvedValue(openCycle) },
+        };
+        return callback(mockTx);
+      });
 
       const result = await service.rejectFeedbackCycle(mockCycleId);
 

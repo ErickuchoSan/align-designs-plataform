@@ -29,6 +29,7 @@ describe('UsersService', () => {
     isActive: true,
     deletedAt: null,
     phone: '1234567890',
+    passwordHash: null, // No password set
   };
 
   const mockAdmin = {
@@ -162,7 +163,9 @@ describe('UsersService', () => {
 
       const result = await service.findAll(paginationDto);
 
-      expect(result.data).toEqual([mockUser]);
+      // Service adds hasPassword field and removes passwordHash for security
+      const { passwordHash, ...userWithoutPassword } = mockUser;
+      expect(result.data).toEqual([{ ...userWithoutPassword, hasPassword: false }]);
       expect(result.meta.total).toBe(1);
     });
 
@@ -190,7 +193,9 @@ describe('UsersService', () => {
         Role.CLIENT,
       );
 
-      expect(result).toEqual(mockUser);
+      // Service adds hasPassword field and removes passwordHash for security
+      const { passwordHash, ...userWithoutPassword } = mockUser;
+      expect(result).toEqual({ ...userWithoutPassword, hasPassword: false });
     });
 
     it('should throw ForbiddenException if client tries to view another user', async () => {

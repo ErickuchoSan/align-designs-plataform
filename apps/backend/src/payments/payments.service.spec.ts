@@ -3,6 +3,7 @@ import { PaymentsService } from './payments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProjectStatusService } from '../projects/services/project-status.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PaymentApprovalService } from './services/payment-approval.service';
 import { PaymentStatus, PaymentType, NotificationType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
@@ -21,6 +22,7 @@ describe('PaymentsService', () => {
   let projectStatusService: any;
   let notificationsService: any;
   let storageService: any;
+  let paymentApprovalService: any;
 
   const mockProjectId = 'project-123';
   const mockUserId = 'user-123';
@@ -102,6 +104,14 @@ describe('PaymentsService', () => {
             getDownloadUrl: jest.fn(),
           },
         },
+        {
+          provide: PaymentApprovalService,
+          useValue: {
+            requestApproval: jest.fn(),
+            approvePayment: jest.fn(),
+            rejectPayment: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -112,6 +122,7 @@ describe('PaymentsService', () => {
     notificationsService =
       module.get<NotificationsService>(NotificationsService);
     storageService = module.get<StorageService>(StorageService);
+    paymentApprovalService = module.get<PaymentApprovalService>(PaymentApprovalService);
   });
 
   it('should be defined', () => {
@@ -214,34 +225,27 @@ describe('PaymentsService', () => {
   });
 
   describe('approvePayment', () => {
-    it('should approve payment and update project status', async () => {
-      const pendingPayment = {
-        ...mockPayment,
-        status: PaymentStatus.PENDING_APPROVAL,
-      };
-      prismaService.payment.findUnique.mockResolvedValue(pendingPayment);
-      prismaService.payment.update.mockResolvedValue({
+    it('should delegate to paymentApprovalService', async () => {
+      const approvedPayment = {
         ...mockPayment,
         status: PaymentStatus.CONFIRMED,
-      });
+      };
+      paymentApprovalService.approvePayment.mockResolvedValue(approvedPayment);
 
       const result = await service.approvePayment(mockPaymentId, 'admin-id');
 
+      expect(paymentApprovalService.approvePayment).toHaveBeenCalledWith(
+        mockPaymentId,
+        'admin-id',
+        undefined,
+      );
       expect(result.status).toBe(PaymentStatus.CONFIRMED);
-      expect(projectStatusService.updateProjectPayment).toHaveBeenCalledWith(
-        mockProject.id,
-        Number(mockPayment.amount),
-      );
-      expect(notificationsService.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          userId: mockUserId, // Notify client
-          type: NotificationType.SUCCESS,
-        }),
-      );
     });
 
-    it('should throw BadRequest if payment not pending', async () => {
-      prismaService.payment.findUnique.mockResolvedValue(mockPayment); // Already confirmed
+    it('should throw BadRequest when paymentApprovalService throws', async () => {
+      paymentApprovalService.approvePayment.mockRejectedValue(
+        new BadRequestException('Payment is not pending approval'),
+      );
 
       await expect(
         service.approvePayment(mockPaymentId, 'admin-id'),
@@ -250,16 +254,12 @@ describe('PaymentsService', () => {
   });
 
   describe('rejectPayment', () => {
-    it('should reject payment', async () => {
-      const pendingPayment = {
-        ...mockPayment,
-        status: PaymentStatus.PENDING_APPROVAL,
-      };
-      prismaService.payment.findUnique.mockResolvedValue(pendingPayment);
-      prismaService.payment.update.mockResolvedValue({
+    it('should delegate to paymentApprovalService', async () => {
+      const rejectedPayment = {
         ...mockPayment,
         status: PaymentStatus.REJECTED,
-      });
+      };
+      paymentApprovalService.rejectPayment.mockResolvedValue(rejectedPayment);
 
       const result = await service.rejectPayment(
         mockPaymentId,
@@ -267,12 +267,12 @@ describe('PaymentsService', () => {
         'Invalid receipt',
       );
 
-      expect(result.status).toBe(PaymentStatus.REJECTED);
-      expect(notificationsService.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: NotificationType.WARNING,
-        }),
+      expect(paymentApprovalService.rejectPayment).toHaveBeenCalledWith(
+        mockPaymentId,
+        'admin-id',
+        'Invalid receipt',
       );
+      expect(result.status).toBe(PaymentStatus.REJECTED);
     });
   });
 

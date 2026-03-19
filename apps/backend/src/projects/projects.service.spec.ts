@@ -16,6 +16,7 @@ import { StorageService } from '../storage/storage.service';
 import { CacheManagerService } from '../cache/services/cache-manager.service';
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
+import { ProjectLifecycleService } from './services/project-lifecycle.service';
 import { InvoicesService } from '../invoices/invoices.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
@@ -95,6 +96,13 @@ describe('ProjectsService', () => {
     updateStatus: jest.fn(),
   };
 
+  const mockProjectLifecycleService = {
+    closeBrief: jest.fn(),
+    archiveProject: jest.fn(),
+    reopenProject: jest.fn(),
+    softDelete: jest.fn().mockResolvedValue({ message: 'Project deleted successfully' }),
+  };
+
   const mockInvoicesService = {
     createInvoiceForProject: jest.fn(),
   };
@@ -167,6 +175,10 @@ describe('ProjectsService', () => {
         {
           provide: ProjectStatusService,
           useValue: mockProjectStatusService,
+        },
+        {
+          provide: ProjectLifecycleService,
+          useValue: mockProjectLifecycleService,
         },
         {
           provide: InvoicesService,
@@ -456,94 +468,29 @@ describe('ProjectsService', () => {
   });
 
   describe('remove', () => {
-    it('should soft delete project for admin', async () => {
-      jest
-        .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
-
-      const mockTx = {
-        project: {
-          update: jest.fn().mockResolvedValue({
-            ...mockProject,
-            deletedAt: new Date(),
-          }),
-        },
-        file: {
-          updateMany: jest.fn(),
-        },
-      };
-
-      jest
-        .spyOn(prismaService, '$transaction')
-        .mockImplementation(async (callback: any) => callback(mockTx));
-
-      // Mock findUnique for post-delete notifications
-      jest.spyOn(prismaService.project, 'findUnique').mockResolvedValue({
-        ...mockProject,
-        employees: [],
-      } as any);
-
+    it('should delegate to projectLifecycleService.softDelete', async () => {
       const result = await service.remove(
         'project-123',
         'admin-123',
         Role.ADMIN,
       );
 
+      expect(mockProjectLifecycleService.softDelete).toHaveBeenCalledWith(
+        'project-123',
+        'admin-123',
+        Role.ADMIN,
+      );
       expect(result.message).toContain('deleted');
     });
 
-    it('should throw ForbiddenException for client deleting other project', async () => {
-      jest
-        .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(mockProject);
+    it('should throw ForbiddenException when softDelete throws', async () => {
+      mockProjectLifecycleService.softDelete.mockRejectedValueOnce(
+        new ForbiddenException('No permission'),
+      );
 
       await expect(
         service.remove('project-123', 'different-client', Role.CLIENT),
       ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('should soft delete all project files when deleting project', async () => {
-      const projectWithFiles = {
-        ...mockProject,
-        files: [
-          { id: '1', filename: 'file1.pdf', storagePath: '/path1' },
-          { id: '2', filename: 'file2.pdf', storagePath: '/path2' },
-        ],
-      };
-
-      jest
-        .spyOn(prismaService.project, 'findFirst')
-        .mockResolvedValue(projectWithFiles as any);
-
-      const mockTx = {
-        project: {
-          update: jest.fn().mockResolvedValue({
-            ...projectWithFiles,
-            deletedAt: new Date(),
-          }),
-        },
-        file: {
-          updateMany: jest.fn(),
-        },
-      };
-
-      jest
-        .spyOn(prismaService, '$transaction')
-        .mockImplementation(async (callback: any) => callback(mockTx));
-
-      // Mock findUnique for post-delete notifications
-      jest.spyOn(prismaService.project, 'findUnique').mockResolvedValue({
-        ...projectWithFiles,
-        employees: [],
-      } as any);
-
-      await service.remove('project-123', 'admin-123', Role.ADMIN);
-
-      expect(mockTx.file.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { projectId: 'project-123', deletedAt: null },
-        }),
-      );
     });
   });
 
