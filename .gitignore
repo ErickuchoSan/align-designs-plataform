@@ -34,10 +34,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Service logs (Windows auto-start)
-logs/monorepo-service.log
-logs/monorepo-service-error.log
-
 # OS files
 .DS_Store
 Thumbs.db
@@ -90,11 +86,11 @@ docs/dev/
 deploy-bundle.tar.gz
 build_log.txt
 .env.dev.corrected
-scripts/create_bundle.ps1
 
 # SSH keys
 *.key
 
 # Claude Code
 .claude/
+.claude.bak/
 .mcp.json
