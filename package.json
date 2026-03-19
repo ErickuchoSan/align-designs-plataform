@@ -19,6 +19,9 @@
     "test": "pnpm -r test",
     "test:backend": "pnpm --filter backend test",
     "test:frontend": "pnpm --filter frontend test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "prisma:generate": "pnpm --filter backend prisma:generate",
     "prisma:migrate": "pnpm --filter backend prisma:migrate:deploy",
     "prisma:studio": "pnpm --filter backend prisma:studio",
@@ -26,6 +29,7 @@
     "install:all": "pnpm install"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "concurrently": "^8.2.2"
   },
   "engines": {

@@ -12,6 +12,11 @@ yarn.lock
 coverage/
 .nyc_output
 
+# Playwright E2E
+playwright-report/
+test-results/
+playwright/.cache/
+
 # Production builds
 dist/
 build/
