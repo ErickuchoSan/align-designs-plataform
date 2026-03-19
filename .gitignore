@@ -18,6 +18,9 @@ build/
 .next/
 out/
 
+# Uploads (stored in MinIO, not git)
+uploads/
+
 # Environment variables
 .env
 .env*.local
