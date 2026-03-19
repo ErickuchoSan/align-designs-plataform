@@ -1,116 +1,108 @@
-import {
-  describe,
-  it,
-  expect,
-  render,
-  screen,
-  fireEvent,
-  createMockOnChange,
-  testInputHandlesCustomPlaceholder,
-  testInputHandlesRequiredValidation,
-  renderAndGetInput,
-  getInputByPlaceholder,
-  changeInput,
-  PASSWORD_STRENGTH_TESTS,
-  PASSWORD_REQUIREMENTS,
-} from './test-utils';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import PasswordInput from '../PasswordInput';
 
-const PLACEHOLDER = 'Password';
+describe('PasswordInput', () => {
+  const mockOnChange = vi.fn();
 
-// TODO: Fix component state issues in test environment
-describe.skip('PasswordInput', () => {
-  const mockOnChange = createMockOnChange();
-
-  it('renders correctly', () => {
-    renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER);
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+  beforeEach(() => {
+    mockOnChange.mockClear();
   });
 
-  it('handles custom placeholder', () => {
-    testInputHandlesCustomPlaceholder(PasswordInput, mockOnChange, 'Enter password');
+  it('renders with placeholder', () => {
+    render(<PasswordInput value="" onChange={mockOnChange} />);
+    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
   });
 
-  it('handles required validation', () => {
-    testInputHandlesRequiredValidation(PasswordInput, mockOnChange, PLACEHOLDER);
+  it('renders with custom placeholder', () => {
+    render(<PasswordInput value="" onChange={mockOnChange} placeholder="Enter password" />);
+    expect(screen.getByPlaceholderText('Enter password')).toBeInTheDocument();
+  });
+
+  it('handles required attribute', () => {
+    render(<PasswordInput value="" onChange={mockOnChange} required />);
+    expect(screen.getByPlaceholderText('Password')).toBeRequired();
+  });
+
+  it('starts with password hidden', () => {
+    render(<PasswordInput value="test123" onChange={mockOnChange} />);
+    const input = screen.getByPlaceholderText('Password');
+    expect(input).toHaveAttribute('type', 'password');
   });
 
   it('toggles password visibility', () => {
-    const input = renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER, 'test123');
+    render(<PasswordInput value="test123" onChange={mockOnChange} />);
+    const input = screen.getByPlaceholderText('Password');
+    const toggleButton = screen.getByRole('button', { name: /show password/i });
+
+    // Initially hidden
     expect(input).toHaveAttribute('type', 'password');
 
-    const toggleButton = screen.getByLabelText(/password/i);
+    // Click to show
     fireEvent.click(toggleButton);
     expect(input).toHaveAttribute('type', 'text');
 
-    fireEvent.click(toggleButton);
+    // Click to hide again
+    fireEvent.click(screen.getByRole('button', { name: /hide password/i }));
     expect(input).toHaveAttribute('type', 'password');
   });
 
-  it('shows password strength indicator when value is present', () => {
-    renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER, 'test');
-    expect(screen.getByText('Password Strength')).toBeInTheDocument();
-    expect(screen.getByText('Very Weak')).toBeInTheDocument();
+  it('calls onChange on input', () => {
+    render(<PasswordInput value="" onChange={mockOnChange} />);
+    const input = screen.getByPlaceholderText('Password');
+    fireEvent.change(input, { target: { value: 'newpassword' } });
+    expect(mockOnChange).toHaveBeenCalledWith('newpassword');
   });
 
-  it('hides password strength indicator when disabled', () => {
+  it('shows strength indicator when value is present', () => {
+    render(<PasswordInput value="test" onChange={mockOnChange} />);
+    expect(screen.getByText('Password Strength')).toBeInTheDocument();
+  });
+
+  it('hides strength indicator when disabled', () => {
     render(<PasswordInput value="test" onChange={mockOnChange} showStrengthIndicator={false} />);
     expect(screen.queryByText('Password Strength')).not.toBeInTheDocument();
   });
 
-  // Data-driven password strength tests
-  describe.each(PASSWORD_STRENGTH_TESTS)('password strength', ({ password, strength }) => {
-    it(`shows "${strength}" for "${password}"`, () => {
-      renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER, password);
-      expect(screen.getByText(strength)).toBeInTheDocument();
-    });
+  // Password strength tests based on actual algorithm:
+  // score = count of: length>=12, uppercase, lowercase, number, symbol
+  // 0-1: Very Weak, 2: Weak, 3: Fair, 4: Good, 5: Strong
+
+  it('shows Very Weak for simple passwords', () => {
+    // "abc" = lowercase only = score 1 = Very Weak
+    render(<PasswordInput value="abc" onChange={mockOnChange} />);
+    expect(screen.getByText('Very Weak')).toBeInTheDocument();
   });
 
-  it('shows all password requirements', () => {
-    renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER, 'test');
-    PASSWORD_REQUIREMENTS.forEach(req => {
-      expect(screen.getByText(req)).toBeInTheDocument();
-    });
+  it('shows Fair for passwords with mixed case and numbers', () => {
+    // "Abc123" = uppercase + lowercase + number = score 3 = Fair
+    render(<PasswordInput value="Abc123" onChange={mockOnChange} />);
+    expect(screen.getByText('Fair')).toBeInTheDocument();
   });
 
-  it('updates requirements checkmarks as password improves', () => {
-    const { rerender } = render(<PasswordInput value="" onChange={mockOnChange} />);
-    expect(screen.getAllByText(/✗/).length).toBeGreaterThan(0);
-
-    // Progress through passwords until all requirements are met
-    ['abc', 'Abc', 'Abc123', 'Abc123!', 'MyP@ssw0rd123!'].forEach(pw => {
-      rerender(<PasswordInput value={pw} onChange={mockOnChange} />);
-    });
-
-    expect(screen.getAllByText(/✓/).length).toBe(5);
+  it('shows Good for passwords with special chars', () => {
+    // "Abc123!" = uppercase + lowercase + number + symbol = score 4 = Good
+    render(<PasswordInput value="Abc123!" onChange={mockOnChange} />);
+    expect(screen.getByText('Good')).toBeInTheDocument();
   });
 
-  it('changes input border color based on strength', () => {
-    const { rerender } = render(<PasswordInput value="" onChange={mockOnChange} />);
-    const input = getInputByPlaceholder(PLACEHOLDER);
-    expect(input).toHaveClass('border-stone-300');
-
-    const colorTests = [
-      { password: 'abc', borderClass: 'border-red-500', bgClass: 'bg-red-50' },
-      { password: 'Abc123!', borderClass: 'border-amber-500', bgClass: 'bg-amber-50' },
-      { password: 'MyP@ssw0rd123!', borderClass: 'border-green-500', bgClass: 'bg-green-50' },
-    ];
-
-    colorTests.forEach(({ password, borderClass, bgClass }) => {
-      rerender(<PasswordInput value={password} onChange={mockOnChange} />);
-      expect(input).toHaveClass(borderClass);
-      expect(input).toHaveClass(bgClass);
-    });
+  it('shows Strong for complete passwords', () => {
+    // "MyP@ssw0rd123!" = length>=12 + all requirements = score 5 = Strong
+    render(<PasswordInput value="MyP@ssw0rd123!" onChange={mockOnChange} />);
+    expect(screen.getByText('Strong')).toBeInTheDocument();
   });
 
-  it('shows password strength bar', () => {
-    renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER, 'Abc123!');
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  it('shows password requirements', () => {
+    render(<PasswordInput value="test" onChange={mockOnChange} />);
+    expect(screen.getByText('At least 12 characters')).toBeInTheDocument();
+    expect(screen.getByText('One uppercase letter')).toBeInTheDocument();
+    expect(screen.getByText('One lowercase letter')).toBeInTheDocument();
+    expect(screen.getByText('One number')).toBeInTheDocument();
+    expect(screen.getByText('One special character')).toBeInTheDocument();
   });
 
-  it('calls onChange handler', () => {
-    const input = renderAndGetInput(PasswordInput, mockOnChange, PLACEHOLDER);
-    changeInput(input, 'newpassword');
-    expect(mockOnChange).toHaveBeenCalledWith('newpassword');
+  it('does not show strength indicator for empty value', () => {
+    render(<PasswordInput value="" onChange={mockOnChange} />);
+    expect(screen.queryByText('Password Strength')).not.toBeInTheDocument();
   });
 });

@@ -25,6 +25,10 @@
 | `/nestjs-patterns` | Patrones del backend |
 | `/backend-tests` | Tests unitarios del backend (Jest) |
 | `/e2e-tests` | Tests E2E con Playwright |
+| `/minio-storage` | Operaciones de archivos (S3-compatible) |
+| `/test-generator` | Generar tests automáticamente |
+| `/performance-analyzer` | Análisis de rendimiento |
+| `/dependency-health` | Salud de dependencias |
 
 ### Flujo de Trabajo Obligatorio
 
@@ -62,8 +66,35 @@ Ver `.claude/PROJECT.md` para:
 - SSH tunnel para desarrollo local: `.\scripts\ssh-tunnel.ps1`
 - Puerto SSH: 29 (NO 22)
 
+## Testing
+
+### Frontend (Vitest)
+- Tests en `apps/frontend/**/__tests__/`
+- Ejecutar: `pnpm --filter frontend test`
+- Coverage: `pnpm --filter frontend test:coverage`
+- Hooks: `usePagination`, `useModal`, `useClickOutside`
+- Utils: `AuthStorage`, `SafeStorage`
+
+### Backend (Jest)
+- Tests en `apps/backend/src/**/*.spec.ts`
+- Ejecutar: `pnpm --filter backend test`
+- Coverage: `pnpm --filter backend test:cov`
+
+### E2E (Playwright)
+- Tests en `e2e/*.spec.ts`
+- Ejecutar: `pnpm test:e2e`
+- Requiere servidor corriendo
+
 ## CI/CD
 
-Push a `main` → GitHub Actions → SonarCloud → Deploy a Digital Ocean
+Push a `main` → Build → Tests → SonarCloud → Deploy → Health Check → E2E
 
 El workflow está en `.github/workflows/deploy-dev.yml`
+
+### Jobs del Pipeline
+1. `validate` - Build, lint, tests con coverage
+2. `sonarcloud` - Análisis de código
+3. `backup` - Backup de DB
+4. `deploy` - Deploy a Digital Ocean
+5. `health-check` - Verificar servicios
+6. `e2e-tests` - Tests E2E (si `E2E_ADMIN_PASSWORD` está configurado)
