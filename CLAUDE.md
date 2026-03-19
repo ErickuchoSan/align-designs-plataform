@@ -23,6 +23,8 @@
 | `/database-review` | Cambios en Prisma/PostgreSQL |
 | `/security-audit` | Cambios de seguridad |
 | `/nestjs-patterns` | Patrones del backend |
+| `/backend-tests` | Tests unitarios del backend (Jest) |
+| `/e2e-tests` | Tests E2E con Playwright |
 
 ### Flujo de Trabajo Obligatorio
 
