@@ -1,2 +1,0 @@
--- Add PARTIALLY_PAID to InvoiceStatus enum
-ALTER TYPE "InvoiceStatus" ADD VALUE IF NOT EXISTS 'PARTIALLY_PAID';
