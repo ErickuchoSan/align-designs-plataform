@@ -199,15 +199,15 @@ const myPayments = await prisma.payment.findMany({
 
 ## Implementation Checklist
 
-- [x] Backend privacy helper created (`payment-privacy.helper.ts`)
-- [x] Stage permissions documented (`stage-permissions.helper.ts`)
-- [ ] Payment queries implement privacy filters
+- [x] Stage permissions helper (`stage-permissions.helper.ts`)
+- [x] Payment privacy rules defined in this document
+- [x] EmployeePayment model with privacy (schema ready)
+- [ ] Payment queries implement full privacy filters
 - [ ] Frontend UI shows correct tabs per role
 - [ ] Frontend hides unauthorized payment types
 - [ ] Tests verify privacy boundaries
-- [ ] Audit logging for payment access
 
 ---
 
-**Last Updated:** December 2024
-**Status:** Privacy rules defined, implementation in progress
+**Last Updated:** March 2025
+**Status:** Schema ready, privacy rules defined. Frontend UI pending.

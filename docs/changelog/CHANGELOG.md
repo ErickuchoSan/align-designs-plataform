@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented user enumeration prevention
 - Added comprehensive security headers
 
-## [1.0.0] - 2025-01-XX
+## [1.0.0] - 2025-01-01
 
 ### Added
 
@@ -227,7 +227,6 @@ Special thanks to the security audit team for identifying critical vulnerabiliti
 
 ## Links
 
-- [Documentation](./docs/)
-- [Contributing Guidelines](./CONTRIBUTING.md)
-- [Security Policy](./SECURITY.md)
+- [Documentation](../README.md)
+- [Contributing Guidelines](../development/CONTRIBUTING.md)
 - [API Documentation](http://localhost:4000/api/docs)
