@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { handleApiError } from '@/lib/errors';
 import { MESSAGE_DURATION, FILE_UPLOAD } from '@/lib/constants/ui.constants';
 import { FilesService } from '@/services/files.service';
+import { USE_BLOB_URLS } from '@/hooks';
 import type { FileData } from './useProjectFiles';
 
 export function useFileOperations(
@@ -239,14 +240,23 @@ export function useFileOperations(
   const handleDownload = useCallback(
     async (fileId: string, fileName: string) => {
       try {
-        const downloadUrl = await FilesService.getDownloadUrl(fileId);
+        let downloadUrl: string;
+
+        if (USE_BLOB_URLS) {
+          // Blob mode: download file and create object URL
+          const blob = await FilesService.downloadFile(fileId);
+          downloadUrl = globalThis.URL.createObjectURL(blob);
+        } else {
+          // Direct URL mode: use presigned URL from API
+          downloadUrl = await FilesService.getDownloadUrl(fileId);
+        }
 
         if (!downloadUrl) {
           onErrorRef.current('No download URL available for this file');
           return;
         }
 
-        // Download file directly using presigned URL
+        // Trigger download using anchor element
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.setAttribute('download', fileName);
@@ -254,6 +264,12 @@ export function useFileOperations(
         document.body.appendChild(link);
         link.click();
         link.remove();
+
+        // Revoke blob URL after download starts (if using blob mode)
+        if (USE_BLOB_URLS) {
+          // Small delay to ensure download starts before revoking
+          setTimeout(() => globalThis.URL.revokeObjectURL(downloadUrl), 1000);
+        }
 
         onSuccessRef.current('File download started');
         setTrackedTimeout(() => onSuccessRef.current(''), MESSAGE_DURATION.SUCCESS);

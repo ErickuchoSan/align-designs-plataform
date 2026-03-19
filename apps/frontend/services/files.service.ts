@@ -106,11 +106,24 @@ export class FilesService {
     }
 
     /**
-     * Get download URL for a file
+     * Get download URL for a file (presigned URL)
      */
     static async getDownloadUrl(fileId: string): Promise<string> {
         const response = await api.get<{ downloadUrl: string }>(`${this.BASE_URL}/${fileId}/download`);
         return response.data.downloadUrl;
+    }
+
+    /**
+     * Download file as blob for viewing/downloading
+     * Uses the presigned URL to fetch the file and return as blob
+     */
+    static async downloadFile(fileId: string): Promise<Blob> {
+        const presignedUrl = await this.getDownloadUrl(fileId);
+        const response = await fetch(presignedUrl);
+        if (!response.ok) {
+            throw new Error('Failed to download file');
+        }
+        return response.blob();
     }
 
     /**
