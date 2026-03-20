@@ -4,20 +4,22 @@ import { useRef } from 'react';
 import { useClickOutside } from '../useClickOutside';
 
 // Test component that uses the hook
+interface TestComponentProps {
+  readonly onClickOutside: () => void;
+  readonly enabled?: boolean;
+}
+
 function TestComponent({
   onClickOutside,
   enabled = true,
-}: {
-  onClickOutside: () => void;
-  enabled?: boolean;
-}) {
+}: Readonly<TestComponentProps>) {
   const ref = useRef<HTMLDivElement>(null);
   useClickOutside(ref, onClickOutside, enabled);
 
   return (
     <div>
       <div ref={ref} data-testid="inside">
-        Inside Element
+        Inside Element{' '}
         <button data-testid="inside-button">Inside Button</button>
       </div>
       <div data-testid="outside">Outside Element</div>
