@@ -19,7 +19,7 @@ npm install -g pnpm
 - 🔒 **Más estricto** - detecta mejor dependencias faltantes
 - 🏗️ **Optimizado para monorepos**
 
-Ver [PNPM_MIGRATION.md](./docs/setup/PNPM_MIGRATION.md) para más detalles.
+Ver [pnpm-setup.md](./docs/getting-started/pnpm-setup.md) para mas detalles.
 
 ## Tecnologías Utilizadas
 
@@ -283,6 +283,10 @@ DELETE /files/:id                     # Eliminar archivo o comentario
 
 ## Deployment
 
-- **Server:** Digital Ocean (45.55.71.127)
+- **Server:** Digital Ocean
 - **CI/CD:** GitHub Actions → SonarCloud → Auto-deploy
 - **Push to main** triggers automatic deployment
+
+Ver documentacion detallada:
+- [CI/CD Pipeline](./docs/guides/ci-cd.md) - Flujo completo del pipeline
+- [Seguridad](./docs/guides/security.md) - Configuracion de seguridad del servidor

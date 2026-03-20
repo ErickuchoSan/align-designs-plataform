@@ -20,7 +20,9 @@ docs/
 │   ├── system-flow.md        # Flujo del sistema
 │   └── workflow-stages.md    # Etapas del workflow
 ├── guides/                   # Guias how-to
-│   └── contributing.md       # Como contribuir
+│   ├── contributing.md       # Como contribuir
+│   ├── ci-cd.md              # Pipeline de CI/CD
+│   └── security.md           # Seguridad del servidor
 ├── references/               # Info de referencia
 │   ├── environment-variables.md  # Variables de entorno
 │   └── payments-privacy-matrix.md # Permisos de pagos
@@ -36,6 +38,12 @@ docs/
 | [installation.md](./getting-started/installation.md) | Configurar entorno de desarrollo |
 | [environment-variables.md](./references/environment-variables.md) | Variables de entorno |
 | [contributing.md](./guides/contributing.md) | Guia de contribucion |
+
+### Operaciones
+| Documento | Descripcion |
+|-----------|-------------|
+| [ci-cd.md](./guides/ci-cd.md) | Pipeline de CI/CD completo |
+| [security.md](./guides/security.md) | Seguridad del servidor |
 
 ### Arquitectura
 | Documento | Descripcion |
