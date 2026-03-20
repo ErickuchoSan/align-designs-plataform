@@ -6,8 +6,8 @@
 
 | Capa | Componente | Configuracion |
 |------|------------|---------------|
-| Red | UFW Firewall | Solo puertos 29, 80, 443 |
-| SSH | Puerto personalizado | Puerto 29 (no el 22 default) |
+| Red | UFW Firewall | Solo puertos SSH, 80, 443 |
+| SSH | Puerto personalizado | Puerto no-estandar (no el 22 default) |
 | SSH | Autenticacion | Solo llaves SSH, sin passwords |
 | SSH | Fail2ban | Bloqueo 24h tras 3 intentos fallidos |
 | Web | Nginx | Headers de seguridad, rate limiting |
@@ -18,7 +18,7 @@
 
 | Puerto | Servicio | Descripcion |
 |--------|----------|-------------|
-| 29/tcp | SSH | Administracion del servidor |
+| [SSH_PORT]/tcp | SSH | Administracion del servidor |
 | 80/tcp | HTTP | Trafico web |
 | 443/tcp | HTTPS | Trafico web seguro (futuro) |
 
@@ -33,7 +33,7 @@
 
 | Setting | Valor | Razon |
 |---------|-------|-------|
-| Port | 29 | Evita escaneos automaticos al puerto 22 |
+| Port | [CUSTOM] | Evita escaneos automaticos al puerto 22 |
 | PermitRootLogin | prohibit-password | Solo con llave SSH |
 | PasswordAuthentication | no | Sin contraseñas, solo llaves |
 | PubkeyAuthentication | yes | Autenticacion por llave publica |
@@ -42,10 +42,10 @@
 
 ```bash
 # Conectar al servidor
-ssh -p 29 root@[IP_SERVIDOR]
+ssh -p [SSH_PORT] root@[IP_SERVIDOR]
 
 # Con llave especifica
-ssh -p 29 -i ~/.ssh/mi_llave root@[IP_SERVIDOR]
+ssh -p [SSH_PORT] -i ~/.ssh/mi_llave root@[IP_SERVIDOR]
 ```
 
 ## Fail2ban
@@ -65,7 +65,7 @@ ssh -p 29 -i ~/.ssh/mi_llave root@[IP_SERVIDOR]
 
 | Servicio | Protegido |
 |----------|-----------|
-| SSH (puerto 29) | ✅ Si |
+| SSH (puerto personalizado) | ✅ Si |
 | Web (puerto 80) | ❌ No - Los usuarios web nunca son bloqueados |
 | API (puerto 80) | ❌ No - Rate limiting por Nginx |
 

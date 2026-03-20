@@ -74,4 +74,4 @@ docs/
 - **Database:** PostgreSQL
 - **Storage:** MinIO (S3-compatible)
 - **CI/CD:** GitHub Actions + SonarCloud
-- **Server:** Digital Ocean (45.55.71.127)
+- **Server:** Digital Ocean
