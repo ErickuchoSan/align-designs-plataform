@@ -209,7 +209,7 @@ page.on('console', msg => console.log('BROWSER:', msg.text()));
 
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
-| `E2E_BASE_URL` | URL base para tests | `http://45.55.71.127` |
+| `E2E_BASE_URL` | URL base para tests | `http://144.126.221.76` |
 | `E2E_ADMIN_PASSWORD` | Contraseña del admin | (confidencial) |
 
 Para desarrollo local:

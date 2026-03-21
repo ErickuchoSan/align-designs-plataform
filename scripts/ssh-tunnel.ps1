@@ -3,7 +3,7 @@
 
 $KeyFile = "$PSScriptRoot\..\aligndesigns-dev.key"
 $FixedKeyFile = "$env:TEMP\aligndesigns-dev-fixed.key"
-$RemoteHost = "45.55.71.127"
+$RemoteHost = "144.126.221.76"
 $RemoteUser = "root"
 $RemotePort = 29
 

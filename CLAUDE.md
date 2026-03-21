@@ -44,7 +44,7 @@
 ## Configuración del Proyecto
 
 Ver `.claude/PROJECT.md` para:
-- Credenciales del servidor (45.55.71.127)
+- Credenciales del servidor (144.126.221.76)
 - Conexión SSH (puerto 29)
 - Base de datos y MinIO
 - Comandos útiles

@@ -27,8 +27,8 @@ services:
       NODE_ENV: development
       PORT: 3001
       FRONTEND_URL: https://dev.aligndesignsllc.com
-      CORS_ORIGIN: https://dev.aligndesignsllc.com,http://45.55.71.127
-      ALLOWED_ORIGINS: https://dev.aligndesignsllc.com,http://45.55.71.127
+      CORS_ORIGIN: https://dev.aligndesignsllc.com,http://144.126.221.76
+      ALLOWED_ORIGINS: https://dev.aligndesignsllc.com,http://144.126.221.76
       MINIO_ENDPOINT: minio-dev
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}

@@ -84,7 +84,7 @@ jobs:
       - name: Backup PostgreSQL
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 45.55.71.127
+          host: 144.126.221.76
           username: root
           port: 29
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
@@ -109,7 +109,7 @@ jobs:
       - name: Deploy to Dev Server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 45.55.71.127
+          host: 144.126.221.76
           username: root
           port: 29
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
@@ -118,7 +118,7 @@ jobs:
             git pull origin main
 
             # Create frontend .env.local (not tracked by git)
-            echo 'NEXT_PUBLIC_API_URL=http://45.55.71.127/api' > apps/frontend/.env.local
+            echo 'NEXT_PUBLIC_API_URL=http://144.126.221.76/api' > apps/frontend/.env.local
 
             # Stop old containers, rebuild and start
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
@@ -163,7 +163,7 @@ jobs:
       - name: Check Backend Health
         id: backend_health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127/api/v1/health)
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76/api/v1/health)
           if [ "$response" != "200" ]; then
             echo "::error::Backend health check failed! Status: $response"
             echo "backend_failed=true" >> $GITHUB_OUTPUT
@@ -174,7 +174,7 @@ jobs:
       - name: Check Frontend Health
         id: frontend_health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://45.55.71.127)
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76)
           if [ "$response" != "200" ]; then
             echo "::error::Frontend health check failed! Status: $response"
             echo "frontend_failed=true" >> $GITHUB_OUTPUT
@@ -192,7 +192,7 @@ jobs:
       - name: Rollback to Previous Version
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 45.55.71.127
+          host: 144.126.221.76
           username: root
           port: 29
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
@@ -238,8 +238,8 @@ jobs:
         uses: treosh/lighthouse-ci-action@v12
         with:
           urls: |
-            http://45.55.71.127
-            http://45.55.71.127/login
+            http://144.126.221.76
+            http://144.126.221.76/login
           uploadArtifacts: true
           temporaryPublicStorage: true
         continue-on-error: true
@@ -272,7 +272,7 @@ jobs:
       - name: Run E2E Tests
         run: pnpm test:e2e
         env:
-          E2E_BASE_URL: http://45.55.71.127
+          E2E_BASE_URL: http://144.126.221.76
           E2E_ADMIN_PASSWORD: ${{ vars.E2E_ADMIN_PASSWORD }}
         continue-on-error: true
 

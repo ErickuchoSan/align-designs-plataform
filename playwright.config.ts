@@ -14,7 +14,7 @@ export default defineConfig({
   timeout: 60000, // 60 seconds per test
 
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'http://45.55.71.127',
+    baseURL: process.env.E2E_BASE_URL || 'http://144.126.221.76',
     trace: 'on-first-retry', // Collect trace on first retry
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
