@@ -25,22 +25,22 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  MINIO_ENDPOINT: string;
+  STORAGE_ENDPOINT: string;
 
   @IsString()
   @IsNotEmpty()
-  MINIO_ACCESS_KEY: string;
+  STORAGE_ACCESS_KEY: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(8, {
-    message: 'MINIO_SECRET_KEY must be at least 8 characters long',
+    message: 'STORAGE_SECRET_KEY must be at least 8 characters long',
   })
-  MINIO_SECRET_KEY: string;
+  STORAGE_SECRET_KEY: string;
 
   @IsString()
   @IsNotEmpty()
-  MINIO_BUCKET: string;
+  STORAGE_BUCKET: string;
 
   @IsString()
   @IsNotEmpty()

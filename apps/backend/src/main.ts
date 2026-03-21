@@ -52,12 +52,14 @@ async function bootstrap() {
   // Enable Helmet security headers
   const isProd = isProduction();
 
-  // Get MinIO endpoint for CSP configuration
-  const minioEndpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
-  const minioPort = process.env.MINIO_PORT ?? '9000';
-  const minioUseSSL = process.env.MINIO_USE_SSL === 'true';
-  const minioProtocol = minioUseSSL ? 'https' : 'http';
-  const minioUrl = `${minioProtocol}://${minioEndpoint}:${minioPort}`;
+  // Get storage endpoint for CSP configuration
+  const storageEndpoint = process.env.STORAGE_ENDPOINT ?? 'localhost';
+  const storagePort = process.env.STORAGE_PORT ?? '443';
+  const storageUseSSL = process.env.STORAGE_USE_SSL === 'true';
+  const storageProtocol = storageUseSSL ? 'https' : 'http';
+  const storageUrl = storagePort === '443' || storagePort === '80'
+    ? `${storageProtocol}://${storageEndpoint}`
+    : `${storageProtocol}://${storageEndpoint}:${storagePort}`;
 
   app.use(
     helmet({
@@ -67,12 +69,12 @@ async function bootstrap() {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'"], // Removed 'unsafe-inline' for security hardening
           scriptSrc: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'https:', 'http:', minioUrl],
+          imgSrc: ["'self'", 'data:', 'https:', 'http:', storageUrl],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
           objectSrc: ["'none'"],
-          mediaSrc: ["'self'", minioUrl],
-          frameSrc: ["'self'", minioUrl], // Allow MinIO iframes for PDF preview
+          mediaSrc: ["'self'", storageUrl],
+          frameSrc: ["'self'", storageUrl], // Allow storage iframes for PDF preview
           upgradeInsecureRequests: isProd ? [] : null, // Force HTTPS in production
         },
       },

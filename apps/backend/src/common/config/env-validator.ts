@@ -17,13 +17,13 @@ interface RequiredEnvVars {
   // Frontend
   FRONTEND_URL: string;
 
-  // MinIO Storage
-  MINIO_ENDPOINT: string;
-  MINIO_PORT: string;
-  MINIO_ACCESS_KEY: string;
-  MINIO_SECRET_KEY: string;
-  MINIO_BUCKET: string;
-  MINIO_USE_SSL: string;
+  // Storage (S3-compatible: DigitalOcean Spaces, AWS S3, etc.)
+  STORAGE_ENDPOINT: string;
+  STORAGE_PORT: string;
+  STORAGE_ACCESS_KEY: string;
+  STORAGE_SECRET_KEY: string;
+  STORAGE_BUCKET: string;
+  STORAGE_USE_SSL: string;
 
   // Email (Resend API)
   RESEND_API_KEY: string;
@@ -46,12 +46,12 @@ export function validateEnvironmentVariables(): void {
     'JWT_SECRET',
     'JWT_EXPIRATION',
     'FRONTEND_URL',
-    'MINIO_ENDPOINT',
-    'MINIO_PORT',
-    'MINIO_ACCESS_KEY',
-    'MINIO_SECRET_KEY',
-    'MINIO_BUCKET',
-    'MINIO_USE_SSL',
+    'STORAGE_ENDPOINT',
+    'STORAGE_PORT',
+    'STORAGE_ACCESS_KEY',
+    'STORAGE_SECRET_KEY',
+    'STORAGE_BUCKET',
+    'STORAGE_USE_SSL',
     'RESEND_API_KEY',
     'EMAIL_FROM',
     'NODE_ENV',
@@ -101,7 +101,7 @@ export function validateEnvironmentVariables(): void {
   validateJwtSecret();
   validatePort();
   validateNodeEnv();
-  validateMinioPort();
+  validateStoragePort();
 
   logger.log('✓ All environment variables validated successfully');
 }
@@ -151,12 +151,12 @@ function validateNodeEnv(): void {
 }
 
 /**
- * Validates MINIO_PORT is a valid number
+ * Validates STORAGE_PORT is a valid number
  */
-function validateMinioPort(): void {
-  const port = Number.parseInt(process.env.MINIO_PORT ?? '', 10);
+function validateStoragePort(): void {
+  const port = Number.parseInt(process.env.STORAGE_PORT ?? '', 10);
 
   if (Number.isNaN(port) || port < 1 || port > 65535) {
-    throw new Error('MINIO_PORT must be a valid number between 1 and 65535');
+    throw new Error('STORAGE_PORT must be a valid number between 1 and 65535');
   }
 }
