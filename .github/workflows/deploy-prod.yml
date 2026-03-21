@@ -1,14 +1,19 @@
-name: Deploy to Production (Manual)
+name: Deploy to Production
 
 # ============================================================
-# NOTE: Production is deployed AUTOMATICALLY via deploy-dev.yml
-# after development passes all checks (validate, sonarcloud,
-# deploy-dev, health-check).
+# PRODUCTION DEPLOYMENT
 #
-# This workflow is for MANUAL operations only:
-# - Emergency rollbacks
-# - Hotfixes that need to skip dev
-# - Re-deploying after manual server changes
+# Use this workflow to deploy to production AFTER verifying
+# that development is working correctly.
+#
+# Workflow:
+# 1. Push to main → deploys to development automatically
+# 2. Verify dev works, show to client if needed
+# 3. Run this workflow → deploys to production
+#
+# Options:
+# - skip_backup: Skip backup (not recommended)
+# - rollback_to: Rollback to a specific backup
 # ============================================================
 
 on:

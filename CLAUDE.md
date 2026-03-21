@@ -93,29 +93,32 @@ Puerto SSH: **29** (ambos servidores)
 
 ## CI/CD
 
-### Deploy Automático (Dev + Prod)
+### Desarrollo (Automático)
 
-Push a `main` despliega automáticamente a **ambos entornos**:
+Push a `main` despliega automáticamente a **desarrollo**:
 
 ```
-Push to main
-    │
-    ▼ DESARROLLO
-    validate → sonarcloud → backup-dev → deploy-dev → health-check
-    │
-    ▼ PRODUCCIÓN (si dev pasa)
-    backup-prod → deploy-prod → health-check-prod
+Push to main → validate → sonarcloud → backup → deploy-dev → health-check
 ```
 
 Workflow: `.github/workflows/deploy-dev.yml`
 
-### Deploy Manual (Solo Emergencias)
+### Producción (Manual)
 
-Para rollbacks o hotfixes que necesitan saltar desarrollo:
+Después de verificar que desarrollo funciona (mostrar al cliente si es necesario):
 
-GitHub Actions → "Deploy to Production (Manual)" → Run workflow
+```
+GitHub Actions → "Deploy to Production" → Run workflow
+```
 
 Workflow: `.github/workflows/deploy-prod.yml`
+
+### Flujo Recomendado
+
+1. Push cambios a `main` → deploya a desarrollo automáticamente
+2. Verificar en http://144.126.221.76 que todo funciona
+3. Mostrar al cliente si es necesario
+4. Cuando esté listo: GitHub Actions → "Deploy to Production"
 
 ### Features de Seguridad
 
@@ -123,19 +126,3 @@ Workflow: `.github/workflows/deploy-prod.yml`
 - **Rollback automático** si health check de producción falla
 - **Rollback manual** disponible via workflow manual
 - **Retención**: últimos 5 backups
-
-### Jobs del Pipeline
-
-| # | Job | Entorno | Descripción |
-|---|-----|---------|-------------|
-| 1 | `validate` | CI | Build, lint, tests con coverage |
-| 2 | `sonarcloud` | CI | Análisis de código |
-| 3 | `backup` | Dev | Backup de DB de desarrollo |
-| 4 | `deploy` | Dev | Deploy a 144.126.221.76 |
-| 5 | `health-check` | Dev | Verificar servicios dev |
-| 6 | `e2e-tests` | Dev | Tests E2E (opcional) |
-| 7 | `lighthouse` | Dev | Auditoría de performance |
-| 8 | `backup-prod` | Prod | Backup completo de producción |
-| 9 | `deploy-prod` | Prod | Deploy a 64.23.223.235 |
-| 10 | `health-check-prod` | Prod | Verificar servicios prod |
-| 11 | `rollback-prod` | Prod | Rollback automático si falla |
