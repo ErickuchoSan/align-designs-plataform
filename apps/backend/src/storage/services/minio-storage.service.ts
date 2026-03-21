@@ -16,7 +16,7 @@ import { FileSecurityService } from './file-security.service';
  * StorageService
  * Responsibility: Manage S3-compatible storage operations (upload, download, delete)
  * SRP: Handles only storage client operations and orchestration
- * Supports: DigitalOcean Spaces, AWS S3, MinIO, or any S3-compatible service
+ * Supports: DigitalOcean Spaces, AWS S3, or any S3-compatible service
  */
 @Injectable()
 export class MinioStorageService implements OnModuleInit {
@@ -35,8 +35,7 @@ export class MinioStorageService implements OnModuleInit {
     private readonly fileValidationService: FileValidationService,
     private readonly fileSecurityService: FileSecurityService,
   ) {
-    // Storage configuration - all required in production
-    // Internal endpoint for container-to-container communication
+    // Storage configuration (S3-compatible: DigitalOcean Spaces, AWS S3, etc.)
     const endpoint = this.configService.get<string>('STORAGE_ENDPOINT') ?? '';
     const port = Number.parseInt(
       this.configService.get<string>('STORAGE_PORT', '443'),
@@ -55,18 +54,16 @@ export class MinioStorageService implements OnModuleInit {
     this.internalPort = port;
 
     // Public endpoint for presigned URLs (optional, defaults to internal)
-    // When set, presigned URLs will use this endpoint instead of internal
     this.publicEndpoint =
       this.configService.get<string>('STORAGE_PUBLIC_ENDPOINT') ?? null;
     this.publicPort = Number.parseInt(
-      this.configService.get<string>('STORAGE_PUBLIC_PORT') ?? '443',
+      this.configService.get<string>('STORAGE_PUBLIC_PORT', '443'),
       10,
     );
     this.publicUseSSL =
       this.configService.get<string>('STORAGE_PUBLIC_USE_SSL', 'true') === 'true';
 
     // Validate required storage configuration
-    // Note: These errors are intentionally generic to avoid information disclosure
     if (!endpoint || !port || !accessKey || !secretKey || !this.bucketName) {
       this.logger.error(
         'Missing required storage configuration. Check environment variables: STORAGE_ENDPOINT, STORAGE_PORT, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY, STORAGE_BUCKET',
@@ -83,12 +80,11 @@ export class MinioStorageService implements OnModuleInit {
       accessKey: accessKey,
       secretKey: secretKey,
       region: this.region,
-      // pathStyle is needed for some S3-compatible services
       pathStyle: this.configService.get<string>('STORAGE_PATH_STYLE', 'false') === 'true',
     });
 
     this.logger.log(
-      `Storage client initialized - Internal: ${endpoint}:${port}, Public: ${this.publicEndpoint ?? 'same as internal'}, Bucket: ${this.bucketName}`,
+      `Storage client initialized - Endpoint: ${endpoint}:${port}, Bucket: ${this.bucketName}`,
     );
   }
 
@@ -98,14 +94,12 @@ export class MinioStorageService implements OnModuleInit {
 
     try {
       if (skipBucketCheck) {
-        // For managed S3 services (DO Spaces, AWS S3), bucket is created via console
         this.logger.log(
           `Skipping bucket check - using managed bucket "${this.bucketName}"`,
         );
         return;
       }
 
-      // Check if bucket exists, if not, create it (for self-hosted storage)
       const bucketExists = await this.storageClient.bucketExists(this.bucketName);
 
       if (bucketExists) {
@@ -117,31 +111,18 @@ export class MinioStorageService implements OnModuleInit {
         );
       }
 
-      // Verify bucket is accessible after creation/check
       const verifyExists = await this.storageClient.bucketExists(this.bucketName);
       if (!verifyExists) {
-        throw new Error(
-          'Bucket validation failed: unable to verify bucket existence',
-        );
+        throw new Error('Bucket validation failed');
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(
-        `Error initializing storage bucket: ${errorMessage}`,
-        errorStack,
-      );
-      // Throw error to prevent application startup with misconfigured storage
-      throw new Error(
-        'Failed to initialize storage service. Please check storage configuration.',
-      );
+      this.logger.error(`Error initializing storage bucket: ${errorMessage}`);
+      throw new Error('Failed to initialize storage service.');
     }
   }
 
-  /**
-   * Check if storage is healthy (for health endpoint)
-   */
   async checkHealth(): Promise<boolean> {
     try {
       const exists = await this.storageClient.bucketExists(this.bucketName);
@@ -152,9 +133,6 @@ export class MinioStorageService implements OnModuleInit {
     }
   }
 
-  /**
-   * Validate bucket exists before operations
-   */
   private async validateBucketExists(): Promise<void> {
     try {
       const exists = await this.storageClient.bucketExists(this.bucketName);
@@ -173,29 +151,19 @@ export class MinioStorageService implements OnModuleInit {
     }
   }
 
-  /**
-   * Upload a file to storage
-   */
   async uploadFile(
     file: Express.Multer.File,
     projectId: string,
   ): Promise<{ filename: string; storagePath: string }> {
     try {
-      // Validate bucket exists before upload
       await this.validateBucketExists();
-
-      // Validate project ID to prevent path traversal (delegated to security service)
       this.fileSecurityService.validateProjectId(projectId);
-
-      // Validate file signature matches claimed MIME type (delegated to security service)
       this.fileSecurityService.validateFileSignature(file);
 
-      // Get secure extension based on MIME type (delegated to validation service)
       const fileExtension = this.fileValidationService.getSecureExtension(file);
       const filename = `${uuidv4()}.${fileExtension}`;
       const storagePath = `projects/${projectId}/${filename}`;
 
-      // Upload the file
       await this.storageClient.putObject(
         this.bucketName,
         storagePath,
@@ -208,28 +176,18 @@ export class MinioStorageService implements OnModuleInit {
       );
 
       this.logger.log(`File uploaded successfully: ${storagePath}`);
-
-      return {
-        filename,
-        storagePath,
-      };
+      return { filename, storagePath };
     } catch (error) {
-      // Re-throw BadRequestException as-is (validation errors)
       if (error instanceof BadRequestException) {
         throw error;
       }
-
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`Error uploading file: ${errorMessage}`, errorStack);
+      this.logger.error(`Error uploading file: ${errorMessage}`);
       throw new InternalServerErrorException('Error uploading file');
     }
   }
 
-  /**
-   * Delete a file from storage
-   */
   async deleteFile(storagePath: string): Promise<void> {
     try {
       await this.storageClient.removeObject(this.bucketName, storagePath);
@@ -237,27 +195,22 @@ export class MinioStorageService implements OnModuleInit {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`Error deleting file: ${errorMessage}`, errorStack);
+      this.logger.error(`Error deleting file: ${errorMessage}`);
       throw new InternalServerErrorException('Error deleting file');
     }
   }
 
-  /**
-   * Get download URL for a file
-   */
   async getDownloadUrl(
     storagePath: string,
     expirySeconds: number = STORAGE_PRESIGNED_URL_EXPIRY_SECONDS,
   ): Promise<string> {
     try {
-      // Verify file exists before generating presigned URL
       try {
         await this.storageClient.statObject(this.bucketName, storagePath);
       } catch {
         this.logger.warn(`File not found in storage: ${storagePath}`);
         throw new BadRequestException(
-          'The requested file does not exist in storage. It may have been deleted or the upload may have failed.',
+          'The requested file does not exist in storage.',
         );
       }
 
@@ -267,8 +220,6 @@ export class MinioStorageService implements OnModuleInit {
         expirySeconds,
       );
 
-      // Replace internal endpoint with public endpoint if configured
-      // This allows presigned URLs to work from outside the Docker network
       if (this.publicEndpoint) {
         const internalUrl = `http://${this.internalEndpoint}:${this.internalPort}`;
         const publicProtocol = this.publicUseSSL ? 'https' : 'http';
@@ -278,32 +229,20 @@ export class MinioStorageService implements OnModuleInit {
             : `${publicProtocol}://${this.publicEndpoint}:${this.publicPort}`;
 
         url = url.replace(internalUrl, publicUrl);
-        this.logger.debug(
-          `Replaced internal URL with public URL: ${internalUrl} -> ${publicUrl}`,
-        );
       }
 
       return url;
     } catch (error) {
-      // Re-throw BadRequestException (file not found)
       if (error instanceof BadRequestException) {
         throw error;
       }
-
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(
-        `Error generating download URL: ${errorMessage}`,
-        errorStack,
-      );
+      this.logger.error(`Error generating download URL: ${errorMessage}`);
       throw new InternalServerErrorException('Error generating download URL');
     }
   }
 
-  /**
-   * Check if a file exists in storage
-   */
   async fileExists(storagePath: string): Promise<boolean> {
     try {
       await this.storageClient.statObject(this.bucketName, storagePath);
