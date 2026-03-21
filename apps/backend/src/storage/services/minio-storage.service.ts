@@ -78,6 +78,9 @@ export class MinioStorageService implements OnModuleInit {
       useSSL: useSSL,
       accessKey: accessKey,
       secretKey: secretKey,
+      region: this.region,
+      // pathStyle is needed for some S3-compatible services
+      pathStyle: this.configService.get<string>('MINIO_PATH_STYLE', 'false') === 'true',
     });
 
     this.logger.log(
@@ -86,8 +89,19 @@ export class MinioStorageService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    const skipBucketCheck =
+      this.configService.get<string>('MINIO_SKIP_BUCKET_CHECK', 'false') === 'true';
+
     try {
-      // Check if bucket exists, if not, create it
+      if (skipBucketCheck) {
+        // For managed S3 services (DO Spaces, AWS S3), bucket is created via console
+        this.logger.log(
+          `Skipping bucket check - using managed bucket "${this.bucketName}"`,
+        );
+        return;
+      }
+
+      // Check if bucket exists, if not, create it (for self-hosted MinIO)
       const bucketExists = await this.minioClient.bucketExists(this.bucketName);
 
       if (bucketExists) {
@@ -111,12 +125,12 @@ export class MinioStorageService implements OnModuleInit {
         error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Error initializing MinIO bucket: ${errorMessage}`,
+        `Error initializing storage bucket: ${errorMessage}`,
         errorStack,
       );
       // Throw error to prevent application startup with misconfigured storage
       throw new Error(
-        'Failed to initialize storage service. Please check MinIO configuration.',
+        'Failed to initialize storage service. Please check storage configuration.',
       );
     }
   }
