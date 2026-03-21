@@ -1,13 +1,23 @@
-name: Deploy to Production
+name: Deploy to Production (Manual)
+
+# ============================================================
+# NOTE: Production is deployed AUTOMATICALLY via deploy-dev.yml
+# after development passes all checks (validate, sonarcloud,
+# deploy-dev, health-check).
+#
+# This workflow is for MANUAL operations only:
+# - Emergency rollbacks
+# - Hotfixes that need to skip dev
+# - Re-deploying after manual server changes
+# ============================================================
 
 on:
-  # Manual trigger only - production deploys should be intentional
   workflow_dispatch:
     inputs:
       skip_backup:
         description: 'Skip backup (not recommended)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
       rollback_to:
         description: 'Rollback to specific backup (leave empty for new deploy)'

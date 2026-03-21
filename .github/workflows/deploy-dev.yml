@@ -1,4 +1,4 @@
-name: Deploy to Development
+name: Deploy to Dev & Production
 
 on:
   push:
@@ -283,3 +283,212 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # ============================================================
+  # PRODUCTION DEPLOYMENT (automatic after dev passes)
+  # ============================================================
+
+  # Job 8: Backup Production
+  backup-prod:
+    name: Backup Production
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: success()
+    steps:
+      - name: Full System Backup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            BACKUP_DIR="/var/backups/align-designs"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
+
+            echo "=== Creating backup directory ==="
+            mkdir -p "$BACKUP_PATH"
+
+            echo "=== Backing up PostgreSQL database ==="
+            docker exec postgres-prod pg_dump -U aligndesigns_prod aligndesigns_prod > "$BACKUP_PATH/database.sql" || echo "No DB container yet"
+
+            echo "=== Saving Docker images ==="
+            docker save backend-prod:latest > "$BACKUP_PATH/backend-image.tar" 2>/dev/null || echo "No backend image yet"
+            docker save frontend-prod:latest > "$BACKUP_PATH/frontend-image.tar" 2>/dev/null || echo "No frontend image yet"
+
+            echo "=== Saving docker-compose state ==="
+            cp /var/www/align-designs-prod/docker-compose.prod.yml "$BACKUP_PATH/" 2>/dev/null || echo "No compose file yet"
+            cp /var/www/align-designs-prod/.env.prod "$BACKUP_PATH/" 2>/dev/null || echo "No env file yet"
+
+            echo "=== Compressing backup ==="
+            cd "$BACKUP_DIR"
+            tar -czf "$TIMESTAMP.tar.gz" "$TIMESTAMP"
+            rm -rf "$TIMESTAMP"
+
+            echo "=== Cleanup old backups (keep last 5) ==="
+            ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm --
+
+            echo "=== Backup complete: $TIMESTAMP.tar.gz ==="
+            ls -lh "$BACKUP_DIR"
+
+  # Job 9: Deploy to Production
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: backup-prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          source: "apps/,docker-compose.prod.yml,package.json,pnpm-lock.yaml,pnpm-workspace.yaml,turbo.json"
+          target: /var/www/align-designs-prod/
+          overwrite: true
+
+      - name: Build and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/align-designs-prod
+
+            echo "=== Ensuring .env symlink exists ==="
+            ln -sf .env.prod .env
+
+            echo "=== Creating Docker network if not exists ==="
+            docker network create web-proxy 2>/dev/null || true
+
+            echo "=== Building and starting containers ==="
+            docker compose -f docker-compose.prod.yml build --no-cache
+            docker compose -f docker-compose.prod.yml up -d
+
+            echo "=== Waiting for services to start ==="
+            sleep 30
+
+            echo "=== Running database migrations ==="
+            docker exec backend-prod npx prisma migrate deploy || echo "Migrations may have already been applied"
+
+            echo "=== Cleaning up old Docker images ==="
+            docker image prune -af --filter "until=24h"
+
+            echo "=== Checking container status ==="
+            docker ps
+
+            echo "=== Production deployment complete ==="
+
+  # Job 10: Production Health Check
+  health-check-prod:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+    needs: deploy-prod
+    steps:
+      - name: Wait for services
+        run: sleep 15
+
+      - name: Check Backend Health
+        run: |
+          for i in {1..10}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" -H "Origin: https://aligndesignsllc.com" https://aligndesignsllc.com/api/v1/health || echo "000")
+            if [ "$response" = "200" ]; then
+              echo "Production backend is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i: Backend returned $response, retrying..."
+            sleep 10
+          done
+          echo "Production backend health check failed!"
+          exit 1
+
+      - name: Check Frontend
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://aligndesignsllc.com)
+          if [ "$response" = "200" ]; then
+            echo "Production frontend is healthy!"
+          else
+            echo "Production frontend returned $response"
+            exit 1
+          fi
+
+      - name: Deployment Success
+        if: success()
+        run: |
+          echo "============================================"
+          echo "  DEPLOYMENT SUCCESSFUL TO BOTH ENVIRONMENTS"
+          echo "============================================"
+          echo "Development: http://144.126.221.76"
+          echo "Production:  https://aligndesignsllc.com"
+
+  # Job 11: Rollback Production on Failure
+  rollback-prod:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    needs: health-check-prod
+    if: failure()
+    steps:
+      - name: Rollback to Previous Version
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            BACKUP_DIR="/var/backups/align-designs"
+
+            echo "::warning::Production health check failed! Rolling back..."
+
+            # Get the latest backup
+            LATEST_BACKUP=$(ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | head -1)
+
+            if [ -z "$LATEST_BACKUP" ]; then
+              echo "ERROR: No backup found for rollback!"
+              exit 1
+            fi
+
+            BACKUP_NAME=$(basename "$LATEST_BACKUP" .tar.gz)
+            echo "Rolling back to: $BACKUP_NAME"
+
+            # Extract backup
+            cd $BACKUP_DIR
+            tar -xzf "$LATEST_BACKUP"
+
+            # Stop current containers
+            cd /var/www/align-designs-prod
+            docker compose -f docker-compose.prod.yml down || true
+
+            # Restore Docker images
+            docker load < "$BACKUP_DIR/$BACKUP_NAME/backend-image.tar" || echo "No backend image"
+            docker load < "$BACKUP_DIR/$BACKUP_NAME/frontend-image.tar" || echo "No frontend image"
+
+            # Restore database
+            docker compose -f docker-compose.prod.yml up -d postgres-prod
+            sleep 10
+            docker exec -i postgres-prod psql -U aligndesigns_prod aligndesigns_prod < "$BACKUP_DIR/$BACKUP_NAME/database.sql" || echo "DB restore failed"
+
+            # Start services
+            docker compose -f docker-compose.prod.yml up -d
+
+            # Cleanup extracted backup
+            rm -rf "$BACKUP_DIR/$BACKUP_NAME"
+
+            # Verify rollback
+            sleep 30
+            if curl -s -H "Origin: https://aligndesignsllc.com" https://aligndesignsllc.com/api/v1/health > /dev/null 2>&1; then
+              echo "Production rollback successful!"
+            else
+              echo "::error::Production rollback failed! Manual intervention required."
+              exit 1
+            fi

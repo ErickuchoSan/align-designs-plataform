@@ -43,11 +43,16 @@
 
 ## Configuración del Proyecto
 
-Ver `.claude/PROJECT.md` para:
-- Credenciales del servidor (144.126.221.76)
-- Conexión SSH (puerto 29)
-- Base de datos y Storage (DO Spaces)
-- Comandos útiles
+Ver `.claude/PROJECT.md` para credenciales completas.
+
+### Servidores
+
+| Entorno | IP | Dominio | Clave SSH |
+|---------|-----|---------|-----------|
+| **Desarrollo** | 144.126.221.76 | dev.aligndesignsllc.com | `aligndesigns-dev.key` |
+| **Producción** | 64.23.223.235 | aligndesignsllc.com | `aligndesigns-prod.key` |
+
+Puerto SSH: **29** (ambos servidores)
 
 ## Patrones de Código
 
@@ -88,14 +93,49 @@ Ver `.claude/PROJECT.md` para:
 
 ## CI/CD
 
-Push a `main` → Build → Tests → SonarCloud → Deploy → Health Check → E2E
+### Deploy Automático (Dev + Prod)
 
-El workflow está en `.github/workflows/deploy-dev.yml`
+Push a `main` despliega automáticamente a **ambos entornos**:
+
+```
+Push to main
+    │
+    ▼ DESARROLLO
+    validate → sonarcloud → backup-dev → deploy-dev → health-check
+    │
+    ▼ PRODUCCIÓN (si dev pasa)
+    backup-prod → deploy-prod → health-check-prod
+```
+
+Workflow: `.github/workflows/deploy-dev.yml`
+
+### Deploy Manual (Solo Emergencias)
+
+Para rollbacks o hotfixes que necesitan saltar desarrollo:
+
+GitHub Actions → "Deploy to Production (Manual)" → Run workflow
+
+Workflow: `.github/workflows/deploy-prod.yml`
+
+### Features de Seguridad
+
+- **Backup automático** antes de cada deploy a producción
+- **Rollback automático** si health check de producción falla
+- **Rollback manual** disponible via workflow manual
+- **Retención**: últimos 5 backups
 
 ### Jobs del Pipeline
-1. `validate` - Build, lint, tests con coverage
-2. `sonarcloud` - Análisis de código
-3. `backup` - Backup de DB
-4. `deploy` - Deploy a Digital Ocean
-5. `health-check` - Verificar servicios
-6. `e2e-tests` - Tests E2E (si `E2E_ADMIN_PASSWORD` está configurado)
+
+| # | Job | Entorno | Descripción |
+|---|-----|---------|-------------|
+| 1 | `validate` | CI | Build, lint, tests con coverage |
+| 2 | `sonarcloud` | CI | Análisis de código |
+| 3 | `backup` | Dev | Backup de DB de desarrollo |
+| 4 | `deploy` | Dev | Deploy a 144.126.221.76 |
+| 5 | `health-check` | Dev | Verificar servicios dev |
+| 6 | `e2e-tests` | Dev | Tests E2E (opcional) |
+| 7 | `lighthouse` | Dev | Auditoría de performance |
+| 8 | `backup-prod` | Prod | Backup completo de producción |
+| 9 | `deploy-prod` | Prod | Deploy a 64.23.223.235 |
+| 10 | `health-check-prod` | Prod | Verificar servicios prod |
+| 11 | `rollback-prod` | Prod | Rollback automático si falla |
