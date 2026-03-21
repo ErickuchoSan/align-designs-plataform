@@ -25,7 +25,7 @@
 | `/nestjs-patterns` | Patrones del backend |
 | `/backend-tests` | Tests unitarios del backend (Jest) |
 | `/e2e-tests` | Tests E2E con Playwright |
-| `/minio-storage` | Operaciones de archivos (S3-compatible) |
+| `/minio-storage` | Storage con DigitalOcean Spaces (S3-compatible) |
 | `/server-security` | Seguridad: fail2ban, UFW, SSH hardening |
 | `/test-generator` | Generar tests automáticamente |
 | `/performance-analyzer` | Análisis de rendimiento |
@@ -46,7 +46,7 @@
 Ver `.claude/PROJECT.md` para:
 - Credenciales del servidor (144.126.221.76)
 - Conexión SSH (puerto 29)
-- Base de datos y MinIO
+- Base de datos y Storage (DO Spaces)
 - Comandos útiles
 
 ## Patrones de Código
