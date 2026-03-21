@@ -24,17 +24,17 @@
 
 | Variable | Descripcion | Ejemplo |
 |----------|-------------|---------|
-| `MINIO_ENDPOINT` | Endpoint S3 | `sfo3.digitaloceanspaces.com` |
-| `MINIO_PORT` | Puerto (443 para SSL) | `443` |
-| `MINIO_ACCESS_KEY` | Access key de DO Spaces | `DO801XXXXX` |
-| `MINIO_SECRET_KEY` | Secret key de DO Spaces | `your-secret-key` |
-| `MINIO_BUCKET` | Nombre del bucket | `aligndesigns-dev` |
-| `MINIO_USE_SSL` | Usar HTTPS | `true` |
-| `MINIO_REGION` | Region del bucket | `sfo3` |
-| `MINIO_SKIP_BUCKET_CHECK` | Omitir verificacion de bucket | `true` |
+| `STORAGE_ENDPOINT` | Endpoint S3 | `sfo3.digitaloceanspaces.com` |
+| `STORAGE_PORT` | Puerto (443 para SSL) | `443` |
+| `STORAGE_ACCESS_KEY` | Access key de DO Spaces | `DO801XXXXX` |
+| `STORAGE_SECRET_KEY` | Secret key de DO Spaces | `your-secret-key` |
+| `STORAGE_BUCKET` | Nombre del bucket | `aligndesigns-dev` |
+| `STORAGE_USE_SSL` | Usar HTTPS | `true` |
+| `STORAGE_REGION` | Region del bucket | `sfo3` |
+| `STORAGE_SKIP_BUCKET_CHECK` | Omitir verificacion de bucket | `true` |
 
-> **Nota**: El proyecto usa DigitalOcean Spaces (servicio S3-compatible) en lugar de MinIO self-hosted.
-> Los nombres de variables se mantienen con prefijo MINIO_ por compatibilidad con el SDK.
+> **Nota**: El proyecto usa DigitalOcean Spaces (servicio S3-compatible).
+> Funciona con cualquier servicio S3-compatible (AWS S3, MinIO, Backblaze B2, etc.)
 
 ### Servidor
 
@@ -63,15 +63,15 @@ JWT_SECRET=your-secret-key-minimum-32-characters
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
-# Storage (DigitalOcean Spaces)
-MINIO_ENDPOINT=sfo3.digitaloceanspaces.com
-MINIO_PORT=443
-MINIO_ACCESS_KEY=your-do-spaces-access-key
-MINIO_SECRET_KEY=your-do-spaces-secret-key
-MINIO_BUCKET=aligndesigns-dev
-MINIO_USE_SSL=true
-MINIO_REGION=sfo3
-MINIO_SKIP_BUCKET_CHECK=true
+# Storage (DigitalOcean Spaces / S3-compatible)
+STORAGE_ENDPOINT=sfo3.digitaloceanspaces.com
+STORAGE_PORT=443
+STORAGE_ACCESS_KEY=your-do-spaces-access-key
+STORAGE_SECRET_KEY=your-do-spaces-secret-key
+STORAGE_BUCKET=aligndesigns-dev
+STORAGE_USE_SSL=true
+STORAGE_REGION=sfo3
+STORAGE_SKIP_BUCKET_CHECK=true
 
 # Server
 PORT=3001

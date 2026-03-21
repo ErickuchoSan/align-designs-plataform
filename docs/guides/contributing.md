@@ -84,15 +84,15 @@ DATABASE_URL=postgresql://user:password@localhost:5432/align_designs
 JWT_SECRET=your-super-secret-jwt-key-min-64-chars-for-production-security
 ALLOWED_ORIGINS=http://localhost:3000
 
-# Storage (DigitalOcean Spaces)
-MINIO_ENDPOINT=sfo3.digitaloceanspaces.com
-MINIO_PORT=443
-MINIO_USE_SSL=true
-MINIO_ACCESS_KEY=your-do-spaces-access-key
-MINIO_SECRET_KEY=your-do-spaces-secret-key
-MINIO_BUCKET=aligndesigns-dev
-MINIO_REGION=sfo3
-MINIO_SKIP_BUCKET_CHECK=true
+# Storage (DigitalOcean Spaces / S3-compatible)
+STORAGE_ENDPOINT=sfo3.digitaloceanspaces.com
+STORAGE_PORT=443
+STORAGE_USE_SSL=true
+STORAGE_ACCESS_KEY=your-do-spaces-access-key
+STORAGE_SECRET_KEY=your-do-spaces-secret-key
+STORAGE_BUCKET=aligndesigns-dev
+STORAGE_REGION=sfo3
+STORAGE_SKIP_BUCKET_CHECK=true
 
 # Email Configuration
 EMAIL_HOST=smtp.gmail.com

@@ -13,14 +13,15 @@ import { FileValidationService } from './file-validation.service';
 import { FileSecurityService } from './file-security.service';
 
 /**
- * MinioStorageService
- * Responsibility: Manage MinIO storage operations (upload, download, delete)
- * SRP: Handles only MinIO client operations and orchestration
+ * StorageService
+ * Responsibility: Manage S3-compatible storage operations (upload, download, delete)
+ * SRP: Handles only storage client operations and orchestration
+ * Supports: DigitalOcean Spaces, AWS S3, MinIO, or any S3-compatible service
  */
 @Injectable()
 export class MinioStorageService implements OnModuleInit {
   private readonly logger = new Logger(MinioStorageService.name);
-  private readonly minioClient: Minio.Client;
+  private readonly storageClient: Minio.Client;
   private readonly bucketName: string;
   private readonly region: string;
   private readonly internalEndpoint: string;
@@ -34,20 +35,20 @@ export class MinioStorageService implements OnModuleInit {
     private readonly fileValidationService: FileValidationService,
     private readonly fileSecurityService: FileSecurityService,
   ) {
-    // MinIO configuration - all required in production
+    // Storage configuration - all required in production
     // Internal endpoint for container-to-container communication
-    const endpoint = this.configService.get<string>('MINIO_ENDPOINT') ?? '';
+    const endpoint = this.configService.get<string>('STORAGE_ENDPOINT') ?? '';
     const port = Number.parseInt(
-      this.configService.get<string>('MINIO_PORT', '443'),
+      this.configService.get<string>('STORAGE_PORT', '443'),
       10,
     );
     const useSSL =
-      this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
-    const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY') ?? '';
-    const secretKey = this.configService.get<string>('MINIO_SECRET_KEY') ?? '';
+      this.configService.get<string>('STORAGE_USE_SSL', 'true') === 'true';
+    const accessKey = this.configService.get<string>('STORAGE_ACCESS_KEY') ?? '';
+    const secretKey = this.configService.get<string>('STORAGE_SECRET_KEY') ?? '';
 
-    this.bucketName = this.configService.get<string>('MINIO_BUCKET') ?? '';
-    this.region = this.configService.get<string>('MINIO_REGION', 'us-east-1');
+    this.bucketName = this.configService.get<string>('STORAGE_BUCKET') ?? '';
+    this.region = this.configService.get<string>('STORAGE_REGION', 'us-east-1');
 
     // Store internal endpoint info for URL replacement
     this.internalEndpoint = endpoint;
@@ -56,26 +57,26 @@ export class MinioStorageService implements OnModuleInit {
     // Public endpoint for presigned URLs (optional, defaults to internal)
     // When set, presigned URLs will use this endpoint instead of internal
     this.publicEndpoint =
-      this.configService.get<string>('MINIO_PUBLIC_ENDPOINT') ?? null;
+      this.configService.get<string>('STORAGE_PUBLIC_ENDPOINT') ?? null;
     this.publicPort = Number.parseInt(
-      this.configService.get<string>('MINIO_PUBLIC_PORT') ?? '443',
+      this.configService.get<string>('STORAGE_PUBLIC_PORT') ?? '443',
       10,
     );
     this.publicUseSSL =
-      this.configService.get<string>('MINIO_PUBLIC_USE_SSL', 'true') === 'true';
+      this.configService.get<string>('STORAGE_PUBLIC_USE_SSL', 'true') === 'true';
 
-    // Validate required MinIO configuration
+    // Validate required storage configuration
     // Note: These errors are intentionally generic to avoid information disclosure
     if (!endpoint || !port || !accessKey || !secretKey || !this.bucketName) {
       this.logger.error(
-        'Missing required MinIO configuration. Check environment variables: MINIO_ENDPOINT, MINIO_PORT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET',
+        'Missing required storage configuration. Check environment variables: STORAGE_ENDPOINT, STORAGE_PORT, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY, STORAGE_BUCKET',
       );
       throw new Error(
         'Storage service configuration is incomplete. Please contact system administrator.',
       );
     }
 
-    this.minioClient = new Minio.Client({
+    this.storageClient = new Minio.Client({
       endPoint: endpoint,
       port: port,
       useSSL: useSSL,
@@ -83,17 +84,17 @@ export class MinioStorageService implements OnModuleInit {
       secretKey: secretKey,
       region: this.region,
       // pathStyle is needed for some S3-compatible services
-      pathStyle: this.configService.get<string>('MINIO_PATH_STYLE', 'false') === 'true',
+      pathStyle: this.configService.get<string>('STORAGE_PATH_STYLE', 'false') === 'true',
     });
 
     this.logger.log(
-      `MinIO client initialized - Internal: ${endpoint}:${port}, Public: ${this.publicEndpoint ?? 'same as internal'}, Bucket: ${this.bucketName}`,
+      `Storage client initialized - Internal: ${endpoint}:${port}, Public: ${this.publicEndpoint ?? 'same as internal'}, Bucket: ${this.bucketName}`,
     );
   }
 
   async onModuleInit() {
     const skipBucketCheck =
-      this.configService.get<string>('MINIO_SKIP_BUCKET_CHECK', 'false') === 'true';
+      this.configService.get<string>('STORAGE_SKIP_BUCKET_CHECK', 'false') === 'true';
 
     try {
       if (skipBucketCheck) {
@@ -104,20 +105,20 @@ export class MinioStorageService implements OnModuleInit {
         return;
       }
 
-      // Check if bucket exists, if not, create it (for self-hosted MinIO)
-      const bucketExists = await this.minioClient.bucketExists(this.bucketName);
+      // Check if bucket exists, if not, create it (for self-hosted storage)
+      const bucketExists = await this.storageClient.bucketExists(this.bucketName);
 
       if (bucketExists) {
         this.logger.log(`Bucket "${this.bucketName}" already exists`);
       } else {
-        await this.minioClient.makeBucket(this.bucketName, this.region);
+        await this.storageClient.makeBucket(this.bucketName, this.region);
         this.logger.log(
           `Bucket "${this.bucketName}" created successfully in region "${this.region}"`,
         );
       }
 
       // Verify bucket is accessible after creation/check
-      const verifyExists = await this.minioClient.bucketExists(this.bucketName);
+      const verifyExists = await this.storageClient.bucketExists(this.bucketName);
       if (!verifyExists) {
         throw new Error(
           'Bucket validation failed: unable to verify bucket existence',
@@ -143,7 +144,7 @@ export class MinioStorageService implements OnModuleInit {
    */
   async checkHealth(): Promise<boolean> {
     try {
-      const exists = await this.minioClient.bucketExists(this.bucketName);
+      const exists = await this.storageClient.bucketExists(this.bucketName);
       return exists;
     } catch (error) {
       this.logger.error('Storage health check failed', error);
@@ -156,7 +157,7 @@ export class MinioStorageService implements OnModuleInit {
    */
   private async validateBucketExists(): Promise<void> {
     try {
-      const exists = await this.minioClient.bucketExists(this.bucketName);
+      const exists = await this.storageClient.bucketExists(this.bucketName);
       if (!exists) {
         this.logger.error(`Bucket "${this.bucketName}" does not exist`);
         throw new InternalServerErrorException(
@@ -173,7 +174,7 @@ export class MinioStorageService implements OnModuleInit {
   }
 
   /**
-   * Upload a file to MinIO
+   * Upload a file to storage
    */
   async uploadFile(
     file: Express.Multer.File,
@@ -195,7 +196,7 @@ export class MinioStorageService implements OnModuleInit {
       const storagePath = `projects/${projectId}/${filename}`;
 
       // Upload the file
-      await this.minioClient.putObject(
+      await this.storageClient.putObject(
         this.bucketName,
         storagePath,
         file.buffer,
@@ -227,11 +228,11 @@ export class MinioStorageService implements OnModuleInit {
   }
 
   /**
-   * Delete a file from MinIO
+   * Delete a file from storage
    */
   async deleteFile(storagePath: string): Promise<void> {
     try {
-      await this.minioClient.removeObject(this.bucketName, storagePath);
+      await this.storageClient.removeObject(this.bucketName, storagePath);
       this.logger.log(`File deleted successfully: ${storagePath}`);
     } catch (error) {
       const errorMessage =
@@ -252,7 +253,7 @@ export class MinioStorageService implements OnModuleInit {
     try {
       // Verify file exists before generating presigned URL
       try {
-        await this.minioClient.statObject(this.bucketName, storagePath);
+        await this.storageClient.statObject(this.bucketName, storagePath);
       } catch {
         this.logger.warn(`File not found in storage: ${storagePath}`);
         throw new BadRequestException(
@@ -260,7 +261,7 @@ export class MinioStorageService implements OnModuleInit {
         );
       }
 
-      let url = await this.minioClient.presignedGetObject(
+      let url = await this.storageClient.presignedGetObject(
         this.bucketName,
         storagePath,
         expirySeconds,
@@ -305,7 +306,7 @@ export class MinioStorageService implements OnModuleInit {
    */
   async fileExists(storagePath: string): Promise<boolean> {
     try {
-      await this.minioClient.statObject(this.bucketName, storagePath);
+      await this.storageClient.statObject(this.bucketName, storagePath);
       return true;
     } catch {
       return false;

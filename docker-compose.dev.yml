@@ -30,14 +30,14 @@ services:
       CORS_ORIGIN: https://dev.aligndesignsllc.com,http://144.126.221.76
       ALLOWED_ORIGINS: https://dev.aligndesignsllc.com,http://144.126.221.76
       # DigitalOcean Spaces (S3-compatible storage)
-      MINIO_ENDPOINT: sfo3.digitaloceanspaces.com
-      MINIO_PORT: 443
-      MINIO_ACCESS_KEY: ${DO_SPACES_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${DO_SPACES_SECRET_KEY}
-      MINIO_USE_SSL: true
-      MINIO_BUCKET: aligndesigns-dev
-      MINIO_REGION: sfo3
-      MINIO_SKIP_BUCKET_CHECK: true
+      STORAGE_ENDPOINT: sfo3.digitaloceanspaces.com
+      STORAGE_PORT: 443
+      STORAGE_ACCESS_KEY: ${DO_SPACES_ACCESS_KEY}
+      STORAGE_SECRET_KEY: ${DO_SPACES_SECRET_KEY}
+      STORAGE_USE_SSL: true
+      STORAGE_BUCKET: aligndesigns-dev
+      STORAGE_REGION: sfo3
+      STORAGE_SKIP_BUCKET_CHECK: true
       RESEND_API_KEY: ${RESEND_API_KEY}
       EMAIL_FROM: ${EMAIL_FROM}
     depends_on:
@@ -46,22 +46,6 @@ services:
       - dev-internal
       - web-proxy
     restart: always
-
-  # MinIO removed - now using DigitalOcean Spaces
-  # minio-dev:
-  #   image: minio/minio
-  #   container_name: minio-dev
-  #   command: server /data --console-address ":9001"
-  #   ports:
-  #     - "127.0.0.1:9000:9000"
-  #   environment:
-  #     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-  #     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-  #   volumes:
-  #     - minio_data_dev:/data
-  #   networks:
-  #     - dev-internal
-  #   restart: always
 
   frontend-dev:
     build:
@@ -88,4 +72,3 @@ networks:
 
 volumes:
   postgres_data_dev:
-  # minio_data_dev: # Removed - using DigitalOcean Spaces
