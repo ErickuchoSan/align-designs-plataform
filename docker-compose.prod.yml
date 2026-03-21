@@ -12,12 +12,15 @@ services:
       - postgres_data_prod:/var/lib/postgresql/data
     networks:
       - prod-internal
+    restart: always
 
   backend-prod:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/backend/Dockerfile
     container_name: backend-prod
+    ports:
+      - "3001:3001"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-prod:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
@@ -25,41 +28,36 @@ services:
       NODE_ENV: production
       PORT: 3001
       FRONTEND_URL: https://aligndesignsllc.com
-      CORS_ORIGIN: https://aligndesignsllc.com
-      MINIO_ENDPOINT: minio-prod
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_USE_SSL: false
-      MINIO_BUCKET: align-designs
+      CORS_ORIGIN: https://aligndesignsllc.com,https://www.aligndesignsllc.com
+      ALLOWED_ORIGINS: https://aligndesignsllc.com,https://www.aligndesignsllc.com
+      # DigitalOcean Spaces (S3-compatible storage)
+      STORAGE_ENDPOINT: sfo3.digitaloceanspaces.com
+      STORAGE_PORT: 443
+      STORAGE_ACCESS_KEY: ${DO_SPACES_ACCESS_KEY}
+      STORAGE_SECRET_KEY: ${DO_SPACES_SECRET_KEY}
+      STORAGE_USE_SSL: true
+      STORAGE_BUCKET: aligndesigns-prod
+      STORAGE_REGION: sfo3
+      STORAGE_SKIP_BUCKET_CHECK: true
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
     depends_on:
       - postgres-prod
-      - minio-prod
     networks:
       - prod-internal
       - web-proxy
     restart: always
 
-  minio-prod:
-    image: minio/minio
-    container_name: minio-prod
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio_data_prod:/data
-    networks:
-      - prod-internal
-    restart: always
-
   frontend-prod:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://aligndesignsllc.com/api
     container_name: frontend-prod
+    ports:
+      - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://aligndesignsllc.com/api
       NODE_ENV: production
     depends_on:
       - backend-prod
@@ -75,4 +73,3 @@ networks:
 
 volumes:
   postgres_data_prod:
-  minio_data_prod:

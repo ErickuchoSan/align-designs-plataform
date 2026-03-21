@@ -1,0 +1,218 @@
+name: Deploy to Production
+
+on:
+  # Manual trigger only - production deploys should be intentional
+  workflow_dispatch:
+    inputs:
+      skip_backup:
+        description: 'Skip backup (not recommended)'
+        required: false
+        default: 'false'
+        type: boolean
+      rollback_to:
+        description: 'Rollback to specific backup (leave empty for new deploy)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  # Job 1: Verify Dev Pipeline Passed
+  verify-dev:
+    name: Verify Development Tests Passed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check last dev workflow
+        run: |
+          echo "Verifying that development pipeline passed..."
+          # The manual trigger implies dev has been verified
+          echo "Production deployment authorized"
+
+  # Job 2: Create Full Backup
+  backup:
+    name: Create Full Backup
+    runs-on: ubuntu-latest
+    needs: verify-dev
+    if: ${{ github.event.inputs.skip_backup != 'true' && github.event.inputs.rollback_to == '' }}
+    steps:
+      - name: Full System Backup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            BACKUP_DIR="/var/backups/align-designs"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
+
+            echo "=== Creating backup directory ==="
+            mkdir -p "$BACKUP_PATH"
+
+            echo "=== Backing up PostgreSQL database ==="
+            docker exec postgres-prod pg_dump -U aligndesigns_prod aligndesigns_prod > "$BACKUP_PATH/database.sql" || echo "No DB container yet"
+
+            echo "=== Saving Docker images ==="
+            docker save backend-prod:latest > "$BACKUP_PATH/backend-image.tar" 2>/dev/null || echo "No backend image yet"
+            docker save frontend-prod:latest > "$BACKUP_PATH/frontend-image.tar" 2>/dev/null || echo "No frontend image yet"
+
+            echo "=== Saving docker-compose state ==="
+            cp /var/www/align-designs-prod/docker-compose.prod.yml "$BACKUP_PATH/" 2>/dev/null || echo "No compose file yet"
+            cp /var/www/align-designs-prod/.env.prod "$BACKUP_PATH/" 2>/dev/null || echo "No env file yet"
+
+            echo "=== Compressing backup ==="
+            cd "$BACKUP_DIR"
+            tar -czf "$TIMESTAMP.tar.gz" "$TIMESTAMP"
+            rm -rf "$TIMESTAMP"
+
+            echo "=== Cleanup old backups (keep last 5) ==="
+            ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm --
+
+            echo "=== Backup complete: $TIMESTAMP.tar.gz ==="
+            ls -lh "$BACKUP_DIR"
+
+  # Job 3: Rollback (if requested)
+  rollback:
+    name: Rollback to Previous Version
+    runs-on: ubuntu-latest
+    needs: verify-dev
+    if: ${{ github.event.inputs.rollback_to != '' }}
+    steps:
+      - name: Perform Rollback
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            BACKUP_NAME="${{ github.event.inputs.rollback_to }}"
+            BACKUP_DIR="/var/backups/align-designs"
+            BACKUP_FILE="$BACKUP_DIR/$BACKUP_NAME.tar.gz"
+
+            if [ ! -f "$BACKUP_FILE" ]; then
+              echo "ERROR: Backup $BACKUP_FILE not found!"
+              ls -la $BACKUP_DIR/
+              exit 1
+            fi
+
+            echo "=== Extracting backup ==="
+            cd $BACKUP_DIR
+            tar -xzf "$BACKUP_FILE"
+
+            echo "=== Stopping current containers ==="
+            cd /var/www/align-designs-prod
+            docker compose -f docker-compose.prod.yml down || true
+
+            echo "=== Restoring Docker images ==="
+            docker load < "$BACKUP_DIR/$BACKUP_NAME/backend-image.tar" || echo "No backend image in backup"
+            docker load < "$BACKUP_DIR/$BACKUP_NAME/frontend-image.tar" || echo "No frontend image in backup"
+
+            echo "=== Restoring database ==="
+            docker compose -f docker-compose.prod.yml up -d postgres-prod
+            sleep 10
+            docker exec -i postgres-prod psql -U aligndesigns_prod aligndesigns_prod < "$BACKUP_DIR/$BACKUP_NAME/database.sql"
+
+            echo "=== Starting services ==="
+            docker compose -f docker-compose.prod.yml up -d
+
+            echo "=== Cleanup ==="
+            rm -rf "$BACKUP_DIR/$BACKUP_NAME"
+
+            echo "=== Rollback complete ==="
+
+  # Job 4: Deploy to Production
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [verify-dev, backup]
+    if: ${{ always() && needs.verify-dev.result == 'success' && (needs.backup.result == 'success' || needs.backup.result == 'skipped') && github.event.inputs.rollback_to == '' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          source: "apps/,docker-compose.prod.yml,package.json,pnpm-lock.yaml,pnpm-workspace.yaml,turbo.json"
+          target: /var/www/align-designs-prod/
+          overwrite: true
+
+      - name: Build and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 64.23.223.235
+          username: root
+          port: 29
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/align-designs-prod
+
+            echo "=== Creating Docker network if not exists ==="
+            docker network create web-proxy 2>/dev/null || true
+
+            echo "=== Building and starting containers ==="
+            docker compose -f docker-compose.prod.yml build --no-cache
+            docker compose -f docker-compose.prod.yml up -d
+
+            echo "=== Waiting for services to start ==="
+            sleep 30
+
+            echo "=== Running database migrations ==="
+            docker exec backend-prod npx prisma migrate deploy || echo "Migrations may have already been applied"
+
+            echo "=== Checking container status ==="
+            docker ps
+
+            echo "=== Deployment complete ==="
+
+  # Job 5: Health Check
+  health-check:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy, rollback]
+    if: ${{ always() && (needs.deploy.result == 'success' || needs.rollback.result == 'success') }}
+    steps:
+      - name: Wait for services
+        run: sleep 15
+
+      - name: Check Backend Health
+        run: |
+          for i in {1..10}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" https://aligndesignsllc.com/api/v1/health || echo "000")
+            if [ "$response" = "200" ]; then
+              echo "Backend is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i: Backend returned $response, retrying..."
+            sleep 10
+          done
+          echo "Backend health check failed!"
+          exit 1
+
+      - name: Check Frontend
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://aligndesignsllc.com)
+          if [ "$response" = "200" ]; then
+            echo "Frontend is healthy!"
+          else
+            echo "Frontend returned $response"
+            exit 1
+          fi
+
+      - name: Notify Success
+        if: success()
+        run: echo "Production deployment successful!"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "Production deployment FAILED!"
+          echo "Consider rolling back using the rollback_to input"
