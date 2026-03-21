@@ -126,14 +126,9 @@ async function bootstrap() {
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      // Only in development. In production, require origin header.
+      // Allow requests with no origin (same-origin requests, mobile apps, curl)
+      // Browsers don't send Origin header for same-origin requests
       if (!origin) {
-        if (isProd) {
-          logger.warn('CORS blocked: Missing origin header in production');
-          callback(new Error('Origin header required'));
-          return;
-        }
         callback(null, true);
         return;
       }
