@@ -72,6 +72,6 @@ docs/
 - **Frontend:** Next.js 15, React 19, Tailwind CSS
 - **Backend:** NestJS, Prisma ORM
 - **Database:** PostgreSQL
-- **Storage:** MinIO (S3-compatible)
+- **Storage:** DigitalOcean Spaces (S3-compatible)
 - **CI/CD:** GitHub Actions + SonarCloud
 - **Server:** Digital Ocean

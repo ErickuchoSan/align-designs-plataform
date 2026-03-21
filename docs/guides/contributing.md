@@ -47,7 +47,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 - **Node.js**: v20.x or higher
 - **pnpm**: v10.x or higher (install with `npm install -g pnpm`)
 - **PostgreSQL**: v14.x or higher
-- **MinIO**: Latest version (for file storage)
+- **DigitalOcean Spaces**: Account with S3 credentials (for file storage)
 - **Git**: Latest version
 
 ### First-Time Contributors
@@ -84,13 +84,15 @@ DATABASE_URL=postgresql://user:password@localhost:5432/align_designs
 JWT_SECRET=your-super-secret-jwt-key-min-64-chars-for-production-security
 ALLOWED_ORIGINS=http://localhost:3000
 
-# MinIO Configuration
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_USE_SSL=false
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET=align-designs
+# Storage (DigitalOcean Spaces)
+MINIO_ENDPOINT=sfo3.digitaloceanspaces.com
+MINIO_PORT=443
+MINIO_USE_SSL=true
+MINIO_ACCESS_KEY=your-do-spaces-access-key
+MINIO_SECRET_KEY=your-do-spaces-secret-key
+MINIO_BUCKET=aligndesigns-dev
+MINIO_REGION=sfo3
+MINIO_SKIP_BUCKET_CHECK=true
 
 # Email Configuration
 EMAIL_HOST=smtp.gmail.com

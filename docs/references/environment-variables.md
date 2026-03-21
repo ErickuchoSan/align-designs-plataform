@@ -20,16 +20,21 @@
 | `JWT_EXPIRES_IN` | Tiempo de expiracion access token | `15m` |
 | `JWT_REFRESH_EXPIRES_IN` | Tiempo de expiracion refresh token | `7d` |
 
-### MinIO (Storage)
+### Storage (DigitalOcean Spaces / S3-compatible)
 
 | Variable | Descripcion | Ejemplo |
 |----------|-------------|---------|
-| `MINIO_ENDPOINT` | Host de MinIO | `localhost` |
-| `MINIO_PORT` | Puerto de MinIO | `9000` |
-| `MINIO_ACCESS_KEY` | Access key | `minioadmin` |
-| `MINIO_SECRET_KEY` | Secret key | `minioadmin` |
-| `MINIO_BUCKET` | Nombre del bucket | `dev-bucket` |
-| `MINIO_USE_SSL` | Usar HTTPS | `false` |
+| `MINIO_ENDPOINT` | Endpoint S3 | `sfo3.digitaloceanspaces.com` |
+| `MINIO_PORT` | Puerto (443 para SSL) | `443` |
+| `MINIO_ACCESS_KEY` | Access key de DO Spaces | `DO801XXXXX` |
+| `MINIO_SECRET_KEY` | Secret key de DO Spaces | `your-secret-key` |
+| `MINIO_BUCKET` | Nombre del bucket | `aligndesigns-dev` |
+| `MINIO_USE_SSL` | Usar HTTPS | `true` |
+| `MINIO_REGION` | Region del bucket | `sfo3` |
+| `MINIO_SKIP_BUCKET_CHECK` | Omitir verificacion de bucket | `true` |
+
+> **Nota**: El proyecto usa DigitalOcean Spaces (servicio S3-compatible) en lugar de MinIO self-hosted.
+> Los nombres de variables se mantienen con prefijo MINIO_ por compatibilidad con el SDK.
 
 ### Servidor
 
@@ -58,13 +63,15 @@ JWT_SECRET=your-secret-key-minimum-32-characters
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
-# MinIO Storage
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET=dev-bucket
-MINIO_USE_SSL=false
+# Storage (DigitalOcean Spaces)
+MINIO_ENDPOINT=sfo3.digitaloceanspaces.com
+MINIO_PORT=443
+MINIO_ACCESS_KEY=your-do-spaces-access-key
+MINIO_SECRET_KEY=your-do-spaces-secret-key
+MINIO_BUCKET=aligndesigns-dev
+MINIO_USE_SSL=true
+MINIO_REGION=sfo3
+MINIO_SKIP_BUCKET_CHECK=true
 
 # Server
 PORT=3001
@@ -88,7 +95,8 @@ Para conectar a la base de datos remota desde tu maquina local:
 
 Esto mapea:
 - `localhost:5433` -> Servidor PostgreSQL remoto
-- `localhost:9000` -> Servidor MinIO remoto
+
+> **Nota**: Storage usa DigitalOcean Spaces (cloud), no requiere tunnel.
 
 ## Seguridad
 
