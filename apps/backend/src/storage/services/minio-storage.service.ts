@@ -37,7 +37,10 @@ export class MinioStorageService implements OnModuleInit {
     // MinIO configuration - all required in production
     // Internal endpoint for container-to-container communication
     const endpoint = this.configService.get<string>('MINIO_ENDPOINT') ?? '';
-    const port = this.configService.get<number>('MINIO_PORT') ?? 0;
+    const port = Number.parseInt(
+      this.configService.get<string>('MINIO_PORT', '443'),
+      10,
+    );
     const useSSL =
       this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
     const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY') ?? '';
