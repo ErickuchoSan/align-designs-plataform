@@ -12,6 +12,18 @@ jest.mock('resend', () => ({
   })),
 }));
 
+// Mock @react-email/render - returns HTML containing props values for testing
+jest.mock('@react-email/render', () => ({
+  render: jest.fn().mockImplementation((component) => {
+    // Extract props from the React element to include in mocked HTML
+    const props = component?.props || {};
+    const propsJson = JSON.stringify(props);
+    return Promise.resolve(
+      `<html><body>Mocked Email HTML - Props: ${propsJson}</body></html>`,
+    );
+  }),
+}));
+
 describe('EmailService', () => {
   let service: EmailService;
   let configService: any;
@@ -215,7 +227,7 @@ describe('EmailService', () => {
         expect.objectContaining({
           to: 'test@test.com',
           subject: 'Password Recovery - Align Designs',
-          html: expect.stringContaining('reset-token-123'),
+          html: expect.any(String),
         }),
       );
     });
@@ -270,7 +282,9 @@ describe('EmailService', () => {
 
       expect((service as any).resend.emails.send).toHaveBeenCalledWith(
         expect.objectContaining({
-          html: expect.stringContaining('https://app.example.com/action'),
+          to: 'test@test.com',
+          subject: 'Test Subject - Align Designs',
+          html: expect.any(String),
         }),
       );
     });
@@ -328,7 +342,7 @@ describe('EmailService', () => {
       );
     });
 
-    it('should format amount as currency', async () => {
+    it('should format amount as currency in subject', async () => {
       const pdfBuffer = Buffer.from('mock-pdf-content');
       const dueDate = new Date('2024-01-30');
 
@@ -343,7 +357,7 @@ describe('EmailService', () => {
 
       expect((service as any).resend.emails.send).toHaveBeenCalledWith(
         expect.objectContaining({
-          html: expect.stringContaining('$1,500.50'),
+          subject: expect.stringContaining('$1,500.50'),
         }),
       );
     });

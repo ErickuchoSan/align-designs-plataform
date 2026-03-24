@@ -24,7 +24,8 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed",
-    "clean": "rimraf dist node_modules"
+    "clean": "rimraf dist node_modules",
+    "email:dev": "email dev --dir src/email/templates --port 3001"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",
@@ -39,6 +40,8 @@
     "@nestjs/swagger": "^11.2.6",
     "@nestjs/throttler": "^6.4.0",
     "@prisma/client": "^6.19.2",
+    "@react-email/components": "^1.0.10",
+    "@react-email/render": "^2.0.4",
     "@types/pdfkit": "^0.17.5",
     "@willsoto/nestjs-prometheus": "^6.0.2",
     "bcrypt": "^6.0.0",
@@ -90,6 +93,7 @@
     "jest": "^30.3.0",
     "prettier": "^3.8.1",
     "prisma": "^6.19.2",
+    "react-email": "^5.2.10",
     "source-map-support": "^0.5.21",
     "supertest": "^7.2.2",
     "ts-jest": "^29.2.5",
@@ -103,12 +107,13 @@
     "moduleFileExtensions": [
       "js",
       "json",
-      "ts"
+      "ts",
+      "tsx"
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)sx?$": "ts-jest"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!uuid)"
