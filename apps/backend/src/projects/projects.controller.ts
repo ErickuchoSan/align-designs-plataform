@@ -287,7 +287,8 @@ export class ProjectsController {
   @ApiNotFoundResponse('Project or employee')
   async assignEmployees(
     @Param('id') projectId: string,
-    @Body(zodPipe(AssignEmployeesSchema)) assignEmployeesDto: AssignEmployeesDto,
+    @Body(zodPipe(AssignEmployeesSchema))
+    assignEmployeesDto: AssignEmployeesDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -388,7 +389,8 @@ export class ProjectsController {
   @ApiBadRequestResponse('Invalid payment amount')
   async recordPayment(
     @Param('id') projectId: string,
-    @Body(zodPipe(ProjectRecordPaymentSchema)) recordPaymentDto: ProjectRecordPaymentDto,
+    @Body(zodPipe(ProjectRecordPaymentSchema))
+    recordPaymentDto: ProjectRecordPaymentDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,

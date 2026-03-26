@@ -63,7 +63,8 @@ export type AssignEmployeesDto = z.infer<typeof AssignEmployeesSchema>;
  */
 export const UpdateProjectStatusSchema = z.object({
   status: z.nativeEnum(ProjectStatus, {
-    message: 'Status must be one of: WAITING_PAYMENT, ACTIVE, COMPLETED, ARCHIVED',
+    message:
+      'Status must be one of: WAITING_PAYMENT, ACTIVE, COMPLETED, ARCHIVED',
   }),
 });
 
@@ -77,4 +78,6 @@ export const ProjectRecordPaymentSchema = z.object({
   notes: optionalStringSchema,
 });
 
-export type ProjectRecordPaymentDto = z.infer<typeof ProjectRecordPaymentSchema>;
+export type ProjectRecordPaymentDto = z.infer<
+  typeof ProjectRecordPaymentSchema
+>;

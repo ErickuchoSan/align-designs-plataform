@@ -37,7 +37,9 @@ export class InvoicesController {
   @Post()
   @Roles(Role.ADMIN)
   @UseInterceptors(IdempotencyInterceptor)
-  create(@Body(zodPipe(CreateInvoiceSchema)) createInvoiceDto: CreateInvoiceDto) {
+  create(
+    @Body(zodPipe(CreateInvoiceSchema)) createInvoiceDto: CreateInvoiceDto,
+  ) {
     return this.invoicesService.create(createInvoiceDto);
   }
 

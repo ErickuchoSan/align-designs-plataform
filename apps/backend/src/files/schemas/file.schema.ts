@@ -42,10 +42,7 @@ export type UploadFileDto = z.infer<typeof UploadFileSchema>;
  */
 export const UpdateFileSchema = z.object({
   comment: z
-    .union([
-      commentSchema.min(1, 'Comment cannot be empty'),
-      z.null(),
-    ])
+    .union([commentSchema.min(1, 'Comment cannot be empty'), z.null()])
     .optional(),
 });
 

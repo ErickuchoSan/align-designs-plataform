@@ -44,7 +44,8 @@ export class EmployeePaymentsController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create employee payment (Admin only)' })
   create(
-    @Body(zodPipe(CreateEmployeePaymentSchema)) createDto: CreateEmployeePaymentDto,
+    @Body(zodPipe(CreateEmployeePaymentSchema))
+    createDto: CreateEmployeePaymentDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.employeePaymentsService.create(createDto, user.userId);
@@ -96,7 +97,8 @@ export class EmployeePaymentsController {
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(zodPipe(UpdateEmployeePaymentSchema)) updateDto: UpdateEmployeePaymentDto,
+    @Body(zodPipe(UpdateEmployeePaymentSchema))
+    updateDto: UpdateEmployeePaymentDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.employeePaymentsService.update(id, updateDto, user.userId);

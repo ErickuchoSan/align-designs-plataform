@@ -188,11 +188,7 @@ export class EmailService implements OnModuleInit {
         }),
       );
 
-      await this.sendEmail(
-        to,
-        `${subjectMap[type]} - Align Designs`,
-        html,
-      );
+      await this.sendEmail(to, `${subjectMap[type]} - Align Designs`, html);
       this.logger.log(`${contextMap[type]} email sent successfully to ${to}`);
     } catch (error) {
       this.logger.error(

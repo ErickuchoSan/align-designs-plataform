@@ -130,7 +130,9 @@ export class UsersController {
   @ApiSuccessResponse('Available employees retrieved successfully')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
-  getAvailableEmployees(@Query(zodPipe(paginationSchema)) paginationDto: PaginationDto) {
+  getAvailableEmployees(
+    @Query(zodPipe(paginationSchema)) paginationDto: PaginationDto,
+  ) {
     return this.usersService.findAvailableEmployees(paginationDto);
   }
 
@@ -165,7 +167,8 @@ export class UsersController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Update user by ID',
-    description: 'Admin-only: Update any user by their ID (supports both PUT and PATCH)',
+    description:
+      'Admin-only: Update any user by their ID (supports both PUT and PATCH)',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiSuccessResponse('User updated successfully')

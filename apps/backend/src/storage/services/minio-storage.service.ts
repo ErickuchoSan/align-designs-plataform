@@ -43,8 +43,10 @@ export class MinioStorageService implements OnModuleInit {
     );
     const useSSL =
       this.configService.get<string>('STORAGE_USE_SSL', 'true') === 'true';
-    const accessKey = this.configService.get<string>('STORAGE_ACCESS_KEY') ?? '';
-    const secretKey = this.configService.get<string>('STORAGE_SECRET_KEY') ?? '';
+    const accessKey =
+      this.configService.get<string>('STORAGE_ACCESS_KEY') ?? '';
+    const secretKey =
+      this.configService.get<string>('STORAGE_SECRET_KEY') ?? '';
 
     this.bucketName = this.configService.get<string>('STORAGE_BUCKET') ?? '';
     this.region = this.configService.get<string>('STORAGE_REGION', 'us-east-1');
@@ -61,7 +63,8 @@ export class MinioStorageService implements OnModuleInit {
       10,
     );
     this.publicUseSSL =
-      this.configService.get<string>('STORAGE_PUBLIC_USE_SSL', 'true') === 'true';
+      this.configService.get<string>('STORAGE_PUBLIC_USE_SSL', 'true') ===
+      'true';
 
     // Validate required storage configuration
     if (!endpoint || !port || !accessKey || !secretKey || !this.bucketName) {
@@ -80,7 +83,9 @@ export class MinioStorageService implements OnModuleInit {
       accessKey: accessKey,
       secretKey: secretKey,
       region: this.region,
-      pathStyle: this.configService.get<string>('STORAGE_PATH_STYLE', 'false') === 'true',
+      pathStyle:
+        this.configService.get<string>('STORAGE_PATH_STYLE', 'false') ===
+        'true',
     });
 
     this.logger.log(
@@ -90,7 +95,8 @@ export class MinioStorageService implements OnModuleInit {
 
   async onModuleInit() {
     const skipBucketCheck =
-      this.configService.get<string>('STORAGE_SKIP_BUCKET_CHECK', 'false') === 'true';
+      this.configService.get<string>('STORAGE_SKIP_BUCKET_CHECK', 'false') ===
+      'true';
 
     try {
       if (skipBucketCheck) {
@@ -100,7 +106,9 @@ export class MinioStorageService implements OnModuleInit {
         return;
       }
 
-      const bucketExists = await this.storageClient.bucketExists(this.bucketName);
+      const bucketExists = await this.storageClient.bucketExists(
+        this.bucketName,
+      );
 
       if (bucketExists) {
         this.logger.log(`Bucket "${this.bucketName}" already exists`);
@@ -111,7 +119,9 @@ export class MinioStorageService implements OnModuleInit {
         );
       }
 
-      const verifyExists = await this.storageClient.bucketExists(this.bucketName);
+      const verifyExists = await this.storageClient.bucketExists(
+        this.bucketName,
+      );
       if (!verifyExists) {
         throw new Error('Bucket validation failed');
       }

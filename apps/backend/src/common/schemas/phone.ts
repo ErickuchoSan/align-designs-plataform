@@ -22,10 +22,7 @@ export const optionalPhoneNumberSchema = phoneNumberSchema.optional();
  */
 export const countryCodeSchema = z
   .string()
-  .min(
-    PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH,
-    'Country code is required',
-  )
+  .min(PHONE_CONSTRAINTS.COUNTRY_CODE_MIN_LENGTH, 'Country code is required')
   .max(
     PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH,
     `Country code must be at most ${PHONE_CONSTRAINTS.COUNTRY_CODE_MAX_LENGTH} digits`,

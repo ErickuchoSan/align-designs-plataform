@@ -64,9 +64,10 @@ async function bootstrap() {
   const storagePort = process.env.STORAGE_PORT ?? '443';
   const storageUseSSL = process.env.STORAGE_USE_SSL === 'true';
   const storageProtocol = storageUseSSL ? 'https' : 'http';
-  const storageUrl = storagePort === '443' || storagePort === '80'
-    ? `${storageProtocol}://${storageEndpoint}`
-    : `${storageProtocol}://${storageEndpoint}:${storagePort}`;
+  const storageUrl =
+    storagePort === '443' || storagePort === '80'
+      ? `${storageProtocol}://${storageEndpoint}`
+      : `${storageProtocol}://${storageEndpoint}:${storagePort}`;
 
   app.use(
     helmet({

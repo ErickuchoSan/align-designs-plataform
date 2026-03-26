@@ -34,11 +34,15 @@ const environmentSchema = z.object({
 
 export type EnvironmentVariables = z.infer<typeof environmentSchema>;
 
-export function validate(config: Record<string, unknown>): EnvironmentVariables {
+export function validate(
+  config: Record<string, unknown>,
+): EnvironmentVariables {
   const result = environmentSchema.safeParse(config);
 
   if (!result.success) {
-    const missingVars = result.error.issues.map((issue) => issue.path.join('.')).join(', ');
+    const missingVars = result.error.issues
+      .map((issue) => issue.path.join('.'))
+      .join(', ');
     throw new Error(
       `Missing or invalid required environment variables: ${missingVars}`,
     );

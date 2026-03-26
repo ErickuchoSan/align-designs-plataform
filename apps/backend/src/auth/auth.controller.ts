@@ -128,7 +128,9 @@ export class AuthController {
       example: { requiresPasswordSetup: false },
     },
   })
-  async checkEmail(@Body(zodPipe(CheckEmailSchema)) checkEmailDto: CheckEmailDto) {
+  async checkEmail(
+    @Body(zodPipe(CheckEmailSchema)) checkEmailDto: CheckEmailDto,
+  ) {
     return this.authService.checkEmail(checkEmailDto.email);
   }
 
@@ -366,7 +368,9 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.FORGOT_PASSWORD })
-  async forgotPassword(@Body(zodPipe(ForgotPasswordSchema)) forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(
+    @Body(zodPipe(ForgotPasswordSchema)) forgotPasswordDto: ForgotPasswordDto,
+  ) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 

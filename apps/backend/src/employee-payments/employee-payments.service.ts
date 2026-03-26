@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import type { CreateEmployeePaymentDto, UpdateEmployeePaymentDto } from './schemas';
+import type {
+  CreateEmployeePaymentDto,
+  UpdateEmployeePaymentDto,
+} from './schemas';
 import { EmployeePaymentStatus, Role, Prisma } from '@prisma/client';
 
 @Injectable()

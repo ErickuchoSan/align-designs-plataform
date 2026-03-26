@@ -19,11 +19,16 @@ export const CreateEmployeePaymentSchema = z.object({
   receiptFileId: optionalStringSchema,
 });
 
-export type CreateEmployeePaymentDto = z.infer<typeof CreateEmployeePaymentSchema>;
+export type CreateEmployeePaymentDto = z.infer<
+  typeof CreateEmployeePaymentSchema
+>;
 
 /**
  * Update employee payment schema (all fields optional)
  */
-export const UpdateEmployeePaymentSchema = CreateEmployeePaymentSchema.partial();
+export const UpdateEmployeePaymentSchema =
+  CreateEmployeePaymentSchema.partial();
 
-export type UpdateEmployeePaymentDto = z.infer<typeof UpdateEmployeePaymentSchema>;
+export type UpdateEmployeePaymentDto = z.infer<
+  typeof UpdateEmployeePaymentSchema
+>;

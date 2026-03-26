@@ -25,9 +25,7 @@ export const passwordSchema = z
 /**
  * Simple password schema (for login, just non-empty)
  */
-export const loginPasswordSchema = z
-  .string()
-  .min(1, 'Password is required');
+export const loginPasswordSchema = z.string().min(1, 'Password is required');
 
 /**
  * Current password schema (for change password)

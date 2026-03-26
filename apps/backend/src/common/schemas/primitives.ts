@@ -42,7 +42,10 @@ export const optionalNameSchema = nameSchema.optional();
 /**
  * Non-empty string schema
  */
-export const nonEmptyStringSchema = z.string().min(1, 'This field is required').trim();
+export const nonEmptyStringSchema = z
+  .string()
+  .min(1, 'This field is required')
+  .trim();
 
 /**
  * Optional string schema with trim
