@@ -20,25 +20,33 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         // First try to extract from cookie (preferred for security)
-        (request: Request) => request?.cookies?.access_token,
+        (request: Request): string | null => {
+          const cookies = request?.cookies as
+            | Record<string, string>
+            | undefined;
+          return cookies?.access_token ?? null;
+        },
         // Fallback to Authorization header for backward compatibility
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKeyProvider: async (
-        request: Request,
-        rawJwtToken: any,
-        done: (err: any, secret?: string | Buffer) => void,
-      ) => {
-        try {
-          const secret = await this.secretsService.getSecret('JWT_SECRET');
-          if (!secret) {
-            return done(new Error('JWT_SECRET not found'));
-          }
-          done(null, secret);
-        } catch (err) {
-          done(err);
-        }
+      secretOrKeyProvider: (
+        _request: Request,
+        _rawJwtToken: string,
+        done: (err: Error | null, secret?: string | Buffer) => void,
+      ): void => {
+        this.secretsService
+          .getSecret('JWT_SECRET')
+          .then((secret) => {
+            if (!secret) {
+              done(new Error('JWT_SECRET not found'));
+              return;
+            }
+            done(null, secret);
+          })
+          .catch((err: Error) => {
+            done(err);
+          });
       },
       audience: 'align-designs-client',
       issuer: 'align-designs-api',

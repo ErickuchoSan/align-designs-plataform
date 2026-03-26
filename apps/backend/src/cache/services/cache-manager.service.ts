@@ -82,7 +82,7 @@ export class CacheManagerService {
    * Note: Not implemented for all cache stores
    * Use with caution!
    */
-  async reset(): Promise<void> {
+  reset(): void {
     this.logger.warn(
       'Cache reset requested - not implemented for current store',
     );

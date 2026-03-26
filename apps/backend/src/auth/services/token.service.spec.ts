@@ -268,11 +268,11 @@ describe('TokenService', () => {
   });
 
   describe('revokeAccessToken', () => {
-    it('should add valid token to blacklist', async () => {
+    it('should add valid token to blacklist', () => {
       const futureExp = Math.floor(Date.now() / 1000) + 900; // 15 minutes from now
       jwtService.decode.mockReturnValue({ exp: futureExp });
 
-      await service.revokeAccessToken('valid-token');
+      service.revokeAccessToken('valid-token');
 
       expect(jwtBlacklistService.addToBlacklist).toHaveBeenCalledWith(
         'valid-token',
@@ -280,27 +280,27 @@ describe('TokenService', () => {
       );
     });
 
-    it('should not blacklist already expired token', async () => {
+    it('should not blacklist already expired token', () => {
       const pastExp = Math.floor(Date.now() / 1000) - 100; // Expired 100 seconds ago
       jwtService.decode.mockReturnValue({ exp: pastExp });
 
-      await service.revokeAccessToken('expired-token');
+      service.revokeAccessToken('expired-token');
 
       expect(jwtBlacklistService.addToBlacklist).not.toHaveBeenCalled();
     });
 
-    it('should handle invalid token gracefully', async () => {
+    it('should handle invalid token gracefully', () => {
       jwtService.decode.mockReturnValue(null);
 
-      await service.revokeAccessToken('invalid-token');
+      service.revokeAccessToken('invalid-token');
 
       expect(jwtBlacklistService.addToBlacklist).not.toHaveBeenCalled();
     });
 
-    it('should handle token without expiration', async () => {
+    it('should handle token without expiration', () => {
       jwtService.decode.mockReturnValue({ userId: '123' }); // No exp field
 
-      await service.revokeAccessToken('no-exp-token');
+      service.revokeAccessToken('no-exp-token');
 
       expect(jwtBlacklistService.addToBlacklist).not.toHaveBeenCalled();
     });
