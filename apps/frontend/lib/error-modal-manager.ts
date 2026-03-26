@@ -13,9 +13,9 @@ interface ErrorModalData {
   willRedirect?: boolean;
   onClose?: () => void;
   // Full error object for dev mode
-  errorObject?: any;
-  requestConfig?: any;
-  responseData?: any;
+  errorObject?: unknown;
+  requestConfig?: unknown;
+  responseData?: unknown;
   stackTrace?: string;
   errorCode?: string;
 }

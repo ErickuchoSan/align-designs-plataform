@@ -18,7 +18,7 @@
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-type LogContext = Record<string, any>;
+type LogContext = Record<string, unknown>;
 
 class Logger {
   private formatMessage(level: string, message: string, context?: LogContext): string {

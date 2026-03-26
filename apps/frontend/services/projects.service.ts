@@ -94,7 +94,7 @@ export class ProjectsService {
       if (!params.page) params.page = 1;
     }
 
-    const response = await api.get<{ data: Project[]; meta: any }>(this.BASE_URL, {
+    const response = await api.get<{ data: Project[]; meta: { total: number; page: number; limit: number; totalPages: number } }>(this.BASE_URL, {
       params,
     });
     

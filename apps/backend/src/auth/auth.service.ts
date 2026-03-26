@@ -90,10 +90,8 @@ export class AuthService {
         },
       };
     } catch (error) {
-      this.logger.error(
-        `Login failed for ${email}: ${(error as any).message}`,
-        (error as any).stack,
-      );
+      const err = error instanceof Error ? error : new Error(String(error));
+      this.logger.error(`Login failed for ${email}: ${err.message}`, err.stack);
       throw error;
     }
   }

@@ -52,7 +52,7 @@ export const EmployeePaymentsService = {
     return response.data;
   },
 
-  async getPendingItems(projectId: string, employeeId: string): Promise<any[]> {
+  async getPendingItems(projectId: string, employeeId: string): Promise<Array<{ id: string; description: string; amount: number }>> {
     const response = await api.get('/employee-payments/pending-items', {
       params: { projectId, employeeId }
     });

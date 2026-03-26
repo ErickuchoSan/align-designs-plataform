@@ -11,7 +11,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Request, Response, CookieOptions } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
   ApiUnauthorizedResponse,
@@ -78,7 +78,7 @@ export class AuthController {
       `Auth Cookie Settings: secure=${config.useSecureCookie}, sameSite=${config.sameSite}, isHttps=${config.isHttps}, host=${req?.headers.host || 'unknown'}`,
     );
 
-    res.cookie('access_token', token, cookieOptions as any);
+    res.cookie('access_token', token, cookieOptions as CookieOptions);
   }
 
   @Get('csrf-token')
@@ -95,7 +95,7 @@ export class AuthController {
       example: { message: 'CSRF token generated' },
     },
   })
-  async getCsrfToken(@Res({ passthrough: true }) res: Response) {
+  getCsrfToken(@Res({ passthrough: true }) res: Response) {
     // Disable caching for this endpoint to always get fresh CSRF token
     res.setHeader(
       'Cache-Control',
