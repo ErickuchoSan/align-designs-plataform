@@ -128,7 +128,7 @@ export class PaymentsController {
   )
   async uploadClientPayment(
     @UploadedFiles() files: Express.Multer.File[],
-    @Req() req: Request & { body: ClientPaymentBody },
+    @Req() req: Request,
     @CurrentUser() user: UserPayload,
   ) {
     const file = files && files.length > 0 ? files[0] : null;
@@ -137,17 +137,20 @@ export class PaymentsController {
       throw new BadRequestException('Receipt file is required');
     }
 
-    // Extract fields from multipart form data
-    const { amount, paymentDate, paymentMethod, notes, invoiceId } = req.body;
-    let { projectId, type } = req.body;
+    // Extract fields from multipart form data (cast to typed body)
+    const body = req.body as ClientPaymentBody;
+    const { amount, paymentDate, paymentMethod, notes, invoiceId } = body;
+    let { projectId, type } = body;
 
     // If projectId is missing but invoiceId exists, fetch it from the invoice
     // Using InvoicesService to follow Law of Demeter
     if (!projectId && invoiceId) {
-      projectId = await this.invoicesService.getProjectIdByInvoiceId(invoiceId);
-      if (!projectId) {
+      const resolvedProjectId =
+        await this.invoicesService.getProjectIdByInvoiceId(invoiceId);
+      if (!resolvedProjectId) {
         throw new BadRequestException('Invalid invoiceId provided');
       }
+      projectId = resolvedProjectId;
     }
 
     // Fail fast validation

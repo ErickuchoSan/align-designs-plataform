@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ProjectStatusService } from '../projects/services/project-status.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PaymentApprovalService } from './services/payment-approval.service';
-import { PaymentStatus, PaymentType, NotificationType } from '@prisma/client';
+import { PaymentStatus, PaymentType } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 // Mock StorageService to avoid uuid import issues
@@ -78,11 +78,11 @@ describe('PaymentsService', () => {
             timeTracking: {
               updateMany: jest.fn(),
             },
-            $transaction: jest.fn().mockImplementation(async (callback) => {
+            $transaction: jest.fn().mockImplementation((callback: unknown) => {
               if (typeof callback === 'function') {
-                return callback(prismaService);
+                return Promise.resolve(callback(prismaService));
               }
-              return callback; // In case it's a promise array (not used here but good practice)
+              return Promise.resolve(callback);
             }),
           },
         },
