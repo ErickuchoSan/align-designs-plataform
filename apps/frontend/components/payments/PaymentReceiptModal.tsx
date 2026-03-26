@@ -167,14 +167,14 @@ export default function PaymentReceiptModal({
                         {notes && (
                             <div className="border-t border-gray-200 pt-3 mt-3">
                                 <p className="text-gray-500 mb-1">Notes:</p>
-                                <p className="text-gray-700 italic">"{notes}"</p>
+                                <p className="text-gray-700 italic">&quot;{notes}&quot;</p>
                             </div>
                         )}
 
                         {rejectionReason && (
                             <div className="border-t border-gray-200 pt-3 mt-3 bg-red-50 p-2 rounded">
                                 <p className="text-red-700 font-medium mb-1">Rejection Reason:</p>
-                                <p className="text-red-600">"{rejectionReason}"</p>
+                                <p className="text-red-600">&quot;{rejectionReason}&quot;</p>
                             </div>
                         )}
                     </div>

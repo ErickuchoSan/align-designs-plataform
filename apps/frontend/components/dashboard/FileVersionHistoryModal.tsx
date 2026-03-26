@@ -9,7 +9,7 @@ interface FileVersionHistoryModalProps {
     onDownload: (fileId: string, fileName: string) => void;
 }
 
-export default function FileVersionHistoryModal({ isOpen, onClose, file, onDownload }: Readonly<FileVersionHistoryModalProps>) {
+export default function FileVersionHistoryModal({ isOpen, onClose, file, onDownload: _onDownload }: Readonly<FileVersionHistoryModalProps>) {
     // File history is derived from the current file - no state needed
 
     return (

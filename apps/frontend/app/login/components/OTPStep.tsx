@@ -18,7 +18,7 @@ interface OTPStepProps {
 export default function OTPStep({
   email,
   onSubmit,
-  onResend,
+  onResend: _onResend,
   loading,
   onBack,
   requiresPasswordSetup = false

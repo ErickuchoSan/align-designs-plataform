@@ -39,7 +39,7 @@ const FileRow = memo(({
   const fileExtension = useMemo(() => getFileExtension(file.originalName || ''), [file.originalName]);
   const uploaderName = useMemo(() =>
     file.uploader ? `${file.uploader.firstName} ${file.uploader.lastName}` : 'Unknown',
-    [file.uploader?.firstName, file.uploader?.lastName]
+    [file.uploader]
   );
 
   return (

@@ -29,14 +29,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: pnpm --filter backend exec prisma generate
+
       - name: Lint Backend
         run: pnpm --filter backend lint
 
       - name: Lint Frontend
         run: pnpm --filter frontend lint
-
-      - name: Generate Prisma Client
-        run: pnpm --filter backend exec prisma generate
 
       - name: Run Backend Tests with Coverage
         run: pnpm --filter backend test:cov
@@ -74,7 +74,7 @@ jobs:
           fetch-depth: 0
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -62,7 +62,7 @@ export default function ErrorModal({
   statusCode,
   onClose,
   willRedirect = false,
-  errorObject,
+  errorObject: _errorObject,
   requestConfig,
   responseData,
   stackTrace,
