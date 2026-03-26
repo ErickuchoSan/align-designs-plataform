@@ -45,12 +45,12 @@ jobs:
           # The manual trigger implies dev has been verified
           echo "Production deployment authorized"
 
-  # Job 2: Create Full Backup to DigitalOcean Spaces
+  # Job 6: Create Full Backup to DigitalOcean Spaces (after successful deploy)
   backup:
     name: Full Backup to Cloud
     runs-on: ubuntu-latest
-    needs: verify-dev
-    if: ${{ github.event.inputs.skip_backup != 'true' && github.event.inputs.rollback_to == '' }}
+    needs: health-check
+    if: ${{ success() && github.event.inputs.skip_backup != 'true' && github.event.inputs.rollback_to == '' }}
     steps:
       - name: Backup DB, Docker Images & SSH Config to Spaces
         uses: appleboy/ssh-action@v1.0.3
@@ -61,19 +61,35 @@ jobs:
           key: ${{ secrets.PROD_SERVER_SSH_KEY }}
           command_timeout: 30m
           script: |
+            set -e
             BACKUP_DIR="/var/backups/align-designs"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
             echo "=== Creating backup directory ==="
             mkdir -p "$BACKUP_DIR"
 
-            echo "=== Backing up PostgreSQL database ==="
-            if docker ps --format '{{.Names}}' | grep -q postgres-prod; then
-              docker exec postgres-prod pg_dump -U aligndesigns_prod aligndesigns_prod > "$BACKUP_DIR/database.sql"
-              echo "Database backup created"
-            else
-              echo "postgres-prod container not running, skipping DB backup"
+            echo "=== Ensuring containers are running ==="
+            cd /var/www/align-designs-prod
+
+            # Check if containers are running, if not start them
+            if ! docker ps --format '{{.Names}}' | grep -q postgres-prod; then
+              echo "Containers not running, starting them..."
+              docker compose -f docker-compose.prod.yml up -d
+              sleep 30
             fi
+
+            # Verify containers are running
+            for container in postgres-prod backend-prod frontend-prod; do
+              if ! docker ps --format '{{.Names}}' | grep -q $container; then
+                echo "ERROR: $container is not running!"
+                exit 1
+              fi
+              echo "$container is running ✓"
+            done
+
+            echo "=== Backing up PostgreSQL database ==="
+            docker exec postgres-prod pg_dump -U aligndesigns_prod aligndesigns_prod > "$BACKUP_DIR/database.sql"
+            echo "Database backup created"
 
             echo "=== Saving Docker images (this may take a while) ==="
             docker save frontend-prod:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-prod.tar.gz" || echo "No frontend image"
@@ -182,8 +198,8 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [verify-dev, backup]
-    if: ${{ always() && needs.verify-dev.result == 'success' && (needs.backup.result == 'success' || needs.backup.result == 'skipped') && github.event.inputs.rollback_to == '' }}
+    needs: verify-dev
+    if: ${{ needs.verify-dev.result == 'success' && github.event.inputs.rollback_to == '' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

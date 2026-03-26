@@ -79,85 +79,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # Job 3: Full Backup to DigitalOcean Spaces
-  backup:
-    name: Full Backup to Cloud
-    runs-on: ubuntu-latest
-    steps:
-      - name: Backup DB, Docker Images & SSH Config to Spaces
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 144.126.221.76
-          username: root
-          port: 29
-          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
-          command_timeout: 30m
-          script: |
-            BACKUP_DIR="/var/www/align-designs/backups"
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-
-            echo "=== Creating backup directory ==="
-            mkdir -p "$BACKUP_DIR"
-
-            echo "=== Backing up PostgreSQL database ==="
-            if docker ps --format '{{.Names}}' | grep -q postgres-dev; then
-              docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > "$BACKUP_DIR/database.sql"
-              echo "Database backup created"
-            else
-              echo "postgres-dev container not running, skipping DB backup"
-            fi
-
-            echo "=== Saving Docker images (this may take a while) ==="
-            docker save frontend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-dev.tar.gz" || echo "No frontend image"
-            docker save backend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/backend-dev.tar.gz" || echo "No backend image"
-            # Note: postgres image is from Docker Hub, no need to backup
-
-            echo "=== Backing up SSH config ==="
-            cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config"
-
-            echo "=== Installing/configuring AWS CLI for Spaces ==="
-            if ! command -v aws &> /dev/null; then
-              curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
-              unzip -q /tmp/awscliv2.zip -d /tmp
-              /tmp/aws/install --update
-              rm -rf /tmp/awscliv2.zip /tmp/aws
-            fi
-
-            # Configure AWS CLI for DigitalOcean Spaces
-            export AWS_ACCESS_KEY_ID="${{ secrets.STORAGE_ACCESS_KEY }}"
-            export AWS_SECRET_ACCESS_KEY="${{ secrets.STORAGE_SECRET_KEY }}"
-            export AWS_DEFAULT_REGION="sfo3"
-
-            S3_ENDPOINT="https://sfo3.digitaloceanspaces.com"
-            BUCKET="aligndesigns-dev"
-            BACKUP_PREFIX="backups/dev"
-
-            echo "=== Uploading to DigitalOcean Spaces ==="
-            # Upload all backup files (overwrites previous backup)
-            [ -f "$BACKUP_DIR/database.sql" ] && aws s3 cp "$BACKUP_DIR/database.sql" "s3://$BUCKET/$BACKUP_PREFIX/database.sql" --endpoint-url "$S3_ENDPOINT" || echo "No DB backup to upload"
-            [ -f "$BACKUP_DIR/frontend-dev.tar.gz" ] && aws s3 cp "$BACKUP_DIR/frontend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/frontend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || echo "No frontend image to upload"
-            [ -f "$BACKUP_DIR/backend-dev.tar.gz" ] && aws s3 cp "$BACKUP_DIR/backend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/backend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || echo "No backend image to upload"
-            aws s3 cp "$BACKUP_DIR/sshd_config" "s3://$BUCKET/$BACKUP_PREFIX/sshd_config" --endpoint-url "$S3_ENDPOINT"
-
-            # Upload a metadata file with timestamp
-            echo "Backup created at: $TIMESTAMP" > "$BACKUP_DIR/backup_info.txt"
-            echo "Server: dev (144.126.221.76)" >> "$BACKUP_DIR/backup_info.txt"
-            aws s3 cp "$BACKUP_DIR/backup_info.txt" "s3://$BUCKET/$BACKUP_PREFIX/backup_info.txt" --endpoint-url "$S3_ENDPOINT"
-
-            echo "=== Cleaning up local backup files ==="
-            rm -f "$BACKUP_DIR/frontend-dev.tar.gz" "$BACKUP_DIR/backend-dev.tar.gz"
-
-            # Keep only last 2 DB backups locally
-            cd "$BACKUP_DIR" && ls -t *.sql 2>/dev/null | tail -n +3 | xargs -r rm -- || true
-
-            echo "=== Backup completed and uploaded to Spaces at $(date) ==="
-            aws s3 ls "s3://$BUCKET/$BACKUP_PREFIX/" --endpoint-url "$S3_ENDPOINT"
-
-  # Job 4: Deploy
+  # Job 3: Deploy
   deploy:
     name: Deploy to Dev Server
     runs-on: ubuntu-latest
-    needs: [validate, sonarcloud, backup]
+    needs: [validate, sonarcloud]
     steps:
       - name: Deploy to Dev Server
         uses: appleboy/ssh-action@v1.0.3
@@ -315,11 +241,101 @@ jobs:
 
             echo "Rolled back at $(date)"
 
-  # Job 6: Lighthouse Performance Audit (only runs if health check passed)
+  # Job 6: Full Backup to DigitalOcean Spaces (after successful deploy)
+  backup:
+    name: Full Backup to Cloud
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: success()
+    steps:
+      - name: Backup DB, Docker Images & SSH Config to Spaces
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 144.126.221.76
+          username: root
+          port: 29
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -e
+            BACKUP_DIR="/var/www/align-designs/backups"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+            echo "=== Creating backup directory ==="
+            mkdir -p "$BACKUP_DIR"
+
+            echo "=== Ensuring containers are running ==="
+            cd /var/www/align-designs
+
+            # Check if containers are running, if not start them
+            if ! docker ps --format '{{.Names}}' | grep -q postgres-dev; then
+              echo "Containers not running, starting them..."
+              docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+              sleep 30
+            fi
+
+            # Verify containers are running
+            for container in postgres-dev backend-dev frontend-dev; do
+              if ! docker ps --format '{{.Names}}' | grep -q $container; then
+                echo "ERROR: $container is not running!"
+                exit 1
+              fi
+              echo "$container is running ✓"
+            done
+
+            echo "=== Backing up PostgreSQL database ==="
+            docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > "$BACKUP_DIR/database.sql"
+            echo "Database backup created"
+
+            echo "=== Saving Docker images (this may take a while) ==="
+            docker save frontend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-dev.tar.gz" || echo "No frontend image"
+            docker save backend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/backend-dev.tar.gz" || echo "No backend image"
+
+            echo "=== Backing up SSH config ==="
+            cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config"
+
+            echo "=== Installing/configuring AWS CLI for Spaces ==="
+            if ! command -v aws &> /dev/null; then
+              curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+              unzip -q /tmp/awscliv2.zip -d /tmp
+              /tmp/aws/install --update
+              rm -rf /tmp/awscliv2.zip /tmp/aws
+            fi
+
+            # Configure AWS CLI for DigitalOcean Spaces
+            export AWS_ACCESS_KEY_ID="${{ secrets.STORAGE_ACCESS_KEY }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.STORAGE_SECRET_KEY }}"
+            export AWS_DEFAULT_REGION="sfo3"
+
+            S3_ENDPOINT="https://sfo3.digitaloceanspaces.com"
+            BUCKET="aligndesigns-dev"
+            BACKUP_PREFIX="backups/dev"
+
+            echo "=== Uploading to DigitalOcean Spaces ==="
+            aws s3 cp "$BACKUP_DIR/database.sql" "s3://$BUCKET/$BACKUP_PREFIX/database.sql" --endpoint-url "$S3_ENDPOINT"
+            [ -f "$BACKUP_DIR/frontend-dev.tar.gz" ] && aws s3 cp "$BACKUP_DIR/frontend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/frontend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            [ -f "$BACKUP_DIR/backend-dev.tar.gz" ] && aws s3 cp "$BACKUP_DIR/backend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/backend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            aws s3 cp "$BACKUP_DIR/sshd_config" "s3://$BUCKET/$BACKUP_PREFIX/sshd_config" --endpoint-url "$S3_ENDPOINT"
+
+            # Upload a metadata file with timestamp
+            echo "Backup created at: $TIMESTAMP" > "$BACKUP_DIR/backup_info.txt"
+            echo "Server: dev (144.126.221.76)" >> "$BACKUP_DIR/backup_info.txt"
+            aws s3 cp "$BACKUP_DIR/backup_info.txt" "s3://$BUCKET/$BACKUP_PREFIX/backup_info.txt" --endpoint-url "$S3_ENDPOINT"
+
+            echo "=== Cleaning up local backup files ==="
+            rm -f "$BACKUP_DIR/frontend-dev.tar.gz" "$BACKUP_DIR/backend-dev.tar.gz"
+
+            # Keep only last 2 DB backups locally
+            cd "$BACKUP_DIR" && ls -t *.sql 2>/dev/null | tail -n +3 | xargs -r rm -- || true
+
+            echo "=== Backup completed and uploaded to Spaces at $(date) ==="
+            aws s3 ls "s3://$BUCKET/$BACKUP_PREFIX/" --endpoint-url "$S3_ENDPOINT"
+
+  # Job 7: Lighthouse Performance Audit (only runs if health check passed)
   lighthouse:
     name: Lighthouse Audit
     runs-on: ubuntu-latest
-    needs: health-check
+    needs: backup
     if: success()
     steps:
       - name: Checkout code
@@ -335,11 +351,11 @@ jobs:
           temporaryPublicStorage: true
         continue-on-error: true
 
-  # Job 7: E2E Tests with Playwright (optional - requires credentials)
+  # Job 8: E2E Tests with Playwright (optional - requires credentials)
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: health-check
+    needs: backup
     if: success() && vars.E2E_ADMIN_PASSWORD != ''
     steps:
       - name: Checkout code
