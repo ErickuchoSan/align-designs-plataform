@@ -67,7 +67,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // Sanitize error messages in production for server errors (5xx)
     // to prevent exposing internal details like database errors, stack traces, etc.
-    if (isProduction && status >= 500) {
+    if (isProduction && (status as number) >= 500) {
       // Map common error types to safe generic messages
       const genericMessage = this.getGenericErrorMessage(status);
       message = genericMessage;
@@ -86,14 +86,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
 
     // Log error details (always log original message and stack trace)
-    if (status >= 500) {
+    const statusCode = status as number;
+    if (statusCode >= 500) {
       this.logger.error(
-        `${request.method} ${request.url} - ${status} - ${originalMessage}`,
+        `${request.method} ${request.url} - ${statusCode} - ${originalMessage}`,
         exception instanceof Error ? exception.stack : undefined,
       );
-    } else if (status >= 400) {
+    } else if (statusCode >= 400) {
       this.logger.warn(
-        `${request.method} ${request.url} - ${status} - ${originalMessage}`,
+        `${request.method} ${request.url} - ${statusCode} - ${originalMessage}`,
       );
     }
 

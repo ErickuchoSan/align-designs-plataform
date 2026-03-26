@@ -227,8 +227,8 @@ describe('AuthService', () => {
       );
     });
 
-    it('revokeToken delegation', async () => {
-      await service.revokeToken('t');
+    it('revokeToken delegation', () => {
+      service.revokeToken('t');
       expect(tokenService.revokeAccessToken).toHaveBeenCalledWith('t');
     });
   });

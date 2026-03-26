@@ -216,8 +216,8 @@ export class AuthService {
    * Revoke a JWT token by adding it to the blacklist
    * Delegated to TokenService
    */
-  async revokeToken(token: string): Promise<void> {
-    return this.tokenService.revokeAccessToken(token);
+  revokeToken(token: string): void {
+    this.tokenService.revokeAccessToken(token);
   }
 
   /**

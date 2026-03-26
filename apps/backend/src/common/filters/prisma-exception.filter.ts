@@ -130,7 +130,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest();
+    const request = ctx.getRequest<{ url: string; method: string }>();
 
     const errorResponse = this.handlePrismaError(exception);
 

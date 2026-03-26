@@ -421,7 +421,7 @@ export class AuthController {
     // Revoke access token
     const token = this.extractTokenFromRequest(req);
     if (token) {
-      await this.authService.revokeToken(token);
+      this.authService.revokeToken(token);
     }
 
     // Revoke all refresh tokens for user (security best practice)
