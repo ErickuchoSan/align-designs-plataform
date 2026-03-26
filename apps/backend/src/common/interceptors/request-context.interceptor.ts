@@ -14,14 +14,14 @@ import { tap, catchError } from 'rxjs/operators';
 @Injectable()
 export class RequestContextInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<{ requestId?: string }>();
     const requestId = request.requestId;
 
     return next.handle().pipe(
       tap(() => {
         // Can add success logging here if needed
       }),
-      catchError((error) => {
+      catchError((error: Error & { requestId?: string }) => {
         // Attach request ID to error for logging
         if (requestId && error) {
           error.requestId = requestId;

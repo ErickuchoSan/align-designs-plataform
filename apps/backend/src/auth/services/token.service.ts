@@ -164,7 +164,7 @@ export class TokenService {
   revokeAccessToken(token: string): void {
     try {
       // Decode the token to get expiration time
-      const decoded = this.jwt.decode(token) as { exp?: number } | null;
+      const decoded = this.jwt.decode(token);
 
       if (!decoded?.exp) {
         this.logger.warn(
@@ -195,7 +195,7 @@ export class TokenService {
    * Decode a JWT token without verification
    */
   decodeToken(token: string): JwtPayload | null {
-    return this.jwt.decode(token) as JwtPayload | null;
+    return this.jwt.decode(token);
   }
 
   /**
