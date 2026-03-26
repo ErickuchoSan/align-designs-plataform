@@ -99,6 +99,7 @@ build_log.txt
 *.key
 
 # Claude Code
+CLAUDE.md
 .claude/
 .claude.bak/
 .mcp.json
