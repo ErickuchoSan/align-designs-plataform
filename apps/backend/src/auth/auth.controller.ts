@@ -292,7 +292,7 @@ export class AuthController {
       'Uses httpOnly refresh token cookie to issue new access and refresh tokens',
   })
   async refresh(
-    @Req() req: Request,
+    @Req() req: Request & { cookies?: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = req.cookies?.refresh_token;

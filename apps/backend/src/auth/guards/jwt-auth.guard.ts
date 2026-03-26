@@ -9,6 +9,12 @@ import { JwtBlacklistService } from '../jwt-blacklist.service';
 import type { UserPayload } from '../interfaces/user.interface';
 import type { AppClsStore } from '../../common/types/cls.types';
 
+interface AuthenticatedRequest {
+  headers?: Record<string, string | string[] | undefined>;
+  cookies?: Record<string, string>;
+  user?: UserPayload;
+}
+
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
@@ -19,7 +25,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     // First, run the default JWT validation
     const isValid = await super.canActivate(context);
@@ -41,7 +47,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     // Store user in CLS context for access anywhere in the request
-    const user = request.user as UserPayload;
+    const user = request.user;
     if (user) {
       this.cls.set('userId', user.userId);
       this.cls.set('userRole', user.role);

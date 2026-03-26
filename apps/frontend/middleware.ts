@@ -20,9 +20,6 @@ const protectedRoutes = ['/dashboard'];
 // Routes that should redirect to dashboard if authenticated
 const authRoutes = ['/login', '/reset-password'];
 
-// Public routes (no auth check needed) - kept for future use
-const _publicRoutes = ['/', '/api'];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 

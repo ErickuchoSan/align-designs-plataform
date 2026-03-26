@@ -9,7 +9,6 @@ import { errorModalManager } from './error-modal-manager';
 // The backend uses URI versioning (e.g., /api/v1/endpoint)
 // Default version is v1, automatically applied to all endpoints
 const API_URL = env.API_URL;
-const _API_VERSION = '1'; // Kept for future API versioning
 
 // Retry configuration
 const MAX_RETRIES = 3;
@@ -85,46 +84,6 @@ async function addCsrfTokenIfNeeded(
   } else {
     logger.warn('No CSRF token available for request', { method, url: config.url });
   }
-}
-
-// Helper to create deduplicatable request wrapper
-function _createDedupedRequest(config: InternalAxiosRequestConfig): Promise<unknown> {
-  const requestKey = getRequestKey(config);
-  const now = Date.now();
-
-  // Check if there's a recent pending request
-  const pending = pendingRequests.get(requestKey);
-  if (pending && (now - pending.timestamp) < REQUEST_DEDUP_TTL) {
-    logger.debug('Deduplicating request', { url: config.url });
-    return pending.promise;
-  }
-
-  // Create new request promise
-  const requestPromise = new Promise((resolve, reject) => {
-    // Store original adapter call
-    const originalAdapter = config.adapter || axios.defaults.adapter;
-    if (typeof originalAdapter === 'function') {
-      originalAdapter(config).then(resolve, reject);
-    } else {
-      reject(new Error('No adapter available'));
-    }
-  });
-
-  // Store in map
-  pendingRequests.set(requestKey, {
-    promise: requestPromise,
-    timestamp: now,
-  });
-
-  // Clean up after completion
-  requestPromise.finally(() => {
-    const current = pendingRequests.get(requestKey);
-    if (current?.timestamp === now) {
-      pendingRequests.delete(requestKey);
-    }
-  });
-
-  return requestPromise;
 }
 
 export const api = axios.create({

@@ -41,4 +41,4 @@ export interface CreateEmployeePaymentDto {
   receiptFileId?: string;
 }
 
-export interface UpdateEmployeePaymentDto extends Partial<CreateEmployeePaymentDto> { }
+export type UpdateEmployeePaymentDto = Partial<CreateEmployeePaymentDto>;
