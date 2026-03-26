@@ -7,7 +7,7 @@ export interface UseFetchOptions<T> {
   /** Auto-fetch on mount */
   immediate?: boolean;
   /** Dependencies that trigger refetch */
-  deps?: any[];
+  deps?: unknown[];
   /** Error message prefix for logging */
   errorPrefix?: string;
   /** Callback on successful fetch */

@@ -9,7 +9,7 @@ import { errorModalManager } from './error-modal-manager';
 // The backend uses URI versioning (e.g., /api/v1/endpoint)
 // Default version is v1, automatically applied to all endpoints
 const API_URL = env.API_URL;
-const API_VERSION = '1';
+const _API_VERSION = '1'; // Kept for future API versioning
 
 // Retry configuration
 const MAX_RETRIES = 3;
@@ -21,7 +21,7 @@ let csrfTokenPromise: Promise<void> | null = null; // Prevent concurrent fetches
 
 // Request deduplication - prevents duplicate simultaneous requests
 // Only for GET requests to avoid race conditions with mutations
-const pendingRequests = new Map<string, { promise: Promise<any>; timestamp: number }>();
+const pendingRequests = new Map<string, { promise: Promise<unknown>; timestamp: number }>();
 const REQUEST_DEDUP_TTL = 100; // 100ms window for deduplication
 
 // Helper to generate cache key for requests
@@ -88,7 +88,7 @@ async function addCsrfTokenIfNeeded(
 }
 
 // Helper to create deduplicatable request wrapper
-function createDedupedRequest(config: InternalAxiosRequestConfig): Promise<any> {
+function _createDedupedRequest(config: InternalAxiosRequestConfig): Promise<unknown> {
   const requestKey = getRequestKey(config);
   const now = Date.now();
 
@@ -251,10 +251,15 @@ function isDevModeEnabled(): boolean {
   return typeof globalThis !== 'undefined' && globalThis.localStorage.getItem('devMode') === 'true';
 }
 
+interface ErrorData {
+  errors?: Array<{ field?: string; property?: string; message?: string; error?: string }>;
+  details?: unknown;
+}
+
 // Build error details from error data
-function buildErrorDetails(errorData: any): string[] {
+function buildErrorDetails(errorData: ErrorData | undefined): string[] {
   if (errorData?.errors && Array.isArray(errorData.errors)) {
-    return errorData.errors.map((err: any) =>
+    return errorData.errors.map((err) =>
       `${err.field || err.property || 'Field'}: ${err.message || err.error}`
     );
   }
@@ -275,7 +280,7 @@ function showErrorModal(error: AxiosError, config?: InternalAxiosRequestConfig, 
     return;
   }
 
-  const errorData = error.response?.data as any;
+  const errorData = error.response?.data as (ErrorData & { message?: string; error?: string }) | undefined;
   const errorMessage = errorData?.message || errorData?.error || error.message || 'Unknown error occurred';
   const statusCode = error.response?.status || 'N/A';
   const url = config?.url || 'Unknown';
@@ -397,7 +402,7 @@ function handle5xxError(error: AxiosError, config: ExtendedConfig | undefined): 
   if (!status || status < 500 || config?._errorShown) return;
 
   const willRetry = (config?.retryCount || 0) < MAX_RETRIES;
-  const serverMessage = (error.response?.data as any)?.message || 'The server encountered an error.';
+  const serverMessage = (error.response?.data as { message?: string })?.message || 'The server encountered an error.';
 
   logger.error('Server Error (5xx)', undefined, { status, url: config?.url, data: error.response?.data });
 

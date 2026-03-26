@@ -127,8 +127,9 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       setShowDeleteConfirm(false);
       setShowForceDeleteConfirm(false);
       setUserToDelete(null);
-    } catch (err: any) {
-      if (!force && err.response?.status === 409) {
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } };
+      if (!force && axiosError.response?.status === 409) {
         // If 409 Conflict, show Force Delete Confirmation
         setShowForceDeleteConfirm(true);
         setShowDeleteConfirm(false);

@@ -66,7 +66,7 @@ export function useModal(initialState = false) {
  * }
  * ```
  */
-export function useModalWithData<T = any>() {
+export function useModalWithData<T = unknown>() {
   const [data, setData] = useState<T | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
