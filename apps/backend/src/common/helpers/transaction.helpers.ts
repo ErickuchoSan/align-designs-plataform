@@ -111,15 +111,17 @@ export async function executeTransactionWithRetry<R>(
  * }
  * ```
  */
-export function RetryTransaction(options: TransactionRetryOptions = {}) {
+export function RetryTransaction(_options: TransactionRetryOptions = {}) {
   return function (
-    _target: any,
+    _target: object,
     _propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
-    const originalMethod = descriptor.value;
+    const originalMethod = descriptor.value as (
+      ...args: unknown[]
+    ) => Promise<unknown>;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]): Promise<unknown> {
       try {
         return await originalMethod.apply(this, args);
       } catch (error) {

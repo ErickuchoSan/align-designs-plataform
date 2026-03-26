@@ -10,6 +10,8 @@ import { CacheManagerService } from './services/cache-manager.service';
     NestCacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
+        // Async required by NestJS CacheModule type signature
+        await Promise.resolve();
         const redisEnabled =
           configService.get<string>('REDIS_ENABLED', 'false') === 'true';
 

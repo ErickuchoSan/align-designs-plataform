@@ -35,7 +35,7 @@ export function getActiveRecordsWhere() {
  *   where: getActiveRecordsWhereWith({ role: 'ADMIN' })
  * })
  */
-export function getActiveRecordsWhereWith<T extends Record<string, any>>(
+export function getActiveRecordsWhereWith<T extends Record<string, unknown>>(
   additionalWhere: T,
 ): T & { deletedAt: null } {
   return {
