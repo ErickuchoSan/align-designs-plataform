@@ -19,7 +19,7 @@ describe('FilesService', () => {
   let service: FilesService;
   let permissions: any;
   let storageCoordinator: any;
-  let transformer: any;
+  let _transformer: any;
   let cacheManager: any;
   let fileNotifications: any;
   let fileMaintenance: any;
@@ -95,7 +95,7 @@ describe('FilesService', () => {
     storageCoordinator = module.get<FileStorageCoordinatorService>(
       FileStorageCoordinatorService,
     );
-    transformer = module.get<FileTransformerService>(FileTransformerService);
+    _transformer = module.get<FileTransformerService>(FileTransformerService);
     cacheManager = module.get<CacheManagerService>(CacheManagerService);
     fileNotifications = module.get<FileNotificationService>(
       FileNotificationService,

@@ -142,6 +142,28 @@ jobs:
               docker compose -f docker-compose.dev.yml --env-file .env.dev up -d backend-dev
             fi
 
+            # Verify all 3 containers are running (frontend, backend, postgres)
+            echo "Verifying all containers are running..."
+            EXPECTED_CONTAINERS=("frontend-dev" "backend-dev" "postgres-dev")
+            MISSING_CONTAINERS=()
+
+            for container in "${EXPECTED_CONTAINERS[@]}"; do
+              if [ "$(docker inspect -f '{{.State.Running}}' $container 2>/dev/null)" != "true" ]; then
+                echo "Container $container is NOT running!"
+                MISSING_CONTAINERS+=("$container")
+              else
+                echo "Container $container is running ✓"
+              fi
+            done
+
+            # If any container is missing, restart all services
+            if [ ${#MISSING_CONTAINERS[@]} -gt 0 ]; then
+              echo "Missing containers detected: ${MISSING_CONTAINERS[*]}"
+              echo "Restarting all services..."
+              docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+              sleep 10
+            fi
+
             # Wait for backend to be ready
             echo "Waiting for backend to start..."
             for i in {1..30}; do
@@ -151,6 +173,10 @@ jobs:
               fi
               sleep 2
             done
+
+            # Final container status
+            echo "Final container status:"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
             echo "Deployed at $(date)"
 

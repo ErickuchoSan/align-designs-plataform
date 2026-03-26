@@ -21,14 +21,14 @@ const COLORS = {
 };
 
 interface InvoiceWithRelations extends Invoice {
-  project?: { name: string };
+  project?: { name: string } | null;
   client?: {
     firstName: string;
     lastName: string;
     email: string;
-    phone?: string;
-    company?: string;
-  };
+    phone?: string | null;
+    company?: string | null;
+  } | null;
   items?: Array<{
     description: string;
     amount: number | Decimal;
@@ -66,7 +66,7 @@ export class InvoicePdfService {
         doc.end();
       } catch (error) {
         this.logger.error('Error generating PDF', error);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }

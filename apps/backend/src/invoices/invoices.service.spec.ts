@@ -5,7 +5,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { InvoicePdfService } from './invoice-pdf.service';
 import { EmailService } from '../email/email.service';
 import { InvoiceStatus, NotificationType } from '@prisma/client';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 describe('InvoicesService', () => {
   let service: InvoicesService;

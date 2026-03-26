@@ -6,12 +6,24 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateInvoiceDto } from './schemas';
-import { InvoiceStatus, Invoice, NotificationType } from '@prisma/client';
+import {
+  InvoiceStatus,
+  Invoice,
+  NotificationType,
+  Prisma,
+} from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InvoicePdfService } from './invoice-pdf.service';
 import { EmailService } from '../email/email.service';
 import { DEFAULT_PAYMENT_TERMS_DAYS } from '../common/constants/business.constants';
+
+/**
+ * Invoice type with client, project, and payments relations included
+ */
+type InvoiceWithRelations = Prisma.InvoiceGetPayload<{
+  include: { project: true; client: true; payments: true };
+}>;
 
 @Injectable()
 export class InvoicesService {
@@ -143,7 +155,21 @@ export class InvoicesService {
   /**
    * Transform Prisma Decimal fields to numbers for proper JSON serialization
    */
-  private transformInvoiceDecimals(invoice: any): any {
+  private transformInvoiceDecimals<
+    T extends {
+      subtotal: unknown;
+      taxAmount: unknown;
+      totalAmount: unknown;
+      amountPaid: unknown;
+    },
+  >(
+    invoice: T,
+  ): T & {
+    subtotal: number;
+    taxAmount: number;
+    totalAmount: number;
+    amountPaid: number;
+  } {
     return {
       ...invoice,
       subtotal: Number(invoice.subtotal),
@@ -153,7 +179,7 @@ export class InvoicesService {
     };
   }
 
-  async findOne(id: string): Promise<Invoice> {
+  async findOne(id: string): Promise<InvoiceWithRelations> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id },
       include: {
@@ -164,7 +190,7 @@ export class InvoicesService {
     });
 
     if (!invoice) throw new NotFoundException('Invoice not found');
-    return this.transformInvoiceDecimals(invoice) as Invoice;
+    return this.transformInvoiceDecimals(invoice);
   }
 
   /**
@@ -181,7 +207,7 @@ export class InvoicesService {
   }
 
   async updateStatus(id: string, status: InvoiceStatus): Promise<Invoice> {
-    const data: any = { status };
+    const data: { status: InvoiceStatus; sentToClientAt?: Date } = { status };
     if (status === InvoiceStatus.SENT) {
       data.sentToClientAt = new Date();
     }
@@ -273,7 +299,7 @@ export class InvoicesService {
       if (newAmountPaid >= amount) {
         newStatus = InvoiceStatus.PAID;
       } else if (newAmountPaid > 0) {
-        newStatus = 'PARTIALLY_PAID' as any;
+        newStatus = 'PARTIALLY_PAID' as InvoiceStatus;
       }
 
       await this.prisma.invoice.update({
@@ -345,7 +371,7 @@ export class InvoicesService {
    * Throws error if email sending fails, allowing admin to see the reason
    */
   async resendInvoiceEmail(id: string): Promise<void> {
-    const invoice: any = await this.findOne(id);
+    const invoice = await this.findOne(id);
     const invoiceNumber = invoice.invoiceNumber;
     const amount = Number(invoice.totalAmount);
 

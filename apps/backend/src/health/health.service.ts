@@ -68,7 +68,7 @@ export class HealthService {
     const checks = {
       database: await this.checkDatabase(),
       storage: await this.checkStorage(),
-      email: await this.checkEmail(),
+      email: this.checkEmail(),
       scheduler: this.checkScheduler(),
     };
 
@@ -212,11 +212,11 @@ export class HealthService {
     }
   }
 
-  private async checkEmail(): Promise<{
+  private checkEmail(): {
     status: string;
     configured: boolean;
     verified?: boolean;
-  }> {
+  } {
     const emailHost = this.configService.get<string>('EMAIL_HOST');
     const emailUser = this.configService.get<string>('EMAIL_USER');
 
