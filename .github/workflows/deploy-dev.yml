@@ -306,8 +306,9 @@ jobs:
             echo "Database backup created"
 
             echo "=== Saving Docker images (this may take a while) ==="
-            docker save frontend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-dev.tar.gz" || echo "No frontend image"
-            docker save backend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/backend-dev.tar.gz" || echo "No backend image"
+            # Docker Compose names images as {directory}-{service}
+            docker save align-designs-frontend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-dev.tar.gz" || echo "No frontend image"
+            docker save align-designs-backend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/backend-dev.tar.gz" || echo "No backend image"
 
             echo "=== Backing up SSH config ==="
             cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config"
