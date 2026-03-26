@@ -31,8 +31,8 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
     enabled: !!projectId,
   });
 
-  const payments = data?.payments || [];
-  const invoices = data?.invoices || [];
+  const payments = useMemo(() => data?.payments || [], [data?.payments]);
+  const invoices = useMemo(() => data?.invoices || [], [data?.invoices]);
   const project = data?.project || null;
 
   const pendingAmount = useMemo(() => {

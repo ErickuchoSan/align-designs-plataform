@@ -22,6 +22,17 @@ interface PaymentProgress {
   pendingInvoiceCount: number;
 }
 
+interface CompletionChecklist {
+  isReadyToComplete: boolean;
+  checklist: {
+    allPaymentsApproved: boolean;
+    allFilesDelivered: boolean;
+    feedbackComplete: boolean;
+    noOutstandingInvoices: boolean;
+  };
+  blockers: string[];
+}
+
 interface UseWorkflowDataReturn {
   // Invoice data
   invoiceDeadlines: InvoiceDeadline[];
@@ -31,7 +42,7 @@ interface UseWorkflowDataReturn {
   payments: Payment[];
   pendingAmount: number;
   // Completion data
-  checklistData: any;
+  checklistData: CompletionChecklist | null;
   checklistLoading: boolean;
   // Actions
   fetchCompletionStatus: () => Promise<void>;
@@ -59,7 +70,7 @@ export function useWorkflowData(project: Project, onUpdate: () => void): UseWork
   const [pendingAmount, setPendingAmount] = useState(0);
 
   // Completion data
-  const [checklistData, setChecklistData] = useState<any>(null);
+  const [checklistData, setChecklistData] = useState<CompletionChecklist | null>(null);
   const [checklistLoading, setChecklistLoading] = useState(false);
 
   // State

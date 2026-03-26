@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createInvoiceSchema, CreateInvoiceFormData } from '@/lib/schemas/invoice.schema';
 import { InvoicesService } from '@/services/invoices.service';
@@ -18,7 +18,7 @@ export default function CreateInvoicePage() {
 
     // TanStack Query: fetch projects
     const { data: projectsData, isLoading: loadingProjects } = useProjectsListQuery({ limit: 100 });
-    const projects = projectsData?.projects || [];
+    const projects = useMemo(() => projectsData?.projects || [], [projectsData?.projects]);
 
     const {
         register,
@@ -27,7 +27,7 @@ export default function CreateInvoicePage() {
         setValue,
         formState: { errors, isSubmitting }
     } = useForm<CreateInvoiceFormData>({
-        resolver: zodResolver(createInvoiceSchema) as any,
+        resolver: zodResolver(createInvoiceSchema) as Resolver<CreateInvoiceFormData>,
         defaultValues: {
             projectId: '',
             clientId: '',

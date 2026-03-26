@@ -1,22 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Role, Invoice } from '@prisma/client';
+
+interface ClientFinancials {
+  totalBilled: number;
+  totalPaid: number;
+  outstanding: number;
+  projectCount: number;
+  onTimePaymentRate: number;
+}
 
 @Injectable()
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getClientFinancials(clientId: string) {
-    const invoices = await this.prisma.invoice.findMany({
+  async getClientFinancials(clientId: string): Promise<ClientFinancials> {
+    const invoices: Invoice[] = await this.prisma.invoice.findMany({
       where: { clientId },
     });
 
     const totalBilled = invoices.reduce(
-      (sum: number, inv) => sum + Number(inv.totalAmount),
+      (sum: number, inv: Invoice) => sum + Number(inv.totalAmount),
       0,
     );
     const totalPaid = invoices.reduce(
-      (sum: number, inv) => sum + Number(inv.amountPaid),
+      (sum: number, inv: Invoice) => sum + Number(inv.amountPaid),
       0,
     );
     const outstanding = totalBilled - totalPaid;

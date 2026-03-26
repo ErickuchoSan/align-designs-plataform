@@ -18,8 +18,8 @@ export default function ClientProfilePage() {
     });
 
     const client = data?.client || null;
-    const invoices = data?.invoices || [];
-    const projects = data?.projects || [];
+    const invoices = useMemo(() => data?.invoices || [], [data?.invoices]);
+    const projects = useMemo(() => data?.projects || [], [data?.projects]);
 
     // Compute totals
     const { totalBilled, totalPaid, outstanding } = useMemo(() => {

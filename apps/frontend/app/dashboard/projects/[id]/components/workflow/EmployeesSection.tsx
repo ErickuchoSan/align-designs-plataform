@@ -1,4 +1,4 @@
-import { Project } from '@/types';
+import { Project, ProjectEmployee, User } from '@/types';
 
 interface EmployeesSectionProps {
   project: Project;
@@ -33,7 +33,7 @@ export function EmployeesSection({
 
       {hasEmployees ? (
         <div className="flex flex-wrap gap-2">
-          {project.employees?.map((pe: any) => (
+          {project.employees?.map((pe: ProjectEmployee & { employee: User }) => (
             <div
               key={pe.id}
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg"

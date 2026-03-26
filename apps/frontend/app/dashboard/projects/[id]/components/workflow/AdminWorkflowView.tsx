@@ -27,6 +27,12 @@ const ConfirmModal = dynamic(
   { loading: () => null, ssr: false }
 );
 
+interface CompletionChecklistData {
+  isReady: boolean;
+  checklist: Record<string, boolean>;
+  counts: Record<string, number>;
+}
+
 interface AdminWorkflowViewProps {
   project: Project;
   invoiceDeadlines: InvoiceDeadline[];
@@ -34,7 +40,7 @@ interface AdminWorkflowViewProps {
   payments: Payment[];
   pendingAmount: number;
   loadingInvoices: boolean;
-  checklistData: any;
+  checklistData: CompletionChecklistData | null;
   processing: boolean;
   error: string;
   onUpdate: () => void;
