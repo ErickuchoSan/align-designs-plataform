@@ -105,7 +105,10 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     // Get TTL from decorator options or use default
     const options =
-      this.reflector?.get(IDEMPOTENCY_KEY, context.getHandler()) ?? {};
+      this.reflector?.get<{ ttlSeconds?: number }>(
+        IDEMPOTENCY_KEY,
+        context.getHandler(),
+      ) ?? {};
     const ttlSeconds = options.ttlSeconds ?? this.DEFAULT_TTL_SECONDS;
 
     return next.handle().pipe(

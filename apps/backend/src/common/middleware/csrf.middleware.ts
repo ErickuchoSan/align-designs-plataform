@@ -61,13 +61,14 @@ export class CsrfMiddleware implements NestMiddleware {
   }
 
   private logDebugInfo(req: Request): void {
+    const cookies = (req.cookies ?? {}) as Record<string, string>;
     const debugInfo = {
       method: req.method,
       path: req.path,
       originalUrl: req.originalUrl,
       cookieHeader: req.headers.cookie ? 'present' : 'missing',
-      csrfCookie: req.cookies[this.csrfTokenCookie]
-        ? `${req.cookies[this.csrfTokenCookie].substring(0, 20)}...`
+      csrfCookie: cookies[this.csrfTokenCookie]
+        ? `${cookies[this.csrfTokenCookie].substring(0, 20)}...`
         : 'missing',
       csrfHeader: req.headers[this.csrfHeaderName]
         ? `${String(req.headers[this.csrfHeaderName]).substring(0, 30)}...`
@@ -84,8 +85,9 @@ export class CsrfMiddleware implements NestMiddleware {
   }
 
   private handleSafeMethod(req: Request, res: Response): void {
-    if (req.cookies[this.csrfTokenCookie]) {
-      const existingSecret = req.cookies[this.csrfTokenCookie];
+    const cookies = (req.cookies ?? {}) as Record<string, string>;
+    if (cookies[this.csrfTokenCookie]) {
+      const existingSecret = cookies[this.csrfTokenCookie];
       const token = this.generateToken(existingSecret);
       res.setHeader('X-CSRF-Token', token);
     } else {
@@ -94,14 +96,15 @@ export class CsrfMiddleware implements NestMiddleware {
   }
 
   private validateCsrfRequest(req: Request, res: Response): void {
-    if (!req.cookies[this.csrfTokenCookie]) {
+    const cookies = (req.cookies ?? {}) as Record<string, string>;
+    if (!cookies[this.csrfTokenCookie]) {
       this.logger.warn(
         `CSRF cookie missing, generating new token for ${req.method} ${req.path}`,
       );
       this.generateAndSetToken(req, res);
     }
 
-    const token = req.cookies[this.csrfTokenCookie];
+    const token = cookies[this.csrfTokenCookie];
     const submittedToken = req.headers[this.csrfHeaderName] || req.body._csrf;
 
     this.logger.debug(
