@@ -117,10 +117,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
+        <dialog
+          open
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-transparent m-0 max-w-none max-h-none w-full h-full"
           aria-labelledby="modal-title"
         >
           {/* Backdrop */}
@@ -166,7 +165,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
               <div className="flex-shrink-0 p-4 border-t border-stone-200 sm:p-6">{footer}</div>
             )}
           </MotionDiv>
-        </div>
+        </dialog>
       )}
     </AnimatePresence>
   );
