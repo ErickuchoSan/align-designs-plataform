@@ -161,10 +161,11 @@ export class UsersController {
   }
 
   @Put(':id')
+  @Patch(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Update user by ID',
-    description: 'Admin-only: Update any user by their ID',
+    description: 'Admin-only: Update any user by their ID (supports both PUT and PATCH)',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiSuccessResponse('User updated successfully')
@@ -196,7 +197,9 @@ export class UsersController {
         resourceId: id,
         ipAddress,
         userAgent,
-        details: { ...updateUserDto },
+        details: {
+          updatedFields: Object.keys(updateUserDto).join(', '),
+        },
       },
       'user update',
     );
@@ -258,42 +261,6 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.GET })
   getMonthlyActivity(@Param('id') id: string) {
     return this.userAnalyticsService.getMonthlyActivity(id);
-  }
-
-  @Patch(':id')
-  @Throttle({ default: RATE_LIMIT_USERS.UPDATE })
-  async update(
-    @Param('id') id: string,
-    @Body(zodPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,
-    @CurrentUser() user: UserPayload,
-    @IpAddress() ipAddress: string,
-    @UserAgent() userAgent: string,
-  ) {
-    const updatedUser = await this.usersService.update(
-      id,
-      updateUserDto,
-      user.userId,
-      user.role,
-    );
-
-    // Audit log for user update (non-blocking)
-    await safeAuditLog(
-      this.auditService,
-      {
-        userId: user.userId,
-        action: AuditAction.USER_UPDATE,
-        resourceType: 'user',
-        resourceId: id,
-        ipAddress,
-        userAgent,
-        details: {
-          updatedFields: Object.keys(updateUserDto).join(', '),
-        },
-      },
-      'user update',
-    );
-
-    return updatedUser;
   }
 
   @Post(':id/resend-welcome-email')
