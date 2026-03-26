@@ -16,13 +16,17 @@ import { Reflector } from '@nestjs/core';
 export const IDEMPOTENCY_KEY = 'idempotency';
 export const Idempotent =
   (options?: { ttlSeconds?: number }) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    Reflect.defineMetadata(IDEMPOTENCY_KEY, options ?? {}, descriptor.value);
+  (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) => {
+    Reflect.defineMetadata(
+      IDEMPOTENCY_KEY,
+      options ?? {},
+      descriptor.value as object,
+    );
     return descriptor;
   };
 
 interface CachedResponse {
-  data: any;
+  data: unknown;
   timestamp: number;
   status: 'processing' | 'completed';
 }
@@ -54,8 +58,13 @@ export class IdempotencyInterceptor implements NestInterceptor {
     setInterval(() => this.cleanupExpiredEntries(), 5 * 60 * 1000);
   }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const request = context.switchToHttp().getRequest<{
+      headers: Record<string, string | string[] | undefined>;
+      method: string;
+      path: string;
+      user?: { userId?: string };
+    }>();
     const idempotencyKey = request.headers['idempotency-key'] as string;
 
     // If no idempotency key provided, proceed normally
