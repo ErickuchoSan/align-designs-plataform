@@ -131,10 +131,6 @@ jobs:
             echo "Running database migrations..."
             docker exec backend-dev npx prisma migrate deploy || echo "Migration failed or no pending migrations"
 
-            # Clean up old Docker images to free disk space
-            echo "Cleaning up unused Docker images..."
-            docker image prune -af --filter "until=24h"
-
             # Ensure backend is running (sometimes doesn't start after build)
             sleep 5
             if [ "$(docker inspect -f '{{.State.Running}}' backend-dev 2>/dev/null)" != "true" ]; then
@@ -177,6 +173,22 @@ jobs:
             # Final container status
             echo "Final container status:"
             docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            # Verify ALL 3 required containers are running before cleanup
+            RUNNING_COUNT=0
+            for container in frontend-dev backend-dev postgres-dev; do
+              if [ "$(docker inspect -f '{{.State.Running}}' $container 2>/dev/null)" == "true" ]; then
+                RUNNING_COUNT=$((RUNNING_COUNT + 1))
+              fi
+            done
+
+            if [ $RUNNING_COUNT -eq 3 ]; then
+              echo "All 3 containers confirmed running. Safe to cleanup unused images..."
+              docker system prune -a -f
+              echo "Cleanup completed."
+            else
+              echo "WARNING: Only $RUNNING_COUNT/3 containers running. Skipping cleanup to avoid removing needed images."
+            fi
 
             echo "Deployed at $(date)"
 

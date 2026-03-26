@@ -60,8 +60,11 @@ describe('PaymentApprovalService', () => {
             invoice: {
               update: jest.fn(),
             },
-            $transaction: jest.fn().mockImplementation(async (callback) => {
-              return callback(prismaService);
+            $transaction: jest.fn().mockImplementation((callback: unknown) => {
+              if (typeof callback === 'function') {
+                return Promise.resolve(callback(prismaService));
+              }
+              return Promise.resolve(callback);
             }),
           },
         },
@@ -105,7 +108,7 @@ describe('PaymentApprovalService', () => {
       };
 
       // Mock transaction to return the approved payment
-      prismaService.$transaction.mockImplementation(async (callback) => {
+      prismaService.$transaction.mockImplementation((callback: unknown) => {
         const mockTx = {
           payment: {
             update: jest.fn().mockResolvedValue(approvedPayment),
@@ -117,7 +120,9 @@ describe('PaymentApprovalService', () => {
             update: jest.fn().mockResolvedValue(mockPayment.invoice),
           },
         };
-        return callback(mockTx);
+        return typeof callback === 'function'
+          ? Promise.resolve(callback(mockTx))
+          : Promise.resolve(callback);
       });
 
       projectStatusService.canActivateProject.mockResolvedValue({
@@ -146,7 +151,7 @@ describe('PaymentApprovalService', () => {
         status: PaymentStatus.CONFIRMED,
       };
 
-      prismaService.$transaction.mockImplementation(async (callback) => {
+      prismaService.$transaction.mockImplementation((callback: unknown) => {
         const mockTx = {
           payment: {
             update: jest.fn().mockResolvedValue(approvedPayment),
@@ -158,7 +163,9 @@ describe('PaymentApprovalService', () => {
             update: jest.fn().mockResolvedValue(mockPayment.invoice),
           },
         };
-        return callback(mockTx);
+        return typeof callback === 'function'
+          ? Promise.resolve(callback(mockTx))
+          : Promise.resolve(callback);
       });
 
       projectStatusService.canActivateProject.mockResolvedValue({
@@ -218,7 +225,7 @@ describe('PaymentApprovalService', () => {
         status: PaymentStatus.CONFIRMED,
       };
 
-      prismaService.$transaction.mockImplementation(async (callback) => {
+      prismaService.$transaction.mockImplementation((callback: unknown) => {
         const mockTx = {
           payment: {
             update: jest.fn().mockResolvedValue(approvedPayment),
@@ -230,7 +237,9 @@ describe('PaymentApprovalService', () => {
             update: jest.fn().mockResolvedValue(mockPayment.invoice),
           },
         };
-        return callback(mockTx);
+        return typeof callback === 'function'
+          ? Promise.resolve(callback(mockTx))
+          : Promise.resolve(callback);
       });
 
       projectStatusService.canActivateProject.mockResolvedValue({
@@ -255,7 +264,7 @@ describe('PaymentApprovalService', () => {
         status: PaymentStatus.CONFIRMED,
       };
 
-      prismaService.$transaction.mockImplementation(async (callback) => {
+      prismaService.$transaction.mockImplementation((callback: unknown) => {
         const mockTx = {
           payment: {
             update: jest.fn().mockResolvedValue(approvedPayment),
@@ -267,7 +276,9 @@ describe('PaymentApprovalService', () => {
             update: jest.fn().mockResolvedValue(mockPayment.invoice),
           },
         };
-        return callback(mockTx);
+        return typeof callback === 'function'
+          ? Promise.resolve(callback(mockTx))
+          : Promise.resolve(callback);
       });
 
       projectStatusService.canActivateProject.mockRejectedValue(

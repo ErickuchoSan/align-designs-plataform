@@ -12,6 +12,7 @@ import {
   PaymentStatus,
   PaymentType,
   NotificationType,
+  Prisma,
 } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { StorageService } from '../storage/storage.service';
@@ -152,20 +153,26 @@ export class PaymentsService {
     userRole?: string,
   ): Promise<Payment[]> {
     // Build where clause based on user role and permissions
-    const whereClause: any = { projectId };
+    let whereClause: Prisma.PaymentWhereInput = { projectId };
 
     // EMPLOYEE: Only see payments TO them (employee payments they received)
     if (userRole === 'EMPLOYEE') {
-      whereClause.toUserId = userId;
-      whereClause.type = PaymentType.EMPLOYEE_PAYMENT;
+      whereClause = {
+        ...whereClause,
+        toUserId: userId,
+        type: PaymentType.EMPLOYEE_PAYMENT,
+      };
     }
     // CLIENT: Only see payments FROM them (initial payments, invoice payments they made)
     else if (userRole === 'CLIENT') {
-      whereClause.OR = [
-        { fromUserId: userId },
-        { type: PaymentType.INITIAL_PAYMENT },
-        { type: PaymentType.INVOICE },
-      ];
+      whereClause = {
+        ...whereClause,
+        OR: [
+          { fromUserId: userId },
+          { type: PaymentType.INITIAL_PAYMENT },
+          { type: PaymentType.INVOICE },
+        ],
+      };
     }
     // ADMIN: See all payments (no additional filters)
 
