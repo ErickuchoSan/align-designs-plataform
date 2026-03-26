@@ -98,8 +98,8 @@ jobs:
             # Backup database with timestamp
             docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > /var/www/align-designs/backups/db_$(date +%Y%m%d_%H%M%S).sql
 
-            # Keep only last 5 backups
-            cd /var/www/align-designs/backups && ls -t *.sql | tail -n +6 | xargs -r rm --
+            # Keep only last 2 backups
+            cd /var/www/align-designs/backups && ls -t *.sql | tail -n +3 | xargs -r rm --
 
             echo "Backup completed at $(date)"
 

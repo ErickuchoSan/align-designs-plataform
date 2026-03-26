@@ -84,8 +84,8 @@ jobs:
             tar -czf "$TIMESTAMP.tar.gz" "$TIMESTAMP"
             rm -rf "$TIMESTAMP"
 
-            echo "=== Cleanup old backups (keep last 5) ==="
-            ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm --
+            echo "=== Cleanup old backups (keep last 2) ==="
+            ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm --
 
             echo "=== Backup complete: $TIMESTAMP.tar.gz ==="
             ls -lh "$BACKUP_DIR"
@@ -191,6 +191,44 @@ jobs:
 
             echo "=== Checking container status ==="
             docker ps
+
+            # Verify all 3 containers are running
+            echo "Verifying all containers are running..."
+            EXPECTED_CONTAINERS=("frontend-prod" "backend-prod" "postgres-prod")
+            MISSING_CONTAINERS=()
+
+            for container in "${EXPECTED_CONTAINERS[@]}"; do
+              if [ "$(docker inspect -f '{{.State.Running}}' $container 2>/dev/null)" != "true" ]; then
+                echo "Container $container is NOT running!"
+                MISSING_CONTAINERS+=("$container")
+              else
+                echo "Container $container is running ✓"
+              fi
+            done
+
+            # If any container is missing, restart all services
+            if [ ${#MISSING_CONTAINERS[@]} -gt 0 ]; then
+              echo "Missing containers detected: ${MISSING_CONTAINERS[*]}"
+              echo "Restarting all services..."
+              docker compose -f docker-compose.prod.yml up -d
+              sleep 15
+            fi
+
+            # Verify ALL 3 required containers are running before cleanup
+            RUNNING_COUNT=0
+            for container in frontend-prod backend-prod postgres-prod; do
+              if [ "$(docker inspect -f '{{.State.Running}}' $container 2>/dev/null)" == "true" ]; then
+                RUNNING_COUNT=$((RUNNING_COUNT + 1))
+              fi
+            done
+
+            if [ $RUNNING_COUNT -eq 3 ]; then
+              echo "All 3 containers confirmed running. Safe to cleanup unused images..."
+              docker system prune -a -f
+              echo "Cleanup completed."
+            else
+              echo "WARNING: Only $RUNNING_COUNT/3 containers running. Skipping cleanup to avoid removing needed images."
+            fi
 
             echo "=== Deployment complete ==="
 
