@@ -1,75 +1,48 @@
-import { plainToClass } from 'class-transformer';
-import {
-  IsString,
-  IsNotEmpty,
-  Matches,
-  MinLength,
-  validateSync,
-} from 'class-validator';
+import { z } from 'zod';
 
-class EnvironmentVariables {
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(64, {
-    message:
+/**
+ * Environment variables schema using Zod
+ * Validates all required configuration at startup
+ */
+const environmentSchema = z.object({
+  JWT_SECRET: z
+    .string()
+    .min(
+      64,
       'JWT_SECRET must be at least 64 characters long for production security',
-  })
-  JWT_SECRET: string;
+    ),
 
-  @IsString()
-  @IsNotEmpty()
-  @Matches(/^postgresql:\/\//, {
-    message: 'DATABASE_URL must be a valid PostgreSQL connection string',
-  })
-  DATABASE_URL: string;
+  DATABASE_URL: z
+    .string()
+    .regex(
+      /^postgresql:\/\//,
+      'DATABASE_URL must be a valid PostgreSQL connection string',
+    ),
 
-  @IsString()
-  @IsNotEmpty()
-  STORAGE_ENDPOINT: string;
+  STORAGE_ENDPOINT: z.string().min(1, 'STORAGE_ENDPOINT is required'),
+  STORAGE_ACCESS_KEY: z.string().min(1, 'STORAGE_ACCESS_KEY is required'),
+  STORAGE_SECRET_KEY: z
+    .string()
+    .min(8, 'STORAGE_SECRET_KEY must be at least 8 characters long'),
+  STORAGE_BUCKET: z.string().min(1, 'STORAGE_BUCKET is required'),
 
-  @IsString()
-  @IsNotEmpty()
-  STORAGE_ACCESS_KEY: string;
+  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
+  EMAIL_FROM: z.string().min(1, 'EMAIL_FROM is required'),
 
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(8, {
-    message: 'STORAGE_SECRET_KEY must be at least 8 characters long',
-  })
-  STORAGE_SECRET_KEY: string;
+  CORS_ORIGIN: z.string().min(1, 'CORS_ORIGIN is required'),
+});
 
-  @IsString()
-  @IsNotEmpty()
-  STORAGE_BUCKET: string;
+export type EnvironmentVariables = z.infer<typeof environmentSchema>;
 
-  @IsString()
-  @IsNotEmpty()
-  RESEND_API_KEY: string;
+export function validate(config: Record<string, unknown>): EnvironmentVariables {
+  const result = environmentSchema.safeParse(config);
 
-  @IsString()
-  @IsNotEmpty()
-  EMAIL_FROM: string;
-
-  @IsString()
-  @IsNotEmpty()
-  CORS_ORIGIN: string;
-}
-
-export function validate(config: Record<string, unknown>) {
-  const validatedConfig = plainToClass(EnvironmentVariables, config, {
-    enableImplicitConversion: true,
-  });
-
-  const errors = validateSync(validatedConfig, {
-    skipMissingProperties: false,
-  });
-
-  if (errors.length > 0) {
-    const missingVars = errors.map((err) => err.property).join(', ');
+  if (!result.success) {
+    const missingVars = result.error.issues.map((issue) => issue.path.join('.')).join(', ');
     throw new Error(
       `Missing or invalid required environment variables: ${missingVars}`,
     );
   }
 
-  return validatedConfig;
+  return result.data;
 }

@@ -1,15 +1,15 @@
-import { useEffect, useState, memo, useMemo } from 'react';
-import { TrackingService, ProjectTrackingStats } from '@/services/tracking.service';
-import { handleApiError } from '@/lib/errors';
+import { memo, useMemo } from 'react';
+import { useProjectTrackingStatsQuery } from '@/hooks/queries';
 
 interface TimeTrackingChartsProps {
     projectId: string;
 }
 
 function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
-    const [stats, setStats] = useState<ProjectTrackingStats | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    // TanStack Query: fetch project tracking stats
+    const { data: stats, isLoading, error } = useProjectTrackingStatsQuery(projectId, {
+        enabled: !!projectId,
+    });
 
     // Memoize expensive calculations
     const rejectionPercentage = useMemo(() => {
@@ -20,25 +20,7 @@ function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
         return (stats?.averageCycleDuration || 0).toFixed(1);
     }, [stats?.averageCycleDuration]);
 
-    useEffect(() => {
-        async function loadStats() {
-            try {
-                setLoading(true);
-                const data = await TrackingService.getProjectStats(projectId);
-                setStats(data);
-            } catch (err) {
-                setError(handleApiError(err, 'Could not load time tracking data'));
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        if (projectId) {
-            loadStats();
-        }
-    }, [projectId]);
-
-    if (loading) {
+    if (isLoading) {
         return <div className="animate-pulse h-32 bg-gray-100 rounded-lg"></div>;
     }
 

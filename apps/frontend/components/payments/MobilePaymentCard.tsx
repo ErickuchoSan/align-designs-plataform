@@ -2,14 +2,7 @@
 
 import { memo, useMemo } from 'react';
 import { Payment, PAYMENT_METHOD_LABELS, PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS } from '@/types/payments';
-
-const formatDateSimple = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
+import { formatDate } from '@/lib/date.utils';
 
 const formatCurrency = (amount: number | string) => {
   return Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
@@ -24,7 +17,7 @@ interface MobilePaymentCardProps {
 
 function MobilePaymentCard({ payment, isAdmin, onViewReceipt, onOpenReceipt }: Readonly<MobilePaymentCardProps>) {
   const formattedAmount = useMemo(() => formatCurrency(payment.amount), [payment.amount]);
-  const formattedDate = useMemo(() => formatDateSimple(payment.paymentDate), [payment.paymentDate]);
+  const formattedDate = useMemo(() => formatDate(payment.paymentDate, 'invoice'), [payment.paymentDate]);
 
   const statusStyles: Record<string, string> = {
     CONFIRMED: 'bg-green-100 text-green-800',

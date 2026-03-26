@@ -14,7 +14,8 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import { CreateInvoiceSchema, type CreateInvoiceDto } from './schemas';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -36,7 +37,7 @@ export class InvoicesController {
   @Post()
   @Roles(Role.ADMIN)
   @UseInterceptors(IdempotencyInterceptor)
-  create(@Body() createInvoiceDto: CreateInvoiceDto) {
+  create(@Body(zodPipe(CreateInvoiceSchema)) createInvoiceDto: CreateInvoiceDto) {
     return this.invoicesService.create(createInvoiceDto);
   }
 

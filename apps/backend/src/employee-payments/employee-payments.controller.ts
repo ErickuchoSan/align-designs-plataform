@@ -17,8 +17,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EmployeePaymentsService } from './employee-payments.service';
-import { CreateEmployeePaymentDto } from './dto/create-employee-payment.dto';
-import { UpdateEmployeePaymentDto } from './dto/update-employee-payment.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  CreateEmployeePaymentSchema,
+  type CreateEmployeePaymentDto,
+  UpdateEmployeePaymentSchema,
+  type UpdateEmployeePaymentDto,
+} from './schemas';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -39,7 +44,7 @@ export class EmployeePaymentsController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create employee payment (Admin only)' })
   create(
-    @Body() createDto: CreateEmployeePaymentDto,
+    @Body(zodPipe(CreateEmployeePaymentSchema)) createDto: CreateEmployeePaymentDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.employeePaymentsService.create(createDto, user.userId);
@@ -91,7 +96,7 @@ export class EmployeePaymentsController {
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateDto: UpdateEmployeePaymentDto,
+    @Body(zodPipe(UpdateEmployeePaymentSchema)) updateDto: UpdateEmployeePaymentDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.employeePaymentsService.update(id, updateDto, user.userId);

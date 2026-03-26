@@ -12,10 +12,9 @@ import { CACHE_KEYS, CACHE_TTL } from '../cache/constants/cache-keys';
 import { EmailService } from '../email/email.service';
 import type { IUserRepository } from './repositories/user.repository.interface';
 import { INJECTION_TOKENS } from '../common/constants/injection-tokens';
-import { CreateClientDto } from './dto/create-client.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import type { CreateClientDto, UpdateUserDto } from './schemas';
 import { Role } from '@prisma/client';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import type { PaginationDto, PaginatedResult } from '../common/schemas';
 import { UserResponse } from '../common/interfaces/user-response.interface';
 import {
   getActiveRecordsWhere,

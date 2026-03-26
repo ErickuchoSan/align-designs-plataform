@@ -29,10 +29,17 @@ import {
 } from '../common/decorators/api-responses.decorator';
 import { UsersService } from './users.service';
 import { UserAnalyticsService } from './services/user-analytics.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { ToggleStatusDto } from './dto/toggle-status.dto';
-import { QueryUsersDto } from './dto/query-users.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  CreateUserSchema,
+  type CreateUserDto,
+  UpdateUserSchema,
+  type UpdateUserDto,
+  ToggleStatusSchema,
+  type ToggleStatusDto,
+  QueryUsersSchema,
+  type QueryUsersDto,
+} from './schemas';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -41,7 +48,7 @@ import { IpAddress } from '../auth/decorators/ip-address.decorator';
 import { UserAgent } from '../auth/decorators/user-agent.decorator';
 import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { paginationSchema, type PaginationDto } from '../common/schemas';
 import { RATE_LIMIT_USERS } from '../common/constants/timeouts.constants';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
@@ -68,7 +75,7 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.CREATE })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() createUserDto: CreateUserDto,
+    @Body(zodPipe(CreateUserSchema)) createUserDto: CreateUserDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -111,7 +118,7 @@ export class UsersController {
   @ApiSuccessResponse('Users retrieved successfully')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
-  findAll(@Query() queryDto: QueryUsersDto) {
+  findAll(@Query(zodPipe(QueryUsersSchema)) queryDto: QueryUsersDto) {
     return this.usersService.findAll(queryDto, queryDto.role);
   }
 
@@ -123,7 +130,7 @@ export class UsersController {
   @ApiSuccessResponse('Available employees retrieved successfully')
   @Roles(Role.ADMIN)
   @Throttle({ default: RATE_LIMIT_USERS.LIST })
-  getAvailableEmployees(@Query() paginationDto: PaginationDto) {
+  getAvailableEmployees(@Query(zodPipe(paginationSchema)) paginationDto: PaginationDto) {
     return this.usersService.findAvailableEmployees(paginationDto);
   }
 
@@ -142,7 +149,7 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.UPDATE })
   @HttpCode(HttpStatus.OK)
   updateProfile(
-    @Body() updateUserDto: UpdateUserDto,
+    @Body(zodPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.usersService.update(
@@ -167,7 +174,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateUser(
     @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body(zodPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -257,7 +264,7 @@ export class UsersController {
   @Throttle({ default: RATE_LIMIT_USERS.UPDATE })
   async update(
     @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body(zodPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -335,7 +342,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   toggleStatus(
     @Param('id') id: string,
-    @Body() toggleStatusDto: ToggleStatusDto,
+    @Body(zodPipe(ToggleStatusSchema)) toggleStatusDto: ToggleStatusDto,
   ) {
     return this.usersService.toggleStatus(id, toggleStatusDto.isActive);
   }

@@ -6,8 +6,7 @@ import {
 import { User, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IUserRepository } from './user.repository.interface';
-import { CreateClientDto } from '../dto/create-client.dto';
-import { UpdateUserDto } from '../dto/update-user.dto';
+import type { CreateClientDto, UpdateUserDto } from '../schemas';
 import { FindAllOptions } from '../../common/repositories/base.repository';
 
 /**

@@ -1,56 +1,34 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FeedbackTimeline } from '@/components/feedback/FeedbackTimeline';
 import { FeedbackThread } from '@/components/feedback/FeedbackThread';
-import { FeedbackService } from '@/services/feedback.service';
-import { FeedbackCycle } from '@/types/feedback';
-import { toast } from '@/lib/toast';
-import { handleApiError } from '@/lib/errors';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProjectFeedbackCyclesQuery, useFeedbackCyclesRefresh } from '@/hooks/queries';
 
 export default function ProjectFeedbackPage() {
     const params = useParams();
     const router = useRouter();
     const projectId = params.id as string;
-    const { user } = useAuth(); // Need to get current user ID
+    const { user } = useAuth();
 
-    const [cycles, setCycles] = useState<FeedbackCycle[]>([]);
     const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
-    const loadData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await FeedbackService.getProjectCycles(projectId);
-            setCycles(data);
-            // Select first cycle by default if none selected
-            if (!selectedCycleId && data.length > 0) {
-                setSelectedCycleId(data[0].id);
-            }
-        } catch (error) {
-            toast.error(handleApiError(error, 'Error loading feedback'));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [projectId]); // Remove selectedCycleId from deps to avoid loop
+    // TanStack Query: fetch feedback cycles
+    const { data: cycles = [], isLoading } = useProjectFeedbackCyclesQuery(projectId, {
+        enabled: !!projectId,
+    });
 
-    // Separate function for refreshing without resetting loading state
-    const refreshData = async () => {
-        try {
-            const data = await FeedbackService.getProjectCycles(projectId);
-            setCycles(data);
-        } catch {
-            // Silent refresh - don't show error toast for background refreshes
-        }
-    };
+    // Hook for silent refresh
+    const refreshData = useFeedbackCyclesRefresh(projectId);
 
+    // Auto-select first cycle when data loads
     useEffect(() => {
-        if (projectId) {
-            loadData();
+        if (cycles.length > 0 && selectedCycleId === null) {
+            setSelectedCycleId(cycles[0].id);
         }
-    }, [projectId, loadData]);
+    }, [cycles, selectedCycleId]);
 
     const selectedCycle = cycles.find(c => c.id === selectedCycleId);
 

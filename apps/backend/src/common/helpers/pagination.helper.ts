@@ -1,4 +1,4 @@
-import { PaginationDto, PaginatedResult } from '../dto/pagination.dto';
+import type { PaginationDto, PaginatedResult } from '../schemas';
 
 /**
  * Centralized pagination helper to avoid code duplication

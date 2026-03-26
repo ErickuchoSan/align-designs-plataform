@@ -7,6 +7,7 @@ import { EmployeePaymentsService } from '@/services/employee-payments.service';
 import { handleApiError } from '@/lib/errors';
 import { toast } from '@/lib/toast';
 import { USE_BLOB_URLS } from '@/hooks';
+import { formatDate } from '@/lib/date.utils';
 
 interface PaymentReceiptModalProps {
     isOpen: boolean;
@@ -148,7 +149,7 @@ export default function PaymentReceiptModal({
                             <div>
                                 <p className="text-gray-500">Date</p>
                                 <p className="font-medium text-gray-900">
-                                    {paymentDate.toLocaleDateString()}
+                                    {formatDate(paymentDate)}
                                 </p>
                             </div>
                             <div>

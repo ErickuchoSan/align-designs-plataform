@@ -10,8 +10,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import { CreateClientDto } from './dto/create-client.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import type { CreateClientDto } from './schemas';
+import type { PaginationDto } from '../common/schemas';
 
 describe('UsersService', () => {
   let service: UsersService;

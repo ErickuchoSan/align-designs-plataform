@@ -18,9 +18,15 @@ import {
 import type { Response } from 'express';
 import { FileInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import { PaymentsService } from './payments.service';
-import { RecordPaymentDto } from './dto/record-payment.dto';
-import { ApprovePaymentDto } from './dto/approve-payment.dto';
-import { RejectPaymentDto } from './dto/reject-payment.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  RecordPaymentSchema,
+  type RecordPaymentDto,
+  ApprovePaymentSchema,
+  type ApprovePaymentDto,
+  RejectPaymentSchema,
+  type RejectPaymentDto,
+} from './schemas';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -53,7 +59,7 @@ export class PaymentsController {
     }),
   )
   async create(
-    @Body() createPaymentDto: RecordPaymentDto,
+    @Body(zodPipe(RecordPaymentSchema)) createPaymentDto: RecordPaymentDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     let receiptStoragePath: string | undefined;
@@ -188,7 +194,7 @@ export class PaymentsController {
   @UseInterceptors(IdempotencyInterceptor)
   async approvePayment(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() approveDto: ApprovePaymentDto,
+    @Body(zodPipe(ApprovePaymentSchema)) approveDto: ApprovePaymentDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.paymentsService.approvePayment(
@@ -206,7 +212,7 @@ export class PaymentsController {
   @Roles(Role.ADMIN)
   async rejectPayment(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() rejectDto: RejectPaymentDto,
+    @Body(zodPipe(RejectPaymentSchema)) rejectDto: RejectPaymentDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.paymentsService.rejectPayment(

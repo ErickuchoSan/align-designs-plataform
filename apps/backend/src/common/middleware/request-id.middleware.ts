@@ -1,6 +1,8 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { ClsService } from 'nestjs-cls';
 import { v4 as uuidv4 } from 'uuid';
+import type { AppClsStore } from '../types/cls.types';
 
 // Extend Express Request type to include requestId
 declare global {
@@ -15,6 +17,8 @@ declare global {
 export class RequestIdMiddleware implements NestMiddleware {
   private readonly logger = new Logger('HTTP');
 
+  constructor(private readonly cls: ClsService<AppClsStore>) {}
+
   use(req: Request, res: Response, next: NextFunction) {
     // Generate or use existing request ID from headers
     const requestId = (req.headers['x-request-id'] as string) || uuidv4();
@@ -28,6 +32,10 @@ export class RequestIdMiddleware implements NestMiddleware {
     // Log incoming request with request ID
     const { method, originalUrl, ip } = req;
     const userAgent = req.get('user-agent') || '';
+
+    // Store IP and UserAgent in CLS for access anywhere
+    this.cls.set('ipAddress', ip || 'unknown');
+    this.cls.set('userAgent', userAgent);
 
     this.logger.log(
       `[${requestId}] ${method} ${originalUrl} - ${ip} - ${userAgent}`,

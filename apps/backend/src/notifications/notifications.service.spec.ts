@@ -3,7 +3,7 @@ import { NotificationsService } from './notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { NotificationType } from '@prisma/client';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import type { CreateNotificationDto } from './schemas';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;

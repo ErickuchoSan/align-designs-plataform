@@ -1,8 +1,12 @@
-import { useState, useCallback } from 'react';
-import { handleApiError } from '@/lib/errors';
-import { Project, File, FileFilters } from '@/types';
-import { ProjectsService } from '@/services/projects.service';
-import { FilesService } from '@/services/files.service';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Project, File } from '@/types';
+import {
+  useProjectQuery,
+  useProjectFilesQuery,
+  useProjectFileTypesQuery,
+} from '@/hooks/queries';
+import { queryKeys } from '@/lib/query-keys';
 
 // Use Project type from types index
 export type ProjectData = Project;
@@ -10,81 +14,81 @@ export type ProjectData = Project;
 export type FileData = File;
 
 export function useProjectFiles(projectId: string) {
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [files, setFiles] = useState<FileData[]>([]);
-  const [filteredFiles, setFilteredFiles] = useState<FileData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Local state for UI messages (success/error)
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   // Filter state
   const [nameFilter, setNameFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
-  const fetchProjectDetails = useCallback(async () => {
-    try {
-      // Parallelize service calls for better performance
-      const [project, types] = await Promise.all([
-        ProjectsService.getById(projectId),
-        FilesService.getProjectFileTypes(projectId),
-      ]);
+  // TanStack Query: fetch project details
+  const {
+    data: project = null,
+    isLoading: projectLoading,
+    error: projectError,
+  } = useProjectQuery(projectId);
 
-      setProject(project);
-      setAvailableTypes(types || []);
-    } catch (error) {
-      setError(handleApiError(error, 'Error loading project'));
+  // TanStack Query: fetch file types
+  const { data: availableTypes = [], refetch: refetchTypes } = useProjectFileTypesQuery(projectId);
+
+  // TanStack Query: fetch files with pagination and filters
+  const {
+    data: filesResult,
+    isLoading: filesLoading,
+    error: filesError,
+    refetch: refetchFiles,
+  } = useProjectFilesQuery(projectId, {
+    page: currentPage,
+    limit: itemsPerPage,
+    name: nameFilter || undefined,
+    type: typeFilter !== 'all' ? typeFilter : undefined,
+  });
+
+  // Derived state from query results
+  const files = filesResult?.data || [];
+  const totalItems = filesResult?.meta?.total || 0;
+  const totalPages = filesResult?.meta?.totalPages || 0;
+  const loading = projectLoading || filesLoading;
+
+  // Handle query errors
+  useEffect(() => {
+    if (projectError) {
+      setError(projectError.message || 'Error loading project');
     }
-  }, [projectId]);
-
-  const fetchFiles = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params: Partial<FileFilters> = {
-        page: currentPage,
-        limit: itemsPerPage,
-      };
-
-      // Add filters if active
-      if (nameFilter) params.name = nameFilter;
-      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
-
-      const result = await FilesService.getProjectFiles(projectId, params);
-      setFiles(result.data || []);
-      setTotalItems(result.meta?.total || 0);
-      setTotalPages(result.meta?.totalPages || 0);
-    } catch (error) {
-      setError(handleApiError(error, 'Error loading files'));
-      setFiles([]);
-    } finally {
-      setLoading(false);
+    if (filesError) {
+      setError((filesError as Error).message || 'Error loading files');
     }
-  }, [projectId, currentPage, itemsPerPage, nameFilter, typeFilter]);
+  }, [projectError, filesError]);
 
-  // Helper to refresh types (call after upload/delete)
-  const refreshTypes = useCallback(async () => {
-    try {
-      const types = await FilesService.getProjectFileTypes(projectId);
-      setAvailableTypes(types || []);
-    } catch {
-      // Silent error - file types refresh is non-critical
-    }
-  }, [projectId]);
+  // Wrapper functions for backward compatibility
+  const fetchProjectDetails = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    await refetchTypes();
+  };
+
+  const fetchFiles = async () => {
+    await refetchFiles();
+  };
+
+  const refreshTypes = async () => {
+    await refetchTypes();
+  };
 
   return {
     project,
     files,
-    filteredFiles, // For backward compatibility, map to files or remove usage
+    filteredFiles: files, // For backward compatibility
     loading,
     error,
     success,
-    setFilteredFiles,
+    setFilteredFiles: () => {}, // No-op for backward compatibility
     setError,
     setSuccess,
     fetchProjectDetails,

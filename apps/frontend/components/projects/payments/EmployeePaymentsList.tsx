@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { EmployeePayment, EmployeePaymentStatus } from '@/types/employee-payment';
 import { formatCurrency } from '@/lib/utils/currency.utils';
+import { formatDate } from '@/lib/date.utils';
 import { CheckIcon, CloseIcon } from '@/components/ui/icons';
 import PaymentEmptyState from './PaymentEmptyState';
 
@@ -80,7 +81,7 @@ function EmployeePaymentsList({
             <div className="text-sm text-stone-600 space-y-1">
               <p>Amount: {formatCurrency(Number(payment.amount))}</p>
               <p>Method: {payment.paymentMethod}</p>
-              <p>Date: {new Date(payment.paymentDate).toLocaleDateString()}</p>
+              <p>Date: {formatDate(payment.paymentDate)}</p>
               {payment.description && <p>Note: {payment.description}</p>}
               {payment.rejectionReason && (
                 <p className="text-red-600">Rejection Reason: {payment.rejectionReason}</p>

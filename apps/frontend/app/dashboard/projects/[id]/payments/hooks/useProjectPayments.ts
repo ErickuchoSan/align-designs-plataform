@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { PaymentsService } from '@/services/payments.service';
 import { InvoicesService } from '@/services/invoices.service';
-import { ProjectsService } from '@/services/projects.service';
 import { Payment } from '@/types/payments';
 import { Invoice } from '@/types/invoice';
 import { Project } from '@/types';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
+import { usePaymentPageDataQuery } from '@/hooks/queries';
+import { queryKeys } from '@/lib/query-keys';
 
 export interface UseProjectPaymentsReturn {
   payments: Payment[];
@@ -22,34 +24,16 @@ export interface UseProjectPaymentsReturn {
 }
 
 export function useProjectPayments(projectId: string): UseProjectPaymentsReturn {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [project, setProject] = useState<Project | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [paymentsData, invoicesData, projectData] = await Promise.all([
-        PaymentsService.findAllByProject(projectId),
-        InvoicesService.getByProject(projectId),
-        ProjectsService.getById(projectId),
-      ]);
-      setPayments(paymentsData);
-      setInvoices(invoicesData);
-      setProject(projectData);
-    } catch (error) {
-      toast.error(handleApiError(error, 'Error loading payment information'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId]);
+  // TanStack Query: fetch all payment page data
+  const { data, isLoading, refetch } = usePaymentPageDataQuery(projectId, {
+    enabled: !!projectId,
+  });
 
-  useEffect(() => {
-    if (projectId) {
-      loadData();
-    }
-  }, [projectId, loadData]);
+  const payments = data?.payments || [];
+  const invoices = data?.invoices || [];
+  const project = data?.project || null;
 
   const pendingAmount = useMemo(() => {
     return payments
@@ -65,7 +49,14 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
 
   const isFullyCovered = remainingAmount === 0;
 
-  const handleViewInvoice = async (invoiceId: string) => {
+  const loadData = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.projects.payments(projectId),
+    });
+    await refetch();
+  }, [queryClient, projectId, refetch]);
+
+  const handleViewInvoice = useCallback(async (invoiceId: string) => {
     try {
       const blob = await InvoicesService.downloadPdf(invoiceId);
       const url = globalThis.URL.createObjectURL(blob);
@@ -73,9 +64,9 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
     } catch (error) {
       toast.error(handleApiError(error, 'Could not download invoice'));
     }
-  };
+  }, []);
 
-  const handleViewReceipt = async (payment: Payment) => {
+  const handleViewReceipt = useCallback(async (payment: Payment) => {
     try {
       const blob = await PaymentsService.downloadReceipt(payment.id);
       const url = globalThis.URL.createObjectURL(blob);
@@ -83,7 +74,7 @@ export function useProjectPayments(projectId: string): UseProjectPaymentsReturn 
     } catch (error) {
       toast.error(handleApiError(error, 'Could not view receipt'));
     }
-  };
+  }, []);
 
   return {
     payments,

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { formatDate } from '@/lib/date.utils';
 
 interface Deadline {
   date: Date;
@@ -24,13 +25,6 @@ export function DeadlinesSection({ deadlines, loading = false }: Readonly<Deadli
       .slice(0, 3); // Show only next 3 deadlines
   }, [deadlines]);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   const getDaysUntil = (date: Date) => {
     const now = new Date();
@@ -101,7 +95,7 @@ export function DeadlinesSection({ deadlines, loading = false }: Readonly<Deadli
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs text-stone-600">
-                <span>{formatDate(deadline.date)}</span>
+                <span>{formatDate(deadline.date, 'invoice')}</span>
                 <span className="font-medium">${deadline.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>

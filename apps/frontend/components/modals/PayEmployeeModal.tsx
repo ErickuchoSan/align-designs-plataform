@@ -4,13 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Modal from '@/components/ui/Modal';
 import LoadingButton from '@/components/ui/LoadingButton';
-import { EmployeePaymentsService } from '@/services/employee-payments.service';
-import { UsersService } from '@/services/users.service';
-import { User } from '@/types';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
-import { useFetchOnOpen, useFetch } from '@/hooks';
-import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { useEmployeesQuery, usePendingItemsQuery, useCreateEmployeePaymentMutation } from '@/hooks/queries';
+import { getTodayDateString, formatDate } from '@/lib/date.utils';
 import { cn, INPUT_BASE, INPUT_VARIANTS, FORM_LABEL, FORM_ERROR, CHECKBOX_BASE } from '@/lib/styles';
 
 interface PayEmployeeModalProps {
@@ -41,7 +36,7 @@ export default function PayEmployeeModal({
     handleSubmit,
     watch,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<PayEmployeeFormValues>({
     defaultValues: {
       employeeId: '',
@@ -54,24 +49,20 @@ export default function PayEmployeeModal({
 
   const employeeId = watch('employeeId');
 
-  // DRY: Fetch employees when modal opens
-  const { data: employees, loading: loadingEmployees } = useFetchOnOpen<User[]>(
-    isOpen,
-    () => UsersService.getEmployees(),
-    { initialData: [], errorPrefix: 'Failed to load employees' }
+  // TanStack Query: fetch employees when modal opens
+  const { data: employees = [], isLoading: loadingEmployees } = useEmployeesQuery({
+    enabled: isOpen,
+  });
+
+  // TanStack Query: fetch pending items when employee is selected
+  const { data: pendingItems = [], isLoading: loadingItems } = usePendingItemsQuery(
+    projectId,
+    employeeId,
+    { enabled: !!employeeId && !!projectId }
   );
 
-  // DRY: Fetch pending items when employee is selected
-  const { data: pendingItems, loading: loadingItems } = useFetch<any[]>(
-    () => EmployeePaymentsService.getPendingItems(projectId, employeeId),
-    {
-      immediate: false,
-      enabled: !!employeeId && !!projectId,
-      deps: [employeeId, projectId],
-      initialData: [],
-      errorPrefix: 'Failed to load pending items'
-    }
-  );
+  // TanStack Query: create payment mutation
+  const createPaymentMutation = useCreateEmployeePaymentMutation(projectId);
 
   const toggleItemSelection = (itemId: string) => {
     setSelectedItemIds((prev) =>
@@ -80,23 +71,22 @@ export default function PayEmployeeModal({
   };
 
   const onSubmit = async (data: PayEmployeeFormValues) => {
-    try {
-      const payload = {
+    createPaymentMutation.mutate(
+      {
         employeeId: data.employeeId,
         amount: Number(data.amount),
         paymentMethod: data.paymentMethod,
         paymentDate: new Date(data.paymentDate).toISOString(),
         description: data.description || undefined,
         projectItemIds: selectedItemIds.length > 0 ? selectedItemIds : undefined,
-      };
-
-      await EmployeePaymentsService.create(projectId, payload);
-      toast.success('Payment recorded successfully');
-      onSuccess();
-      handleClose();
-    } catch (err) {
-      toast.error(handleApiError(err, 'Failed to record payment'));
-    }
+      },
+      {
+        onSuccess: () => {
+          onSuccess();
+          handleClose();
+        },
+      }
+    );
   };
 
   const handleClose = () => {
@@ -120,7 +110,7 @@ export default function PayEmployeeModal({
             className={cn(errors.employeeId ? inputErrorClass : inputClass, 'disabled:bg-stone-100')}
           >
             <option value="">-- Select Employee --</option>
-            {(employees ?? []).map((emp) => (
+            {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>
                 {emp.firstName} {emp.lastName} ({emp.email})
               </option>
@@ -136,12 +126,12 @@ export default function PayEmployeeModal({
             {loadingItems && (
               <p className="text-xs text-stone-500">Loading pending items...</p>
             )}
-            {!loadingItems && (pendingItems ?? []).length === 0 && (
+            {!loadingItems && pendingItems.length === 0 && (
               <p className="text-xs text-stone-500 italic">No pending approved items found.</p>
             )}
-            {!loadingItems && (pendingItems ?? []).length > 0 && (
+            {!loadingItems && pendingItems.length > 0 && (
               <div className="space-y-2 max-h-32 overflow-y-auto">
-                {(pendingItems ?? []).map((item) => (
+                {pendingItems.map((item: any) => (
                   <div key={item.id} className="flex items-start gap-2">
                     <input
                       type="checkbox"
@@ -153,7 +143,7 @@ export default function PayEmployeeModal({
                     <label htmlFor={`item-${item.id}`} className="text-sm text-stone-700 cursor-pointer">
                       <span className="font-medium block">{item.originalName || item.filename}</span>
                       <span className="text-xs text-stone-500">
-                        Apv: {new Date(item.approvedClientAt).toLocaleDateString()}
+                        Apv: {formatDate(item.approvedClientAt)}
                       </span>
                     </label>
                   </div>
@@ -223,7 +213,7 @@ export default function PayEmployeeModal({
           </button>
           <LoadingButton
             type="submit"
-            isLoading={isSubmitting}
+            isLoading={createPaymentMutation.isPending}
             loadingText="Saving..."
             disabled={!employeeId}
             variant="primary"

@@ -3,8 +3,7 @@ import {
   IBaseRepository,
   FindAllOptions,
 } from '../../common/repositories/base.repository';
-import { CreateProjectDto } from '../dto/create-project.dto';
-import { UpdateProjectDto } from '../dto/update-project.dto';
+import type { CreateProjectDto, UpdateProjectDto } from '../schemas';
 
 /**
  * Project repository interface

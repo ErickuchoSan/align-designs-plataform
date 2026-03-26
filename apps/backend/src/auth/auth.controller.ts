@@ -19,14 +19,25 @@ import {
 } from '../common/decorators/api-responses.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RequestOtpDto } from './dto/request-otp.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { CheckEmailDto } from './dto/check-email.dto';
-import { SetPasswordDto } from './dto/set-password.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  LoginSchema,
+  type LoginDto,
+  RequestOtpSchema,
+  type RequestOtpDto,
+  VerifyOtpSchema,
+  type VerifyOtpDto,
+  ChangePasswordSchema,
+  type ChangePasswordDto,
+  ForgotPasswordSchema,
+  type ForgotPasswordDto,
+  ResetPasswordSchema,
+  type ResetPasswordDto,
+  CheckEmailSchema,
+  type CheckEmailDto,
+  SetPasswordSchema,
+  type SetPasswordDto,
+} from './schemas';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { IpAddress } from './decorators/ip-address.decorator';
@@ -117,7 +128,7 @@ export class AuthController {
       example: { requiresPasswordSetup: false },
     },
   })
-  async checkEmail(@Body() checkEmailDto: CheckEmailDto) {
+  async checkEmail(@Body(zodPipe(CheckEmailSchema)) checkEmailDto: CheckEmailDto) {
     return this.authService.checkEmail(checkEmailDto.email);
   }
 
@@ -148,7 +159,7 @@ export class AuthController {
   @ApiUnauthorizedResponse()
   @ApiTooManyRequestsResponse()
   async login(
-    @Body() loginDto: LoginDto,
+    @Body(zodPipe(LoginSchema)) loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
     @IpAddress() ipAddress: string,
@@ -201,7 +212,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.OTP_REQUEST })
   async requestOtp(
-    @Body() requestOtpDto: RequestOtpDto,
+    @Body(zodPipe(RequestOtpSchema)) requestOtpDto: RequestOtpDto,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
@@ -231,7 +242,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.OTP_VERIFY })
   async verifyOtp(
-    @Body() verifyOtpDto: VerifyOtpDto,
+    @Body(zodPipe(VerifyOtpSchema)) verifyOtpDto: VerifyOtpDto,
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
     @IpAddress() ipAddress: string,
@@ -310,7 +321,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async setPassword(
     @CurrentUser() user: UserPayload,
-    @Body() setPasswordDto: SetPasswordDto,
+    @Body(zodPipe(SetPasswordSchema)) setPasswordDto: SetPasswordDto,
   ) {
     return this.authService.setPassword(
       user.userId,
@@ -324,7 +335,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @CurrentUser() user: UserPayload,
-    @Body() changePasswordDto: ChangePasswordDto,
+    @Body(zodPipe(ChangePasswordSchema)) changePasswordDto: ChangePasswordDto,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {
@@ -355,7 +366,7 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.FORGOT_PASSWORD })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(@Body(zodPipe(ForgotPasswordSchema)) forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
@@ -363,7 +374,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: RATE_LIMIT_AUTH.RESET_PASSWORD })
   async resetPassword(
-    @Body() resetPasswordDto: ResetPasswordDto,
+    @Body(zodPipe(ResetPasswordSchema)) resetPasswordDto: ResetPasswordDto,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
   ) {

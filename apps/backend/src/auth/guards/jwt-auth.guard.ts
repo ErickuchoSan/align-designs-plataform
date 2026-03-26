@@ -4,11 +4,17 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ClsService } from 'nestjs-cls';
 import { JwtBlacklistService } from '../jwt-blacklist.service';
+import type { UserPayload } from '../interfaces/user.interface';
+import type { AppClsStore } from '../../common/types/cls.types';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private readonly jwtBlacklistService: JwtBlacklistService) {
+  constructor(
+    private readonly jwtBlacklistService: JwtBlacklistService,
+    private readonly cls: ClsService<AppClsStore>,
+  ) {
     super();
   }
 
@@ -32,6 +38,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Check if the token is blacklisted
     if (this.jwtBlacklistService.isBlacklisted(token)) {
       throw new UnauthorizedException('Token has been revoked');
+    }
+
+    // Store user in CLS context for access anywhere in the request
+    const user = request.user as UserPayload;
+    if (user) {
+      this.cls.set('userId', user.userId);
+      this.cls.set('userRole', user.role);
+      this.cls.set('userEmail', user.email);
+      this.cls.set('user', user);
     }
 
     return true;

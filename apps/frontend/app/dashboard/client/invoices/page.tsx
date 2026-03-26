@@ -1,44 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { InvoicesService } from '@/services/invoices.service'; // We need a way to fetch "my invoices" or assume user context
-import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
-
-// NOTE: We need to update InvoicesService to support "getMyInvoices" or assume API handles it via user session
-// For now, let's use getAll({ clientId: 'current-user-id' }) but we need current user ID. 
-// Or better, backend endpoint /invoices/my-invoices
 import { useAuth } from '@/contexts/AuthContext';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
+import { useInvoicesListQuery } from '@/hooks/queries';
 
 export default function ClientInvoicesPage() {
     const { user } = useAuth();
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (user) {
-            loadInvoices();
-        }
-    }, [user]);
+    // TanStack Query: fetch invoices filtered by client ID
+    const filters = user?.role === 'CLIENT' ? { clientId: user.id } : {};
+    const { data: invoices = [], isLoading } = useInvoicesListQuery(filters, {
+        enabled: !!user,
+    });
 
-    async function loadInvoices() {
-        try {
-            // Filter by client ID if the user is a client
-            const filters = user?.role === 'CLIENT' ? { clientId: user.id } : {};
-            const data = await InvoicesService.getAll(filters);
-            setInvoices(data);
-        } catch (error) {
-            toast.error(handleApiError(error, 'Failed to load invoices'));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    if (loading) return <div>Loading invoices...</div>;
+    if (isLoading) return <div>Loading invoices...</div>;
 
     return (
         <div className="space-y-6">

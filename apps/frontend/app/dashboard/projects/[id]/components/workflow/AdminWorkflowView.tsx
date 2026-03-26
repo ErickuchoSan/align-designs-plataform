@@ -10,6 +10,7 @@ import {
   PaymentStatusDisplay,
 } from '@/components/payments/PaymentWorkflowShared';
 import ManageEmployeesModal from '@/components/dashboard/ManageEmployeesModal';
+import { formatDate } from '@/lib/date.utils';
 
 const CompletionChecklistModal = dynamic(
   () => import('@/components/projects/CompletionChecklistModal'),
@@ -196,13 +197,6 @@ const PaymentSection = memo(function PaymentSection({
   loadingInvoices: boolean;
   onShowHistory: () => void;
 }) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   return (
     <div className="border border-stone-200 rounded-lg p-4">
@@ -230,7 +224,7 @@ const PaymentSection = memo(function PaymentSection({
       {project.deadlineDate && (
         <div className="mt-4 pt-4 border-t border-stone-200">
           <p className="text-xs font-medium text-stone-500 mb-1">Project Completion Deadline</p>
-          <p className="text-sm font-medium text-navy-900">{formatDate(project.deadlineDate)}</p>
+          <p className="text-sm font-medium text-navy-900">{formatDate(project.deadlineDate, 'invoice')}</p>
           {new Date(project.deadlineDate) < new Date() && (
             <p className="text-xs text-red-600 mt-0.5">Overdue</p>
           )}

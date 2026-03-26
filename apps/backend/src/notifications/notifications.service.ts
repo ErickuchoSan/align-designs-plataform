@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import type { CreateNotificationDto } from './schemas';
 import { NotificationType } from '@prisma/client';
 
 @Injectable()

@@ -8,6 +8,7 @@ import PaymentsStageContent from './PaymentsStageContent';
 import { InlineSpinner } from '@/components/ui/Loader';
 import { ProjectsService } from '@/services/projects.service';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
+import { formatDate } from '@/lib/date.utils';
 
 interface StageContentProps {
   stage: StageInfo;
@@ -157,11 +158,7 @@ function StageContent({
               <div>
                 <p className="font-medium text-green-800">Project Brief Closed</p>
                 <p className="text-sm text-green-700">
-                  Closed on {new Date(briefApprovedAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  Closed on {formatDate(briefApprovedAt, 'invoice')}
                 </p>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RequestContextService } from '../common/services/request-context.service';
 import { DEFAULT_AUDIT_LOG_LIMIT } from './audit.constants';
 
 export enum AuditAction {
@@ -35,12 +36,28 @@ export interface AuditLogData {
   details?: Record<string, AuditDetailsValue>;
 }
 
+/**
+ * Simplified audit data - user context is obtained from CLS
+ */
+export interface SimpleAuditData {
+  action: AuditAction;
+  resourceType: string;
+  resourceId?: string;
+  details?: Record<string, AuditDetailsValue>;
+}
+
 @Injectable()
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ctx: RequestContextService,
+  ) {}
 
+  /**
+   * Log audit event with full data (legacy method)
+   */
   async log(auditData: AuditLogData): Promise<void> {
     try {
       await this.prisma.auditLog.create({
@@ -64,6 +81,29 @@ export class AuditService {
       this.logger.error('Failed to create audit log:', error);
       // Don't throw error to prevent disrupting the main operation
     }
+  }
+
+  /**
+   * Log audit event with automatic context from CLS
+   * User ID, IP, and UserAgent are obtained automatically from request context
+   *
+   * @example
+   * await this.auditService.logWithContext({
+   *   action: AuditAction.PROJECT_CREATE,
+   *   resourceType: 'project',
+   *   resourceId: project.id,
+   *   details: { name: project.name },
+   * });
+   */
+  async logWithContext(data: SimpleAuditData): Promise<void> {
+    const { userId, ipAddress, userAgent } = this.ctx.getAuditContext();
+
+    return this.log({
+      ...data,
+      userId,
+      ipAddress,
+      userAgent,
+    });
   }
 
   async findByUser(userId: string, limit = DEFAULT_AUDIT_LOG_LIMIT) {

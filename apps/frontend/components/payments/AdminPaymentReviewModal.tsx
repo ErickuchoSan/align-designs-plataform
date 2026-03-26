@@ -3,10 +3,11 @@ import { toast } from '@/lib/toast';
 import { Payment, PaymentStatus } from '@/types/payments';
 import { PaymentsService } from '@/services/payments.service';
 import Modal from '@/components/ui/Modal';
-import { useAsyncOperation } from '@/hooks';
+import { useApprovePaymentMutation, useRejectPaymentMutation } from '@/hooks/queries';
 import { CheckIcon } from '@/components/ui/icons';
 import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE } from '@/lib/styles';
 import { handleApiError } from '@/lib/errors';
+import { formatDate } from '@/lib/date.utils';
 
 // Helper function to get payment status badge style
 function getStatusBadgeClass(status: PaymentStatus): string {
@@ -32,8 +33,10 @@ export default function AdminPaymentReviewModal({
   payment,
   onSuccess,
 }: Readonly<AdminPaymentReviewModalProps>) {
-  // DRY: Use useAsyncOperation for approve/reject handling
-  const { loading: processing, execute } = useAsyncOperation();
+  // TanStack Query mutations
+  const approveMutation = useApprovePaymentMutation();
+  const rejectMutation = useRejectPaymentMutation();
+
   const [rejecting, setRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isEditingAmount, setIsEditingAmount] = useState(false);
@@ -46,6 +49,8 @@ export default function AdminPaymentReviewModal({
   const [receiptError, setReceiptError] = useState<string | null>(null);
   // Ref to track current blob URL for cleanup
   const blobUrlRef = useRef<string | null>(null);
+
+  const processing = approveMutation.isPending || rejectMutation.isPending;
 
   // Load receipt as blob when modal opens
   const loadReceipt = useCallback(async (paymentId: string) => {
@@ -86,11 +91,9 @@ export default function AdminPaymentReviewModal({
 
   const handleApprove = async () => {
     const finalAmount = isEditingAmount && correctedAmount ? Number(correctedAmount) : undefined;
-    await execute(
-      () => PaymentsService.approve(payment.id, finalAmount),
+    approveMutation.mutate(
+      { paymentId: payment.id, correctedAmount: finalAmount },
       {
-        successMessage: 'Payment approved successfully',
-        errorMessagePrefix: 'Failed to approve payment',
         onSuccess: () => {
           onSuccess?.();
           onClose();
@@ -105,11 +108,9 @@ export default function AdminPaymentReviewModal({
       return;
     }
 
-    await execute(
-      () => PaymentsService.reject(payment.id, rejectionReason),
+    rejectMutation.mutate(
+      { paymentId: payment.id, reason: rejectionReason },
       {
-        successMessage: 'Payment rejected',
-        errorMessagePrefix: 'Failed to reject payment',
         onSuccess: () => {
           onSuccess?.();
           onClose();
@@ -155,7 +156,7 @@ export default function AdminPaymentReviewModal({
               <div>
                 <p className="text-stone-500">Date</p>
                 <p className="font-medium text-stone-900">
-                  {new Date(payment.paymentDate).toLocaleDateString()}
+                  {formatDate(payment.paymentDate)}
                 </p>
               </div>
               <div>

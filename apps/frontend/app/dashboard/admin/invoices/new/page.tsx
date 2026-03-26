@@ -1,23 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createInvoiceSchema, CreateInvoiceFormData } from '@/lib/schemas/invoice.schema';
 import { InvoicesService } from '@/services/invoices.service';
-import { ProjectsService } from '@/services/projects.service';
-import { Project } from '@/types';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { getTodayDateString, formatDateForInput } from '@/lib/date.utils';
 import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
+import { useProjectsListQuery } from '@/hooks/queries';
 
 export default function CreateInvoicePage() {
     const router = useRouter();
-    const [loadingProjects, setLoadingProjects] = useState(true);
-    const [projects, setProjects] = useState<Project[]>([]);
+
+    // TanStack Query: fetch projects
+    const { data: projectsData, isLoading: loadingProjects } = useProjectsListQuery({ limit: 100 });
+    const projects = projectsData?.projects || [];
 
     const {
         register,
@@ -49,7 +50,7 @@ export default function CreateInvoicePage() {
         if (!issueDate || paymentTermsDays === undefined) return '';
         const issue = new Date(issueDate);
         issue.setDate(issue.getDate() + Number(paymentTermsDays));
-        return issue.toISOString().split('T')[0];
+        return formatDateForInput(issue);
     })();
 
     // Derived total for display
@@ -58,10 +59,6 @@ export default function CreateInvoicePage() {
         const tax = sub * ((Number(taxRate) || 0) / 100);
         return sub + tax;
     })();
-
-    useEffect(() => {
-        loadProjects();
-    }, []);
 
     // Effect to update clientId when project changes
     useEffect(() => {
@@ -72,18 +69,6 @@ export default function CreateInvoicePage() {
             }
         }
     }, [projectId, projects, setValue]);
-
-    async function loadProjects() {
-        try {
-            setLoadingProjects(true);
-            const response = await ProjectsService.getAll({ limit: 100 });
-            setProjects(response.projects);
-        } catch (error) {
-            toast.error(handleApiError(error, 'Failed to load projects'));
-        } finally {
-            setLoadingProjects(false);
-        }
-    }
 
     const onSubmit = async (data: CreateInvoiceFormData) => {
         try {
@@ -99,7 +84,7 @@ export default function CreateInvoicePage() {
                 projectId: data.projectId,
                 clientId: data.clientId,
                 issueDate: data.issueDate,
-                dueDate: due.toISOString().split('T')[0],
+                dueDate: formatDateForInput(due),
                 paymentTermsDays: Number(data.paymentTermsDays),
                 subtotal: sub,
                 taxAmount: tax,

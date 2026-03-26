@@ -6,11 +6,9 @@ import { PaymentMethodSelect } from './PaymentMethodSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from '@/lib/toast';
 import { PaymentsService } from '@/services/payments.service';
-import { InvoicesService } from '@/services/invoices.service';
-import { Invoice } from '@/types/invoice';
 import { PaymentMethod, PaymentType } from '@/types/payments';
-import { useFetchOnOpen, useAsyncOperation } from '@/hooks';
-import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { useUnpaidInvoicesQuery, useUploadClientPaymentMutation } from '@/hooks/queries';
+import { getTodayDateString } from '@/lib/date.utils';
 import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 interface ClientPaymentUploadModalProps {
@@ -37,18 +35,13 @@ export default function ClientPaymentUploadModal({
   const [file, setFile] = useState<File | null>(null);
   const [invoiceId, setInvoiceId] = useState<string>('');
 
-  // DRY: Use useAsyncOperation for submit handling
-  const { loading: isSubmitting, execute } = useAsyncOperation();
+  // TanStack Query: fetch unpaid invoices when modal opens
+  const { data: invoices = [] } = useUnpaidInvoicesQuery(projectId, {
+    enabled: isOpen,
+  });
 
-  // DRY: Use useFetchOnOpen for automatic fetch when modal opens
-  const { data: invoices } = useFetchOnOpen<Invoice[]>(
-    isOpen,
-    async () => {
-      const data = await InvoicesService.getByProject(projectId);
-      return data.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
-    },
-    { deps: [projectId], initialData: [], errorPrefix: 'Failed to fetch invoices' }
-  );
+  // TanStack Query: upload mutation
+  const uploadMutation = useUploadClientPaymentMutation();
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -92,34 +85,26 @@ export default function ClientPaymentUploadModal({
       return;
     }
 
-    // DRY: Use execute() for automatic loading state and error handling
-    await execute(
-      async () => {
-        const formData = new FormData();
+    const formData = new FormData();
 
-        if (file) {
-          formData.append('file', file);
-        }
+    if (file) {
+      formData.append('file', file);
+    }
 
-        formData.append('projectId', projectId);
-        formData.append('amount', amount.toString());
-        formData.append('paymentDate', new Date(date).toISOString());
-        formData.append('paymentMethod', method);
-        formData.append('type', invoiceId ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT);
-        if (invoiceId) formData.append('invoiceId', invoiceId);
-        if (notes) formData.append('notes', notes);
+    formData.append('projectId', projectId);
+    formData.append('amount', amount.toString());
+    formData.append('paymentDate', new Date(date).toISOString());
+    formData.append('paymentMethod', method);
+    formData.append('type', invoiceId ? PaymentType.INVOICE : PaymentType.INITIAL_PAYMENT);
+    if (invoiceId) formData.append('invoiceId', invoiceId);
+    if (notes) formData.append('notes', notes);
 
-        await PaymentsService.uploadClientPayment(formData);
+    uploadMutation.mutate(formData, {
+      onSuccess: () => {
+        onSuccess?.();
+        onClose();
       },
-      {
-        successMessage: 'Payment submitted for review',
-        errorMessagePrefix: 'Failed to submit payment',
-        onSuccess: () => {
-          if (onSuccess) onSuccess();
-          onClose();
-        },
-      }
-    );
+    });
   };
 
   return (
@@ -196,7 +181,7 @@ export default function ClientPaymentUploadModal({
             className={cn(INPUT_BASE, INPUT_VARIANTS.default)}
           >
             <option value="">-- General Payment --</option>
-            {(invoices ?? []).map(inv => (
+            {invoices.map(inv => (
               <option key={inv.id} value={inv.id}>
                 {inv.invoiceNumber} - ${Number(inv.totalAmount).toLocaleString()}
               </option>
@@ -239,17 +224,17 @@ export default function ClientPaymentUploadModal({
           <button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting}
+            disabled={uploadMutation.isPending}
             className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'w-full border border-stone-300 sm:w-auto')}
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={uploadMutation.isPending}
             className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md, 'w-full sm:w-auto')}
           >
-            {isSubmitting ? <ButtonLoader /> : 'Submit Payment'}
+            {uploadMutation.isPending ? <ButtonLoader /> : 'Submit Payment'}
           </button>
         </div>
       </form>

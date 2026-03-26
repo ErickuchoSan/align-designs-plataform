@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { InvoiceDeadline } from '@/types/payments';
 import type { Project } from '@/types';
 import { PaymentProgressBar } from '@/components/projects/PaymentProgressBar';
+import { formatDate } from '@/lib/date.utils';
 
 /**
  * Loading spinner for payment sections
@@ -63,7 +64,7 @@ export const InvoiceDeadlinesList = memo(function InvoiceDeadlinesList({
               <span
                 className={`${invoice.date < new Date() ? 'text-red-600 font-medium' : 'text-stone-500'}`}
               >
-                Due: {invoice.date.toLocaleDateString()}
+                Due: {formatDate(invoice.date)}
                 {invoice.date < new Date() && ' (Overdue)'}
               </span>
               <button

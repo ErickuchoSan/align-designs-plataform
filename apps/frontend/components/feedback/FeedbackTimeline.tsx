@@ -1,4 +1,6 @@
 import { FeedbackCycle } from '../../types/feedback';
+import { formatDateTime } from '@/lib/date.utils';
+import { MotionDiv, staggerContainer, staggerItem } from '@/components/ui/motion';
 
 interface FeedbackTimelineProps {
     cycles: FeedbackCycle[];
@@ -27,33 +29,39 @@ export function FeedbackTimeline({ cycles, isLoading, onCycleSelect, selectedCyc
     }
 
     return (
-        <div className="space-y-4">
+        <MotionDiv
+            className="space-y-4"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+        >
             {cycles.map((cycle, index) => (
-                <button
-                    key={cycle.id}
-                    type="button"
-                    onClick={() => onCycleSelect(cycle.id)}
-                    className={`w-full text-left p-4 rounded-lg border transition-all ${selectedCycleId === cycle.id
-                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                        }`}
-                >
-                    <div className="flex justify-between items-start mb-2">
-                        <div>
-                            <h4 className="font-semibold text-gray-900">Cycle {cycles.length - index}</h4>
-                            <p className="text-sm text-gray-500">
-                                Started by: {cycle.employee.firstName} {cycle.employee.lastName}
-                            </p>
+                <MotionDiv key={cycle.id} variants={staggerItem}>
+                    <button
+                        type="button"
+                        onClick={() => onCycleSelect(cycle.id)}
+                        className={`w-full text-left p-4 rounded-lg border transition-all ${selectedCycleId === cycle.id
+                            ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                            }`}
+                    >
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 className="font-semibold text-gray-900">Cycle {cycles.length - index}</h4>
+                                <p className="text-sm text-gray-500">
+                                    Started by: {cycle.employee.firstName} {cycle.employee.lastName}
+                                </p>
+                            </div>
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(cycle.status)}`}>
+                                {cycle.status.toUpperCase()}
+                            </span>
                         </div>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(cycle.status)}`}>
-                            {cycle.status.toUpperCase()}
-                        </span>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                        {new Date(cycle.startDate).toLocaleString()}
-                    </div>
-                </button>
+                        <div className="text-xs text-gray-400">
+                            {formatDateTime(cycle.startDate)}
+                        </div>
+                    </button>
+                </MotionDiv>
             ))}
-        </div>
+        </MotionDiv>
     );
 }

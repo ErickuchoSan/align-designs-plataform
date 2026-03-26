@@ -4,9 +4,10 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from 'sonner';
 import GlobalErrorModal from "@/components/common/GlobalErrorModal";
 import SkipLinks from "@/components/common/SkipLinks";
+import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,19 +28,21 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <ErrorBoundary>
-          <SkipLinks />
-          <OfflineIndicator />
-          <GlobalErrorModal />
-          <AuthProvider>
-            <Toaster
-              position="top-right"
-              containerStyle={{ zIndex: 9999 }}
-              toastOptions={{
-                style: { zIndex: 9999 },
-              }}
-            />
-            {children}
-          </AuthProvider>
+          <Providers>
+            <SkipLinks />
+            <OfflineIndicator />
+            <GlobalErrorModal />
+            <AuthProvider>
+              <Toaster
+                position="top-right"
+                richColors
+                closeButton
+                duration={4000}
+                style={{ zIndex: 9999 }}
+              />
+              {children}
+            </AuthProvider>
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>

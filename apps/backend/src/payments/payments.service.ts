@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { RecordPaymentDto } from './dto/record-payment.dto';
+import type { RecordPaymentDto } from './schemas';
 import { ProjectStatusService } from '../projects/services/project-status.service';
 import {
   Payment,

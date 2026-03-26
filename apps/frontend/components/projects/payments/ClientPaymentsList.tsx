@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Payment } from '@/types/payments';
 import { CheckCircleIcon } from '@/components/ui/icons';
+import { formatDate } from '@/lib/date.utils';
 import PaymentEmptyState from './PaymentEmptyState';
 
 const getPaymentStatusColor = (status: string): string => {
@@ -53,7 +54,7 @@ function ClientPaymentsList({ payments, onViewReceipt }: Readonly<ClientPayments
                 ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
               <p>Method: {payment.paymentMethod}</p>
-              <p>Date: {new Date(payment.paymentDate).toLocaleDateString()}</p>
+              <p>Date: {formatDate(payment.paymentDate)}</p>
               {payment.notes && <p>Note: {payment.notes}</p>}
               {payment.rejectionReason && (
                 <p className="text-red-600">Rejection Reason: {payment.rejectionReason}</p>
@@ -123,7 +124,7 @@ export const PendingPaymentsList = memo(function PendingPaymentsList({
                 Amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
               <p>Method: {payment.paymentMethod}</p>
-              <p>Date: {new Date(payment.paymentDate).toLocaleDateString()}</p>
+              <p>Date: {formatDate(payment.paymentDate)}</p>
               {payment.notes && <p>Note: {payment.notes}</p>}
               {payment.invoiceId && <p className="text-navy-600">Linked to Invoice</p>}
             </div>

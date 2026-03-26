@@ -1,33 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { UsersService } from '@/services/users.service';
-import { User } from '@/types';
 import { formatDate } from '@/lib/utils/date.utils';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
+import { useClientsQuery } from '@/hooks/queries';
 
 export default function ClientsListPage() {
-    const [clients, setClients] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
+    // TanStack Query: fetch clients
+    const { data: clients = [], isLoading } = useClientsQuery();
 
-    useEffect(() => {
-        loadClients();
-    }, []);
-
-    async function loadClients() {
-        try {
-            const data = await UsersService.getClients();
-            setClients(data);
-        } catch (error) {
-            toast.error(handleApiError(error, 'Failed to load clients'));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    if (loading) {
+    if (isLoading) {
         return <div className="p-8 text-center">Loading clients...</div>;
     }
 

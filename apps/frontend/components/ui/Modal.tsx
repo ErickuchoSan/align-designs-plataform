@@ -3,6 +3,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { cn, MODAL_CONTENT, MODAL_SIZES, MODAL_HEADER, MODAL_TITLE, MODAL_BODY } from '@/lib/styles';
 import { CloseIcon } from './icons';
+import {
+  MotionDiv,
+  MotionButton,
+  AnimatePresence,
+  modalVariants,
+  backdropVariants,
+  useReducedMotion,
+} from './motion';
 
 interface ModalProps {
   isOpen: boolean;
@@ -24,7 +32,6 @@ const FOCUSABLE_SELECTORS = [
 ].join(', ');
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: Readonly<ModalProps>) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
   const hasSetInitialFocus = useRef(false);
@@ -39,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
-  // Focus trap: cycle focus within modal - stable function that doesn't change
+  // Focus trap: cycle focus within modal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       onCloseRef.current();
@@ -54,43 +61,36 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    // Shift+Tab on first element: go to last
     if (e.shiftKey && document.activeElement === firstElement) {
       e.preventDefault();
       lastElement.focus();
-    }
-    // Tab on last element: go to first
-    else if (!e.shiftKey && document.activeElement === lastElement) {
+    } else if (!e.shiftKey && document.activeElement === lastElement) {
       e.preventDefault();
       firstElement.focus();
     }
   }, [getFocusableElements]);
 
-  // Combined effect for body overflow, focus management, and keyboard handling
+  // Focus management and keyboard handling
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
     if (!isOpen) {
-      // Reset initial focus flag when modal closes
       hasSetInitialFocus.current = false;
-      if (dialog.open) {
-        dialog.close();
+      // Restore focus when modal closes
+      if (previousActiveElement.current?.focus) {
+        previousActiveElement.current.focus();
+        previousActiveElement.current = null;
       }
       return;
     }
 
-    // Store currently focused element to restore later (only once)
+    // Store currently focused element
     if (!hasSetInitialFocus.current) {
       previousActiveElement.current = document.activeElement as HTMLElement;
     }
 
-    // Show dialog using native method
-    if (!dialog.open) {
-      dialog.showModal();
-    }
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
 
-    // Focus the first focusable element after modal opens (only once)
+    // Focus first focusable element
     if (!hasSetInitialFocus.current) {
       hasSetInitialFocus.current = true;
       requestAnimationFrame(() => {
@@ -98,78 +98,76 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
         if (focusableElements.length > 0) {
           focusableElements[0].focus();
         } else {
-          // If no focusable elements, focus the modal container
           modalRef.current?.focus();
         }
       });
     }
 
-    // Handle native cancel event (Escape key)
-    const handleCancel = (e: Event) => {
-      e.preventDefault();
-      onCloseRef.current();
-    };
-    dialog.addEventListener('cancel', handleCancel);
-
-    // Add keyboard listener for focus trap
+    // Add keyboard listener
     document.addEventListener('keydown', handleKeyDown);
 
-    // Cleanup: remove event listeners
     return () => {
-      dialog.removeEventListener('cancel', handleCancel);
+      document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, getFocusableElements, handleKeyDown]);
 
-  // Separate effect for restoring focus when modal closes
-  useEffect(() => {
-    // When modal closes, restore focus to the previously focused element
-    if (!isOpen && previousActiveElement.current?.focus) {
-      previousActiveElement.current.focus();
-      previousActiveElement.current = null;
-    }
-  }, [isOpen]);
+  const shouldReduceMotion = useReducedMotion();
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="fixed inset-0 z-50 m-auto p-0 bg-transparent animate-fadeIn backdrop:bg-black/60 backdrop:transition-opacity open:flex open:items-center open:justify-center"
-      aria-labelledby="modal-title"
-    >
-      {/* Invisible backdrop button for accessibility */}
-      <button
-        type="button"
-        className="fixed inset-0 w-full h-full cursor-default bg-transparent -z-10"
-        onClick={onClose}
-        aria-label="Close modal"
-        tabIndex={-1}
-      />
-      {/* Modal - with max-height and scroll */}
-      <div
-        ref={modalRef}
-        className={cn(MODAL_CONTENT, MODAL_SIZES[size], 'animate-slideUp')}
-        tabIndex={-1}
-      >
-        {/* Header - fixed */}
-        <div className={MODAL_HEADER}>
-          <h3 id="modal-title" className={MODAL_TITLE}>{title}</h3>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          {/* Backdrop */}
+          <MotionDiv
+            className="absolute inset-0 bg-black/60"
+            variants={backdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             onClick={onClose}
-            className="p-1 transition-colors rounded-lg text-stone-500 hover:text-stone-700 hover:bg-stone-200"
-            aria-label="Close dialog"
+            aria-hidden="true"
+          />
+
+          {/* Modal content */}
+          <MotionDiv
+            ref={modalRef}
+            className={cn(MODAL_CONTENT, MODAL_SIZES[size], 'relative')}
+            variants={modalVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            tabIndex={-1}
           >
-            <CloseIcon size="lg" aria-hidden="true" />
-          </button>
+            {/* Header */}
+            <div className={MODAL_HEADER}>
+              <h3 id="modal-title" className={MODAL_TITLE}>{title}</h3>
+              <MotionButton
+                onClick={onClose}
+                className="p-1 transition-colors rounded-lg text-stone-500 hover:text-stone-700 hover:bg-stone-200"
+                aria-label="Close dialog"
+                whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
+              >
+                <CloseIcon size="lg" aria-hidden="true" />
+              </MotionButton>
+            </div>
+
+            {/* Content */}
+            <div className={MODAL_BODY}>{children}</div>
+
+            {/* Footer */}
+            {footer && (
+              <div className="flex-shrink-0 p-4 border-t border-stone-200 sm:p-6">{footer}</div>
+            )}
+          </MotionDiv>
         </div>
-
-        {/* Content - scrollable */}
-        <div className={MODAL_BODY}>{children}</div>
-
-        {/* Footer - optional */}
-        {footer && (
-          <div className="flex-shrink-0 p-4 border-t border-stone-200 sm:p-6">{footer}</div>
-        )}
-      </div>
-    </dialog>
+      )}
+    </AnimatePresence>
   );
 }

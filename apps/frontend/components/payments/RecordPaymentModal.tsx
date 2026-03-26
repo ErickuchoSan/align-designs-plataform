@@ -4,12 +4,12 @@ import { PaymentMethod, PaymentType } from '@/types/payments';
 import { PaymentMethodSelect } from './PaymentMethodSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from '@/lib/toast';
-import { PaymentsService } from '@/services/payments.service';
-import { UsersService } from '@/services/users.service';
-import { FilesService, FileData } from '@/services/files.service';
-import { User } from '@/types';
-import { useFetchOnOpen, useFetch, useAsyncOperation } from '@/hooks';
-import { getTodayDateString } from '@/lib/utils/date-formatter';
+import {
+  useEmployeesQuery,
+  usePendingPaymentFilesQuery,
+  useRecordPaymentMutation,
+} from '@/hooks/queries';
+import { getTodayDateString, formatDate } from '@/lib/date.utils';
 import { cn, INPUT_BASE, INPUT_VARIANTS, TEXTAREA_BASE, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES, CHECKBOX_BASE } from '@/lib/styles';
 
 interface RecordPaymentModalProps {
@@ -36,33 +36,26 @@ export default function RecordPaymentModal({
     const [notes, setNotes] = useState('');
     const [file, setFile] = useState<File | null>(null);
 
-    // DRY: Use useAsyncOperation for submit handling
-    const { loading: isSubmitting, execute } = useAsyncOperation();
-
     // Employee Payment State
     const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
     const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
 
     const isEmployeePaymentMode = isOpen && defaultType === PaymentType.EMPLOYEE_PAYMENT;
 
-    // DRY: Fetch employees when modal opens for employee payment
-    const { data: employees, loading: isLoadingEmployees } = useFetchOnOpen<User[]>(
-        isEmployeePaymentMode,
-        () => UsersService.getEmployees(),
-        { initialData: [], errorPrefix: 'Failed to load employees' }
+    // TanStack Query: fetch employees when modal opens for employee payment
+    const { data: employees = [], isLoading: isLoadingEmployees } = useEmployeesQuery({
+        enabled: isEmployeePaymentMode,
+    });
+
+    // TanStack Query: fetch pending files when employee is selected
+    const { data: pendingFiles = [], isLoading: isLoadingFiles } = usePendingPaymentFilesQuery(
+        projectId,
+        selectedEmployeeId,
+        { enabled: !!selectedEmployeeId }
     );
 
-    // DRY: Fetch pending files when employee is selected
-    const { data: pendingFiles, loading: isLoadingFiles } = useFetch<FileData[]>(
-        () => FilesService.getPendingPaymentFiles(projectId, selectedEmployeeId),
-        {
-            immediate: false,
-            enabled: !!selectedEmployeeId,
-            deps: [selectedEmployeeId, projectId],
-            initialData: [],
-            errorPrefix: 'Failed to load pending files'
-        }
-    );
+    // TanStack Query: record payment mutation
+    const recordPaymentMutation = useRecordPaymentMutation();
 
     // Reset type when modal opens
     useEffect(() => {
@@ -91,37 +84,29 @@ export default function RecordPaymentModal({
             return;
         }
 
-        // DRY: Use execute() for automatic loading state and error handling
-        await execute(
-            async () => {
-                const formData = new FormData();
-                formData.append('projectId', projectId);
-                formData.append('amount', amount.toString());
-                formData.append('paymentMethod', method);
-                formData.append('paymentDate', date);
-                formData.append('type', type);
-                if (notes) formData.append('notes', notes);
-                if (file) formData.append('receiptFile', file);
+        const formData = new FormData();
+        formData.append('projectId', projectId);
+        formData.append('amount', amount.toString());
+        formData.append('paymentMethod', method);
+        formData.append('paymentDate', date);
+        formData.append('type', type);
+        if (notes) formData.append('notes', notes);
+        if (file) formData.append('receiptFile', file);
 
-                if (type === PaymentType.EMPLOYEE_PAYMENT) {
-                    formData.append('toUserId', selectedEmployeeId);
-                    selectedFileIds.forEach(id => formData.append('relatedFileIds[]', id));
-                }
+        if (type === PaymentType.EMPLOYEE_PAYMENT) {
+            formData.append('toUserId', selectedEmployeeId);
+            selectedFileIds.forEach(id => formData.append('relatedFileIds[]', id));
+        }
 
-                // Since FormData handling of arrays varies, let's try appending each.
-                selectedFileIds.forEach(id => formData.append('relatedFileIds', id));
+        // Since FormData handling of arrays varies, let's try appending each.
+        selectedFileIds.forEach(id => formData.append('relatedFileIds', id));
 
-                await PaymentsService.create(formData);
+        recordPaymentMutation.mutate(formData, {
+            onSuccess: () => {
+                onSuccess();
+                onClose();
             },
-            {
-                successMessage: 'Payment recorded successfully',
-                errorMessagePrefix: 'Error recording payment',
-                onSuccess: () => {
-                    onSuccess();
-                    onClose();
-                },
-            }
-        );
+        });
     };
 
     const isEmployeePayment = type === PaymentType.EMPLOYEE_PAYMENT;
@@ -143,7 +128,7 @@ export default function RecordPaymentModal({
                             disabled={isLoadingEmployees}
                         >
                             <option value="">Select Employee...</option>
-                            {(employees ?? []).map(emp => (
+                            {employees.map(emp => (
                                 <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
                             ))}
                         </select>
@@ -157,12 +142,12 @@ export default function RecordPaymentModal({
                         {isLoadingFiles && (
                             <div className="text-sm text-stone-500">Loading...</div>
                         )}
-                        {!isLoadingFiles && (pendingFiles ?? []).length === 0 && (
+                        {!isLoadingFiles && pendingFiles.length === 0 && (
                             <div className="text-sm italic text-stone-400">No approved pending jobs</div>
                         )}
-                        {!isLoadingFiles && (pendingFiles ?? []).length > 0 && (
+                        {!isLoadingFiles && pendingFiles.length > 0 && (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
-                                {(pendingFiles ?? []).map(f => (
+                                {pendingFiles.map(f => (
                                     <div key={f.id} className="flex items-center">
                                         <input
                                             type="checkbox"
@@ -172,7 +157,7 @@ export default function RecordPaymentModal({
                                             className={CHECKBOX_BASE}
                                         />
                                         <label htmlFor={`file-${f.id}`} className="block ml-2 text-sm truncate text-stone-900">
-                                            {f.filename} <span className="text-xs text-stone-500">({new Date(f.approvedClientAt).toLocaleDateString()})</span>
+                                            {f.filename} <span className="text-xs text-stone-500">({formatDate(f.approvedClientAt)})</span>
                                         </label>
                                     </div>
                                 ))}
@@ -248,17 +233,17 @@ export default function RecordPaymentModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        disabled={isSubmitting}
+                        disabled={recordPaymentMutation.isPending}
                         className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'mr-3 border border-stone-300')}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={recordPaymentMutation.isPending}
                         className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}
                     >
-                        {isSubmitting ? <ButtonLoader /> : 'Record Payment'}
+                        {recordPaymentMutation.isPending ? <ButtonLoader /> : 'Record Payment'}
                     </button>
                 </div>
             </form>

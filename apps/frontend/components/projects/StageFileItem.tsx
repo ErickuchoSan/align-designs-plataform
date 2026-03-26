@@ -4,6 +4,7 @@ import { memo } from 'react';
 import type { File } from '@/types';
 import { Stage } from '@/types/stage';
 import { CheckIcon, CloseIcon } from '@/components/ui/icons';
+import { formatDate } from '@/lib/date.utils';
 
 interface StageFileItemProps {
   file: File;
@@ -59,7 +60,7 @@ function StageFileItem({
           <p className="font-medium text-stone-900 truncate">{file.originalName}</p>
           <p className="text-sm text-stone-500">
             {file.uploader && `${file.uploader.firstName} ${file.uploader.lastName}`} •{' '}
-            {new Date(file.uploadedAt).toLocaleDateString()}
+            {formatDate(file.uploadedAt)}
           </p>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { InvoicesService } from '@/services/invoices.service';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
 import { formatCurrency } from '@/lib/utils/currency.utils';
+import { formatDate } from '@/lib/date.utils';
 import PaymentEmptyState from './PaymentEmptyState';
 
 const InvoiceIcon = () => (
@@ -112,7 +113,7 @@ function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
                     {formatCurrency(invoice.amountPaid)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-600">
-                    {new Date(invoice.dueDate).toLocaleDateString()}
+                    {formatDate(invoice.dueDate)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-center">
                     <button
@@ -165,7 +166,7 @@ function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
               </div>
               <div className="col-span-2">
                 <div className="text-stone-500">Due Date</div>
-                <div className="text-sm text-stone-600">{new Date(invoice.dueDate).toLocaleDateString()}</div>
+                <div className="text-sm text-stone-600">{formatDate(invoice.dueDate)}</div>
               </div>
             </div>
             <button

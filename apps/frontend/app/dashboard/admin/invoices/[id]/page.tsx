@@ -1,55 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { InvoicesService } from '@/services/invoices.service';
-import { Invoice, InvoiceStatus } from '@/types/invoice';
+import { InvoiceStatus } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
-import { toast } from '@/lib/toast';
-import { handleApiError } from '@/lib/errors';
 import { cn, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
+import { useInvoiceQuery, useUpdateInvoiceStatusMutation } from '@/hooks/queries';
 
 export default function InvoiceDetailPage() {
-    const params = useParams(); // returns { id: string } | null
+    const params = useParams();
     const id = params?.id as string;
     const router = useRouter();
 
-    const [invoice, setInvoice] = useState<Invoice | null>(null);
-    const [loading, setLoading] = useState(true);
+    // TanStack Query: fetch invoice details
+    const { data: invoice = null, isLoading, error } = useInvoiceQuery(id, {
+        enabled: !!id,
+    });
 
+    // TanStack Query: mutation for updating status
+    const updateStatusMutation = useUpdateInvoiceStatusMutation();
+
+    // Redirect on error
     useEffect(() => {
-        if (id) {
-            loadInvoice(id);
-        }
-    }, [id]);
-
-    async function loadInvoice(invoiceId: string) {
-        try {
-            setLoading(true);
-            const data = await InvoicesService.getOne(invoiceId);
-            setInvoice(data);
-        } catch (error) {
-            toast.error(handleApiError(error, 'Could not load invoice details'));
+        if (error) {
             router.push('/dashboard/admin/invoices');
-        } finally {
-            setLoading(false);
         }
-    }
+    }, [error, router]);
 
-    async function handleStatusChange(newStatus: InvoiceStatus) {
+    function handleStatusChange(newStatus: InvoiceStatus) {
         if (!invoice) return;
-        try {
-            const updated = await InvoicesService.updateStatus(invoice.id, newStatus);
-            setInvoice(updated);
-            toast.success(`Invoice marked as ${newStatus}`);
-        } catch (error) {
-            toast.error(handleApiError(error, 'Failed to update status'));
-        }
+        updateStatusMutation.mutate({ invoiceId: invoice.id, status: newStatus });
     }
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading invoice details...</div>;
+    if (isLoading) return <div className="p-8 text-center text-gray-500">Loading invoice details...</div>;
     if (!invoice) return <div className="p-8 text-center text-red-500">Invoice not found</div>;
 
     return (

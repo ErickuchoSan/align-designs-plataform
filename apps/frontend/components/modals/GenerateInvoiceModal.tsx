@@ -3,12 +3,8 @@
 import { useForm } from 'react-hook-form';
 import Modal from '@/components/ui/Modal';
 import LoadingButton from '@/components/ui/LoadingButton';
-import { InvoicesService } from '@/services/invoices.service';
-import { ProjectsService } from '@/services/projects.service';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
+import { useProjectForInvoiceQuery, useCreateInvoiceMutation } from '@/hooks/queries';
 import { WarningIcon, SpinnerIcon } from '@/components/ui/icons';
-import { useFetchOnOpen } from '@/hooks';
 import { cn, INPUT_BASE, INPUT_VARIANTS, FORM_LABEL, FORM_ERROR } from '@/lib/styles';
 
 interface GenerateInvoiceModalProps {
@@ -34,7 +30,7 @@ export default function GenerateInvoiceModal({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<GenerateInvoiceFormValues>({
     defaultValues: {
       amount: '',
@@ -43,38 +39,30 @@ export default function GenerateInvoiceModal({
     },
   });
 
-  // DRY: Fetch project details and check unpaid invoices when modal opens
-  const { data: projectData, loading: checkingUnpaid } = useFetchOnOpen<{ hasUnpaid: boolean; clientId: string | null }>(
-    isOpen,
-    async () => {
-      const [unpaid, project] = await Promise.all([
-        InvoicesService.hasUnpaidInvoices(projectId),
-        ProjectsService.getById(projectId),
-      ]);
-      return {
-        hasUnpaid: unpaid,
-        clientId: project?.clientId || null,
-      };
-    },
-    { deps: [projectId], initialData: { hasUnpaid: false, clientId: null }, errorPrefix: 'Failed to load project details' }
+  // TanStack Query: fetch project data with unpaid status
+  const { data: projectData, isLoading: checkingUnpaid } = useProjectForInvoiceQuery(
+    projectId,
+    { enabled: isOpen }
   );
+
+  // TanStack Query: create invoice mutation
+  const createInvoiceMutation = useCreateInvoiceMutation();
 
   const hasUnpaid = projectData?.hasUnpaid ?? false;
   const clientId = projectData?.clientId ?? null;
 
   const onSubmit = async (data: GenerateInvoiceFormValues) => {
-    try {
-      if (!clientId) {
-        toast.error('Client ID not found for this project');
-        return;
-      }
+    if (!clientId) {
+      return;
+    }
 
-      const issueDate = new Date();
-      const due = new Date(data.dueDate);
-      const diffTime = Math.abs(due.getTime() - issueDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const issueDate = new Date();
+    const due = new Date(data.dueDate);
+    const diffTime = Math.abs(due.getTime() - issueDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      const payload = {
+    createInvoiceMutation.mutate(
+      {
         projectId,
         clientId,
         issueDate: issueDate.toISOString(),
@@ -83,15 +71,14 @@ export default function GenerateInvoiceModal({
         subtotal: Number(data.amount),
         totalAmount: Number(data.amount),
         notes: data.description || undefined,
-      };
-
-      await InvoicesService.create(payload as any);
-      toast.success('Invoice created successfully');
-      onSuccess();
-      handleClose();
-    } catch (err) {
-      toast.error(handleApiError(err, 'Failed to create invoice'));
-    }
+      },
+      {
+        onSuccess: () => {
+          onSuccess();
+          handleClose();
+        },
+      }
+    );
   };
 
   const handleClose = () => {
@@ -180,7 +167,7 @@ export default function GenerateInvoiceModal({
             </button>
             <LoadingButton
               type="submit"
-              isLoading={isSubmitting}
+              isLoading={createInvoiceMutation.isPending}
               loadingText="Saving..."
               variant="primary"
               size="md"

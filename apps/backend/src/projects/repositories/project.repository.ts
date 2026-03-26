@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Project } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IProjectRepository } from './project.repository.interface';
-import { CreateProjectDto } from '../dto/create-project.dto';
-import { UpdateProjectDto } from '../dto/update-project.dto';
+import type { CreateProjectDto, UpdateProjectDto } from '../schemas';
 import { FindAllOptions } from '../../common/repositories/base.repository';
 import { TRANSACTION_TIMEOUT_MS } from '../../common/constants/timeouts.constants';
 

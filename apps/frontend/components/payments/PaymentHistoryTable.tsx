@@ -2,15 +2,8 @@ import { memo, useMemo } from 'react';
 import { Payment, PAYMENT_METHOD_LABELS, PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS } from '../../types/payments';
 import MobilePaymentCard from './MobilePaymentCard';
 import { useReceiptViewer } from '@/hooks';
-
-// Create a simple format date if it doesn't exist or use Intl
-const formatDateSimple = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-};
+import { formatDate } from '@/lib/date.utils';
+import { MotionDiv, staggerContainer, staggerItem } from '@/components/ui/motion';
 
 // Format currency once and memoize
 const formatCurrency = (amount: number | string) => {
@@ -41,7 +34,7 @@ interface PaymentRowProps {
 // Memoized payment row component to prevent unnecessary re-renders
 const PaymentRow = memo(({ payment, isAdmin, onViewReceipt, onOpenReceipt }: PaymentRowProps) => {
     const formattedAmount = useMemo(() => formatCurrency(payment.amount), [payment.amount]);
-    const formattedDate = useMemo(() => formatDateSimple(payment.paymentDate), [payment.paymentDate]);
+    const formattedDate = useMemo(() => formatDate(payment.paymentDate, 'invoice'), [payment.paymentDate]);
 
     return (
         <tr>
@@ -146,17 +139,23 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Re
                 </div>
 
                 {/* Mobile Card View */}
-                <div className="md:hidden space-y-3">
+                <MotionDiv
+                    className="md:hidden space-y-3"
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                >
                     {payments.map((payment) => (
-                        <MobilePaymentCard
-                            key={payment.id}
-                            payment={payment}
-                            isAdmin={isAdmin}
-                            onViewReceipt={onViewReceipt}
-                            onOpenReceipt={openReceipt}
-                        />
+                        <MotionDiv key={payment.id} variants={staggerItem}>
+                            <MobilePaymentCard
+                                payment={payment}
+                                isAdmin={isAdmin}
+                                onViewReceipt={onViewReceipt}
+                                onOpenReceipt={openReceipt}
+                            />
+                        </MotionDiv>
                     ))}
-                </div>
+                </MotionDiv>
             </>
         );
     }
@@ -200,19 +199,25 @@ function PaymentHistoryTable({ payments, isLoading, onViewReceipt, isAdmin }: Re
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-3">
+            <MotionDiv
+                className="md:hidden space-y-3"
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+            >
                 {payments.map((payment) => (
-                    <MobilePaymentCard
-                        key={payment.id}
-                        payment={payment}
-                        isAdmin={isAdmin}
-                        onViewReceipt={onViewReceipt}
-                    />
+                    <MotionDiv key={payment.id} variants={staggerItem}>
+                        <MobilePaymentCard
+                            payment={payment}
+                            isAdmin={isAdmin}
+                            onViewReceipt={onViewReceipt}
+                        />
+                    </MotionDiv>
                 ))}
                 <div className="text-xs text-gray-500 mt-2 px-2 text-center">
                     Showing {payments.length} payments
                 </div>
-            </div>
+            </MotionDiv>
         </>
     );
 }

@@ -2,14 +2,9 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { InvoicesService } from '@/services/invoices.service';
-import { PaymentsService } from '@/services/payments.service';
-import { Invoice } from '@/types/invoice';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
 import { CloseIcon } from '@/components/ui/icons';
-import { useFetchOnOpen } from '@/hooks';
-import { getTodayDateString } from '@/lib/utils/date-formatter';
+import { useUnpaidInvoicesQuery, useUploadClientPaymentMutation } from '@/hooks/queries';
+import { getTodayDateString } from '@/lib/date.utils';
 import { cn, INPUT_BASE, INPUT_VARIANTS, BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 
 interface UploadPaymentProofModalProps {
@@ -33,7 +28,6 @@ export default function UploadPaymentProofModal({
     onClose,
     projectId,
     onSuccess,
-    userId,
 }: Readonly<UploadPaymentProofModalProps>) {
     const [file, setFile] = useState<File | null>(null);
 
@@ -43,7 +37,7 @@ export default function UploadPaymentProofModal({
         setValue,
         reset,
         watch,
-        formState: { errors, isSubmitting }
+        formState: { errors }
     } = useForm<UploadPaymentProofFormValues>({
         defaultValues: {
             invoiceId: '',
@@ -56,15 +50,14 @@ export default function UploadPaymentProofModal({
 
     const selectedInvoiceId = watch('invoiceId');
 
-    // DRY: Fetch invoices when modal opens
-    const { data: invoices, loading: loadingInvoices } = useFetchOnOpen<Invoice[]>(
-        isOpen,
-        async () => {
-            const allInvoices = await InvoicesService.getByProject(projectId);
-            return allInvoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'CANCELLED');
-        },
-        { deps: [projectId], initialData: [], errorPrefix: 'Failed to load invoices' }
+    // TanStack Query: fetch unpaid invoices when modal opens
+    const { data: invoices = [], isLoading: loadingInvoices } = useUnpaidInvoicesQuery(
+        projectId,
+        { enabled: isOpen }
     );
+
+    // TanStack Query: upload mutation
+    const uploadMutation = useUploadClientPaymentMutation();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -77,7 +70,7 @@ export default function UploadPaymentProofModal({
         const invId = e.target.value;
         setValue('invoiceId', invId);
 
-        const invoice = (invoices ?? []).find(i => i.id === invId);
+        const invoice = invoices.find(i => i.id === invId);
         if (invoice) {
             setValue('amount', (invoice.totalAmount - invoice.amountPaid).toString());
         } else {
@@ -86,27 +79,25 @@ export default function UploadPaymentProofModal({
     };
 
     const onSubmit = async (data: UploadPaymentProofFormValues) => {
-        try {
-            const formData = new FormData();
-            formData.append('invoiceId', data.invoiceId);
-            formData.append('amount', data.amount);
-            formData.append('paymentDate', new Date(data.paymentDate).toISOString());
-            formData.append('paymentMethod', data.paymentMethod);
-            if (data.referenceNumber) {
-                formData.append('notes', `Ref: ${data.referenceNumber}`);
-            }
-
-            if (file) {
-                formData.append('file', file);
-            }
-
-            await PaymentsService.uploadClientPayment(formData);
-            toast.success('Payment proof submitted successfully');
-            onSuccess();
-            handleClose();
-        } catch (err) {
-            toast.error(handleApiError(err, 'Failed to submit payment proof'));
+        const formData = new FormData();
+        formData.append('invoiceId', data.invoiceId);
+        formData.append('amount', data.amount);
+        formData.append('paymentDate', new Date(data.paymentDate).toISOString());
+        formData.append('paymentMethod', data.paymentMethod);
+        if (data.referenceNumber) {
+            formData.append('notes', `Ref: ${data.referenceNumber}`);
         }
+
+        if (file) {
+            formData.append('file', file);
+        }
+
+        uploadMutation.mutate(formData, {
+            onSuccess: () => {
+                onSuccess();
+                handleClose();
+            },
+        });
     };
 
     const handleClose = () => {
@@ -146,7 +137,7 @@ export default function UploadPaymentProofModal({
                             className={cn(INPUT_BASE, errors.invoiceId ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'disabled:bg-stone-100')}
                         >
                             <option value="">-- Select Invoice --</option>
-                            {(invoices ?? []).map((inv) => (
+                            {invoices.map((inv) => (
                                 <option key={inv.id} value={inv.id}>
                                     #{inv.invoiceNumber} - Total: ${inv.totalAmount} (Due: ${inv.totalAmount - inv.amountPaid})
                                 </option>
@@ -154,7 +145,7 @@ export default function UploadPaymentProofModal({
                         </select>
                         {errors.invoiceId && <p className="text-xs text-red-600 mt-1">{errors.invoiceId.message}</p>}
                         {loadingInvoices && <p className="text-xs text-stone-500 mt-1">Loading invoices...</p>}
-                        {(invoices ?? []).length === 0 && !loadingInvoices && <p className="text-xs text-orange-500 mt-1">No pending invoices found.</p>}
+                        {invoices.length === 0 && !loadingInvoices && <p className="text-xs text-orange-500 mt-1">No pending invoices found.</p>}
                     </div>
 
                     <div>
@@ -250,10 +241,10 @@ export default function UploadPaymentProofModal({
                         </button>
                         <button
                             type="submit"
-                            disabled={isSubmitting || !selectedInvoiceId}
+                            disabled={uploadMutation.isPending || !selectedInvoiceId}
                             className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md, 'flex-1 gap-2')}
                         >
-                            {isSubmitting ? (
+                            {uploadMutation.isPending ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                     <span>Uploading...</span>

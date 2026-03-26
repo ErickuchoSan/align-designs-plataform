@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from './InvoiceStatusBadge';
+import { formatDate } from '@/lib/date.utils';
 
 interface InvoiceCardsProps {
   invoices: Invoice[];
@@ -64,7 +65,7 @@ function InvoiceCards({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">{dateLabel}:</span>
-              <span className="text-gray-700">{new Date(invoice[dateField]).toLocaleDateString()}</span>
+              <span className="text-gray-700">{formatDate(invoice[dateField])}</span>
             </div>
           </div>
           <button

@@ -1,35 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { InvoicesService } from '@/services/invoices.service';
-import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
+import { useInvoicesListQuery } from '@/hooks/queries';
 
 export default function InvoicesListPage() {
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [loading, setLoading] = useState(true);
+    // TanStack Query: fetch all invoices
+    const { data: invoices = [], isLoading } = useInvoicesListQuery();
 
-    useEffect(() => {
-        loadInvoices();
-    }, []);
-
-    async function loadInvoices() {
-        try {
-            const data = await InvoicesService.getAll();
-            setInvoices(data);
-        } catch (error) {
-            toast.error(handleApiError(error, 'Failed to load invoices'));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    if (loading) {
+    if (isLoading) {
         return <div className="p-8 text-center">Loading invoices...</div>;
     }
 

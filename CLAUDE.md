@@ -31,6 +31,13 @@
 | `/performance-analyzer` | Análisis de rendimiento |
 | `/dependency-health` | Salud de dependencias |
 | `/webapp-testing` | Verificación visual con Playwright |
+| `/tanstack-query` | Data fetching y cache en frontend |
+| `/zod-validation` | Validación de schemas type-safe |
+| `/date-fns` | Manipulación de fechas |
+| `/pino-logging` | Logging estructurado de alto rendimiento |
+| `/nestjs-cls` | Contexto de request (AsyncLocalStorage) |
+| `/framer-motion` | Animaciones en React |
+| `/sonner-toasts` | Notificaciones toast modernas |
 
 ### Flujo de Trabajo Obligatorio
 
@@ -65,7 +72,9 @@ Puerto SSH: **29** (ambos servidores)
 
 ### Backend (NestJS)
 - Permisos de stage en `apps/backend/src/common/helpers/stage-permissions.helper.ts`
-- Validación con class-validator
+- **Validación con Zod** - 100% migrado, ver `/zod-validation` skill
+- Schemas en `apps/backend/src/*/schemas/`
+- Pipe: `zodPipe(Schema)` en controllers
 - Manejo de errores con excepciones HTTP
 
 ### Base de Datos

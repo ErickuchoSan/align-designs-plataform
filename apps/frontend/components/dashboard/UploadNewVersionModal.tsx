@@ -2,24 +2,23 @@ import React, { useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import { ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import { toast } from '@/lib/toast';
-import { ProjectsService } from '@/services/projects.service';
-import { useAsyncOperation } from '@/hooks';
+import { useUploadFileVersionMutation } from '@/hooks/queries';
 import { cn, TEXTAREA_BASE, INPUT_VARIANTS } from '@/lib/styles';
 
 interface UploadNewVersionModalProps {
     isOpen: boolean;
     onClose: () => void;
     parentFileId: string;
-    projectId: string; // Needed if endpoint requires it, though :id/version relies on fileId.
+    projectId: string;
     onSuccess: () => void;
 }
 
-export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, projectId, onSuccess }: Readonly<UploadNewVersionModalProps>) {
+export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, onSuccess }: Readonly<UploadNewVersionModalProps>) {
     const [file, setFile] = useState<File | null>(null);
     const [notes, setNotes] = useState('');
 
-    // DRY: Use useAsyncOperation for upload handling
-    const { loading: isUploading, execute } = useAsyncOperation();
+    // TanStack Query: upload mutation
+    const uploadMutation = useUploadFileVersionMutation();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -34,12 +33,9 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
             return;
         }
 
-        // DRY: Use execute() for automatic loading state and error handling
-        await execute(
-            () => ProjectsService.uploadFileVersion(parentFileId, file, notes),
+        uploadMutation.mutate(
+            { parentFileId, file, notes: notes || undefined },
             {
-                successMessage: 'New version uploaded successfully',
-                errorMessagePrefix: 'Failed to upload new version',
                 onSuccess: () => {
                     onSuccess();
                     onClose();
@@ -98,9 +94,9 @@ export default function UploadNewVersionModal({ isOpen, onClose, parentFileId, p
                     type="button"
                     className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleUpload}
-                    disabled={!file || isUploading}
+                    disabled={!file || uploadMutation.isPending}
                 >
-                    {isUploading ? 'Uploading...' : 'Upload Version'}
+                    {uploadMutation.isPending ? 'Uploading...' : 'Upload Version'}
                 </button>
             </div>
         </Modal>

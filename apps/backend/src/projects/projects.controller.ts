@@ -33,8 +33,17 @@ import {
 } from '../common/decorators/api-responses.decorator';
 import { Throttle } from '@nestjs/throttler';
 import { ProjectsService } from './projects.service';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  CreateProjectSchema,
+  type CreateProjectDto,
+  UpdateProjectSchema,
+  type UpdateProjectDto,
+  AssignEmployeesSchema,
+  type AssignEmployeesDto,
+  ProjectRecordPaymentSchema,
+  type ProjectRecordPaymentDto,
+} from './schemas';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -43,7 +52,7 @@ import { UserAgent } from '../auth/decorators/user-agent.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { paginationSchema, type PaginationDto } from '../common/schemas';
 import { RATE_LIMIT_PROJECTS } from '../common/constants/timeouts.constants';
 import {
   AuditService,
@@ -53,8 +62,6 @@ import {
 import { safeAuditLog } from '../audit/audit.helper';
 import { ProjectEmployeeService } from './services/project-employee.service';
 import { ProjectStatusService } from './services/project-status.service';
-import { AssignEmployeesDto } from './dto/assign-employees.dto';
-import { RecordPaymentDto } from './dto/record-payment.dto';
 
 interface AuditContext {
   user: UserPayload;
@@ -112,7 +119,7 @@ export class ProjectsController {
   @ApiCreatedResponse('Project successfully created')
   @ApiAdminWriteResponses()
   async create(
-    @Body() createProjectDto: CreateProjectDto,
+    @Body(zodPipe(CreateProjectSchema)) createProjectDto: CreateProjectDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -169,7 +176,7 @@ export class ProjectsController {
   @ApiUnauthorizedResponse()
   findAll(
     @CurrentUser() user: UserPayload,
-    @Query() paginationDto: PaginationDto,
+    @Query(zodPipe(paginationSchema)) paginationDto: PaginationDto,
     @Query('clientId') clientId?: string,
   ) {
     return this.projectsService.findAll(
@@ -205,7 +212,7 @@ export class ProjectsController {
   @ApiAdminProjectEndpoint('Project successfully updated')
   async update(
     @Param('id') id: string,
-    @Body() updateProjectDto: UpdateProjectDto,
+    @Body(zodPipe(UpdateProjectSchema)) updateProjectDto: UpdateProjectDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -280,7 +287,7 @@ export class ProjectsController {
   @ApiNotFoundResponse('Project or employee')
   async assignEmployees(
     @Param('id') projectId: string,
-    @Body() assignEmployeesDto: AssignEmployeesDto,
+    @Body(zodPipe(AssignEmployeesSchema)) assignEmployeesDto: AssignEmployeesDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -381,7 +388,7 @@ export class ProjectsController {
   @ApiBadRequestResponse('Invalid payment amount')
   async recordPayment(
     @Param('id') projectId: string,
-    @Body() recordPaymentDto: RecordPaymentDto,
+    @Body(zodPipe(ProjectRecordPaymentSchema)) recordPaymentDto: ProjectRecordPaymentDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,

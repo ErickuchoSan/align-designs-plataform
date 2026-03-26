@@ -10,6 +10,7 @@ import {
   PaymentStatusDisplay,
 } from '@/components/payments/PaymentWorkflowShared';
 import { CalendarIcon } from '@heroicons/react/24/outline';
+import { formatDate } from '@/lib/date.utils';
 
 interface ClientWorkflowViewProps {
   project: Project;
@@ -255,11 +256,7 @@ function ClientWorkflowView({
           {project.initialPaymentDeadline && (
             <p className="text-sm text-stone-600 mb-6">
               <span className="font-medium">Payment Deadline:</span>{' '}
-              {new Date(project.initialPaymentDeadline).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {formatDate(project.initialPaymentDeadline, 'invoice')}
               {new Date(project.initialPaymentDeadline) < new Date() && (
                 <span className="ml-2 text-red-600 font-semibold">⚠️ Overdue</span>
               )}
@@ -341,11 +338,7 @@ function ClientWorkflowView({
               <span>Estimated Delivery</span>
             </div>
             <p className="font-semibold text-navy-900">
-              {new Date(project.deadlineDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {formatDate(project.deadlineDate, 'invoice')}
             </p>
           </div>
         )}

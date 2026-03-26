@@ -1,17 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { User, CreateUserDto, Role } from '@/types';
 import { handleApiError } from '@/lib/errors';
 import { usePagination } from './usePagination';
 import { toast } from '@/lib/toast';
-import { UsersService } from '@/services/users.service';
+import {
+  useUsersListQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useToggleUserStatusMutation,
+  useDeleteUserMutation,
+  useResendWelcomeEmailMutation,
+} from './queries';
 
 export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-
   // Use centralized pagination hook
   const pagination = usePagination();
+
+  // TanStack Query for data fetching
+  const {
+    data,
+    isLoading,
+    error: queryError,
+  } = useUsersListQuery(
+    {
+      page: pagination.currentPage,
+      limit: pagination.itemsPerPage,
+    },
+    { enabled: isAuthenticated && isAdmin }
+  );
+
+  // Sync pagination totals from API response
+  useEffect(() => {
+    if (data) {
+      pagination.setTotalItems(data.meta?.total || 0);
+      pagination.setTotalPages(data.meta?.totalPages || 0);
+    }
+  }, [data, pagination]);
+
+  const users: User[] = data?.data || [];
+  const [error, setError] = useState('');
 
   // Create form state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -22,57 +49,31 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     phone: '',
     role: Role.CLIENT,
   });
-  const [isCreating, setIsCreating] = useState(false);
 
-  // Toggle status state
-  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
-  const [showToggleConfirm, setShowToggleConfirm] = useState(false);
-  const [userToToggle, setUserToToggle] = useState<User | null>(null);
-
-  useEffect(() => {
-    if (isAuthenticated && isAdmin) {
-      fetchUsers();
-    }
-  }, [isAuthenticated, isAdmin, pagination.currentPage, pagination.itemsPerPage]);
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const result = await UsersService.getAll({
-        page: pagination.currentPage,
-        limit: pagination.itemsPerPage,
-      });
-      setUsers(result.data || []);
-      pagination.setTotalItems(result.meta?.total || 0);
-      pagination.setTotalPages(result.meta?.totalPages || 0);
-      setError('');
-    } catch (err) {
-      setError(handleApiError(err, 'Error loading users'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pagination.currentPage, pagination.itemsPerPage, pagination]);
+  // Create mutation
+  const createMutation = useCreateUserMutation();
 
   const handleCreateClient = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      setIsCreating(true);
       setError('');
 
       try {
-        await UsersService.create(formData);
+        await createMutation.mutateAsync(formData);
         setShowCreateForm(false);
         setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
-        toast.success(`${formData.role === Role.CLIENT ? 'Client' : 'Employee'} created successfully`);
-        fetchUsers();
       } catch (err) {
         setError(handleApiError(err, `Error creating ${formData.role === Role.CLIENT ? 'client' : 'employee'}`));
-      } finally {
-        setIsCreating(false);
       }
     },
-    [formData, fetchUsers]
+    [formData, createMutation]
   );
+
+  // Toggle status state
+  const [showToggleConfirm, setShowToggleConfirm] = useState(false);
+  const [userToToggle, setUserToToggle] = useState<User | null>(null);
+
+  const toggleMutation = useToggleUserStatusMutation();
 
   const openToggleConfirm = useCallback((user: User) => {
     setUserToToggle(user);
@@ -82,21 +83,17 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const handleToggleStatus = useCallback(async () => {
     if (!userToToggle) return;
 
-    setTogglingUserId(userToToggle.id);
     try {
-      await UsersService.toggleStatus(userToToggle.id, !userToToggle.isActive);
-      toast.success(
-        `User ${userToToggle.isActive ? 'deactivated' : 'activated'} successfully`
-      );
+      await toggleMutation.mutateAsync({
+        id: userToToggle.id,
+        isActive: !userToToggle.isActive,
+      });
       setShowToggleConfirm(false);
       setUserToToggle(null);
-      fetchUsers();
     } catch (err) {
       setError(handleApiError(err, 'Error changing status'));
-    } finally {
-      setTogglingUserId(null);
     }
-  }, [userToToggle, fetchUsers]);
+  }, [userToToggle, toggleMutation]);
 
   const closeToggleConfirm = useCallback(() => {
     setShowToggleConfirm(false);
@@ -107,7 +104,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showForceDeleteConfirm, setShowForceDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const deleteMutation = useDeleteUserMutation();
 
   const openDeleteConfirm = useCallback((user: User) => {
     setUserToDelete(user);
@@ -124,14 +122,11 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
   const handleDeleteUser = useCallback(async (force = false) => {
     if (!userToDelete) return;
 
-    setDeletingUserId(userToDelete.id);
     try {
-      await UsersService.delete(userToDelete.id, { hard: true, force });
-      toast.success('User permanently deleted');
+      await deleteMutation.mutateAsync({ id: userToDelete.id, force });
       setShowDeleteConfirm(false);
       setShowForceDeleteConfirm(false);
       setUserToDelete(null);
-      fetchUsers();
     } catch (err: any) {
       if (!force && err.response?.status === 409) {
         // If 409 Conflict, show Force Delete Confirmation
@@ -140,21 +135,20 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       } else {
         setError(handleApiError(err, 'Error deleting user'));
       }
-    } finally {
-      setDeletingUserId(null);
     }
-  }, [userToDelete, fetchUsers]);
+  }, [userToDelete, deleteMutation]);
 
   // Edit user state
   const [showEditModal, setShowEditModal] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
-  const [editError, setEditError] = useState(''); // Separate error for modal
+  const [editError, setEditError] = useState('');
   const [editFormData, setEditFormData] = useState<Partial<User>>({
     firstName: '',
     lastName: '',
     phone: '',
   });
-  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  const updateMutation = useUpdateUserMutation();
 
   const openEditModal = useCallback((user: User) => {
     setUserToEdit(user);
@@ -163,8 +157,8 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       lastName: user.lastName,
       phone: user.phone || '',
     });
-    setEditError(''); // Clear modal error
-    setError(''); // Clear page error
+    setEditError('');
+    setError('');
     setShowEditModal(true);
   }, []);
 
@@ -172,7 +166,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     setShowEditModal(false);
     setUserToEdit(null);
     setEditFormData({ firstName: '', lastName: '', phone: '' });
-    setEditError(''); // Clear modal error
+    setEditError('');
   }, []);
 
   const handleUpdateUser = useCallback(
@@ -180,54 +174,45 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
       e.preventDefault();
       if (!userToEdit) return;
 
-      setUpdatingUserId(userToEdit.id);
       setEditError('');
 
       try {
-        await UsersService.update(userToEdit.id, editFormData);
-        toast.success('User updated successfully');
+        await updateMutation.mutateAsync({ id: userToEdit.id, data: editFormData });
         closeEditModal();
-        fetchUsers();
       } catch (err) {
         setEditError(handleApiError(err, 'Error updating user'));
-      } finally {
-        setUpdatingUserId(null);
       }
     },
-    [userToEdit, editFormData, fetchUsers, closeEditModal]
+    [userToEdit, editFormData, updateMutation, closeEditModal]
   );
 
-  // Resend welcome email state
-  const [resendingUserId, setResendingUserId] = useState<string | null>(null);
+  // Resend welcome email
+  const resendMutation = useResendWelcomeEmailMutation();
 
   const handleResendWelcomeEmail = useCallback(async (user: User) => {
-    setResendingUserId(user.id);
     try {
-      await UsersService.resendWelcomeEmail(user.id);
-      toast.success(`Welcome email sent to ${user.email}`);
+      await resendMutation.mutateAsync(user.id);
     } catch (err) {
       toast.error(handleApiError(err, 'Error sending welcome email'));
-    } finally {
-      setResendingUserId(null);
     }
-  }, []);
+  }, [resendMutation]);
 
   return {
     // State
     users,
     isLoading,
-    error,
-    // Pagination (spread all pagination state and handlers)
+    error: error || queryError?.message || '',
+    // Pagination
     ...pagination,
     // Create form
     showCreateForm,
     setShowCreateForm,
     formData,
     setFormData,
-    isCreating,
+    isCreating: createMutation.isPending,
     handleCreateClient,
     // Toggle status
-    togglingUserId,
+    togglingUserId: toggleMutation.isPending ? userToToggle?.id : null,
     showToggleConfirm,
     userToToggle,
     openToggleConfirm,
@@ -237,7 +222,7 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     showDeleteConfirm,
     showForceDeleteConfirm,
     userToDelete,
-    deletingUserId,
+    deletingUserId: deleteMutation.isPending ? userToDelete?.id : null,
     openDeleteConfirm,
     closeDeleteConfirm,
     handleDeleteUser,
@@ -247,12 +232,12 @@ export function useUsers(isAuthenticated: boolean, isAdmin: boolean) {
     editError,
     editFormData,
     setEditFormData,
-    updatingUserId,
+    updatingUserId: updateMutation.isPending ? userToEdit?.id : null,
     openEditModal,
     closeEditModal,
     handleUpdateUser,
     // Resend welcome email
-    resendingUserId,
+    resendingUserId: resendMutation.isPending ? resendMutation.variables : null,
     handleResendWelcomeEmail,
   };
 }

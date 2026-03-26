@@ -3,6 +3,7 @@
 import { memo, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import { formatCurrency } from '@/lib/utils/currency.utils';
+import { formatDate, addDays } from '@/lib/date.utils';
 
 interface InvoicePreviewModalProps {
   isOpen: boolean;
@@ -76,8 +77,8 @@ const COMPANY_INFO = {
 // Sample data for preview - this shows how the invoice will look
 const SAMPLE_INVOICE = {
   invoiceNumber: 'INV-2026-PREVIEW',
-  issueDate: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
-  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+  issueDate: formatDate(new Date(), 'short'),
+  dueDate: formatDate(addDays(new Date(), 30), 'short'),
   client: {
     name: 'Danaby Rentals Inc.',
     company: 'Danaby Rentals Inc.',

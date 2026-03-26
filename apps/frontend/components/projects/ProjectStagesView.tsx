@@ -2,14 +2,13 @@
 
 import { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import { StageInfo, Stage } from '@/types/stage';
-import { StagesService } from '@/services/stages.service';
-import { handleApiError } from '@/lib/errors';
 import StageCard from './StageCard';
 import StageHeader from './StageHeader';
 import StageContent from './StageContent';
 import { PageLoader } from '@/components/ui/Loader';
 import type { Project, File } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProjectStagesQuery } from '@/hooks/queries';
 
 interface ProjectStagesViewProps {
   projectId: string;
@@ -65,46 +64,23 @@ function ProjectStagesView({
   onUploadPaymentProof,
 }: Readonly<ProjectStagesViewProps>) {
   const { user } = useAuth();
-  const [stages, setStages] = useState<StageInfo[]>([]);
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [paymentRefreshKey, setPaymentRefreshKey] = useState(0);
 
-  useEffect(() => {
-    loadStages();
-  }, [projectId]);
+  // TanStack Query: fetch project stages
+  const {
+    data: stagesResponse,
+    isLoading: loading,
+    error: queryError,
+  } = useProjectStagesQuery(projectId);
 
-  // Update file counts when files change
-  useEffect(() => {
-    if (stages.length > 0) {
-      updateFileCounts();
-    }
-  }, [files]);
+  const error = queryError?.message || null;
 
-  const loadStages = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await StagesService.getProjectStages(projectId);
-      setStages(response.stages);
+  // Compute stages with updated file counts from local files
+  const stages: StageInfo[] = useMemo(() => {
+    if (!stagesResponse?.stages) return [];
 
-      // Auto-select first stage with files, or just first stage
-      if (response.stages.length > 0) {
-        const stageWithFiles = response.stages.find((s) => s.fileCount > 0);
-        setSelectedStage(
-          stageWithFiles?.stage || response.stages[0].stage
-        );
-      }
-    } catch (err) {
-      setError(handleApiError(err, 'Failed to load stages'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateFileCounts = () => {
-    // Pre-compute file counts per stage to reduce function nesting depth
+    // Pre-compute file counts per stage
     const fileCounts = new Map<Stage, number>();
     for (const file of files) {
       if (file.stage) {
@@ -112,15 +88,21 @@ function ProjectStagesView({
       }
     }
 
-    setStages((prevStages) =>
-      prevStages.map((stage) =>
-        // For PAYMENTS stage, preserve the count from the server (handled by backend)
-        stage.stage === Stage.PAYMENTS
-          ? stage
-          : { ...stage, fileCount: fileCounts.get(stage.stage) || 0 }
-      )
+    return stagesResponse.stages.map((stage) =>
+      // For PAYMENTS stage, preserve the count from the server (handled by backend)
+      stage.stage === Stage.PAYMENTS
+        ? stage
+        : { ...stage, fileCount: fileCounts.get(stage.stage) || 0 }
     );
-  };
+  }, [stagesResponse?.stages, files]);
+
+  // Auto-select first stage with files, or just first stage
+  useEffect(() => {
+    if (stages.length > 0 && selectedStage === null) {
+      const stageWithFiles = stages.find((s) => s.fileCount > 0);
+      setSelectedStage(stageWithFiles?.stage || stages[0].stage);
+    }
+  }, [stages, selectedStage]);
 
   // IMPORTANT: All hooks must be called before any conditional returns
   // Memoize current stage lookup

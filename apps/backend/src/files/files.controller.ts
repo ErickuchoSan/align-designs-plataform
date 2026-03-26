@@ -37,21 +37,28 @@ import { FileVersionService } from './file-version.service';
 import { FileStageService } from './services/file-stage.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator'; // Restored
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { IpAddress } from '../auth/decorators/ip-address.decorator';
 import { UserAgent } from '../auth/decorators/user-agent.decorator';
-import { Roles } from '../auth/decorators/roles.decorator'; // Added
-import { Role } from '@prisma/client'; // Added
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 import type { UserPayload } from '../auth/interfaces/user.interface';
-import { UploadFileDto } from './dto/upload-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
-import { CreateCommentDto } from './dto/create-comment.dto';
+import { zodPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  UploadFileSchema,
+  type UploadFileDto,
+  UpdateFileSchema,
+  type UpdateFileDto,
+  CreateCommentSchema,
+  type CreateCommentDto,
+  FileFiltersSchema,
+  type FileFiltersDto,
+} from './schemas';
 import { FileValidationPipe } from './pipes/file-validation.pipe';
 import {
   RATE_LIMIT_FILES,
   MAX_FILE_SIZE_BYTES,
 } from '../common/constants/timeouts.constants';
-import { FileFiltersDto } from './dto/file-filters.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { safeAuditLog } from '../audit/audit.helper';
 
@@ -95,7 +102,7 @@ export class FilesController {
     @Param('projectId') projectId: string,
     @UploadedFile(new FileValidationPipe())
     file: Express.Multer.File | undefined,
-    @Body() uploadFileDto: UploadFileDto,
+    @Body(zodPipe(UploadFileSchema)) uploadFileDto: UploadFileDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -161,7 +168,7 @@ export class FilesController {
     @Param('id') id: string,
     @UploadedFile(new FileValidationPipe())
     file: Express.Multer.File | undefined,
-    @Body() uploadFileDto: UploadFileDto, // Reusing DTO for comment/notes
+    @Body(zodPipe(UploadFileSchema)) uploadFileDto: UploadFileDto,
     @CurrentUser() user: UserPayload,
     @IpAddress() ipAddress: string,
     @UserAgent() userAgent: string,
@@ -214,7 +221,7 @@ export class FilesController {
   @HttpCode(HttpStatus.CREATED)
   async createComment(
     @Param('projectId') projectId: string,
-    @Body() createCommentDto: CreateCommentDto,
+    @Body(zodPipe(CreateCommentSchema)) createCommentDto: CreateCommentDto,
     @CurrentUser() user: UserPayload,
   ) {
     // Log comment creation for debugging
@@ -261,7 +268,7 @@ export class FilesController {
     @Param('id') id: string,
     @UploadedFile(new FileValidationPipe())
     file: Express.Multer.File | undefined,
-    @Body() updateFileDto: UpdateFileDto,
+    @Body(zodPipe(UpdateFileSchema)) updateFileDto: UpdateFileDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.filesService.updateFile(
@@ -284,7 +291,7 @@ export class FilesController {
   @ApiNotFoundResponse('Project')
   async findAllByProject(
     @Param('projectId') projectId: string,
-    @Query() fileFilters: FileFiltersDto,
+    @Query(zodPipe(FileFiltersSchema)) fileFilters: FileFiltersDto,
     @CurrentUser() user: UserPayload,
   ) {
     return this.filesService.findAllByProject(projectId, fileFilters, {

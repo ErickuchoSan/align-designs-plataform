@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Invoice } from '@/types/invoice';
 import InvoiceStatusBadge from './InvoiceStatusBadge';
+import { formatDate } from '@/lib/date.utils';
 
 interface InvoiceTableProps {
   invoices: Invoice[];
@@ -73,7 +74,7 @@ function InvoiceTable({
                 ${invoice.amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {new Date(invoice[dateField]).toLocaleDateString()}
+                {formatDate(invoice[dateField])}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                 <button

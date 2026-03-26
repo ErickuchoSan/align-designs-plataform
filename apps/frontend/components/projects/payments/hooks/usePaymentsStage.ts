@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { InvoicesService } from '@/services/invoices.service';
-import { EmployeePaymentsService } from '@/services/employee-payments.service';
-import { PaymentsService } from '@/services/payments.service';
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Invoice } from '@/types/invoice';
 import { EmployeePayment } from '@/types/employee-payment';
 import { Payment } from '@/types/payments';
 import { toast } from '@/lib/toast';
-import { handleApiError } from '@/lib/errors';
+import {
+  usePaymentStageDataQuery,
+  useApproveEmployeePaymentMutation,
+  useRejectEmployeePaymentMutation,
+} from '@/hooks/queries';
+import { queryKeys } from '@/lib/query-keys';
 
 type UserRole = 'ADMIN' | 'CLIENT' | 'EMPLOYEE';
 
@@ -35,67 +38,41 @@ export function usePaymentsStage({
   projectId,
   userRole,
 }: UsePaymentsStageProps): UsePaymentsStageReturn {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [employeePayments, setEmployeePayments] = useState<EmployeePayment[]>([]);
-  const [clientPayments, setClientPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [approvingPayment, setApprovingPayment] = useState(false);
-  const [rejectingPayment, setRejectingPayment] = useState(false);
+  const queryClient = useQueryClient();
 
-  const loadPaymentData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // TanStack Query: fetch payment stage data based on role
+  const { data, isLoading, error: queryError, refetch: refetchQuery } = usePaymentStageDataQuery(
+    projectId,
+    userRole
+  );
 
-      // Load invoices (Admin and Client only)
-      if (userRole === 'ADMIN' || userRole === 'CLIENT') {
-        const invoiceData = await InvoicesService.getByProject(projectId);
-        setInvoices(invoiceData);
-      }
+  // TanStack Query: mutations
+  const approveMutation = useApproveEmployeePaymentMutation();
+  const rejectMutation = useRejectEmployeePaymentMutation();
 
-      // Load employee payments (Admin and Employee only)
-      if (userRole === 'ADMIN' || userRole === 'EMPLOYEE') {
-        const paymentData = await EmployeePaymentsService.getByProject(projectId);
-        setEmployeePayments(paymentData);
-      }
+  const invoices = data?.invoices || [];
+  const employeePayments = data?.employeePayments || [];
+  const clientPayments = data?.clientPayments || [];
+  const error = queryError ? (queryError as Error).message : null;
 
-      // Load client payments (Admin and Client)
-      if (userRole === 'ADMIN' || userRole === 'CLIENT') {
-        const allPayments = await PaymentsService.findAllByProject(projectId);
-        const clientPays = allPayments.filter(
-          (p) => p.type === 'INITIAL_PAYMENT' || p.type === 'INVOICE'
-        );
-        setClientPayments(clientPays);
-      }
-    } catch (err) {
-      const msg = handleApiError(err, 'Failed to load payment data');
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, userRole]);
-
-  useEffect(() => {
-    loadPaymentData();
-  }, [loadPaymentData]);
+  const refetch = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.projects.payments(projectId),
+    });
+    await refetchQuery();
+  }, [queryClient, projectId, refetchQuery]);
 
   const approvePayment = useCallback(
     async (paymentId: string, file: File): Promise<boolean> => {
-      setApprovingPayment(true);
       try {
-        await EmployeePaymentsService.approve(paymentId, file);
-        toast.success('Payment approved successfully');
-        await loadPaymentData();
+        await approveMutation.mutateAsync({ paymentId, file });
+        await refetch();
         return true;
-      } catch (err) {
-        toast.error(handleApiError(err, 'Failed to approve payment'));
+      } catch {
         return false;
-      } finally {
-        setApprovingPayment(false);
       }
     },
-    [loadPaymentData]
+    [approveMutation, refetch]
   );
 
   const rejectPayment = useCallback(
@@ -105,32 +82,27 @@ export function usePaymentsStage({
         return false;
       }
 
-      setRejectingPayment(true);
       try {
-        await EmployeePaymentsService.reject(paymentId, reason);
-        toast.success('Payment rejected');
-        await loadPaymentData();
+        await rejectMutation.mutateAsync({ paymentId, reason });
+        await refetch();
         return true;
-      } catch (err) {
-        toast.error(handleApiError(err, 'Failed to reject payment'));
+      } catch {
         return false;
-      } finally {
-        setRejectingPayment(false);
       }
     },
-    [loadPaymentData]
+    [rejectMutation, refetch]
   );
 
   return {
     invoices,
     employeePayments,
     clientPayments,
-    loading,
+    loading: isLoading,
     error,
-    refetch: loadPaymentData,
+    refetch,
     approvePayment,
     rejectPayment,
-    approvingPayment,
-    rejectingPayment,
+    approvingPayment: approveMutation.isPending,
+    rejectingPayment: rejectMutation.isPending,
   };
 }

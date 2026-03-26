@@ -3,8 +3,7 @@ import {
   IBaseRepository,
   FindAllOptions,
 } from '../../common/repositories/base.repository';
-import { CreateClientDto } from '../dto/create-client.dto';
-import { UpdateUserDto } from '../dto/update-user.dto';
+import type { CreateClientDto, UpdateUserDto } from '../schemas';
 
 /**
  * User repository interface

@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import { EmployeeSelect } from '@/components/projects/EmployeeSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { ProjectsService } from '@/services/projects.service';
 import { User } from '@/types';
-import { UsersService } from '@/services/users.service';
-import { useFetchOnOpen, useAsyncOperation } from '@/hooks';
+import { useEmployeesQuery, useAssignEmployeesMutation } from '@/hooks/queries';
 
 interface ManageEmployeesModalProps {
     isOpen: boolean;
@@ -25,15 +23,13 @@ interface ProjectEmployee {
 export default function ManageEmployeesModal({ isOpen, onClose, projectId, currentEmployees, onSuccess }: Readonly<ManageEmployeesModalProps>) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    // DRY: Use useFetchOnOpen for automatic fetch when modal opens
-    const { data: availableEmployees, loading: isLoading } = useFetchOnOpen<User[]>(
-        isOpen,
-        () => UsersService.getEmployees(),
-        { initialData: [], errorPrefix: 'Error loading available employees' }
-    );
+    // TanStack Query: fetch employees when modal opens
+    const { data: availableEmployees = [], isLoading } = useEmployeesQuery({
+        enabled: isOpen,
+    });
 
-    // DRY: Use useAsyncOperation for save handling
-    const { loading: isSaving, execute } = useAsyncOperation();
+    // TanStack Query: assign employees mutation
+    const assignMutation = useAssignEmployeesMutation();
 
     // Initialize selected IDs from current employees when modal opens
     useEffect(() => {
@@ -45,11 +41,9 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        await execute(
-            () => ProjectsService.assignEmployees(projectId, selectedIds),
+        assignMutation.mutate(
+            { projectId, employeeIds: selectedIds },
             {
-                successMessage: 'Employees updated successfully',
-                errorMessagePrefix: 'Error updating employees',
                 onSuccess: () => {
                     onSuccess();
                     onClose();
@@ -71,7 +65,7 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
                         <div className="py-4 text-center text-gray-400">Loading employees...</div>
                     ) : (
                         <EmployeeSelect
-                            employees={availableEmployees ?? []}
+                            employees={availableEmployees}
                             selectedIds={selectedIds}
                             onChange={setSelectedIds}
                         />
@@ -82,17 +76,17 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
                     <button
                         type="button"
                         onClick={onClose}
-                        disabled={isSaving}
+                        disabled={assignMutation.isPending}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        disabled={isSaving || isLoading}
+                        disabled={assignMutation.isPending || isLoading}
                         className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-navy-600 border border-transparent rounded-md hover:bg-navy-700 min-w-[100px]"
                     >
-                        {isSaving ? <ButtonLoader /> : 'Save'}
+                        {assignMutation.isPending ? <ButtonLoader /> : 'Save'}
                     </button>
                 </div>
             </form>

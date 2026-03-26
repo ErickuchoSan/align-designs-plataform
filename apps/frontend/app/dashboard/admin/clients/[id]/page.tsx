@@ -1,65 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { UsersService } from '@/services/users.service';
-import { InvoicesService } from '@/services/invoices.service';
-import { ProjectsService } from '@/services/projects.service';
-import { User, Project } from '@/types';
-import { Invoice } from '@/types/invoice';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 import { formatDate } from '@/lib/utils/date.utils';
 import InvoiceStatusBadge from '@/components/dashboard/invoices/InvoiceStatusBadge';
 import Link from 'next/link';
-import { handleApiError } from '@/lib/errors';
-import { toast } from '@/lib/toast';
+import { useClientProfileDataQuery } from '@/hooks/queries';
 
 export default function ClientProfilePage() {
     const params = useParams();
     const id = params?.id as string;
 
-    const [client, setClient] = useState<User | null>(null);
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true);
+    // TanStack Query: fetch client profile data (user, invoices, projects)
+    const { data, isLoading } = useClientProfileDataQuery(id, {
+        enabled: !!id,
+    });
 
-    useEffect(() => {
-        if (id) {
-            loadData();
-        }
-    }, [id]);
+    const client = data?.client || null;
+    const invoices = data?.invoices || [];
+    const projects = data?.projects || [];
 
-    async function loadData() {
-        try {
-            const [clientData, invoicesData, projectsData] = await Promise.all([
-                UsersService.getById(id),
-                InvoicesService.getAll({ clientId: id }),
-                ProjectsService.getAll({ clientId: id }) // Assuming filter support
-            ]);
+    // Compute totals
+    const { totalBilled, totalPaid, outstanding } = useMemo(() => {
+        const billed = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
+        const paid = invoices.reduce((sum, inv) => sum + Number(inv.amountPaid), 0);
+        return { totalBilled: billed, totalPaid: paid, outstanding: billed - paid };
+    }, [invoices]);
 
-            setClient(clientData);
-            setInvoices(invoicesData);
-            // setProjects(projectsData.projects); // ProjectsService.getAll returns { projects, total } logic might vary
-            // Assuming for now it returns just array or we extract it
-            if ('projects' in projectsData && Array.isArray((projectsData as any).projects)) {
-                setProjects((projectsData as any).projects);
-            } else if (Array.isArray(projectsData)) {
-                setProjects(projectsData);
-            }
-
-        } catch (error) {
-            toast.error(handleApiError(error, 'Failed to load client data'));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    if (loading) return <div>Loading...</div>;
+    if (isLoading) return <div>Loading...</div>;
     if (!client) return <div>Client not found</div>;
-
-    const totalBilled = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0);
-    const totalPaid = invoices.reduce((sum, inv) => sum + Number(inv.amountPaid), 0);
-    const outstanding = totalBilled - totalPaid;
 
     return (
         <div className="space-y-8">
