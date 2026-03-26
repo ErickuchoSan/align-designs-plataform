@@ -161,7 +161,7 @@ export function InvoiceEmail({
   invoiceNumber,
   amount,
   dueDate,
-}: InvoiceEmailProps) {
+}: Readonly<InvoiceEmailProps>) {
   const formattedAmount = formatCurrency(amount);
   const formattedDueDate = formatDate(dueDate);
 

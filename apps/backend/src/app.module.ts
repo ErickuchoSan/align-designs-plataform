@@ -4,7 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
 import { ClsModule } from 'nestjs-cls';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { PrismaModule } from './prisma/prisma.module';
 import { CacheModule } from './cache/cache.module';
 import { UsersModule } from './users/users.module';
@@ -53,16 +53,16 @@ import { GLOBAL_RATE_LIMIT } from './common/constants/timeouts.constants';
         pinoHttp: {
           level: config.get('LOG_LEVEL', 'info'),
           transport:
-            config.get('NODE_ENV') !== 'production'
-              ? {
+            config.get('NODE_ENV') === 'production'
+              ? undefined
+              : {
                   target: 'pino-pretty',
                   options: {
                     colorize: true,
                     singleLine: true,
                     translateTime: 'HH:MM:ss',
                   },
-                }
-              : undefined,
+                },
           customProps: () => ({
             service: 'align-designs-api',
           }),

@@ -17,7 +17,7 @@ export function NotificationEmail({
   message,
   actionLink,
   actionText = 'View Details',
-}: NotificationEmailProps) {
+}: Readonly<NotificationEmailProps>) {
   return (
     <EmailLayout preview={title} title={title}>
       <Text style={styles.message}>{message}</Text>

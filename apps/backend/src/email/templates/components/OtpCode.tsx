@@ -28,7 +28,7 @@ const otpStyles = {
 /**
  * Styled OTP code display component
  */
-export function OtpCode({ code }: OtpCodeProps) {
+export function OtpCode({ code }: Readonly<OtpCodeProps>) {
   return (
     <Section style={otpStyles.container}>
       <Text style={otpStyles.code}>{code}</Text>

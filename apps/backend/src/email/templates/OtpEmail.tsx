@@ -45,7 +45,7 @@ function getOtpContent(type: OtpType) {
 /**
  * OTP email for verification codes (login, new user, password recovery)
  */
-export function OtpEmail({ userName, otpCode, type }: OtpEmailProps) {
+export function OtpEmail({ userName, otpCode, type }: Readonly<OtpEmailProps>) {
   const content = getOtpContent(type);
 
   return (

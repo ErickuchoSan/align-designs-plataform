@@ -4,7 +4,6 @@ import {
   Body,
   Container,
   Text,
-  Hr,
   Preview,
   Section,
 } from '@react-email/components';
@@ -110,7 +109,7 @@ export function EmailLayout({
   children,
   warningMessage,
   footerText = 'This is an automated message, please do not reply.',
-}: EmailLayoutProps) {
+}: Readonly<EmailLayoutProps>) {
   const currentYear = new Date().getFullYear();
 
   return (

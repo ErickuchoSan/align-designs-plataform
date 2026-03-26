@@ -20,7 +20,7 @@ const listStyles = {
 /**
  * Welcome email sent to new users when their account is created
  */
-export function WelcomeEmail({ userName, email, loginUrl }: WelcomeEmailProps) {
+export function WelcomeEmail({ userName, email, loginUrl }: Readonly<WelcomeEmailProps>) {
   return (
     <EmailLayout
       preview={`Welcome to Align Designs, ${userName}!`}

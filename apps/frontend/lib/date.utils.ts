@@ -34,7 +34,7 @@ type DateInput = Date | string | null | undefined;
  */
 export function formatDate(
   date: DateInput,
-  formatStr: keyof typeof DATE_FORMATS | string = 'display'
+  formatStr: keyof typeof DATE_FORMATS = 'display'
 ): string {
   if (!date) return '-';
 
@@ -42,10 +42,7 @@ export function formatDate(
 
   if (!isValid(dateObj)) return 'Invalid date';
 
-  const formatString =
-    DATE_FORMATS[formatStr as keyof typeof DATE_FORMATS] ?? formatStr;
-
-  return format(dateObj, formatString, { locale: enUS });
+  return format(dateObj, DATE_FORMATS[formatStr], { locale: enUS });
 }
 
 /**
@@ -189,7 +186,7 @@ export function formatDateTime(date: DateInput): string {
   return format(dateObj, DATE_FORMATS.displayWithTime, { locale: enUS });
 }
 
-// Re-export commonly used functions
+// Re-export commonly used functions from date-fns
 export {
   format,
   formatDistanceToNow,
@@ -200,4 +197,4 @@ export {
   differenceInDays,
   addDays,
   subDays,
-};
+} from 'date-fns';

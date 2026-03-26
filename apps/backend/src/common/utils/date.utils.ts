@@ -4,12 +4,7 @@ import {
   parseISO,
   isValid,
   addDays,
-  subDays,
   differenceInDays,
-  differenceInHours,
-  differenceInMinutes,
-  startOfDay,
-  endOfDay,
 } from 'date-fns';
 
 export const DATE_FORMATS = {
@@ -27,7 +22,7 @@ type DateInput = Date | string | null | undefined;
  */
 export function formatDate(
   date: DateInput,
-  formatStr: keyof typeof DATE_FORMATS | string = 'display',
+  formatStr: keyof typeof DATE_FORMATS = 'display',
 ): string {
   if (!date) return '-';
 
@@ -35,8 +30,7 @@ export function formatDate(
 
   if (!isValid(dateObj)) return 'Invalid date';
 
-  const formatString =
-    DATE_FORMATS[formatStr as keyof typeof DATE_FORMATS] ?? formatStr;
+  const formatString = DATE_FORMATS[formatStr];
 
   return format(dateObj, formatString);
 }
@@ -95,9 +89,10 @@ export function parseDateSafe(dateString: string): Date | null {
   return isValid(date) ? date : null;
 }
 
-// Re-export commonly used functions
+// Re-export commonly used functions from date-fns
 export {
   format,
+  formatDistanceToNow,
   parseISO,
   isValid,
   addDays,
@@ -107,4 +102,4 @@ export {
   differenceInMinutes,
   startOfDay,
   endOfDay,
-};
+} from 'date-fns';

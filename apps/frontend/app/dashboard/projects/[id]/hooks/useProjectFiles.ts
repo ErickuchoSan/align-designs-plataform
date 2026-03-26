@@ -48,7 +48,7 @@ export function useProjectFiles(projectId: string) {
     page: currentPage,
     limit: itemsPerPage,
     name: nameFilter || undefined,
-    type: typeFilter !== 'all' ? typeFilter : undefined,
+    type: typeFilter === 'all' ? undefined : typeFilter,
   });
 
   // Derived state from query results

@@ -34,7 +34,7 @@ const buttonStyles = {
 /**
  * Styled button component for CTAs in emails
  */
-export function Button({ href, children, variant = 'primary' }: ButtonProps) {
+export function Button({ href, children, variant = 'primary' }: Readonly<ButtonProps>) {
   return (
     <EmailButton href={href} style={buttonStyles[variant]}>
       {children}

@@ -21,7 +21,7 @@ import { z } from 'zod';
  */
 @Injectable()
 export class ZodValidationPipe<T> implements PipeTransform {
-  private schema: z.ZodSchema<T>;
+  private readonly schema: z.ZodSchema<T>;
 
   constructor(schema: z.ZodSchema<T>) {
     this.schema = schema;

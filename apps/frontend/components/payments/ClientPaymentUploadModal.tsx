@@ -5,7 +5,6 @@ import Modal from '@/components/ui/Modal';
 import { PaymentMethodSelect } from './PaymentMethodSelect';
 import { ButtonLoader } from '@/components/ui/Loader';
 import { toast } from '@/lib/toast';
-import { PaymentsService } from '@/services/payments.service';
 import { PaymentMethod, PaymentType } from '@/types/payments';
 import { useUnpaidInvoicesQuery, useUploadClientPaymentMutation } from '@/hooks/queries';
 import { getTodayDateString } from '@/lib/date.utils';

@@ -7,7 +7,7 @@ import {
 import { ProjectsService } from '@/services/projects.service';
 import { queryKeys } from '@/lib/query-keys';
 import { toast } from '@/lib/toast';
-import type { Project, CreateProjectDto, UpdateProjectDto } from '@/types';
+import type { CreateProjectDto, UpdateProjectDto } from '@/types';
 
 interface ProjectsListParams {
   page?: number;

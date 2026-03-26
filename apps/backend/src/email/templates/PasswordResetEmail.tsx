@@ -20,7 +20,7 @@ const linkTextStyles = {
 export function PasswordResetEmail({
   userName,
   resetLink,
-}: PasswordResetEmailProps) {
+}: Readonly<PasswordResetEmailProps>) {
   return (
     <EmailLayout
       preview="Reset your Align Designs password"

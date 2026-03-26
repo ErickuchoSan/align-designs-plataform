@@ -3,7 +3,7 @@ import { InvoicesService } from '@/services/invoices.service';
 import { queryKeys } from '@/lib/query-keys';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
-import type { Invoice, InvoiceStatus } from '@/types/invoice';
+import type { InvoiceStatus } from '@/types/invoice';
 
 interface InvoiceFilters {
   clientId?: string;

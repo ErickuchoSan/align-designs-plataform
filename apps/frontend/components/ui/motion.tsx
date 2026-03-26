@@ -1,10 +1,13 @@
 'use client';
 
-import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { forwardRef, type ComponentPropsWithoutRef } from 'react';
 
-// Hook to check if user prefers reduced motion (accessibility)
-export { useReducedMotion };
+// Re-export hooks and components from framer-motion
+export { useReducedMotion, AnimatePresence } from 'framer-motion';
+
+// Import for internal use
+import { useReducedMotion } from 'framer-motion';
 
 // Helper to get animation props respecting reduced motion preference
 export function getMotionProps(shouldReduceMotion: boolean | null) {
@@ -157,5 +160,3 @@ export const FadeIn = forwardRef<HTMLDivElement, FadeInProps>(
 );
 FadeIn.displayName = 'FadeIn';
 
-// Re-export AnimatePresence for convenience
-export { AnimatePresence };
