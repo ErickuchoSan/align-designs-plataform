@@ -45,50 +45,80 @@ jobs:
           # The manual trigger implies dev has been verified
           echo "Production deployment authorized"
 
-  # Job 2: Create Full Backup
+  # Job 2: Create Full Backup to DigitalOcean Spaces
   backup:
-    name: Create Full Backup
+    name: Full Backup to Cloud
     runs-on: ubuntu-latest
     needs: verify-dev
     if: ${{ github.event.inputs.skip_backup != 'true' && github.event.inputs.rollback_to == '' }}
     steps:
-      - name: Full System Backup
+      - name: Backup DB, Docker Images & SSH Config to Spaces
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 64.23.223.235
           username: root
           port: 29
           key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
             BACKUP_DIR="/var/backups/align-designs"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
 
             echo "=== Creating backup directory ==="
-            mkdir -p "$BACKUP_PATH"
+            mkdir -p "$BACKUP_DIR"
 
             echo "=== Backing up PostgreSQL database ==="
-            docker exec postgres-prod pg_dump -U aligndesigns_prod aligndesigns_prod > "$BACKUP_PATH/database.sql" || echo "No DB container yet"
+            docker exec postgres-prod pg_dump -U aligndesigns_prod aligndesigns_prod > "$BACKUP_DIR/database.sql"
 
-            echo "=== Saving Docker images ==="
-            docker save backend-prod:latest > "$BACKUP_PATH/backend-image.tar" 2>/dev/null || echo "No backend image yet"
-            docker save frontend-prod:latest > "$BACKUP_PATH/frontend-image.tar" 2>/dev/null || echo "No frontend image yet"
+            echo "=== Saving Docker images (this may take a while) ==="
+            docker save frontend-prod:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-prod.tar.gz" || echo "No frontend image"
+            docker save backend-prod:latest 2>/dev/null | gzip > "$BACKUP_DIR/backend-prod.tar.gz" || echo "No backend image"
 
-            echo "=== Saving docker-compose state ==="
-            cp /var/www/align-designs-prod/docker-compose.prod.yml "$BACKUP_PATH/" 2>/dev/null || echo "No compose file yet"
-            cp /var/www/align-designs-prod/.env.prod "$BACKUP_PATH/" 2>/dev/null || echo "No env file yet"
+            echo "=== Backing up SSH config ==="
+            cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config"
 
-            echo "=== Compressing backup ==="
-            cd "$BACKUP_DIR"
-            tar -czf "$TIMESTAMP.tar.gz" "$TIMESTAMP"
-            rm -rf "$TIMESTAMP"
+            echo "=== Backing up docker-compose and env ==="
+            cp /var/www/align-designs-prod/docker-compose.prod.yml "$BACKUP_DIR/" 2>/dev/null || echo "No compose file yet"
+            cp /var/www/align-designs-prod/.env.prod "$BACKUP_DIR/env.prod.backup" 2>/dev/null || echo "No env file yet"
 
-            echo "=== Cleanup old backups (keep last 2) ==="
-            ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm --
+            echo "=== Installing/configuring AWS CLI for Spaces ==="
+            if ! command -v aws &> /dev/null; then
+              apt-get update && apt-get install -y awscli
+            fi
 
-            echo "=== Backup complete: $TIMESTAMP.tar.gz ==="
-            ls -lh "$BACKUP_DIR"
+            # Configure AWS CLI for DigitalOcean Spaces
+            export AWS_ACCESS_KEY_ID="${{ secrets.STORAGE_ACCESS_KEY }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.STORAGE_SECRET_KEY }}"
+            export AWS_DEFAULT_REGION="sfo3"
+
+            S3_ENDPOINT="https://sfo3.digitaloceanspaces.com"
+            BUCKET="aligndesigns-dev"
+            BACKUP_PREFIX="backups/prod"
+
+            echo "=== Uploading to DigitalOcean Spaces ==="
+            # Upload all backup files (overwrites previous backup)
+            aws s3 cp "$BACKUP_DIR/database.sql" "s3://$BUCKET/$BACKUP_PREFIX/database.sql" --endpoint-url "$S3_ENDPOINT"
+            aws s3 cp "$BACKUP_DIR/frontend-prod.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/frontend-prod.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            aws s3 cp "$BACKUP_DIR/backend-prod.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/backend-prod.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            aws s3 cp "$BACKUP_DIR/sshd_config" "s3://$BUCKET/$BACKUP_PREFIX/sshd_config" --endpoint-url "$S3_ENDPOINT"
+            aws s3 cp "$BACKUP_DIR/docker-compose.prod.yml" "s3://$BUCKET/$BACKUP_PREFIX/docker-compose.prod.yml" --endpoint-url "$S3_ENDPOINT" || true
+            aws s3 cp "$BACKUP_DIR/env.prod.backup" "s3://$BUCKET/$BACKUP_PREFIX/env.prod.backup" --endpoint-url "$S3_ENDPOINT" || true
+
+            # Upload a metadata file with timestamp
+            echo "Backup created at: $TIMESTAMP" > "$BACKUP_DIR/backup_info.txt"
+            echo "Server: prod (64.23.223.235)" >> "$BACKUP_DIR/backup_info.txt"
+            aws s3 cp "$BACKUP_DIR/backup_info.txt" "s3://$BUCKET/$BACKUP_PREFIX/backup_info.txt" --endpoint-url "$S3_ENDPOINT"
+
+            echo "=== Cleaning up local backup files ==="
+            rm -f "$BACKUP_DIR/frontend-prod.tar.gz" "$BACKUP_DIR/backend-prod.tar.gz"
+            rm -f "$BACKUP_DIR/database.sql" "$BACKUP_DIR/sshd_config" "$BACKUP_DIR/backup_info.txt"
+
+            # Keep only last 2 compressed backups locally (legacy cleanup)
+            ls -t $BACKUP_DIR/*.tar.gz 2>/dev/null | tail -n +3 | xargs -r rm -- || true
+
+            echo "=== Backup completed and uploaded to Spaces at $(date) ==="
+            aws s3 ls "s3://$BUCKET/$BACKUP_PREFIX/" --endpoint-url "$S3_ENDPOINT"
 
   # Job 3: Rollback (if requested)
   rollback:

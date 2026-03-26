@@ -79,29 +79,72 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # Job 3: Database Backup
+  # Job 3: Full Backup to DigitalOcean Spaces
   backup:
-    name: Database Backup
+    name: Full Backup to Cloud
     runs-on: ubuntu-latest
     steps:
-      - name: Backup PostgreSQL
+      - name: Backup DB, Docker Images & SSH Config to Spaces
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 144.126.221.76
           username: root
           port: 29
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          command_timeout: 30m
           script: |
-            # Create backup directory if not exists
-            mkdir -p /var/www/align-designs/backups
+            set -e
+            BACKUP_DIR="/var/www/align-designs/backups"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-            # Backup database with timestamp
-            docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > /var/www/align-designs/backups/db_$(date +%Y%m%d_%H%M%S).sql
+            echo "=== Creating backup directory ==="
+            mkdir -p "$BACKUP_DIR"
 
-            # Keep only last 2 backups
-            cd /var/www/align-designs/backups && ls -t *.sql | tail -n +3 | xargs -r rm --
+            echo "=== Backing up PostgreSQL database ==="
+            docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > "$BACKUP_DIR/database.sql"
 
-            echo "Backup completed at $(date)"
+            echo "=== Saving Docker images (this may take a while) ==="
+            docker save frontend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-dev.tar.gz" || echo "No frontend image"
+            docker save backend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/backend-dev.tar.gz" || echo "No backend image"
+            # Note: postgres image is from Docker Hub, no need to backup
+
+            echo "=== Backing up SSH config ==="
+            cp /etc/ssh/sshd_config "$BACKUP_DIR/sshd_config"
+
+            echo "=== Installing/configuring AWS CLI for Spaces ==="
+            if ! command -v aws &> /dev/null; then
+              apt-get update && apt-get install -y awscli
+            fi
+
+            # Configure AWS CLI for DigitalOcean Spaces
+            export AWS_ACCESS_KEY_ID="${{ secrets.STORAGE_ACCESS_KEY }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.STORAGE_SECRET_KEY }}"
+            export AWS_DEFAULT_REGION="sfo3"
+
+            S3_ENDPOINT="https://sfo3.digitaloceanspaces.com"
+            BUCKET="aligndesigns-dev"
+            BACKUP_PREFIX="backups/dev"
+
+            echo "=== Uploading to DigitalOcean Spaces ==="
+            # Upload all backup files (overwrites previous backup)
+            aws s3 cp "$BACKUP_DIR/database.sql" "s3://$BUCKET/$BACKUP_PREFIX/database.sql" --endpoint-url "$S3_ENDPOINT"
+            aws s3 cp "$BACKUP_DIR/frontend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/frontend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            aws s3 cp "$BACKUP_DIR/backend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/backend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            aws s3 cp "$BACKUP_DIR/sshd_config" "s3://$BUCKET/$BACKUP_PREFIX/sshd_config" --endpoint-url "$S3_ENDPOINT"
+
+            # Upload a metadata file with timestamp
+            echo "Backup created at: $TIMESTAMP" > "$BACKUP_DIR/backup_info.txt"
+            echo "Server: dev (144.126.221.76)" >> "$BACKUP_DIR/backup_info.txt"
+            aws s3 cp "$BACKUP_DIR/backup_info.txt" "s3://$BUCKET/$BACKUP_PREFIX/backup_info.txt" --endpoint-url "$S3_ENDPOINT"
+
+            echo "=== Cleaning up local backup files ==="
+            rm -f "$BACKUP_DIR/frontend-dev.tar.gz" "$BACKUP_DIR/backend-dev.tar.gz"
+
+            # Keep only last 2 DB backups locally
+            cd "$BACKUP_DIR" && ls -t *.sql 2>/dev/null | tail -n +3 | xargs -r rm -- || true
+
+            echo "=== Backup completed and uploaded to Spaces at $(date) ==="
+            aws s3 ls "s3://$BUCKET/$BACKUP_PREFIX/" --endpoint-url "$S3_ENDPOINT"
 
   # Job 4: Deploy
   deploy:
