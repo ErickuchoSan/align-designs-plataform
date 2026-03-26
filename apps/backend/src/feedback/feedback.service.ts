@@ -37,10 +37,7 @@ export class FeedbackService {
    * Create a new feedback cycle for an employee
    * Called automatically when admin sends first feedback to employee
    */
-  async createFeedbackCycle(
-    projectId: string,
-    employeeId: string,
-  ): Promise<any> {
+  async createFeedbackCycle(projectId: string, employeeId: string) {
     // Check if employee has an open cycle already
     const existingOpenCycle = await this.prisma.feedbackCycle.findFirst({
       where: {
@@ -87,7 +84,7 @@ export class FeedbackService {
     });
 
     this.logger.log(
-      `Feedback cycle created for employee ${employeeId} in project ${projectId}. Start date: ${startDate}`,
+      `Feedback cycle created for employee ${employeeId} in project ${projectId}. Start date: ${startDate.toISOString()}`,
     );
 
     await this.sendFeedbackNotification(
@@ -133,7 +130,7 @@ export class FeedbackService {
     targetAudience: 'client_space' | 'employee_space',
     content?: string,
     fileDocumentId?: string,
-  ): Promise<any> {
+  ) {
     // Find or create open cycle
     let cycle = await this.prisma.feedbackCycle.findFirst({
       where: {
@@ -225,10 +222,7 @@ export class FeedbackService {
   /**
    * Mark cycle as submitted when employee delivers
    */
-  async submitFeedbackCycle(
-    cycleId: string,
-    submittedFileId: string,
-  ): Promise<any> {
+  async submitFeedbackCycle(cycleId: string, submittedFileId: string) {
     const cycle = await this.prisma.feedbackCycle.findUnique({
       where: { id: cycleId },
       select: { status: true },
@@ -291,7 +285,7 @@ export class FeedbackService {
    * Called when admin approves employee's submission
    * Also moves all linked files from SUBMITTED to ADMIN_APPROVED
    */
-  async approveFeedbackCycle(cycleId: string): Promise<any> {
+  async approveFeedbackCycle(cycleId: string) {
     const cycle = await this.prisma.feedbackCycle.findUnique({
       where: { id: cycleId },
       select: {
@@ -400,10 +394,7 @@ export class FeedbackService {
    * Employee can submit again
    * Also increments rejection count on linked files
    */
-  async rejectFeedbackCycle(
-    cycleId: string,
-    rejectionReason?: string,
-  ): Promise<any> {
+  async rejectFeedbackCycle(cycleId: string, rejectionReason?: string) {
     const cycle = await this.prisma.feedbackCycle.findUnique({
       where: { id: cycleId },
       select: { status: true },

@@ -3,7 +3,7 @@ import { FeedbackService } from './feedback.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@prisma/client';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 describe('FeedbackService', () => {
   let service: FeedbackService;
@@ -233,13 +233,17 @@ describe('FeedbackService', () => {
       };
 
       // Mock $transaction to return approved cycle
-      prismaService.$transaction.mockImplementation(async (callback) => {
-        const mockTx = {
-          file: { updateMany: jest.fn() },
-          feedbackCycle: { update: jest.fn().mockResolvedValue(approvedCycle) },
-        };
-        return callback(mockTx);
-      });
+      prismaService.$transaction.mockImplementation(
+        (callback: (tx: unknown) => unknown) => {
+          const mockTx = {
+            file: { updateMany: jest.fn() },
+            feedbackCycle: {
+              update: jest.fn().mockResolvedValue(approvedCycle),
+            },
+          };
+          return Promise.resolve(callback(mockTx));
+        },
+      );
 
       const result = await service.approveFeedbackCycle(mockCycleId);
 
@@ -287,13 +291,15 @@ describe('FeedbackService', () => {
       };
 
       // Mock $transaction to return reopened cycle
-      prismaService.$transaction.mockImplementation(async (callback) => {
-        const mockTx = {
-          file: { updateMany: jest.fn() },
-          feedbackCycle: { update: jest.fn().mockResolvedValue(openCycle) },
-        };
-        return callback(mockTx);
-      });
+      prismaService.$transaction.mockImplementation(
+        (callback: (tx: unknown) => unknown) => {
+          const mockTx = {
+            file: { updateMany: jest.fn() },
+            feedbackCycle: { update: jest.fn().mockResolvedValue(openCycle) },
+          };
+          return Promise.resolve(callback(mockTx));
+        },
+      );
 
       const result = await service.rejectFeedbackCycle(mockCycleId);
 
