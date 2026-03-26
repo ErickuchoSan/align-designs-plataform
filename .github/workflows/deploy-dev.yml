@@ -5,14 +5,28 @@ on:
     branches:
       - main
 
+# Prevent concurrent deployments to avoid conflicts
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+# Minimum required permissions (security best practice)
+permissions:
+  contents: read
+  actions: read
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Centralized configuration (DRY principle)
+  DEV_SERVER_IP: '144.126.221.76'
+  SSH_PORT: '29'
 
 jobs:
   # Job 1: Build Validation + Tests + Security Audit
   validate:
     name: Build, Test & Security
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,6 +81,7 @@ jobs:
   sonarcloud:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -83,6 +98,7 @@ jobs:
   deploy:
     name: Deploy to Dev Server
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [validate, sonarcloud]
     steps:
       - name: Deploy to Dev Server
