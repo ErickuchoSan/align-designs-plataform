@@ -44,7 +44,7 @@ function StageContent({
   stageFiles,
   filesLoading,
   userRole,
-  userId,
+  userId: _userId,
   projectId,
   projectStatus,
   amountPaid,

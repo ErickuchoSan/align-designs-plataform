@@ -3,7 +3,7 @@ import { InvoicesService } from '@/services/invoices.service';
 import { queryKeys } from '@/lib/query-keys';
 import { toast } from '@/lib/toast';
 import { handleApiError } from '@/lib/errors';
-import type { InvoiceStatus } from '@/types/invoice';
+import type { InvoiceStatus, CreateInvoiceDto } from '@/types/invoice';
 
 interface InvoiceFilters {
   clientId?: string;
@@ -124,17 +124,6 @@ export function useProjectForInvoiceQuery(
   });
 }
 
-interface CreateInvoiceData {
-  projectId: string;
-  clientId: string;
-  issueDate: string;
-  dueDate: string;
-  paymentTermsDays: number;
-  subtotal: number;
-  totalAmount: number;
-  notes?: string;
-}
-
 /**
  * Mutation hook for creating an invoice
  */
@@ -142,8 +131,8 @@ export function useCreateInvoiceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateInvoiceData) =>
-      InvoicesService.create(data as any),
+    mutationFn: (data: CreateInvoiceDto) =>
+      InvoicesService.create(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
       queryClient.invalidateQueries({

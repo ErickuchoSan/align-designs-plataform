@@ -3,7 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
-import { NotificationsService } from '@/services/notifications.service';
+import { NotificationsService, Notification } from '@/services/notifications.service';
 import { queryKeys } from '@/lib/query-keys';
 
 /**
@@ -33,7 +33,7 @@ export function useMarkNotificationReadMutation() {
 
       const previousNotifications = queryClient.getQueryData(queryKeys.notifications.list());
 
-      queryClient.setQueryData(queryKeys.notifications.list(), (old: any[] | undefined) =>
+      queryClient.setQueryData(queryKeys.notifications.list(), (old: Notification[] | undefined) =>
         old?.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       );
 
@@ -65,7 +65,7 @@ export function useMarkAllNotificationsReadMutation() {
 
       const previousNotifications = queryClient.getQueryData(queryKeys.notifications.list());
 
-      queryClient.setQueryData(queryKeys.notifications.list(), (old: any[] | undefined) =>
+      queryClient.setQueryData(queryKeys.notifications.list(), (old: Notification[] | undefined) =>
         old?.map((n) => ({ ...n, isRead: true }))
       );
 

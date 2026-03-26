@@ -66,7 +66,7 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
   const logout = useCallback(async () => {
     try {
       await AuthService.logout();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error during logout:', error);
     } finally {
       setUser(null);

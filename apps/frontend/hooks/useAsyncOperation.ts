@@ -10,7 +10,7 @@ export interface AsyncOperationOptions {
   /** Whether to show toast notifications (default: true) */
   showToast?: boolean;
   /** Callback to execute on success */
-  onSuccess?: (data?: any) => void | Promise<void>;
+  onSuccess?: (data?: unknown) => void | Promise<void>;
   /** Callback to execute on error */
   onError?: (error: Error) => void;
   /** Whether to automatically clear success message after delay */
@@ -26,7 +26,7 @@ export interface AsyncOperationState {
 }
 
 export interface AsyncOperationActions {
-  execute: <T = any>(operation: () => Promise<T>, options?: AsyncOperationOptions) => Promise<T | null>;
+  execute: <T = unknown>(operation: () => Promise<T>, options?: AsyncOperationOptions) => Promise<T | null>;
   setError: (error: string) => void;
   setSuccess: (success: string) => void;
   clearError: () => void;
@@ -95,7 +95,7 @@ export function useAsyncOperation(): UseAsyncOperationReturn {
   }, []);
 
   const execute = useCallback(
-    async <T = any>(
+    async <T = unknown>(
       operation: () => Promise<T>,
       options: AsyncOperationOptions = {}
     ): Promise<T | null> => {

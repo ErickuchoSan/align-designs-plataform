@@ -46,7 +46,7 @@ interface ProjectStagesViewProps {
  */
 function ProjectStagesView({
   projectId,
-  projectName,
+  projectName: _projectName,
   project,
   files,
   onOpenContentModal,
@@ -55,7 +55,7 @@ function ProjectStagesView({
   onEdit,
   onDelete,
   onViewHistory,
-  onUploadVersion,
+  onUploadVersion: _onUploadVersion,
   canDeleteFile,
   filesLoading,
   onRefresh,
