@@ -7,7 +7,6 @@ import { PrismaService } from '../prisma/prisma.service';
 describe('OtpService', () => {
   let service: OtpService;
   let prismaService: any;
-  let configService: any;
 
   const mockUserId = 'user-123';
 

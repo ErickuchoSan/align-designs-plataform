@@ -15,7 +15,13 @@ import { validateEnvironmentVariables } from './common/config/env-validator';
 import { isProduction } from './common/utils/request.utils';
 
 // Handle BigInt serialization
-(BigInt.prototype as any).toJSON = function () {
+// TypeScript doesn't have BigInt.prototype.toJSON in its lib, so we need to extend it
+declare global {
+  interface BigInt {
+    toJSON(): string;
+  }
+}
+BigInt.prototype.toJSON = function (): string {
   return this.toString();
 };
 

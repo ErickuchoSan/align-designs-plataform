@@ -15,7 +15,21 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
+
+/**
+ * Multipart form body fields for client payment upload
+ * All fields are strings because multipart/form-data serializes everything as strings
+ */
+interface ClientPaymentBody {
+  projectId?: string;
+  amount?: string;
+  paymentDate?: string;
+  paymentMethod?: string;
+  type?: string;
+  notes?: string;
+  invoiceId?: string;
+}
 import { FileInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import { PaymentsService } from './payments.service';
 import { zodPipe } from '../common/pipes/zod-validation.pipe';
@@ -114,7 +128,7 @@ export class PaymentsController {
   )
   async uploadClientPayment(
     @UploadedFiles() files: Express.Multer.File[],
-    @Req() req: any, // Need @Req for multipart body access
+    @Req() req: Request & { body: ClientPaymentBody },
     @CurrentUser() user: UserPayload,
   ) {
     const file = files && files.length > 0 ? files[0] : null;
@@ -124,15 +138,8 @@ export class PaymentsController {
     }
 
     // Extract fields from multipart form data
-    let {
-      projectId,
-      amount,
-      paymentDate,
-      paymentMethod,
-      type,
-      notes,
-      invoiceId,
-    } = req.body;
+    const { amount, paymentDate, paymentMethod, notes, invoiceId } = req.body;
+    let { projectId, type } = req.body;
 
     // If projectId is missing but invoiceId exists, fetch it from the invoice
     // Using InvoicesService to follow Law of Demeter
@@ -158,9 +165,9 @@ export class PaymentsController {
     // Build DTO
     const createPaymentDto: RecordPaymentDto = {
       projectId,
-      type,
+      type: type as RecordPaymentDto['type'],
       amount: Number.parseFloat(amount),
-      paymentMethod,
+      paymentMethod: paymentMethod as RecordPaymentDto['paymentMethod'],
       paymentDate,
       notes,
       invoiceId,
