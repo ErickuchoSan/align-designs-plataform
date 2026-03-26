@@ -7,8 +7,7 @@ import { User, Role } from '@prisma/client';
 
 describe('AccountLockoutService', () => {
   let service: AccountLockoutService;
-  let prismaService: any;
-  let configService: any;
+  let prismaService: PrismaService;
 
   const mockUser: User = {
     id: 'user-123',

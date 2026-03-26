@@ -53,7 +53,7 @@ export class TokenService {
    */
   async generateRefreshToken(
     userId: string,
-    ipAddress?: string,
+    _ipAddress?: string,
   ): Promise<string> {
     const token = crypto.randomBytes(40).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');

@@ -10,8 +10,6 @@ import { PasswordService } from './password.service';
 
 describe('AuthDependenciesService', () => {
   let service: AuthDependenciesService;
-  let jwtService: JwtService;
-  let configService: ConfigService;
 
   const mockJwtService = {
     signAsync: jest.fn(),

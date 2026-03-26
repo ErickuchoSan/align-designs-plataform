@@ -21,7 +21,6 @@ let csrfTokenPromise: Promise<void> | null = null; // Prevent concurrent fetches
 // Request deduplication - prevents duplicate simultaneous requests
 // Only for GET requests to avoid race conditions with mutations
 const pendingRequests = new Map<string, { promise: Promise<unknown>; timestamp: number }>();
-const REQUEST_DEDUP_TTL = 100; // 100ms window for deduplication
 
 // Helper to generate cache key for requests
 function getRequestKey(config: InternalAxiosRequestConfig): string {

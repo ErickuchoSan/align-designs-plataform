@@ -292,10 +292,11 @@ export class AuthController {
       'Uses httpOnly refresh token cookie to issue new access and refresh tokens',
   })
   async refresh(
-    @Req() req: Request & { cookies?: Record<string, string> },
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies?.refresh_token;
+    const cookies = req.cookies as Record<string, string> | undefined;
+    const refreshToken = cookies?.refresh_token;
 
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token found');
@@ -489,9 +490,7 @@ export class AuthController {
    * Extract JWT token from request
    * Checks both Authorization header and httpOnly cookie
    */
-  private extractTokenFromRequest(
-    request: Request & { cookies?: Record<string, string> },
-  ): string | null {
+  private extractTokenFromRequest(request: Request): string | null {
     // Check Authorization header first
     const authHeader = request.headers['authorization'];
     if (authHeader?.startsWith('Bearer ')) {
@@ -499,7 +498,8 @@ export class AuthController {
     }
 
     // Check httpOnly cookie as fallback
-    const cookieToken = request.cookies?.access_token;
+    const cookies = request.cookies as Record<string, string> | undefined;
+    const cookieToken = cookies?.access_token;
     if (cookieToken) {
       return cookieToken;
     }

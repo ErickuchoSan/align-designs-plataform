@@ -28,7 +28,7 @@ export class AuthDependenciesService {
   /**
    * Generate JWT access token
    */
-  async generateAccessToken(payload: Record<string, any>): Promise<string> {
+  async generateAccessToken(payload: Record<string, unknown>): Promise<string> {
     return this.jwt.signAsync(payload);
   }
 

@@ -13,8 +13,7 @@ jest.mock('bcrypt', () => ({
 
 describe('PasswordService', () => {
   let service: PasswordService;
-  let prismaService: any;
-  let configService: any;
+  let prismaService: PrismaService;
 
   const mockUserId = 'user-123';
   const mockPassword = 'Test@Password123';
