@@ -98,6 +98,9 @@ build_log.txt
 # SSH keys
 *.key
 
+# SSH tunnel script with real credentials (use ssh-tunnel.example.ps1)
+scripts/ssh-tunnel.ps1
+
 # Claude Code
 CLAUDE.md
 .claude/
