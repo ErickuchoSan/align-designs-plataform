@@ -34,15 +34,47 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # Job 1: Verify Dev Pipeline Passed
+  # Job 1: Verify Dev Pipeline Passed (including SonarCloud)
   verify-dev:
-    name: Verify Development Tests Passed
+    name: Verify Development Pipeline Passed
     runs-on: ubuntu-latest
     steps:
-      - name: Check last dev workflow
+      - name: Verify last dev workflow succeeded
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Verifying that development pipeline passed..."
-          # The manual trigger implies dev has been verified
+          echo "=== Checking last development pipeline status ==="
+
+          # Get the last workflow run for deploy-dev.yml
+          LAST_RUN=$(gh api repos/${{ github.repository }}/actions/workflows/deploy-dev.yml/runs \
+            --jq '.workflow_runs[0] | {status: .status, conclusion: .conclusion, head_sha: .head_sha, html_url: .html_url}')
+
+          STATUS=$(echo "$LAST_RUN" | jq -r '.status')
+          CONCLUSION=$(echo "$LAST_RUN" | jq -r '.conclusion')
+          SHA=$(echo "$LAST_RUN" | jq -r '.head_sha')
+          URL=$(echo "$LAST_RUN" | jq -r '.html_url')
+
+          echo "Last dev pipeline:"
+          echo "  Status: $STATUS"
+          echo "  Conclusion: $CONCLUSION"
+          echo "  Commit: $SHA"
+          echo "  URL: $URL"
+
+          # Check if the workflow is still running
+          if [ "$STATUS" != "completed" ]; then
+            echo "::error::Development pipeline is still running. Wait for it to complete."
+            exit 1
+          fi
+
+          # Check if the workflow succeeded
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "::error::Development pipeline failed! SonarCloud or tests may have errors."
+            echo "::error::Fix the issues in dev before deploying to production."
+            echo "::error::See: $URL"
+            exit 1
+          fi
+
+          echo "✅ Development pipeline passed (including SonarCloud)"
           echo "Production deployment authorized"
 
   # Job 6: Create Full Backup to DigitalOcean Spaces (after successful deploy)
