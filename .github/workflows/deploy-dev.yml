@@ -93,7 +93,6 @@ jobs:
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
           command_timeout: 30m
           script: |
-            set -e
             BACKUP_DIR="/var/www/align-designs/backups"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
@@ -101,7 +100,12 @@ jobs:
             mkdir -p "$BACKUP_DIR"
 
             echo "=== Backing up PostgreSQL database ==="
-            docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > "$BACKUP_DIR/database.sql"
+            if docker ps --format '{{.Names}}' | grep -q postgres-dev; then
+              docker exec postgres-dev pg_dump -U aligndesigns_dev aligndesigns_dev > "$BACKUP_DIR/database.sql"
+              echo "Database backup created"
+            else
+              echo "postgres-dev container not running, skipping DB backup"
+            fi
 
             echo "=== Saving Docker images (this may take a while) ==="
             docker save frontend-dev:latest 2>/dev/null | gzip > "$BACKUP_DIR/frontend-dev.tar.gz" || echo "No frontend image"
@@ -130,9 +134,9 @@ jobs:
 
             echo "=== Uploading to DigitalOcean Spaces ==="
             # Upload all backup files (overwrites previous backup)
-            aws s3 cp "$BACKUP_DIR/database.sql" "s3://$BUCKET/$BACKUP_PREFIX/database.sql" --endpoint-url "$S3_ENDPOINT"
-            aws s3 cp "$BACKUP_DIR/frontend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/frontend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
-            aws s3 cp "$BACKUP_DIR/backend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/backend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || true
+            [ -f "$BACKUP_DIR/database.sql" ] && aws s3 cp "$BACKUP_DIR/database.sql" "s3://$BUCKET/$BACKUP_PREFIX/database.sql" --endpoint-url "$S3_ENDPOINT" || echo "No DB backup to upload"
+            [ -f "$BACKUP_DIR/frontend-dev.tar.gz" ] && aws s3 cp "$BACKUP_DIR/frontend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/frontend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || echo "No frontend image to upload"
+            [ -f "$BACKUP_DIR/backend-dev.tar.gz" ] && aws s3 cp "$BACKUP_DIR/backend-dev.tar.gz" "s3://$BUCKET/$BACKUP_PREFIX/backend-dev.tar.gz" --endpoint-url "$S3_ENDPOINT" || echo "No backend image to upload"
             aws s3 cp "$BACKUP_DIR/sshd_config" "s3://$BUCKET/$BACKUP_PREFIX/sshd_config" --endpoint-url "$S3_ENDPOINT"
 
             # Upload a metadata file with timestamp
