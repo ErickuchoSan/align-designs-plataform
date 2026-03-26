@@ -105,7 +105,10 @@ export class CsrfMiddleware implements NestMiddleware {
     }
 
     const token = cookies[this.csrfTokenCookie];
-    const submittedToken = req.headers[this.csrfHeaderName] || req.body._csrf;
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const submittedToken =
+      (req.headers[this.csrfHeaderName] as string | undefined) ||
+      (body._csrf as string | undefined);
 
     this.logger.debug(
       `CSRF Validation: cookie=${token ? 'present' : 'missing'}, header=${submittedToken ? 'present' : 'missing'}`,

@@ -231,7 +231,7 @@ export class HealthService {
     }
 
     // Actually test email connection
-    const isHealthy = await this.emailService.checkHealth();
+    const isHealthy = this.emailService.checkHealth();
 
     return {
       status: isHealthy ? 'healthy' : 'unhealthy',

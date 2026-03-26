@@ -25,7 +25,7 @@ export class EmailService implements OnModuleInit {
   /**
    * Initialize Resend client
    */
-  async onModuleInit() {
+  onModuleInit() {
     try {
       const apiKey = this.configService.get<string>('RESEND_API_KEY');
       this.emailFrom = this.configService.get<string>(
@@ -297,7 +297,7 @@ export class EmailService implements OnModuleInit {
   /**
    * Check if email service is healthy
    */
-  async checkHealth(): Promise<boolean> {
+  checkHealth(): boolean {
     return this.isHealthy;
   }
 }

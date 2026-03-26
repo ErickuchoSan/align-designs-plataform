@@ -14,7 +14,11 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     const startTime = Date.now();
     const { method, originalUrl, ip } = req;
     const userAgent = req.get('user-agent') || '';
-    const requestId = req.requestId || req.headers['x-request-id'] || 'unknown';
+    const headerRequestId = req.headers['x-request-id'];
+    const requestId =
+      req.requestId ||
+      (Array.isArray(headerRequestId) ? headerRequestId[0] : headerRequestId) ||
+      'unknown';
 
     // Log when response finishes
     res.on('finish', () => {

@@ -50,7 +50,7 @@ describe('EmailService', () => {
     configService = module.get<ConfigService>(ConfigService);
 
     // Initialize the service
-    await service.onModuleInit();
+    service.onModuleInit();
 
     jest.clearAllMocks();
   });
@@ -60,28 +60,28 @@ describe('EmailService', () => {
   });
 
   describe('onModuleInit', () => {
-    it('should initialize with valid API key', async () => {
-      await service.onModuleInit();
+    it('should initialize with valid API key', () => {
+      service.onModuleInit();
       expect(service.isServiceHealthy()).toBe(true);
     });
 
-    it('should not throw when API key is missing (graceful degradation)', async () => {
+    it('should not throw when API key is missing (graceful degradation)', () => {
       mockConfigService.get.mockReturnValue(undefined);
 
       const newService = new EmailService(configService);
-      await newService.onModuleInit();
+      newService.onModuleInit();
 
       expect(newService.isServiceHealthy()).toBe(false);
     });
 
-    it('should not throw when API key format is invalid', async () => {
+    it('should not throw when API key format is invalid', () => {
       mockConfigService.get.mockImplementation((key: string) => {
         if (key === 'RESEND_API_KEY') return 'invalid_key';
         return 'Test <test@resend.dev>';
       });
 
       const newService = new EmailService(configService);
-      await newService.onModuleInit();
+      newService.onModuleInit();
 
       expect(newService.isServiceHealthy()).toBe(false);
     });
@@ -94,8 +94,8 @@ describe('EmailService', () => {
   });
 
   describe('checkHealth', () => {
-    it('should return health status asynchronously', async () => {
-      const result = await service.checkHealth();
+    it('should return health status', () => {
+      const result = service.checkHealth();
       expect(typeof result).toBe('boolean');
     });
   });

@@ -157,7 +157,7 @@ export class EmployeePaymentsService {
   async update(
     id: string,
     updateDto: UpdateEmployeePaymentDto,
-    userId: string,
+    _userId: string,
   ) {
     const payment = await this.prisma.employeePayment.findUnique({
       where: { id },
@@ -271,7 +271,7 @@ export class EmployeePaymentsService {
     return updatedPayment;
   }
 
-  async reject(id: string, rejectionReason: string, userId: string) {
+  async reject(id: string, rejectionReason: string, _userId: string) {
     const payment = await this.prisma.employeePayment.findUnique({
       where: { id },
     });
@@ -344,7 +344,7 @@ export class EmployeePaymentsService {
       where: {
         projectId,
         uploadedBy: employeeId,
-        stage: clientApprovedStage as any, // Cast to any or import Stage enum
+        stage: clientApprovedStage,
         employeePaymentId: null, // Not yet linked to a payment
         deletedAt: null,
       },
