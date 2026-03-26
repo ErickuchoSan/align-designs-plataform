@@ -87,14 +87,14 @@ jobs:
               apt-get update && apt-get install -y awscli
             fi
 
-            # Configure AWS CLI for DigitalOcean Spaces
-            export AWS_ACCESS_KEY_ID="${{ secrets.STORAGE_ACCESS_KEY }}"
-            export AWS_SECRET_ACCESS_KEY="${{ secrets.STORAGE_SECRET_KEY }}"
+            # Configure AWS CLI for DigitalOcean Spaces (using prod bucket credentials)
+            export AWS_ACCESS_KEY_ID="${{ secrets.STORAGE_ACCESS_KEY_PROD }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.STORAGE_SECRET_KEY_PROD }}"
             export AWS_DEFAULT_REGION="sfo3"
 
             S3_ENDPOINT="https://sfo3.digitaloceanspaces.com"
-            BUCKET="aligndesigns-dev"
-            BACKUP_PREFIX="backups/prod"
+            BUCKET="aligndesigns-prod"
+            BACKUP_PREFIX="backups"
 
             echo "=== Uploading to DigitalOcean Spaces ==="
             # Upload all backup files (overwrites previous backup)
