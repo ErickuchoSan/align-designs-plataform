@@ -19,9 +19,9 @@ export class FileVersionService {
    */
   async uploadNewVersion(
     parentFileId: string,
-    file: Express.Multer.File,
-    uploadedBy: string,
-    versionNotes?: string,
+    _file: Express.Multer.File,
+    _uploadedBy: string,
+    _versionNotes?: string,
   ): Promise<File> {
     // 1. Get the parent file to verify it exists and get project info
     const parentFile = await this.prisma.file.findUnique({
@@ -88,7 +88,7 @@ export class FileVersionService {
     return parentFile; // Placeholder
   }
 
-  async getVersionHistory(fileId: string): Promise<File[]> {
+  getVersionHistory(_fileId: string): Promise<File[]> {
     // Traverse up to find root?
     // Or traverse down?
     // Linked list up: file.parent -> parent.parent -> ...
@@ -98,6 +98,7 @@ export class FileVersionService {
     // Simplified: Show history by following `parentFileId` backwards?
     // Yes, if I am at v3, show v3 -> v2 -> v1.
 
-    return [];
+    // TODO: Implement version history traversal
+    return Promise.resolve([]);
   }
 }

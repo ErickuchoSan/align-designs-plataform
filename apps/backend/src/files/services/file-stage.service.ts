@@ -32,7 +32,7 @@ export class FileStageService {
    * Admin approves a SUBMITTED file (move to ADMIN_APPROVED stage)
    * Validates that the file has actual content (storagePath exists)
    */
-  async approveFileByAdmin(fileId: string, adminId: string): Promise<any> {
+  async approveFileByAdmin(fileId: string, adminId: string) {
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
       select: {
@@ -130,7 +130,7 @@ export class FileStageService {
     fileId: string,
     adminId: string,
     rejectionReason: string,
-  ): Promise<any> {
+  ) {
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
       select: {
@@ -207,7 +207,7 @@ export class FileStageService {
   /**
    * Mark file as client approved (move to CLIENT_APPROVED stage)
    */
-  async approveFileByClient(fileId: string, adminId: string): Promise<any> {
+  async approveFileByClient(fileId: string, adminId: string) {
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
       select: {
