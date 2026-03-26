@@ -188,6 +188,7 @@ jobs:
   health-check:
     name: Health Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: deploy
     steps:
       - name: Wait for containers to start
@@ -219,6 +220,7 @@ jobs:
   rollback:
     name: Rollback on Failure
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: health-check
     if: failure()
     steps:
@@ -351,6 +353,7 @@ jobs:
   lighthouse:
     name: Lighthouse Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: backup
     if: success()
     steps:
@@ -371,6 +374,7 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 45  # E2E tests can take 30-40 minutes
     needs: backup
     if: success() && vars.E2E_ADMIN_PASSWORD != ''
     steps:
