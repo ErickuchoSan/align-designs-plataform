@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { otpSchema, OtpFormData } from '@/lib/schemas/auth.schema';
 import LoadingButton from '@/components/ui/LoadingButton';
-import { cn, INPUT_BASE, INPUT_VARIANTS } from '@/lib/styles';
+import { cn, INPUT_BASE, INPUT_VARIANTS, FORM_LABEL } from '@/lib/styles';
 
 interface OTPStepProps {
   email: string;
@@ -18,7 +18,7 @@ interface OTPStepProps {
 export default function OTPStep({
   email,
   onSubmit,
-  onResend: _onResend,
+  onResend,
   loading,
   onBack,
   requiresPasswordSetup = false
@@ -32,46 +32,55 @@ export default function OTPStep({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="text-sm text-[#6B6A65] bg-[#C9A84C]/20 p-4 rounded-lg">
-        An 8-digit code has been sent to <strong>{email}</strong>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <p className="text-xs text-[#6B6A65] leading-relaxed">
+        An 8-digit code was sent to <span className="font-semibold text-[#1B1C1A]">{email}</span>.
         {requiresPasswordSetup && (
-          <p className="mt-2 text-xs text-[#6B6A65]">
-            After verifying the code, you will need to set a password for your account.
-          </p>
+          <> After verifying, you&apos;ll set a password for your account.</>
         )}
-      </div>
+      </p>
       <div>
-        <label htmlFor="otp-token" className="block text-sm font-medium text-[#1B1C1A] mb-2">
-          OTP Code
+        <label htmlFor="otp-token" className={FORM_LABEL}>
+          Verification code
         </label>
         <input
           id="otp-token"
           type="text"
+          inputMode="numeric"
           maxLength={8}
           {...register('otpToken')}
           className={cn(
             INPUT_BASE,
-            'py-4 text-center text-3xl font-mono tracking-widest shadow-sm',
+            'py-4 text-center text-3xl font-mono tracking-[0.5em]',
             errors.otpToken ? INPUT_VARIANTS.error : INPUT_VARIANTS.default
           )}
           placeholder="00000000"
           autoFocus
         />
         {errors.otpToken && (
-          <p className="mt-1 text-sm text-red-600">{errors.otpToken.message}</p>
+          <p className="mt-1 text-xs text-red-600">{errors.otpToken.message}</p>
         )}
       </div>
-      <LoadingButton type="submit" isLoading={loading} variant="primary" size="lg" fullWidth>
-        Verify code
+      <LoadingButton type="submit" isLoading={loading} variant="primary" size="lg" fullWidth className="uppercase tracking-widest text-sm">
+        Verify Identity
       </LoadingButton>
-      <button
-        type="button"
-        onClick={onBack}
-        className="w-full text-sm text-[#6B6A65] hover:text-[#1B1C1A] hover:underline"
-      >
-        Change email
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-xs text-[#6B6A65] hover:text-[#1B1C1A] uppercase tracking-widest"
+        >
+          Change email
+        </button>
+        <button
+          type="button"
+          onClick={onResend}
+          disabled={loading}
+          className="text-xs text-[#C9A84C] hover:text-[#755B00] uppercase tracking-widest font-semibold disabled:opacity-50"
+        >
+          Resend code
+        </button>
+      </div>
     </form>
   );
 }

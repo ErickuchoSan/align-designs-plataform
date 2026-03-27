@@ -120,8 +120,8 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
     >
       {isSuccess ? (
         <div className="text-center py-4">
-          <div className="mx-auto w-16 h-16 bg-forest-100 rounded-full flex items-center justify-center mb-4">
-            <CheckIcon size="lg" className="w-8 h-8 text-forest-600" />
+          <div className="mx-auto w-16 h-16 bg-[#D1E7DD] rounded-full flex items-center justify-center mb-4">
+            <CheckIcon size="lg" className="w-8 h-8 text-[#2D6A4F]" />
           </div>
           <h3 className="text-lg font-semibold text-[#1B1C1A] mb-2">Password updated!</h3>
           <p className="text-sm text-[#6B6A65] mb-6">
@@ -210,7 +210,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
           {/* Step 3: New Password */}
           {step === 'password' && (
             <form onSubmit={handlePasswordReset} className="space-y-4">
-              <p className="text-sm text-forest-800 bg-forest-50 p-4 rounded-lg border border-forest-200">
+              <p className="text-sm text-[#6B6A65]">
                 Code verified. Now set your new password.
               </p>
 
@@ -231,7 +231,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                   <div className="mt-3">
                     <PasswordRequirements
                       password={newPassword}
-                      className="bg-forest-50 border border-forest-200 rounded-lg p-4"
+                      className="bg-[#F5F4F0] rounded-lg p-4"
                     />
                   </div>
                 )}
@@ -251,7 +251,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
                 {/* Show match indicator when user starts typing confirmation */}
                 {confirmPassword && (
                   <p
-                    className={`mt-2 text-sm flex items-center gap-1 ${newPassword === confirmPassword ? 'text-green-600' : 'text-red-600'}`}
+                    className={`mt-2 text-xs flex items-center gap-1 ${newPassword === confirmPassword ? 'text-[#2D6A4F]' : 'text-red-600'}`}
                   >
                     {newPassword === confirmPassword ? (
                       <>

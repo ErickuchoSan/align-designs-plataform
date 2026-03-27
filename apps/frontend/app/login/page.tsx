@@ -20,29 +20,20 @@ export default function LoginPage() {
   const { login, verifyOTP, requestOTP } = useAuth();
   const [step, setStep] = useState<LoginStep>('email');
   const [isLoading, setIsLoading] = useState(false);
-
-  // User data
   const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false);
-
-  // Forgot Password Modal
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-
-  // We still need email state for navigation between steps
   const [email, setEmail] = useState('');
 
   const handleEmailSubmit = async (data: EmailFormData) => {
     setIsLoading(true);
     setEmail(data.email);
-
     try {
       const { hasPassword, requiresPasswordSetup: reqSetup } = await AuthService.checkEmail(data.email);
-
       if (!hasPassword && !reqSetup) {
         toast.error('Email not found. Please check your email address.');
         setIsLoading(false);
         return;
       }
-
       if (reqSetup) {
         setRequiresPasswordSetup(true);
         await requestOTP({ email: data.email });
@@ -50,12 +41,6 @@ export default function LoginPage() {
         setStep('otp');
         return;
       }
-
-      if (hasPassword) {
-        setStep('password');
-        return;
-      }
-
       setStep('password');
     } catch (error) {
       toast.error(handleApiError(error, 'An error occurred. Please try again.'));
@@ -66,7 +51,6 @@ export default function LoginPage() {
 
   const handlePasswordLogin = async (data: PasswordFormData) => {
     setIsLoading(true);
-
     try {
       await login({ email, password: data.password });
       router.push('/dashboard');
@@ -79,10 +63,8 @@ export default function LoginPage() {
 
   const handleVerifyOTP = async (data: OtpFormData) => {
     setIsLoading(true);
-
     try {
       await verifyOTP({ email, token: data.otpToken });
-
       if (requiresPasswordSetup) {
         toast.success('OTP verified successfully');
         setStep('set-password');
@@ -98,13 +80,11 @@ export default function LoginPage() {
 
   const handleSetPassword = async (data: SetPasswordFormData) => {
     setIsLoading(true);
-
     try {
       await AuthService.setPassword({
         password: data.newPassword,
         confirmPassword: data.confirmPassword,
       });
-
       toast.success('Password set successfully! Please log in with your email and password.');
       setStep('email');
       setEmail('');
@@ -117,32 +97,11 @@ export default function LoginPage() {
 
   const handleResendOTP = async () => {
     setIsLoading(true);
-
     try {
-      // Use requestOTP from context
       await requestOTP({ email });
       toast.success('Verification code sent to your email');
     } catch (error) {
       toast.error(handleApiError(error, 'Error resending code'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = () => {
-    setShowForgotPassword(true);
-  };
-
-  const handleLoginWithOTP = async () => {
-    setIsLoading(true);
-
-    try {
-      // Use requestOTP from context
-      await requestOTP({ email });
-      toast.success('Verification code sent to your email');
-      setStep('otp');
-    } catch (error) {
-      toast.error(handleApiError(error, 'Error requesting OTP'));
     } finally {
       setIsLoading(false);
     }
@@ -154,39 +113,67 @@ export default function LoginPage() {
     setRequiresPasswordSetup(false);
   };
 
+  const stepTitles: Record<LoginStep, { heading: string; subheading: string }> = {
+    email: { heading: 'Welcome back', subheading: 'Access your project atelier and blueprints.' },
+    password: { heading: 'Welcome back', subheading: `Logging in as ${email}` },
+    otp: { heading: 'Security Check', subheading: 'Enter the verification code sent to your device.' },
+    'set-password': { heading: 'Set Password', subheading: 'Create a secure password for your account.' },
+  };
+
+  const { heading, subheading } = stepTitles[step];
+
   return (
     <>
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#F5F4F0] to-[#F5F4F0] px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-2xl animate-slideUp">
-          <div>
-            <h2 className="mt-2 text-center text-4xl font-bold tracking-tight text-[#1B1C1A]">
-              Align Designs
-            </h2>
-            <p className="mt-3 text-center text-sm text-[#6B6A65]">
-              Project management system
-            </p>
-          </div>
+      {/* Full dark background */}
+      <div className="min-h-screen bg-[#0F0F0D] flex flex-col">
 
-          <div className="mt-8 space-y-6">
+        {/* Brand header — always visible */}
+        <div className="flex-shrink-0 px-8 pt-12 pb-8 text-center lg:text-left lg:px-16 lg:pt-16">
+          <p className="text-[#C9A84C] font-black text-2xl lg:text-3xl tracking-[0.15em] uppercase">
+            Align Designs
+          </p>
+          <p className="text-white/30 text-xs tracking-[0.25em] uppercase mt-1">
+            Architectural Excellence
+          </p>
+        </div>
+
+        {/* Card — white, rounded-t-3xl on mobile, centered on desktop */}
+        <div className="flex-1 lg:flex lg:items-center lg:justify-center lg:px-8 lg:pb-16">
+          <div className="bg-white rounded-t-3xl lg:rounded-2xl w-full lg:max-w-md px-8 pt-10 pb-12 lg:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.4)]">
+
+            {/* Step heading */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold tracking-tight text-[#1B1C1A]">
+                {heading}
+              </h1>
+              <p className="text-sm text-[#6B6A65] mt-1">{subheading}</p>
+            </div>
+
+            {/* Steps */}
             {step === 'email' && (
-              <EmailStep
-                email={email}
-                onSubmit={handleEmailSubmit}
-                loading={isLoading}
-              />
+              <EmailStep email={email} onSubmit={handleEmailSubmit} loading={isLoading} />
             )}
-
             {step === 'password' && (
               <PasswordStep
                 email={email}
                 onSubmit={handlePasswordLogin}
-                onForgotPassword={handleForgotPassword}
-                onLoginWithOTP={handleLoginWithOTP}
+                onForgotPassword={() => setShowForgotPassword(true)}
+                onLoginWithOTP={async () => {
+                  setIsLoading(true);
+                  try {
+                    await requestOTP({ email });
+                    toast.success('Verification code sent to your email');
+                    setStep('otp');
+                  } catch (error) {
+                    toast.error(handleApiError(error, 'Error requesting OTP'));
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
                 loading={isLoading}
                 onBack={resetToEmail}
               />
             )}
-
             {step === 'otp' && (
               <OTPStep
                 email={email}
@@ -197,13 +184,14 @@ export default function LoginPage() {
                 requiresPasswordSetup={requiresPasswordSetup}
               />
             )}
-
             {step === 'set-password' && (
-              <SetPasswordStep
-                onSubmit={handleSetPassword}
-                loading={isLoading}
-              />
+              <SetPasswordStep onSubmit={handleSetPassword} loading={isLoading} />
             )}
+
+            {/* Footer */}
+            <p className="mt-10 text-center text-[10px] font-semibold tracking-[0.2em] uppercase text-[#A09B90]">
+              Partnering with <span className="text-[#6B6A65]">The Monolith Group</span>
+            </p>
           </div>
         </div>
       </div>
