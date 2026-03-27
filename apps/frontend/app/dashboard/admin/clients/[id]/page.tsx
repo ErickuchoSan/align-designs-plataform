@@ -36,10 +36,10 @@ export default function ClientProfilePage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-navy-900">{client.firstName} {client.lastName}</h1>
+                    <h1 className="text-2xl font-bold text-[#1B1C1A]">{client.firstName} {client.lastName}</h1>
                     <p className="text-gray-500">{client.email}</p>
                 </div>
-                <Link href={`/dashboard/admin/invoices/new?clientId=${client.id}`} className="bg-navy-600 text-white px-4 py-2 rounded-md hover:bg-navy-700">
+                <Link href={`/dashboard/admin/invoices/new?clientId=${client.id}`} className="bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white font-semibold px-4 py-2 rounded-lg hover:brightness-95 transition-all">
                     Create Invoice
                 </Link>
             </div>
@@ -48,7 +48,7 @@ export default function ClientProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                     <p className="text-sm font-medium text-gray-500">Total Billed</p>
-                    <p className="text-2xl font-bold text-navy-900">{formatCurrency(totalBilled)}</p>
+                    <p className="text-2xl font-bold text-[#1B1C1A]">{formatCurrency(totalBilled)}</p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                     <p className="text-sm font-medium text-gray-500">Total Paid</p>
@@ -71,7 +71,7 @@ export default function ClientProfilePage() {
                             <Link href={`/dashboard/projects/${project.id}`} className="block">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-navy-600">{project.name}</p>
+                                        <p className="text-sm font-medium text-[#C9A84C]">{project.name}</p>
                                         <p className="text-xs text-gray-500">Created: {formatDate(project.createdAt)}</p>
                                     </div>
                                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -105,11 +105,11 @@ export default function ClientProfilePage() {
                         <tbody className="divide-y divide-gray-200">
                             {invoices.map(invoice => (
                                 <tr key={invoice.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 text-sm font-medium text-navy-600">
+                                    <td className="px-6 py-4 text-sm font-medium text-[#C9A84C]">
                                         <Link href={`/dashboard/admin/invoices/${invoice.id}`}>{invoice.invoiceNumber}</Link>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(invoice.issueDate)}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(invoice.totalAmount)}</td>
+                                    <td className="px-6 py-4 text-sm text-[#6B6A65]">{formatDate(invoice.issueDate)}</td>
+                                    <td className="px-6 py-4 text-sm text-[#1B1C1A]">{formatCurrency(invoice.totalAmount)}</td>
                                     <td className="px-6 py-4"><InvoiceStatusBadge status={invoice.status} /></td>
                                 </tr>
                             ))}
@@ -129,7 +129,7 @@ export default function ClientProfilePage() {
                             <Link key={invoice.id} href={`/dashboard/admin/invoices/${invoice.id}`}>
                                 <div className="px-6 py-4 hover:bg-gray-50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
-                                        <div className="text-sm font-medium text-navy-600">
+                                        <div className="text-sm font-medium text-[#C9A84C]">
                                             {invoice.invoiceNumber}
                                         </div>
                                         <InvoiceStatusBadge status={invoice.status} />

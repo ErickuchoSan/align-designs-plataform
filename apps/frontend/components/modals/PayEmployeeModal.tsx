@@ -107,7 +107,7 @@ export default function PayEmployeeModal({
             id="pay-employee-employeeId"
             {...register('employeeId', { required: 'Please select an employee' })}
             disabled={loadingEmployees}
-            className={cn(errors.employeeId ? inputErrorClass : inputClass, 'disabled:bg-stone-100')}
+            className={cn(errors.employeeId ? inputErrorClass : inputClass, 'disabled:bg-[#F5F4F0]')}
           >
             <option value="">-- Select Employee --</option>
             {employees.map((emp) => (
@@ -117,17 +117,17 @@ export default function PayEmployeeModal({
             ))}
           </select>
           {errors.employeeId && <p className={FORM_ERROR}>{errors.employeeId.message}</p>}
-          {loadingEmployees && <p className="text-xs text-stone-500 mt-1">Loading employees...</p>}
+          {loadingEmployees && <p className="text-xs text-[#6B6A65] mt-1">Loading employees...</p>}
         </div>
 
         {employeeId && (
-          <fieldset className="border border-stone-200 rounded-lg p-3 bg-stone-50">
+          <fieldset className="border border-[#D0C5B2]/20 rounded-lg p-3 bg-[#F5F4F0]">
             <legend className={FORM_LABEL}>Client Approved Items (Unpaid)</legend>
             {loadingItems && (
-              <p className="text-xs text-stone-500">Loading pending items...</p>
+              <p className="text-xs text-[#6B6A65]">Loading pending items...</p>
             )}
             {!loadingItems && pendingItems.length === 0 && (
-              <p className="text-xs text-stone-500 italic">No pending approved items found.</p>
+              <p className="text-xs text-[#6B6A65] italic">No pending approved items found.</p>
             )}
             {!loadingItems && pendingItems.length > 0 && (
               <div className="space-y-2 max-h-32 overflow-y-auto">
@@ -140,9 +140,9 @@ export default function PayEmployeeModal({
                       onChange={() => toggleItemSelection(item.id)}
                       className={cn(CHECKBOX_BASE, 'mt-1')}
                     />
-                    <label htmlFor={`item-${item.id}`} className="text-sm text-stone-700 cursor-pointer">
+                    <label htmlFor={`item-${item.id}`} className="text-sm text-[#1B1C1A] cursor-pointer">
                       <span className="font-medium block">{item.originalName || item.filename}</span>
-                      <span className="text-xs text-stone-500">
+                      <span className="text-xs text-[#6B6A65]">
                         Apv: {formatDate(item.approvedClientAt)}
                       </span>
                     </label>
@@ -156,7 +156,7 @@ export default function PayEmployeeModal({
         <div>
           <label htmlFor="pay-employee-amount" className={FORM_LABEL}>Amount (USD)</label>
           <div className="relative">
-            <span className="absolute left-3 top-2 text-stone-500">$</span>
+            <span className="absolute left-3 top-2 text-[#6B6A65]">$</span>
             <input
               id="pay-employee-amount"
               type="number"
@@ -177,7 +177,7 @@ export default function PayEmployeeModal({
               type="text"
               {...register('paymentMethod')}
               disabled
-              className={cn(inputClass, 'cursor-not-allowed bg-stone-100 text-stone-500')}
+              className={cn(inputClass, 'cursor-not-allowed bg-[#F5F4F0] text-[#6B6A65]')}
             />
           </div>
           <div>
@@ -207,7 +207,7 @@ export default function PayEmployeeModal({
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
+            className="flex-1 px-4 py-2 font-medium text-[#6B6A65] transition-colors bg-[#F5F4F0] rounded-lg hover:bg-[#F5F4F0]"
           >
             Cancel
           </button>

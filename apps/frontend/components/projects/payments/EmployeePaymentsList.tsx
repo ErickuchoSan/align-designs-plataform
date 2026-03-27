@@ -27,9 +27,9 @@ const getStatusColor = (status: EmployeePaymentStatus): string => {
     case EmployeePaymentStatus.REJECTED:
       return 'bg-red-100 text-red-800';
     case EmployeePaymentStatus.CANCELLED:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-[#F5F4F0] text-[#6B6A65]';
     default:
-      return 'bg-stone-100 text-stone-800';
+      return 'bg-[#F5F4F0] text-[#6B6A65]';
   }
 };
 
@@ -65,11 +65,11 @@ function EmployeePaymentsList({
       {payments.map((payment) => (
         <div
           key={payment.id}
-          className="flex items-center justify-between p-4 bg-stone-50 rounded-lg hover:bg-stone-100 transition-colors"
+          className="flex items-center justify-between p-4 bg-[#F5F4F0] rounded-lg hover:bg-[#F5F4F0] transition-colors"
         >
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <p className="font-medium text-stone-900">
+              <p className="font-medium text-[#1B1C1A]">
                 {isAdmin && payment.employee
                   ? `${payment.employee.firstName} ${payment.employee.lastName}`
                   : 'Payment'}
@@ -78,7 +78,7 @@ function EmployeePaymentsList({
                 {payment.status}
               </span>
             </div>
-            <div className="text-sm text-stone-600 space-y-1">
+            <div className="text-sm text-[#6B6A65] space-y-1">
               <p>Amount: {formatCurrency(Number(payment.amount))}</p>
               <p>Method: {payment.paymentMethod}</p>
               <p>Date: {formatDate(payment.paymentDate)}</p>
@@ -94,7 +94,7 @@ function EmployeePaymentsList({
             {(payment.status === 'APPROVED' || payment.receiptFileId || payment.receiptFile) && (
               <button
                 onClick={() => onViewReceipt(payment)}
-                className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+                className="p-2 text-[#6B6A65] hover:text-[#C9A84C] hover:bg-[#F5F4F0] rounded-lg transition-colors"
                 aria-label="View payment receipt"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

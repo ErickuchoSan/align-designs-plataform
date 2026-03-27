@@ -65,16 +65,16 @@ function StageHeader({
   };
 
   return (
-    <div className="border-b border-stone-200 p-6">
+    <div className="border-b border-[#D0C5B2]/20 p-6">
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <span className="text-3xl" aria-hidden="true">{stage.icon}</span>
-            <h3 className="text-2xl font-bold text-navy-900">
+            <h3 className="text-2xl font-bold text-[#1B1C1A]">
               {stage.name}
             </h3>
           </div>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-[#6B6A65]">
             {stage.description}
           </p>
         </div>
@@ -83,7 +83,7 @@ function StageHeader({
           {showBulkDownload && (
             <button
               onClick={handleBulkDownload}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-lg font-medium transition-colors border border-stone-300 text-sm sm:text-base"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#E3E2DF] text-[#1B1C1A] rounded-lg font-medium transition-colors hover:bg-[#D9D8D5] text-sm sm:text-base"
               aria-label={`Download all ${downloadableFiles.length} files from ${stage.name}`}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -96,7 +96,7 @@ function StageHeader({
           {canAddContent && (
             <button
               onClick={() => onOpenContentModal(stage.stage)}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg font-semibold hover:brightness-95 transition-all text-sm sm:text-base"
               aria-label={`Add content to ${stage.name}`}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

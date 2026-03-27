@@ -23,7 +23,7 @@ function PaymentActions({
         <>
           <button
             onClick={onGenerateInvoice}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg font-medium hover:brightness-95 transition-colors text-sm sm:text-base"
           >
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
@@ -94,7 +94,7 @@ function PaymentActions({
       {userRole === 'CLIENT' && (
         <button
           onClick={onUploadPaymentProof}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg font-medium hover:brightness-95 transition-colors text-sm sm:text-base"
         >
           <svg
             className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"

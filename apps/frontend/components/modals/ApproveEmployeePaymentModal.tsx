@@ -37,31 +37,31 @@ export default function ApproveEmployeePaymentModal({
         <Modal isOpen={isOpen} onClose={onClose} title="Approve Payment">
             <div className="space-y-6">
                 <div className="flex flex-col items-center justify-center p-4">
-                    <div className="rounded-full bg-navy-100 p-3 mb-4">
-                        <svg className="h-6 w-6 text-navy-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="rounded-full bg-[#C9A84C]/20 p-3 mb-4">
+                        <svg className="h-6 w-6 text-[#C9A84C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
+                    <h3 className="text-lg font-medium text-[#1B1C1A] text-center mb-2">
                         Confirm Payment Approval
                     </h3>
-                    <p className="text-sm text-stone-600 text-center mb-6">
+                    <p className="text-sm text-[#6B6A65] text-center mb-6">
                         To approve this payment, you must upload the transfer receipt/proof.
                     </p>
 
                     <div className="w-full">
-                        <label htmlFor="receipt-upload" className="block text-sm font-medium text-stone-700 mb-2">
+                        <label htmlFor="receipt-upload" className="block text-sm font-medium text-[#6B6A65] mb-2">
                             Upload Transfer Receipt *
                         </label>
                         <button
                             type="button"
                             id="receipt-upload-trigger"
                             onClick={() => fileInputRef.current?.click()}
-                            className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-lg cursor-pointer hover:border-navy-500 transition-colors bg-stone-50 hover:bg-white"
+                            className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-[#D0C5B2]/20 border-dashed rounded-lg cursor-pointer hover:border-[#C9A84C] transition-colors bg-[#F5F4F0] hover:bg-white"
                         >
                             <div className="space-y-1 text-center">
                                 <svg
-                                    className="mx-auto h-12 w-12 text-stone-400"
+                                    className="mx-auto h-12 w-12 text-[#D0C5B2]"
                                     stroke="currentColor"
                                     fill="none"
                                     viewBox="0 0 48 48"
@@ -74,8 +74,8 @@ export default function ApproveEmployeePaymentModal({
                                         strokeLinejoin="round"
                                     />
                                 </svg>
-                                <div className="flex text-sm text-stone-600 justify-center">
-                                    <span className="relative cursor-pointer bg-white rounded-md font-medium text-navy-600 hover:text-navy-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-navy-500">
+                                <div className="flex text-sm text-[#6B6A65] justify-center">
+                                    <span className="relative cursor-pointer bg-white rounded-md font-medium text-[#C9A84C] hover:text-[#755B00] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#C9A84C]">
                                         Upload a file
                                     </span>
                                     <input
@@ -86,11 +86,11 @@ export default function ApproveEmployeePaymentModal({
                                         onChange={handleFileChange}
                                     />
                                 </div>
-                                <p className="text-xs text-stone-500">PNG, JPG, PDF up to 10MB</p>
+                                <p className="text-xs text-[#6B6A65]">PNG, JPG, PDF up to 10MB</p>
                             </div>
                         </button>
                         {file && (
-                            <div className="mt-2 flex items-center justify-between p-2 bg-navy-50 rounded text-sm text-navy-700">
+                            <div className="mt-2 flex items-center justify-between p-2 bg-[#C9A84C]/20 rounded text-sm text-[#755B00]">
                                 <span className="truncate">{file.name}</span>
                                 <button
                                     onClick={(e) => {
@@ -98,7 +98,7 @@ export default function ApproveEmployeePaymentModal({
                                         setFile(null);
                                         if (fileInputRef.current) fileInputRef.current.value = '';
                                     }}
-                                    className="text-navy-500 hover:text-navy-700"
+                                    className="text-[#C9A84C] hover:text-[#755B00]"
                                 >
                                     Remove
                                 </button>
@@ -107,18 +107,18 @@ export default function ApproveEmployeePaymentModal({
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2 px-4 py-3 -mx-6 -mb-6 bg-stone-50 rounded-b-lg sm:flex-row sm:justify-end sm:gap-3 sm:px-6">
+                <div className="flex flex-col gap-2 px-4 py-3 -mx-6 -mb-6 bg-[#F5F4F0] rounded-b-lg sm:flex-row sm:justify-end sm:gap-3 sm:px-6">
                     <button
                         onClick={onClose}
                         disabled={isLoading}
-                        className="w-full px-4 py-2 font-medium text-stone-700 transition-colors bg-white border border-stone-300 rounded-lg hover:bg-stone-50 disabled:opacity-50 sm:w-auto"
+                        className="w-full px-4 py-2 font-medium text-[#6B6A65] transition-colors bg-white border border-[#D0C5B2]/20 rounded-lg hover:bg-[#F5F4F0] disabled:opacity-50 sm:w-auto"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={isLoading || !file}
-                        className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-white transition-colors bg-navy-600 rounded-lg hover:bg-navy-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+                        className="flex items-center justify-center w-full gap-2 px-4 py-2 font-medium text-white transition-colors bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
                     >
                         {isLoading ? <ButtonLoader /> : 'Approve Payment'}
                     </button>

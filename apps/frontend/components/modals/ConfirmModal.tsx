@@ -52,9 +52,9 @@ export default function ConfirmModal({
     },
     info: {
       icon: 'ℹ️',
-      iconBg: 'bg-navy-100',
-      iconColor: 'text-navy-600',
-      button: 'bg-navy-600 hover:bg-navy-700 focus:ring-navy-500',
+      iconBg: 'bg-[#C9A84C]/20',
+      iconColor: 'text-[#C9A84C]',
+      button: 'bg-gradient-to-br from-[#755B00] to-[#C9A84C] hover:brightness-95 focus:ring-[#C9A84C]',
     },
     success: {
       icon: '✅',
@@ -86,7 +86,7 @@ export default function ConfirmModal({
           <span className="text-3xl">{style.icon}</span>
         </div>
 
-        <p className={`text-sm sm:text-base text-stone-700 mb-4 break-words ${showDetailedWarning ? 'text-left' : ''}`}>{message}</p>
+        <p className={`text-sm sm:text-base text-[#6B6A65] mb-4 break-words ${showDetailedWarning ? 'text-left' : ''}`}>{message}</p>
 
         {/* Detailed Warning Section */}
         {showDetailedWarning && warningItems.length > 0 && (
@@ -124,7 +124,7 @@ export default function ConfirmModal({
             ref={cancelButtonRef}
             onClick={onClose}
             disabled={isLoading}
-            className="w-full px-5 py-2.5 text-sm font-medium transition-colors rounded-lg text-stone-800 bg-stone-200 hover:bg-stone-300 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+            className="w-full px-5 py-2.5 text-sm font-medium transition-colors rounded-lg text-[#1B1C1A] bg-[#E3E2DF] hover:bg-[#D9D8D5] disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
           >
             {cancelText}
           </button>

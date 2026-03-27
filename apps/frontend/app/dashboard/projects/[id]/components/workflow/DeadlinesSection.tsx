@@ -36,7 +36,7 @@ export function DeadlinesSection({ deadlines, loading = false }: Readonly<Deadli
   const getDeadlineCardStyles = (isOverdue: boolean, isUrgent: boolean): string => {
     if (isOverdue) return 'bg-red-50 border-red-200';
     if (isUrgent) return 'bg-amber-50 border-amber-200';
-    return 'bg-stone-50 border-stone-200';
+    return 'bg-[#F5F4F0] border-[#D0C5B2]/20';
   };
 
   const getDeadlineBadgeStyles = (isOverdue: boolean, isUrgent: boolean): string => {
@@ -54,10 +54,10 @@ export function DeadlinesSection({ deadlines, loading = false }: Readonly<Deadli
   if (loading) {
     return (
       <div className="animate-pulse">
-        <h3 className="text-sm font-medium text-stone-600 mb-3">Upcoming Deadlines</h3>
+        <h3 className="text-sm font-medium text-[#6B6A65] mb-3">Upcoming Deadlines</h3>
         <div className="space-y-2">
-          <div className="h-16 bg-stone-100 rounded-lg"></div>
-          <div className="h-16 bg-stone-100 rounded-lg"></div>
+          <div className="h-16 bg-[#F5F4F0] rounded-lg"></div>
+          <div className="h-16 bg-[#F5F4F0] rounded-lg"></div>
         </div>
       </div>
     );
@@ -66,15 +66,15 @@ export function DeadlinesSection({ deadlines, loading = false }: Readonly<Deadli
   if (sortedDeadlines.length === 0) {
     return (
       <div>
-        <h3 className="text-sm font-medium text-stone-600 mb-3">Upcoming Deadlines</h3>
-        <p className="text-sm text-stone-500 italic">No pending deadlines</p>
+        <h3 className="text-sm font-medium text-[#6B6A65] mb-3">Upcoming Deadlines</h3>
+        <p className="text-sm text-[#6B6A65] italic">No pending deadlines</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h3 className="text-sm font-medium text-stone-600 mb-3">Upcoming Deadlines</h3>
+      <h3 className="text-sm font-medium text-[#6B6A65] mb-3">Upcoming Deadlines</h3>
       <div className="space-y-2">
         {sortedDeadlines.map((deadline, index) => {
           const daysUntil = getDaysUntil(deadline.date);
@@ -87,14 +87,14 @@ export function DeadlinesSection({ deadlines, loading = false }: Readonly<Deadli
               className={`p-3 rounded-lg border ${getDeadlineCardStyles(isOverdue, isUrgent)}`}
             >
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-navy-900">{deadline.label}</p>
+                <p className="text-sm font-medium text-[#1B1C1A]">{deadline.label}</p>
                 <span
                   className={`text-xs font-semibold px-2 py-0.5 rounded ${getDeadlineBadgeStyles(isOverdue, isUrgent)}`}
                 >
                   {getDeadlineText(daysUntil, isOverdue)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-xs text-stone-600">
+              <div className="flex items-center justify-between text-xs text-[#6B6A65]">
                 <span>{formatDate(deadline.date, 'invoice')}</span>
                 <span className="font-medium">${deadline.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>

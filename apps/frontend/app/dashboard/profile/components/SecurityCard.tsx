@@ -8,12 +8,12 @@ interface SecurityCardProps {
 
 function SecurityCard({ onChangePassword }: Readonly<SecurityCardProps>) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
-      <h2 className="text-2xl font-bold text-navy-900 mb-4">Security</h2>
-      <p className="text-stone-700 mb-6">Manage your password and keep your account secure</p>
+    <div className="bg-white rounded-2xl p-8">
+      <h2 className="text-2xl font-bold text-[#1B1C1A] mb-4">Security</h2>
+      <p className="text-[#6B6A65] mb-6">Manage your password and keep your account secure</p>
       <button
         onClick={onChangePassword}
-        className="px-6 py-3 text-sm font-medium text-white bg-gold-600 rounded-lg hover:bg-gold-500 transition-all hover:shadow-lg"
+        className="px-6 py-3 text-sm font-medium text-white bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 transition-all"
       >
         Change Password
       </button>

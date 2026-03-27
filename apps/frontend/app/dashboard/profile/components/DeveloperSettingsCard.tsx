@@ -25,21 +25,21 @@ function DeveloperSettingsCard({ isAdmin }: Readonly<DeveloperSettingsCardProps>
   if (!isAdmin) return null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
-      <h2 className="text-2xl font-bold text-navy-900 mb-4">Developer Settings</h2>
-      <p className="text-stone-700 mb-6">
+    <div className="bg-white rounded-2xl p-8">
+      <h2 className="text-2xl font-bold text-[#1B1C1A] mb-4">Developer Settings</h2>
+      <p className="text-[#6B6A65] mb-6">
         Enable detailed error messages for debugging. This will show technical details instead of
         user-friendly messages.
       </p>
-      <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200">
+      <div className="flex items-center justify-between p-4 bg-[#F5F4F0] rounded-lg">
         <div>
-          <h3 className="text-sm font-semibold text-navy-900">Developer Mode</h3>
-          <p className="text-xs text-stone-600 mt-1">Show technical error details</p>
+          <h3 className="text-sm font-semibold text-[#1B1C1A]">Developer Mode</h3>
+          <p className="text-xs text-[#6B6A65] mt-1">Show technical error details</p>
         </div>
         <button
           onClick={handleToggle}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 ${
-            isDevMode ? 'bg-gold-600' : 'bg-stone-300'
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 ${
+            isDevMode ? 'bg-[#C9A84C]' : 'bg-[#D0C5B2]'
           }`}
           role="switch"
           aria-checked={isDevMode}

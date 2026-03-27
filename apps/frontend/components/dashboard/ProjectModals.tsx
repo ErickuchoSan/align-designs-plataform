@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { Project } from '@/types';
-import { type ProjectTheme } from '@/lib/styles';
 import { CreateProjectModal, EditProjectModal, DeleteProjectModal } from './project-modals';
 
 interface Client {
@@ -59,14 +58,12 @@ interface ProjectModalsProps {
   createModal: CreateModalState;
   editModal: EditModalState;
   deleteModal: DeleteModalState;
-  theme?: ProjectTheme;
 }
 
 function ProjectModals({
   createModal,
   editModal,
   deleteModal,
-  theme = 'navy',
 }: Readonly<ProjectModalsProps>) {
   return (
     <>
@@ -79,7 +76,6 @@ function ProjectModals({
         onClose={createModal.onClose}
         onFormChange={createModal.onFormChange}
         onSubmit={createModal.onSubmit}
-        theme={theme}
       />
 
       <EditProjectModal
@@ -97,7 +93,6 @@ function ProjectModals({
         onFormChange={editModal.onFormChange}
         onSubmit={editModal.onSubmit}
         onConfirm={editModal.onConfirm}
-        theme={theme}
       />
 
       <DeleteProjectModal

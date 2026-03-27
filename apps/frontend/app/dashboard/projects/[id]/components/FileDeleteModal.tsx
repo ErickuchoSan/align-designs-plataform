@@ -34,7 +34,7 @@ export default function FileDeleteModal({
       size="sm"
     >
       <div className="space-y-4">
-        <p className="text-sm text-stone-700">
+        <p className="text-sm text-[#6B6A65]">
           {file?.filename ? (
             <>
               Are you sure you want to delete the file <strong>{file?.originalName}</strong>?
@@ -52,7 +52,7 @@ export default function FileDeleteModal({
           <button
             onClick={onClose}
             disabled={deleting}
-            className="w-full px-5 py-2.5 text-sm font-medium text-navy-900 transition-colors bg-stone-200 rounded-lg hover:bg-stone-300 disabled:opacity-50 sm:w-auto"
+            className="w-full px-5 py-2.5 text-sm font-medium text-[#1B1C1A] transition-colors bg-[#E3E2DF] rounded-lg hover:bg-[#D9D8D5] disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>

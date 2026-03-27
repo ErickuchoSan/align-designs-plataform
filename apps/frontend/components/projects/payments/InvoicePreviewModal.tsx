@@ -259,7 +259,7 @@ function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalPr
         </div>
 
         {/* Invoice Document - Matching PDF Design */}
-        <div className="bg-white border-2 border-stone-200 rounded-lg shadow-lg overflow-hidden relative">
+        <div className="bg-white rounded-lg overflow-hidden relative">
           {/* Vertical Invoice Number (Left Side) */}
           <div
             className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center"
@@ -420,7 +420,7 @@ function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalPr
         </div>
 
         {/* Page 2 Preview - Terms */}
-        <div className="bg-white border-2 border-stone-200 rounded-lg shadow-lg p-6 relative">
+        <div className="bg-white rounded-lg p-6 relative">
           <div className="border-b pb-4 mb-4" style={{ borderColor: COLORS.border }}>
             <h3
               className="text-base font-bold"
@@ -473,7 +473,7 @@ function InvoicePreviewModal({ isOpen, onClose }: Readonly<InvoicePreviewModalPr
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-white bg-navy-800 hover:bg-navy-700 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-[#1B1C1A] hover:brightness-95 rounded-lg transition-colors"
           >
             Close
           </button>

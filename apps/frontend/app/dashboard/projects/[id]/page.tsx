@@ -185,12 +185,12 @@ export default function ProjectDetailsPage() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-navy-900 font-medium">Project not found</p>
+          <p className="text-lg text-[#1B1C1A] font-medium">Project not found</p>
           <button
             onClick={() => router.push('/dashboard')}
-            className="mt-4 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700"
+            className="mt-4 px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg hover:brightness-95 transition-all"
           >
             Back to Dashboard
           </button>
@@ -201,14 +201,15 @@ export default function ProjectDetailsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-stone-50">
+      <div className="flex flex-col h-full">
         <DashboardHeader
           title={project.name}
           showBackButton
           backUrl="/dashboard"
         />
 
-        <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <main id="main-content" className="flex-1 px-6 py-8">
+          <div className="max-w-7xl mx-auto">
           <AlertMessages success={success} error={error} />
 
           <ProjectInfo project={project} />
@@ -255,6 +256,7 @@ export default function ProjectDetailsPage() {
               />
             </div>
           )}
+          </div>
         </main>
       </div>
 

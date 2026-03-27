@@ -61,8 +61,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-stone-50 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F4F0] px-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-8 text-center">
             <div className="mb-4">
               <svg
                 className="mx-auto h-12 w-12 text-red-500"
@@ -78,32 +78,32 @@ export class ErrorBoundary extends Component<Props, State> {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-stone-900 mb-2">
+            <h2 className="text-2xl font-bold text-[#1B1C1A] mb-2">
               Oops! Something went wrong
             </h2>
-            <p className="text-stone-600 mb-6">
+            <p className="text-[#6B6A65] mb-6">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <div className="space-y-3">
               <button
                 onClick={this.handleReset}
-                className="w-full bg-navy-600 hover:bg-navy-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                className="w-full bg-gradient-to-br from-[#755B00] to-[#C9A84C] hover:brightness-95 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
               >
                 Try again
               </button>
               <button
                 onClick={() => globalThis.location.reload()}
-                className="w-full bg-stone-200 hover:bg-stone-300 text-stone-900 font-semibold py-2 px-4 rounded-lg transition-colors"
+                className="w-full bg-[#F5F4F0] hover:bg-[#F5F4F0]/80 text-[#1B1C1A] font-semibold py-2 px-4 rounded-lg transition-colors"
               >
                 Reload page
               </button>
             </div>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="cursor-pointer text-sm text-stone-500 hover:text-stone-700">
+                <summary className="cursor-pointer text-sm text-[#6B6A65] hover:text-[#1B1C1A]">
                   Error details (dev only)
                 </summary>
-                <pre className="mt-2 p-4 bg-stone-100 rounded text-xs text-stone-900 overflow-auto max-h-48">
+                <pre className="mt-2 p-4 bg-[#F5F4F0] rounded text-xs text-[#1B1C1A] overflow-auto max-h-48">
                   {this.state.error.stack}
                 </pre>
               </details>

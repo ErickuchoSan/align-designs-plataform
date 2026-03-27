@@ -38,7 +38,7 @@ export const FileListPreview = memo(function FileListPreview({ files }: FileList
   if (files.length === 0) return null;
 
   return (
-    <div className="mt-2 text-sm text-stone-700 max-h-32 overflow-y-auto">
+    <div className="mt-2 text-sm text-[#6B6A65] max-h-32 overflow-y-auto">
       <p className="font-medium mb-1">{files.length} file(s) selected:</p>
       <ul className="list-disc list-inside">
         {files.map((file) => (
@@ -67,13 +67,13 @@ export const UploadProgressBar = memo(function UploadProgressBar({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between text-sm text-navy-900">
+      <div className="flex justify-between text-sm text-[#1B1C1A]">
         <span>Uploading...</span>
         <span className="font-medium">{progress}%</span>
       </div>
-      <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-[#F5F4F0] rounded-full h-2 overflow-hidden">
         <div
-          className="bg-navy-600 h-2 rounded-full transition-all duration-300"
+          className="bg-[#C9A84C] h-2 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -98,7 +98,7 @@ export const ModalCancelButton = memo(function ModalCancelButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full px-5 py-2.5 text-sm font-medium text-navy-900 transition-colors bg-stone-200 rounded-lg hover:bg-stone-300 disabled:opacity-50 sm:w-auto"
+      className="w-full px-5 py-2.5 text-sm font-medium text-[#1B1C1A] transition-colors bg-[#F5F4F0] rounded-lg hover:bg-[#F5F4F0]/80 disabled:opacity-50 sm:w-auto"
     >
       Cancel
     </button>

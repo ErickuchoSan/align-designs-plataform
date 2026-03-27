@@ -32,15 +32,15 @@ export default function LoadingButton({
 
   const variantStyles = {
     primary:
-      'bg-navy-800 hover:bg-navy-700 text-white focus:ring-gold-500 transform hover:scale-105 disabled:transform-none shadow-lg',
+      'bg-gradient-to-br from-[#755B00] to-[#C9A84C] hover:brightness-95 text-white focus:ring-[#C9A84C] transform hover:scale-105 disabled:transform-none shadow-sm',
     secondary:
-      'bg-stone-200 hover:bg-stone-300 text-navy-900 focus:ring-stone-400',
+      'bg-[#F5F4F0] hover:bg-[#F5F4F0]/80 text-[#1B1C1A] focus:ring-[#D0C5B2]',
     danger:
       'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 transform hover:scale-105 disabled:transform-none',
     warning:
       'bg-yellow-600 hover:bg-yellow-700 text-white focus:ring-yellow-500 transform hover:scale-105 disabled:transform-none',
     ghost:
-      'bg-transparent hover:bg-stone-100 text-navy-900 focus:ring-stone-300',
+      'bg-transparent hover:bg-[#F5F4F0] text-[#1B1C1A] focus:ring-[#D0C5B2]',
   };
 
   const sizeStyles = {

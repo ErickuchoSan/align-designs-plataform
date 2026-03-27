@@ -28,7 +28,7 @@ function ClientPaymentsList({ payments, onViewReceipt }: Readonly<ClientPayments
   if (payments.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-stone-600">No payments made yet</p>
+        <p className="text-[#6B6A65]">No payments made yet</p>
       </div>
     );
   }
@@ -38,18 +38,18 @@ function ClientPaymentsList({ payments, onViewReceipt }: Readonly<ClientPayments
       {payments.map((payment) => (
         <div
           key={payment.id}
-          className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200"
+          className="flex items-center justify-between p-4 bg-[#F5F4F0] rounded-lg"
         >
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <p className="font-medium text-stone-900">
+              <p className="font-medium text-[#1B1C1A]">
                 {payment.type === 'INITIAL_PAYMENT' ? 'Initial Payment' : 'Invoice Payment'}
               </p>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(payment.status)}`}>
                 {payment.status}
               </span>
             </div>
-            <div className="text-sm text-stone-600 space-y-1">
+            <div className="text-sm text-[#6B6A65] space-y-1">
               <p className="font-semibold text-green-600">
                 ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
@@ -64,7 +64,7 @@ function ClientPaymentsList({ payments, onViewReceipt }: Readonly<ClientPayments
           {payment.receiptFileUrl && (
             <button
               onClick={() => onViewReceipt(payment)}
-              className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+              className="p-2 text-[#6B6A65] hover:text-[#C9A84C] hover:bg-[#F5F4F0] rounded-lg transition-colors"
               aria-label="View payment receipt"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -112,28 +112,28 @@ export const PendingPaymentsList = memo(function PendingPaymentsList({
         >
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <p className="font-medium text-stone-900">
+              <p className="font-medium text-[#1B1C1A]">
                 {payment.type === 'INITIAL_PAYMENT' ? 'Initial Payment' : 'Invoice Payment'}
               </p>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                 PENDING APPROVAL
               </span>
             </div>
-            <div className="text-sm text-stone-600 space-y-1">
+            <div className="text-sm text-[#6B6A65] space-y-1">
               <p className="font-semibold text-lg text-green-600">
                 Amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
               <p>Method: {payment.paymentMethod}</p>
               <p>Date: {formatDate(payment.paymentDate)}</p>
               {payment.notes && <p>Note: {payment.notes}</p>}
-              {payment.invoiceId && <p className="text-navy-600">Linked to Invoice</p>}
+              {payment.invoiceId && <p className="text-[#C9A84C]">Linked to Invoice</p>}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => onReviewPayment(payment)}
-              className="px-4 py-2 bg-navy-600 hover:bg-navy-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg text-sm font-medium hover:brightness-95 transition-colors flex items-center gap-2"
             >
               <CheckCircleIcon size="md" aria-hidden="true" />
               Review Payment

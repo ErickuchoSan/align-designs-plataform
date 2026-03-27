@@ -83,8 +83,8 @@ export default function FileActionsBar({
             onClick={onOpenCommentModal}
             disabled={!isProjectActive}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-lg shadow-lg transition-all ${isProjectActive
-                ? 'bg-gold-600 text-white hover:bg-gold-700 hover:shadow-xl'
-                : 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                ? 'bg-[#C9A84C] text-white hover:brightness-95'
+                : 'bg-[#E3E2DF] text-[#6B6A65] cursor-not-allowed'
               }`}
             title={isProjectActive ? '' : 'Project must be active to create comments'}
           >
@@ -97,8 +97,8 @@ export default function FileActionsBar({
             onClick={onOpenUploadModal}
             disabled={!isProjectActive}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-lg shadow-lg transition-all ${isProjectActive
-                ? 'bg-navy-800 text-white hover:bg-navy-700 hover:shadow-xl'
-                : 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                ? 'bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white hover:brightness-95'
+                : 'bg-[#E3E2DF] text-[#6B6A65] cursor-not-allowed'
               }`}
             title={isProjectActive ? '' : 'Project must be active to upload files'}
           >

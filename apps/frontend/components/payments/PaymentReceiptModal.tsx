@@ -137,27 +137,27 @@ export default function PaymentReceiptModal({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column: Details */}
                 <div className="space-y-6">
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                        <h4 className="font-semibold text-navy-900">Payment Information</h4>
+                    <div className="bg-[#F5F4F0] p-4 rounded-lg space-y-3">
+                        <h4 className="font-semibold text-[#1B1C1A]">Payment Information</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                                <p className="text-gray-500">Amount</p>
+                                <p className="text-[#6B6A65]">Amount</p>
                                 <p className="font-bold text-lg text-green-600">
                                     ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-gray-500">Date</p>
-                                <p className="font-medium text-gray-900">
+                                <p className="text-[#6B6A65]">Date</p>
+                                <p className="font-medium text-[#1B1C1A]">
                                     {formatDate(paymentDate)}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-gray-500">Method</p>
-                                <p className="font-medium text-gray-900 capitalize">{method}</p>
+                                <p className="text-[#6B6A65]">Method</p>
+                                <p className="font-medium text-[#1B1C1A] capitalize">{method}</p>
                             </div>
                             <div>
-                                <p className="text-gray-500">Status</p>
+                                <p className="text-[#6B6A65]">Status</p>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
                                     {status}
                                 </span>
@@ -165,14 +165,14 @@ export default function PaymentReceiptModal({
                         </div>
 
                         {notes && (
-                            <div className="border-t border-gray-200 pt-3 mt-3">
-                                <p className="text-gray-500 mb-1">Notes:</p>
-                                <p className="text-gray-700 italic">&quot;{notes}&quot;</p>
+                            <div className="border-t border-[#D0C5B2]/20 pt-3 mt-3">
+                                <p className="text-[#6B6A65] mb-1">Notes:</p>
+                                <p className="text-[#6B6A65] italic">&quot;{notes}&quot;</p>
                             </div>
                         )}
 
                         {rejectionReason && (
-                            <div className="border-t border-gray-200 pt-3 mt-3 bg-red-50 p-2 rounded">
+                            <div className="border-t border-[#D0C5B2]/20 pt-3 mt-3 bg-red-50 p-2 rounded">
                                 <p className="text-red-700 font-medium mb-1">Rejection Reason:</p>
                                 <p className="text-red-600">&quot;{rejectionReason}&quot;</p>
                             </div>
@@ -181,14 +181,14 @@ export default function PaymentReceiptModal({
                 </div>
 
                 {/* Right Column: Receipt Preview */}
-                <div className="bg-gray-100 rounded-lg border border-gray-200 overflow-hidden flex flex-col h-[500px]">
-                    <div className="bg-gray-200 px-4 py-2 border-b border-gray-300 flex justify-between items-center">
-                        <span className="font-medium text-gray-700 text-sm">Receipt Preview</span>
+                <div className="bg-[#F5F4F0] rounded-lg border border-[#D0C5B2]/20 overflow-hidden flex flex-col h-[500px]">
+                    <div className="bg-[#F5F4F0] px-4 py-2 border-b border-[#D0C5B2]/20 flex justify-between items-center">
+                        <span className="font-medium text-[#6B6A65] text-sm">Receipt Preview</span>
                         {hasReceipt && (
                             <button
                                 type="button"
                                 onClick={handleOpenReceiptNewTab}
-                                className="text-navy-600 hover:text-navy-800 text-xs font-medium flex items-center gap-1"
+                                className="text-[#C9A84C] hover:text-[#755B00] text-xs font-medium flex items-center gap-1"
                             >
                                 Open in new tab
                                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,7 +199,7 @@ export default function PaymentReceiptModal({
                     </div>
                     <div className="flex-1 bg-white relative flex items-center justify-center overflow-hidden">
                         {loadingReceipt && (
-                            <div className="flex flex-col items-center justify-center gap-2 text-gray-500">
+                            <div className="flex flex-col items-center justify-center gap-2 text-[#6B6A65]">
                                 <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -216,7 +216,7 @@ export default function PaymentReceiptModal({
                                 <button
                                     type="button"
                                     onClick={loadReceipt}
-                                    className="text-xs text-navy-600 hover:text-navy-800 underline"
+                                    className="text-xs text-[#C9A84C] hover:text-[#755B00] underline"
                                 >
                                     Try again
                                 </button>
@@ -241,11 +241,11 @@ export default function PaymentReceiptModal({
                         )}
                         {!hasReceipt && !loadingReceipt && (
                             <div className="text-center p-4">
-                                <svg className="w-12 h-12 mx-auto text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-12 h-12 mx-auto text-[#D0C5B2] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <p className="text-gray-500 font-medium">No receipt available</p>
-                                <p className="text-gray-400 text-sm mt-1">This payment does not have an attached receipt file.</p>
+                                <p className="text-[#6B6A65] font-medium">No receipt available</p>
+                                <p className="text-[#6B6A65] text-sm mt-1">This payment does not have an attached receipt file.</p>
                             </div>
                         )}
                     </div>
@@ -255,7 +255,7 @@ export default function PaymentReceiptModal({
             <div className="mt-6 flex justify-end">
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-stone-600 hover:bg-stone-700 text-white rounded-lg font-medium transition-colors"
+                    className="px-4 py-2 bg-[#1B1C1A] hover:brightness-95 text-white rounded-lg font-medium transition-colors"
                 >
                     Close
                 </button>

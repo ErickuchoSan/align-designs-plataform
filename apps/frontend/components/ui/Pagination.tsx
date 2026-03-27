@@ -98,7 +98,7 @@ function Pagination({
   const endItem = useMemo(() => Math.min(currentPage * itemsPerPage, totalItems), [currentPage, itemsPerPage, totalItems]);
 
   return (
-    <nav ref={paginationRef} className="mt-6 bg-white rounded-xl border border-stone-200 shadow-lg" aria-label="Pagination">
+    <nav ref={paginationRef} className="mt-6 bg-white rounded-xl" aria-label="Pagination">
       {/* Screen reader announcement for page changes */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         Page {currentPage} of {totalPages}
@@ -106,14 +106,14 @@ function Pagination({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6">
         {/* Items per page selector */}
         <div className="flex items-center gap-3">
-          <label htmlFor="items-per-page" className="text-sm font-medium text-navy-900">
+          <label htmlFor="items-per-page" className="text-sm font-medium text-[#1B1C1A]">
             Show:
           </label>
           <select
             id="items-per-page"
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChangeRef.current(Number(e.target.value))}
-            className="px-4 py-2 border border-stone-300 rounded-lg bg-white text-sm font-medium text-navy-900 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all hover:border-gold-400 cursor-pointer shadow-sm"
+            className="px-4 py-2 border border-[#D0C5B2]/20 rounded-lg bg-white text-sm font-medium text-[#1B1C1A] focus:ring-2 focus:ring-[#C9A84C] focus:border-[#C9A84C] transition-all hover:border-[#C9A84C] cursor-pointer shadow-sm"
             aria-label="Items per page"
           >
             {availableLimits.map((limit) => (
@@ -122,7 +122,7 @@ function Pagination({
               </option>
             ))}
           </select>
-          <span className="text-sm text-stone-700 font-medium" aria-live="polite" aria-atomic="true">
+          <span className="text-sm text-[#6B6A65] font-medium" aria-live="polite" aria-atomic="true">
             {startItem}-{endItem} of {totalItems}
           </span>
         </div>
@@ -136,8 +136,8 @@ function Pagination({
               disabled={currentPage === 1}
               className={`p-2.5 rounded-lg border-2 transition-all font-medium ${
                 currentPage === 1
-                  ? 'border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed'
-                  : 'border-navy-300 bg-white text-navy-700 hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-600 hover:text-navy-900 hover:border-gold-600 shadow-sm hover:shadow-lg transform hover:scale-105'
+                  ? 'border-[#D0C5B2]/20 bg-[#F5F4F0] text-[#6B6A65] cursor-not-allowed'
+                  : 'border-[#D0C5B2]/20 bg-white text-[#1B1C1A] hover:bg-[#F5F4F0] shadow-sm transform hover:scale-105'
               }`}
               aria-label="Go to previous page"
               aria-disabled={currentPage === 1}
@@ -154,7 +154,7 @@ function Pagination({
               // Use position-based key: first ellipsis is 'start', second is 'end'
               const ellipsisKey = idx < pageNumbers.length / 2 ? 'ellipsis-start' : 'ellipsis-end';
               return (
-                <span key={ellipsisKey} className="px-3 py-2 text-stone-500 font-bold text-lg" aria-hidden="true">
+                <span key={ellipsisKey} className="px-3 py-2 text-[#6B6A65] font-bold text-lg" aria-hidden="true">
                   ...
                 </span>
               );
@@ -166,8 +166,8 @@ function Pagination({
                 onClick={() => handlePageClick(page)}
                 className={`min-w-[44px] px-4 py-2.5 rounded-lg border-2 text-sm font-bold transition-all transform ${
                   currentPage === page
-                    ? 'bg-gradient-to-r from-gold-500 to-gold-600 border-gold-600 text-navy-900 shadow-lg scale-105'
-                    : 'border-navy-300 bg-white text-navy-700 hover:bg-navy-50 hover:border-navy-500 hover:scale-105 shadow-sm hover:shadow-md'
+                    ? 'bg-[#C9A84C] border-[#C9A84C] text-white shadow-sm scale-105'
+                    : 'border-[#D0C5B2]/20 bg-white text-[#1B1C1A] hover:bg-[#F5F4F0] hover:scale-105 shadow-sm'
                 }`}
                 aria-label={`Go to page ${page}`}
                 aria-current={currentPage === page ? 'page' : undefined}
@@ -184,8 +184,8 @@ function Pagination({
               disabled={currentPage === totalPages}
               className={`p-2.5 rounded-lg border-2 transition-all font-medium ${
                 currentPage === totalPages
-                  ? 'border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed'
-                  : 'border-navy-300 bg-white text-navy-700 hover:bg-gradient-to-r hover:from-gold-500 hover:to-gold-600 hover:text-navy-900 hover:border-gold-600 shadow-sm hover:shadow-lg transform hover:scale-105'
+                  ? 'border-[#D0C5B2]/20 bg-[#F5F4F0] text-[#6B6A65] cursor-not-allowed'
+                  : 'border-[#D0C5B2]/20 bg-white text-[#1B1C1A] hover:bg-[#F5F4F0] shadow-sm transform hover:scale-105'
               }`}
               aria-label="Go to next page"
               aria-disabled={currentPage === totalPages}

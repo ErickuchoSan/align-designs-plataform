@@ -35,8 +35,8 @@ function DataTable<T>({
   ariaLabel,
 }: Readonly<DataTableProps<T>>) {
   const getRowClassName = (item: T) => {
-    const base = 'hover:bg-stone-50 transition-colors';
-    const clickable = onRowClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-inset' : '';
+    const base = 'hover:bg-[#F5F4F0] transition-colors';
+    const clickable = onRowClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-inset' : '';
     const custom = typeof rowClassName === 'function' ? rowClassName(item) : rowClassName || '';
     return `${base} ${clickable} ${custom}`.trim();
   };
@@ -50,21 +50,21 @@ function DataTable<T>({
 
   return (
     <section className="overflow-x-auto" aria-label={ariaLabel}>
-      <table className="min-w-full divide-y divide-stone-200">
-        <thead className="bg-gradient-to-r from-navy-50 to-stone-100">
+      <table className="min-w-full divide-y divide-[#D0C5B2]/20">
+        <thead className="bg-[#F5F4F0]">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
                 scope="col"
-                className={`px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider ${col.headerClassName || ''}`}
+                className={`px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider ${col.headerClassName || ''}`}
               >
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-stone-200">
+        <tbody className="bg-white divide-y divide-[#D0C5B2]/20">
           {isLoading && data.length === 0 && (
             <>
               {Array.from({ length: skeletonRows }, (_, i) => `skeleton-row-${i}`).map((key) => (
@@ -74,7 +74,7 @@ function DataTable<T>({
           )}
           {!isLoading && data.length === 0 && (
             <tr>
-              <td colSpan={columns.length} className="px-6 py-12 text-center text-stone-500">
+              <td colSpan={columns.length} className="px-6 py-12 text-center text-[#6B6A65]">
                 {emptyMessage}
               </td>
             </tr>

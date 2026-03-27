@@ -137,11 +137,11 @@ export default function ErrorModal({
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold text-navy-900">
+              <h3 className="text-lg font-bold text-[#1B1C1A]">
                 {title}
               </h3>
               {statusCode && (
-                <p className="text-sm text-stone-600 mt-0.5">
+                <p className="text-sm text-[#6B6A65] mt-0.5">
                   Status Code: {statusCode}
                 </p>
               )}
@@ -153,21 +153,21 @@ export default function ErrorModal({
         <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
           {/* Main error message */}
           <div className="mb-4">
-            <p className="text-base text-navy-800 font-medium mb-2">
+            <p className="text-base text-[#1B1C1A] font-medium mb-2">
               {message}
             </p>
           </div>
 
           {/* Endpoint info - Only for admins/developers */}
           {showTechnicalDetails && (endpoint || method) && (
-            <div className="mb-4 p-3 bg-stone-50 rounded-lg border border-stone-200">
-              <p className="text-xs font-semibold text-stone-500 uppercase mb-1">
+            <div className="mb-4 p-3 bg-[#F5F4F0] rounded-lg border border-[#D0C5B2]/20">
+              <p className="text-xs font-semibold text-[#6B6A65] uppercase mb-1">
                 Request Details {!isDevelopment && '(Admin Only)'}
               </p>
               {method && endpoint && (
-                <p className="text-sm font-mono text-navy-900">
-                  <span className="font-bold text-gold-600">{method}</span>{' '}
-                  <span className="text-stone-700">{endpoint}</span>
+                <p className="text-sm font-mono text-[#1B1C1A]">
+                  <span className="font-bold text-[#C9A84C]">{method}</span>{' '}
+                  <span className="text-[#6B6A65]">{endpoint}</span>
                 </p>
               )}
             </div>
@@ -176,14 +176,14 @@ export default function ErrorModal({
           {/* Validation errors or details */}
           {details.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-semibold text-navy-900 mb-2">
+              <p className="text-sm font-semibold text-[#1B1C1A] mb-2">
                 Details:
               </p>
               <ul className="space-y-1">
                 {details.map((detail) => (
                   <li
                     key={detail}
-                    className="text-sm text-stone-700 flex items-start gap-2"
+                    className="text-sm text-[#6B6A65] flex items-start gap-2"
                   >
                     <span className="text-red-500 flex-shrink-0 mt-0.5">•</span>
                     <span>{detail}</span>
@@ -204,18 +204,18 @@ export default function ErrorModal({
 
           {/* DEV MODE: Request Details */}
           {showTechnicalDetails && requestConfig && (
-            <div className="mb-4 p-3 bg-stone-50 border border-stone-200 rounded-lg">
-              <p className="text-xs font-bold text-stone-900 mb-2">📤 REQUEST DETAILS</p>
-              <div className="space-y-1 text-xs font-mono text-stone-900">
-                <div><span className="font-semibold text-navy-900">Base URL:</span> {requestConfig.baseURL || 'N/A'}</div>
-                <div><span className="font-semibold text-navy-900">Path:</span> {endpoint}</div>
-                <div><span className="font-semibold text-navy-900">Full URL:</span> {requestConfig.baseURL ? `${requestConfig.baseURL}${endpoint}` : endpoint}</div>
-                <div><span className="font-semibold text-navy-900">Method:</span> {method}</div>
+            <div className="mb-4 p-3 bg-[#F5F4F0] border border-[#D0C5B2]/20 rounded-lg">
+              <p className="text-xs font-bold text-[#1B1C1A] mb-2">📤 REQUEST DETAILS</p>
+              <div className="space-y-1 text-xs font-mono text-[#1B1C1A]">
+                <div><span className="font-semibold text-[#1B1C1A]">Base URL:</span> {requestConfig.baseURL || 'N/A'}</div>
+                <div><span className="font-semibold text-[#1B1C1A]">Path:</span> {endpoint}</div>
+                <div><span className="font-semibold text-[#1B1C1A]">Full URL:</span> {requestConfig.baseURL ? `${requestConfig.baseURL}${endpoint}` : endpoint}</div>
+                <div><span className="font-semibold text-[#1B1C1A]">Method:</span> {method}</div>
 
                 {requestConfig.params && (
                   <div className="mt-2">
-                    <span className="font-semibold text-navy-900">Query Params:</span>
-                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs text-stone-900">
+                    <span className="font-semibold text-[#1B1C1A]">Query Params:</span>
+                    <pre className="mt-1 bg-white p-2 rounded border border-[#D0C5B2]/20 overflow-x-auto text-xs text-[#1B1C1A]">
                       {JSON.stringify(requestConfig.params, null, 2)}
                     </pre>
                   </div>
@@ -223,8 +223,8 @@ export default function ErrorModal({
 
                 {requestConfig.data && (
                   <div className="mt-2">
-                    <span className="font-semibold text-navy-900">Request Body:</span>
-                    <pre className="mt-1 bg-white p-2 rounded border border-stone-300 overflow-x-auto text-xs max-h-48 text-stone-900">
+                    <span className="font-semibold text-[#1B1C1A]">Request Body:</span>
+                    <pre className="mt-1 bg-white p-2 rounded border border-[#D0C5B2]/20 overflow-x-auto text-xs max-h-48 text-[#1B1C1A]">
                       {JSON.stringify(
                         typeof requestConfig.data === 'string' ? JSON.parse(requestConfig.data) : requestConfig.data,
                         null,
@@ -241,7 +241,7 @@ export default function ErrorModal({
           {showTechnicalDetails && responseData && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-xs font-bold text-red-900 mb-2">📥 RESPONSE DATA</p>
-              <pre className="bg-white p-2 rounded border border-red-300 overflow-x-auto text-xs max-h-48 font-mono text-stone-900">
+              <pre className="bg-white p-2 rounded border border-red-300 overflow-x-auto text-xs max-h-48 font-mono text-[#1B1C1A]">
                 {JSON.stringify(responseData, null, 2)}
               </pre>
             </div>
@@ -275,10 +275,10 @@ export default function ErrorModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-stone-50 border-t border-stone-200">
+        <div className="px-6 py-4 bg-[#F5F4F0] border-t border-[#D0C5B2]/20">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2.5 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2"
+            className="w-full px-4 py-2.5 bg-gradient-to-br from-[#755B00] to-[#C9A84C] hover:brightness-95 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2"
           >
             {willRedirect ? 'OK, Go to Login' : 'OK'}
           </button>

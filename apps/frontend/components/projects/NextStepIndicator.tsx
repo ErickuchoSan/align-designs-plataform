@@ -124,14 +124,14 @@ function NextStepIndicator({
 
   const priorityColors = {
     high: 'bg-amber-50 border-amber-200 text-amber-900',
-    medium: 'bg-navy-50 border-navy-200 text-navy-900',
-    low: 'bg-stone-50 border-stone-200 text-stone-700',
+    medium: 'bg-[#F5F4F0] border-[#D0C5B2]/20 text-[#1B1C1A]',
+    low: 'bg-[#F5F4F0] border-[#D0C5B2]/20 text-[#6B6A65]',
   };
 
   const priorityBadge = {
     high: 'bg-amber-100 text-amber-800',
-    medium: 'bg-navy-100 text-navy-800',
-    low: 'bg-stone-100 text-stone-600',
+    medium: 'bg-[#C9A84C]/20 text-[#755B00]',
+    low: 'bg-[#F5F4F0] text-[#6B6A65]',
   };
 
   return (
@@ -150,7 +150,7 @@ function NextStepIndicator({
         {nextStep.actionLabel && (
           <button
             onClick={onAction}
-            className="flex items-center gap-1 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium shrink-0"
+            className="flex items-center gap-1 px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg hover:brightness-95 transition-all text-sm font-semibold shrink-0"
           >
             {nextStep.actionLabel}
             <ChevronRightIcon className="w-4 h-4" />

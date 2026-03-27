@@ -112,11 +112,11 @@ export default function UploadPaymentProofModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50">
-                    <h3 className="text-lg font-semibold text-navy-900">Upload Payment Proof</h3>
+                <div className="px-6 py-4 border-b border-[#D0C5B2]/20 flex justify-between items-center bg-[#F5F4F0]">
+                    <h3 className="text-lg font-semibold text-[#1B1C1A]">Upload Payment Proof</h3>
                     <button
                         onClick={handleClose}
-                        className="text-stone-400 hover:text-stone-600 transition-colors"
+                        className="text-[#6B6A65] hover:text-[#1B1C1A] transition-colors"
                     >
                         <CloseIcon size="md" />
                     </button>
@@ -126,7 +126,7 @@ export default function UploadPaymentProofModal({
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
 
                     <div>
-                        <label htmlFor="payment-proof-invoiceId" className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-invoiceId" className="block text-sm font-medium text-[#6B6A65] mb-1">
                             Select Invoice to Pay
                         </label>
                         <select
@@ -134,7 +134,7 @@ export default function UploadPaymentProofModal({
                             {...register('invoiceId', { required: 'Please select an invoice' })}
                             onChange={handleInvoiceChange}
                             disabled={loadingInvoices}
-                            className={cn(INPUT_BASE, errors.invoiceId ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'disabled:bg-stone-100')}
+                            className={cn(INPUT_BASE, errors.invoiceId ? INPUT_VARIANTS.error : INPUT_VARIANTS.default, 'disabled:bg-[#F5F4F0]')}
                         >
                             <option value="">-- Select Invoice --</option>
                             {invoices.map((inv) => (
@@ -144,16 +144,16 @@ export default function UploadPaymentProofModal({
                             ))}
                         </select>
                         {errors.invoiceId && <p className="text-xs text-red-600 mt-1">{errors.invoiceId.message}</p>}
-                        {loadingInvoices && <p className="text-xs text-stone-500 mt-1">Loading invoices...</p>}
+                        {loadingInvoices && <p className="text-xs text-[#6B6A65] mt-1">Loading invoices...</p>}
                         {invoices.length === 0 && !loadingInvoices && <p className="text-xs text-orange-500 mt-1">No pending invoices found.</p>}
                     </div>
 
                     <div>
-                        <label htmlFor="payment-proof-amount" className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-amount" className="block text-sm font-medium text-[#6B6A65] mb-1">
                             Amount Paid (USD)
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3 top-2 text-stone-500">$</span>
+                            <span className="absolute left-3 top-2 text-[#6B6A65]">$</span>
                             <input
                                 id="payment-proof-amount"
                                 type="number"
@@ -168,7 +168,7 @@ export default function UploadPaymentProofModal({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="payment-proof-method" className="block text-sm font-medium text-stone-700 mb-1">
+                            <label htmlFor="payment-proof-method" className="block text-sm font-medium text-[#6B6A65] mb-1">
                                 Payment Method
                             </label>
                             <select
@@ -181,7 +181,7 @@ export default function UploadPaymentProofModal({
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="payment-proof-date" className="block text-sm font-medium text-stone-700 mb-1">
+                            <label htmlFor="payment-proof-date" className="block text-sm font-medium text-[#6B6A65] mb-1">
                                 Payment Date
                             </label>
                             <input
@@ -195,7 +195,7 @@ export default function UploadPaymentProofModal({
                     </div>
 
                     <div>
-                        <label htmlFor="payment-proof-reference" className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-reference" className="block text-sm font-medium text-[#6B6A65] mb-1">
                             Reference Number (Optional)
                         </label>
                         <input
@@ -209,7 +209,7 @@ export default function UploadPaymentProofModal({
 
                     {/* File Upload Placeholder */}
                     <div>
-                        <label htmlFor="payment-proof-file" className="block text-sm font-medium text-stone-700 mb-1">
+                        <label htmlFor="payment-proof-file" className="block text-sm font-medium text-[#6B6A65] mb-1">
                             Payment Proof (Screenshot/PDF)
                         </label>
                         <input
@@ -217,14 +217,14 @@ export default function UploadPaymentProofModal({
                             type="file"
                             accept="image/*,application/pdf"
                             onChange={handleFileChange}
-                            className="w-full text-sm text-stone-500
+                            className="w-full text-sm text-[#6B6A65]
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
                   file:text-sm file:font-semibold
-                  file:bg-navy-50 file:text-navy-700
-                  hover:file:bg-navy-100"
+                  file:bg-[#F5F4F0] file:text-[#1B1C1A]
+                  hover:file:bg-[#F5F4F0]"
                         />
-                        <p className="text-xs text-stone-500 mt-1">
+                        <p className="text-xs text-[#6B6A65] mt-1">
                             (Note: File upload is optional in this version)
                         </p>
                     </div>

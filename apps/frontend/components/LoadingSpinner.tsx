@@ -19,7 +19,7 @@ const sizeClasses = {
  */
 export function LoadingSpinner({
   size = 'md',
-  color = 'border-navy-600',
+  color = 'border-[#1B1C1A]',
   className = '',
 }: Readonly<LoadingSpinnerProps>) {
   return (
@@ -49,13 +49,13 @@ export function LoadingOverlay({
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity ${
-        transparent ? 'bg-stone-900/30' : 'bg-stone-900/60'
+        transparent ? 'bg-[#1B1C1A]/30' : 'bg-[#1B1C1A]/60'
       }`}
     >
       <div className="bg-white rounded-lg shadow-xl p-8 flex flex-col items-center space-y-4">
         <LoadingSpinner size="lg" />
         {message && (
-          <p className="text-stone-700 font-medium text-center">{message}</p>
+          <p className="text-[#6B6A65] font-medium text-center">{message}</p>
         )}
       </div>
     </div>
@@ -87,7 +87,7 @@ export function LoadingState({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <LoadingSpinner size="lg" />
-        <p className="mt-4 text-stone-600">{loadingMessage}</p>
+        <p className="mt-4 text-[#6B6A65]">{loadingMessage}</p>
       </div>
     );
   }
@@ -124,7 +124,7 @@ export function LoadingState({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <svg
-          className="h-12 w-12 text-stone-400"
+          className="h-12 w-12 text-[#6B6A65]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -136,7 +136,7 @@ export function LoadingState({
             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
           />
         </svg>
-        <p className="mt-4 text-stone-600">{emptyMessage}</p>
+        <p className="mt-4 text-[#6B6A65]">{emptyMessage}</p>
       </div>
     );
   }

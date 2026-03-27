@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import dynamic from 'next/dynamic';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { PROJECT_THEMES, type ProjectTheme } from '@/lib/styles';
+import { BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 import ProjectFormFields from './ProjectFormFields';
 
 const Modal = dynamic(() => import('@/components/ui/Modal'), { ssr: false });
@@ -34,7 +34,6 @@ interface CreateProjectModalProps {
   onClose: () => void;
   onFormChange: (data: ProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
-  theme?: ProjectTheme;
 }
 
 function CreateProjectModal({
@@ -46,10 +45,7 @@ function CreateProjectModal({
   onClose,
   onFormChange,
   onSubmit,
-  theme = 'navy',
 }: Readonly<CreateProjectModalProps>) {
-  const styles = PROJECT_THEMES[theme];
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Project">
       <form onSubmit={onSubmit} className="space-y-5">
@@ -58,24 +54,23 @@ function CreateProjectModal({
           clients={clients}
           employees={employees}
           isSubmitting={isSubmitting}
-          styles={styles}
           idPrefix="create"
           onFormChange={onFormChange}
         />
 
-        <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
+        <div className="flex gap-3 justify-end pt-4 border-t border-[#D0C5B2]/20">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className={`px-5 py-2.5 text-sm font-medium ${styles.cancelButton} rounded-lg transition-colors disabled:opacity-50`}
+            className={`${BUTTON_BASE} ${BUTTON_VARIANTS.secondary} ${BUTTON_SIZES.md}`}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`px-5 py-2.5 text-sm font-medium text-white ${styles.primaryButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
+            className={`${BUTTON_BASE} ${BUTTON_VARIANTS.primary} ${BUTTON_SIZES.md}`}
           >
             {isSubmitting ? <ButtonLoader /> : 'Create Project'}
           </button>

@@ -58,8 +58,8 @@ function SearchableSelect({
       <Combobox value={selectedOption} onChange={(opt) => onChange(opt ? opt.id : '')} disabled={disabled}>
         <div className="relative mt-1">
           <div className={cn(
-            "relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-gold-300 sm:text-sm",
-            error ? "border-red-500" : "border-stone-300"
+            "relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-[#C9A84C] sm:text-sm",
+            error ? "border-red-500" : "border-[#D0C5B2]/20"
           )}>
             <Combobox.Input
               className="w-full border-none py-2.5 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
@@ -89,7 +89,7 @@ function SearchableSelect({
                     className={({ active }) =>
                       cn(
                         'relative cursor-default select-none py-2 pl-10 pr-4',
-                        active ? 'bg-gold-500 text-white' : 'text-gray-900',
+                        active ? 'bg-[#F5F4F0] text-[#1B1C1A]' : 'text-gray-900',
                         option.disabled && 'opacity-50 cursor-not-allowed'
                       )
                     }
@@ -110,7 +110,7 @@ function SearchableSelect({
                           <span
                             className={cn(
                               'absolute inset-y-0 left-0 flex items-center pl-3',
-                              active ? 'text-white' : 'text-navy-900'
+                              active ? 'text-[#1B1C1A]' : 'text-[#1B1C1A]'
                             )}
                           >
                             <CheckIcon size="lg" />

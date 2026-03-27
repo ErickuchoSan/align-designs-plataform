@@ -123,8 +123,8 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
           <div className="mx-auto w-16 h-16 bg-forest-100 rounded-full flex items-center justify-center mb-4">
             <CheckIcon size="lg" className="w-8 h-8 text-forest-600" />
           </div>
-          <h3 className="text-lg font-semibold text-navy-900 mb-2">Password updated!</h3>
-          <p className="text-sm text-stone-700 mb-6">
+          <h3 className="text-lg font-semibold text-[#1B1C1A] mb-2">Password updated!</h3>
+          <p className="text-sm text-[#6B6A65] mb-6">
             Your password has been reset successfully. You can now log in with your new password.
           </p>
           <button onClick={handleClose} className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}>
@@ -136,12 +136,12 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
           {/* Step 1: Enter Email */}
           {step === 'email' && (
             <form onSubmit={handleEmailSubmit} className="space-y-4">
-              <p className="text-sm text-stone-700">
+              <p className="text-sm text-[#6B6A65]">
                 Enter your email and we will send you an 8-digit code to reset your password.
               </p>
 
               <div>
-                <label htmlFor="forgot-email" className="block text-sm font-medium text-navy-900 mb-2">
+                <label htmlFor="forgot-email" className="block text-sm font-medium text-[#1B1C1A] mb-2">
                   Email
                 </label>
                 <EmailInput
@@ -171,12 +171,12 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
           {/* Step 2: Enter OTP */}
           {step === 'otp' && (
             <form onSubmit={handleOtpSubmit} className="space-y-4">
-              <div className="text-sm text-navy-700 bg-gold-50 p-4 rounded-lg border border-gold-200">
+              <div className="text-sm text-[#6B6A65] bg-[#C9A84C]/20 p-4 rounded-lg">
                 An 8-digit code has been sent to <strong>{email}</strong>
               </div>
 
               <div>
-                <label htmlFor="forgot-otp" className="block text-sm font-medium text-navy-900 mb-2">
+                <label htmlFor="forgot-otp" className="block text-sm font-medium text-[#1B1C1A] mb-2">
                   OTP Code
                 </label>
                 <input
@@ -215,7 +215,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
               </p>
 
               <div>
-                <label htmlFor="forgot-new-password" className="block text-sm font-medium text-navy-900 mb-2">
+                <label htmlFor="forgot-new-password" className="block text-sm font-medium text-[#1B1C1A] mb-2">
                   New Password
                 </label>
                 <PasswordInput
@@ -238,7 +238,7 @@ export default function ForgotPasswordModal({ show, onClose, initialEmail = '' }
               </div>
 
               <div>
-                <label htmlFor="forgot-confirm-password" className="block text-sm font-medium text-navy-900 mb-2">
+                <label htmlFor="forgot-confirm-password" className="block text-sm font-medium text-[#1B1C1A] mb-2">
                   Confirm Password
                 </label>
                 <PasswordInput

@@ -118,7 +118,7 @@ export default function RecordPaymentModal({
                 {/* Employee Selection */}
                 {isEmployeePayment && (
                     <div>
-                        <label htmlFor="record-payment-employee" className="block mb-2 text-sm font-medium text-stone-700">Employee</label>
+                        <label htmlFor="record-payment-employee" className="block mb-2 text-sm font-medium text-[#6B6A65]">Employee</label>
                         <select
                             id="record-payment-employee"
                             required
@@ -137,13 +137,13 @@ export default function RecordPaymentModal({
 
                 {/* Pending Files Selection */}
                 {isEmployeePayment && selectedEmployeeId && (
-                    <fieldset className="p-4 border rounded-lg border-stone-200 bg-stone-50">
-                        <legend className="block mb-2 text-sm font-medium text-stone-700">Pending Jobs</legend>
+                    <fieldset className="p-4 border rounded-lg border-[#D0C5B2]/20 bg-[#F5F4F0]">
+                        <legend className="block mb-2 text-sm font-medium text-[#6B6A65]">Pending Jobs</legend>
                         {isLoadingFiles && (
-                            <div className="text-sm text-stone-500">Loading...</div>
+                            <div className="text-sm text-[#6B6A65]">Loading...</div>
                         )}
                         {!isLoadingFiles && pendingFiles.length === 0 && (
-                            <div className="text-sm italic text-stone-400">No approved pending jobs</div>
+                            <div className="text-sm italic text-[#6B6A65]">No approved pending jobs</div>
                         )}
                         {!isLoadingFiles && pendingFiles.length > 0 && (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -156,24 +156,24 @@ export default function RecordPaymentModal({
                                             onChange={() => handleFileToggle(f.id)}
                                             className={CHECKBOX_BASE}
                                         />
-                                        <label htmlFor={`file-${f.id}`} className="block ml-2 text-sm truncate text-stone-900">
-                                            {f.filename} <span className="text-xs text-stone-500">({formatDate(f.approvedClientAt)})</span>
+                                        <label htmlFor={`file-${f.id}`} className="block ml-2 text-sm truncate text-[#1B1C1A]">
+                                            {f.filename} <span className="text-xs text-[#6B6A65]">({formatDate(f.approvedClientAt)})</span>
                                         </label>
                                     </div>
                                 ))}
                             </div>
                         )}
-                        <p className="mt-2 text-xs text-stone-500">
+                        <p className="mt-2 text-xs text-[#6B6A65]">
                             Select the jobs you are paying for to calculate efficiency.
                         </p>
                     </fieldset>
                 )}
 
                 <div>
-                    <label htmlFor="record-payment-amount" className="block mb-2 text-sm font-medium text-stone-700">Amount</label>
+                    <label htmlFor="record-payment-amount" className="block mb-2 text-sm font-medium text-[#6B6A65]">Amount</label>
                     <div className="relative rounded-md shadow-sm">
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <span className="text-stone-500 sm:text-sm">$</span>
+                            <span className="text-[#6B6A65] sm:text-sm">$</span>
                         </div>
                         <input
                             id="record-payment-amount"
@@ -190,12 +190,12 @@ export default function RecordPaymentModal({
                 </div>
 
                 <fieldset>
-                    <legend className="block mb-2 text-sm font-medium text-stone-700">Payment Method</legend>
+                    <legend className="block mb-2 text-sm font-medium text-[#6B6A65]">Payment Method</legend>
                     <PaymentMethodSelect value={method} onChange={setMethod} />
                 </fieldset>
 
                 <div>
-                    <label htmlFor="record-payment-date" className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
+                    <label htmlFor="record-payment-date" className="block mb-2 text-sm font-medium text-[#6B6A65]">Payment Date</label>
                     <input
                         id="record-payment-date"
                         type="date"
@@ -207,18 +207,18 @@ export default function RecordPaymentModal({
                 </div>
 
                 <div>
-                    <label htmlFor="record-payment-receipt" className="block mb-2 text-sm font-medium text-stone-700">Receipt (Optional)</label>
+                    <label htmlFor="record-payment-receipt" className="block mb-2 text-sm font-medium text-[#6B6A65]">Receipt (Optional)</label>
                     <input
                         id="record-payment-receipt"
                         type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => setFile(e.target.files?.[0] || null)}
-                        className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-navy-700 hover:file:bg-stone-200"
+                        className="block w-full text-sm text-[#6B6A65] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#F5F4F0] file:text-[#1B1C1A] hover:file:bg-[#F5F4F0]"
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="record-payment-notes" className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
+                    <label htmlFor="record-payment-notes" className="block mb-2 text-sm font-medium text-[#6B6A65]">Notes</label>
                     <textarea
                         id="record-payment-notes"
                         rows={3}
@@ -234,7 +234,7 @@ export default function RecordPaymentModal({
                         type="button"
                         onClick={onClose}
                         disabled={recordPaymentMutation.isPending}
-                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'mr-3 border border-stone-300')}
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'mr-3 border border-[#D0C5B2]/20')}
                     >
                         Cancel
                     </button>

@@ -43,10 +43,10 @@ export default function InvoiceDetailPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold text-navy-900">{invoice.invoiceNumber}</h1>
+                        <h1 className="text-2xl font-bold text-[#1B1C1A]">{invoice.invoiceNumber}</h1>
                         <InvoiceStatusBadge status={invoice.status} />
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">Created on {formatDate(invoice.createdAt)}</p>
+                    <p className="text-sm text-[#6B6A65] mt-1">Created on {formatDate(invoice.createdAt)}</p>
                 </div>
                 <div className="flex gap-2">
                     {invoice.status === InvoiceStatus.DRAFT && (
@@ -75,64 +75,64 @@ export default function InvoiceDetailPage() {
             </div>
 
             {/* Invoice Document Look */}
-            <div className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+            <div className="bg-white rounded-lg overflow-hidden">
                 <div className="p-8 space-y-8">
 
                     {/* Top Section */}
-                    <div className="flex justify-between border-b border-gray-200 pb-8">
+                    <div className="flex justify-between border-b border-[#D0C5B2]/20 pb-8">
                         <div>
-                            <h2 className="text-lg font-bold text-navy-900">Align Designs</h2>
-                            <p className="text-gray-500">123 Design Street</p>
-                            <p className="text-gray-500">Creative City, CC 12345</p>
-                            <p className="text-gray-500">billing@aligndesigns.com</p>
+                            <h2 className="text-lg font-bold text-[#1B1C1A]">Align Designs</h2>
+                            <p className="text-[#6B6A65]">123 Design Street</p>
+                            <p className="text-[#6B6A65]">Creative City, CC 12345</p>
+                            <p className="text-[#6B6A65]">billing@aligndesigns.com</p>
                         </div>
                         <div className="text-right">
-                            <h3 className="text-gray-500 uppercase tracking-wider text-sm font-semibold">Bill To</h3>
-                            <p className="text-lg font-medium text-gray-900 mt-1">
+                            <h3 className="text-[#6B6A65] uppercase tracking-wider text-sm font-semibold">Bill To</h3>
+                            <p className="text-lg font-medium text-[#1B1C1A] mt-1">
                                 {invoice.client?.firstName} {invoice.client?.lastName}
                             </p>
-                            <p className="text-gray-500">{invoice.client?.email}</p>
-                            {invoice.client?.phone && <p className="text-gray-500">{invoice.client.phone}</p>}
+                            <p className="text-[#6B6A65]">{invoice.client?.email}</p>
+                            {invoice.client?.phone && <p className="text-[#6B6A65]">{invoice.client.phone}</p>}
                         </div>
                     </div>
 
                     {/* Details Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-gray-50 p-6 rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-[#F5F4F0] p-6 rounded-lg">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase">Issue Date</p>
-                            <p className="text-gray-900 font-medium">{formatDate(invoice.issueDate)}</p>
+                            <p className="text-xs font-semibold text-[#6B6A65] uppercase">Issue Date</p>
+                            <p className="text-[#1B1C1A] font-medium">{formatDate(invoice.issueDate)}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase">Due Date</p>
-                            <p className="text-gray-900 font-medium">{formatDate(invoice.dueDate)}</p>
+                            <p className="text-xs font-semibold text-[#6B6A65] uppercase">Due Date</p>
+                            <p className="text-[#1B1C1A] font-medium">{formatDate(invoice.dueDate)}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase">Project</p>
-                            <p className="text-gray-900 font-medium">{invoice.project?.name}</p>
+                            <p className="text-xs font-semibold text-[#6B6A65] uppercase">Project</p>
+                            <p className="text-[#1B1C1A] font-medium">{invoice.project?.name}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase">Amount Due</p>
-                            <p className="text-gray-900 font-bold">{formatCurrency(invoice.totalAmount)}</p>
+                            <p className="text-xs font-semibold text-[#6B6A65] uppercase">Amount Due</p>
+                            <p className="text-[#1B1C1A] font-bold">{formatCurrency(invoice.totalAmount)}</p>
                         </div>
                     </div>
 
                     {/* Line Items (Simplified as one main item for Phase 4) */}
                     <div>
                         {/* Desktop Table View */}
-                        <table className="hidden md:table min-w-full divide-y divide-gray-200">
+                        <table className="hidden md:table min-w-full divide-y divide-[#D0C5B2]/15">
                             <thead>
                                 <tr>
-                                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th className="px-3 py-3 text-left text-xs font-medium text-[#6B6A65] uppercase tracking-wider">Description</th>
+                                    <th className="px-3 py-3 text-right text-xs font-medium text-[#6B6A65] uppercase tracking-wider">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-[#D0C5B2]/15">
                                 <tr>
-                                    <td className="px-3 py-4 text-sm text-gray-900">
+                                    <td className="px-3 py-4 text-sm text-[#1B1C1A]">
                                         Professional Services for Project: <strong>{invoice.project?.name}</strong>
-                                        <div className="text-gray-500 text-xs mt-1">{invoice.notes}</div>
+                                        <div className="text-[#6B6A65] text-xs mt-1">{invoice.notes}</div>
                                     </td>
-                                    <td className="px-3 py-4 text-sm text-gray-900 text-right">
+                                    <td className="px-3 py-4 text-sm text-[#1B1C1A] text-right">
                                         {formatCurrency(invoice.subtotal)}
                                     </td>
                                 </tr>
@@ -140,17 +140,17 @@ export default function InvoiceDetailPage() {
                         </table>
 
                         {/* Mobile Card View */}
-                        <div className="md:hidden bg-gray-50 rounded-lg p-4">
-                            <div className="text-xs font-medium text-gray-500 uppercase mb-2">Description</div>
-                            <div className="text-sm text-gray-900 mb-2">
+                        <div className="md:hidden bg-[#F5F4F0] rounded-lg p-4">
+                            <div className="text-xs font-medium text-[#6B6A65] uppercase mb-2">Description</div>
+                            <div className="text-sm text-[#1B1C1A] mb-2">
                                 Professional Services for Project: <strong>{invoice.project?.name}</strong>
                             </div>
                             {invoice.notes && (
-                                <div className="text-gray-500 text-xs mb-3">{invoice.notes}</div>
+                                <div className="text-[#6B6A65] text-xs mb-3">{invoice.notes}</div>
                             )}
-                            <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                                <span className="text-xs font-medium text-gray-500 uppercase">Amount</span>
-                                <span className="text-sm font-medium text-gray-900">{formatCurrency(invoice.subtotal)}</span>
+                            <div className="flex justify-between items-center pt-3 border-t border-[#D0C5B2]/20">
+                                <span className="text-xs font-medium text-[#6B6A65] uppercase">Amount</span>
+                                <span className="text-sm font-medium text-[#1B1C1A]">{formatCurrency(invoice.subtotal)}</span>
                             </div>
                         </div>
                     </div>
@@ -158,23 +158,23 @@ export default function InvoiceDetailPage() {
                     {/* Totals */}
                     <div className="flex justify-end">
                         <div className="w-full md:w-1/3 space-y-3">
-                            <div className="flex justify-between text-sm text-gray-600">
+                            <div className="flex justify-between text-sm text-[#6B6A65]">
                                 <span>Subtotal</span>
                                 <span>{formatCurrency(invoice.subtotal)}</span>
                             </div>
-                            <div className="flex justify-between text-sm text-gray-600">
+                            <div className="flex justify-between text-sm text-[#6B6A65]">
                                 <span>Tax</span>
                                 <span>{formatCurrency(invoice.taxAmount)}</span>
                             </div>
-                            <div className="flex justify-between text-base font-bold text-navy-900 border-t border-gray-200 pt-3">
+                            <div className="flex justify-between text-base font-bold text-[#1B1C1A] border-t border-[#D0C5B2]/20 pt-3">
                                 <span>Total</span>
                                 <span>{formatCurrency(invoice.totalAmount)}</span>
                             </div>
-                            <div className="flex justify-between text-sm text-gray-600 pt-1">
+                            <div className="flex justify-between text-sm text-[#6B6A65] pt-1">
                                 <span>Amount Paid</span>
                                 <span className="text-green-600">-{formatCurrency(invoice.amountPaid)}</span>
                             </div>
-                            <div className="flex justify-between text-base font-bold text-navy-900 border-t border-gray-200 pt-3">
+                            <div className="flex justify-between text-base font-bold text-[#1B1C1A] border-t border-[#D0C5B2]/20 pt-3">
                                 <span>Balance Due</span>
                                 <span>{formatCurrency(invoice.totalAmount - invoice.amountPaid)}</span>
                             </div>

@@ -51,12 +51,12 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: Readonly<ChangePass
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Change Password" size="md">
       <form onSubmit={handleChangePassword} className="space-y-4">
-        <p className="text-sm text-stone-700 mb-4">
+        <p className="text-sm text-[#6B6A65] mb-4">
           After changing your password, we will automatically log you out for security.
         </p>
 
         <div>
-          <label htmlFor="currentPassword" className="block text-sm font-medium text-navy-900 mb-2">Current Password</label>
+          <label htmlFor="currentPassword" className="block text-sm font-medium text-[#6B6A65] mb-2">Current Password</label>
           <input
             id="currentPassword"
             type="password"
@@ -69,7 +69,7 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: Readonly<ChangePass
         </div>
 
         <div>
-          <label htmlFor="newPassword" className="block text-sm font-medium text-navy-900 mb-2">New Password</label>
+          <label htmlFor="newPassword" className="block text-sm font-medium text-[#6B6A65] mb-2">New Password</label>
           <PasswordInput
             value={passwordData.newPassword}
             onChange={(newPassword) => setPasswordData({ ...passwordData, newPassword })}
@@ -82,14 +82,14 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: Readonly<ChangePass
             <div className="mt-3">
               <PasswordRequirements
                 password={passwordData.newPassword}
-                className="bg-stone-50 border border-stone-200 rounded-lg p-4"
+                className="bg-[#F5F4F0] rounded-lg p-4"
               />
             </div>
           )}
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#6B6A65] mb-2">
             Confirm New Password
           </label>
           <PasswordInput
@@ -120,19 +120,19 @@ function ChangePasswordModal({ isOpen, onClose, onSuccess }: Readonly<ChangePass
           )}
         </div>
 
-        <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
+        <div className="flex gap-3 justify-end pt-4 border-t border-[#D0C5B2]/20">
           <button
             type="button"
             onClick={handleClose}
             disabled={changingPassword}
-            className="px-5 py-2.5 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 text-sm font-medium bg-[#E3E2DF] text-[#1B1C1A] rounded-lg hover:bg-[#D9D8D5] transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={changingPassword}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-gold-600 rounded-lg hover:bg-gold-500 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] flex items-center justify-center"
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] flex items-center justify-center"
           >
             {changingPassword ? <ButtonLoader /> : 'Change Password'}
           </button>

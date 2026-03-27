@@ -33,16 +33,16 @@ export default function OTPStep({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="text-sm text-navy-700 bg-gold-50 p-4 rounded-lg border border-gold-200">
+      <div className="text-sm text-[#6B6A65] bg-[#C9A84C]/20 p-4 rounded-lg">
         An 8-digit code has been sent to <strong>{email}</strong>
         {requiresPasswordSetup && (
-          <p className="mt-2 text-xs text-stone-700">
+          <p className="mt-2 text-xs text-[#6B6A65]">
             After verifying the code, you will need to set a password for your account.
           </p>
         )}
       </div>
       <div>
-        <label htmlFor="otp-token" className="block text-sm font-medium text-navy-900 mb-2">
+        <label htmlFor="otp-token" className="block text-sm font-medium text-[#1B1C1A] mb-2">
           OTP Code
         </label>
         <input
@@ -68,7 +68,7 @@ export default function OTPStep({
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-sm text-navy-700 hover:text-navy-900 hover:underline"
+        className="w-full text-sm text-[#6B6A65] hover:text-[#1B1C1A] hover:underline"
       >
         Change email
       </button>

@@ -33,7 +33,7 @@ function ToggleSwitch({
       type="button"
       onClick={onToggle}
       disabled={disabled}
-      className={`relative inline-flex ${track} items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${isActive ? 'bg-emerald-600' : 'bg-stone-300'}`}
+      className={`relative inline-flex ${track} items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${isActive ? 'bg-[#C9A84C]' : 'bg-[#D0C5B2]'}`}
       aria-label={ariaLabel}
       role="switch"
       aria-checked={isActive}

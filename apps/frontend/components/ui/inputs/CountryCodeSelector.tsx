@@ -134,24 +134,24 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'flex items-center justify-between gap-2 bg-white hover:bg-stone-50', className)}
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'flex items-center justify-between gap-2 bg-white hover:bg-[#F5F4F0]', className)}
       >
         <div className="flex items-center gap-2">
           {selectedCountry ? (
             <>
               <span className="text-xl">{selectedCountry.flag}</span>
-              <span className="text-sm font-semibold text-navy-900">{selectedCountry.dialCode}</span>
+              <span className="text-sm font-semibold text-[#1B1C1A]">{selectedCountry.dialCode}</span>
             </>
           ) : (
             <span className="text-sm text-gray-400">Loading...</span>
           )}
         </div>
-        <ChevronDownIcon className={cn('text-navy-600 transition-transform', isOpen && 'rotate-180')} size="md" />
+        <ChevronDownIcon className={cn('text-[#1B1C1A] transition-transform', isOpen && 'rotate-180')} size="md" />
       </button>
 
       {isOpen && (
         <div
-          className={`fixed z-[9999] w-96 bg-white border border-stone-300 rounded-lg shadow-2xl overflow-hidden transition-opacity duration-200 ${dropdownPosition.openUpward ? 'animate-slide-up' : 'animate-slide-down'
+          className={`fixed z-[9999] w-96 bg-white border border-[#D0C5B2]/20 rounded-lg shadow-sm overflow-hidden transition-opacity duration-200 ${dropdownPosition.openUpward ? 'animate-slide-up' : 'animate-slide-down'
             }`}
           style={{
             top: `${dropdownPosition.top}px`,
@@ -160,28 +160,28 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
           }}
         >
           {/* Search Input */}
-          <div className="p-3 border-b border-stone-200 bg-stone-50">
+          <div className="p-3 border-b border-[#D0C5B2]/20 bg-[#F5F4F0]">
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size="md" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6A65]" size="md" />
               <input
                 type="text"
                 placeholder="Search country or dial code..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'pl-10 pr-3 py-2.5 text-sm text-navy-900 placeholder:text-stone-500')}
+                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'pl-10 pr-3 py-2.5 text-sm text-[#1B1C1A] placeholder:text-[#6B6A65]')}
                 autoFocus
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6A65] hover:text-[#1B1C1A]"
                 >
                   <CloseIcon size="md" />
                 </button>
               )}
             </div>
             {searchTerm?.match(/^\d/) && (
-              <p className="mt-2 text-xs text-stone-600">
+              <p className="mt-2 text-xs text-[#6B6A65]">
                 💡 Tip: Searching for <span className="font-semibold">+{searchTerm}</span>
               </p>
             )}
@@ -189,8 +189,8 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
 
           {/* Popular Countries Header */}
           {showingPopular && filteredCountries.length > 0 && (
-            <div className="px-4 py-2 bg-gold-50 border-b border-gold-100">
-              <p className="text-xs font-semibold text-gold-900">Popular American Countries</p>
+            <div className="px-4 py-2 bg-[#C9A84C]/20 border-b border-[#C9A84C]/20">
+              <p className="text-xs font-semibold text-[#755B00]">Popular American Countries</p>
             </div>
           )}
 
@@ -199,16 +199,16 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
             {countries.length === 0 && (
               <div className="p-6 text-center">
                 <div className="mx-auto w-12 h-12 mb-3 flex items-center justify-center">
-                  <SpinnerIcon className="w-8 h-8 text-gold-600" />
+                  <SpinnerIcon className="w-8 h-8 text-[#C9A84C]" />
                 </div>
-                <p className="text-sm font-medium text-stone-600">Loading countries...</p>
+                <p className="text-sm font-medium text-[#6B6A65]">Loading countries...</p>
               </div>
             )}
             {countries.length > 0 && filteredCountries.length === 0 && (
               <div className="p-6 text-center">
-                <SearchIcon className="mx-auto w-12 h-12 text-stone-300 mb-3" />
-                <p className="text-sm font-medium text-stone-600">No countries found</p>
-                <p className="text-xs text-stone-500 mt-1">Try searching with a different term</p>
+                <SearchIcon className="mx-auto w-12 h-12 text-[#6B6A65] mb-3" />
+                <p className="text-sm font-medium text-[#6B6A65]">No countries found</p>
+                <p className="text-xs text-[#6B6A65] mt-1">Try searching with a different term</p>
               </div>
             )}
             {filteredCountries.length > 0 && filteredCountries.map((country, index) => {
@@ -218,28 +218,28 @@ export default function CountryCodeSelector({ value, onChange, className = '' }:
               return (
                 <div key={country.code}>
                   {showDivider && (
-                    <div className="border-t-2 border-stone-200 my-1">
-                      <p className="px-4 py-2 text-xs font-semibold text-stone-500 bg-stone-50">All American Countries</p>
+                    <div className="border-t-2 border-[#D0C5B2]/20 my-1">
+                      <p className="px-4 py-2 text-xs font-semibold text-[#6B6A65] bg-[#F5F4F0]">All American Countries</p>
                     </div>
                   )}
                   <button
                     onClick={() => handleSelect(country)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gold-50 transition-colors text-left border-b border-stone-100 last:border-b-0 ${selectedCountry?.code === country.code ? 'bg-gold-50' : ''
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F5F4F0] transition-colors text-left border-b border-[#D0C5B2]/15 last:border-b-0 ${selectedCountry?.code === country.code ? 'bg-[#C9A84C]/10' : ''
                       }`}
                   >
                     <span className="text-2xl">{country.flag}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm text-navy-900 truncate">{country.name}</p>
+                        <p className="font-semibold text-sm text-[#1B1C1A] truncate">{country.name}</p>
                         {isPopular && !searchTerm && (
-                          <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium text-gold-700 bg-gold-100 rounded">
+                          <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium text-[#755B00] bg-[#C9A84C]/20 rounded">
                             Popular
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-stone-600 mt-0.5">{country.dialCode}</p>
+                      <p className="text-xs text-[#6B6A65] mt-0.5">{country.dialCode}</p>
                     </div>
-                    <span className="text-xs font-mono text-stone-500 uppercase">{country.code}</span>
+                    <span className="text-xs font-mono text-[#6B6A65] uppercase">{country.code}</span>
                   </button>
                 </div>
               );

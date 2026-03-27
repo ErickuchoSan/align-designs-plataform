@@ -156,13 +156,13 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-stone-100 to-navy-100 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-2xl border border-stone-200 animate-slideUp">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#F5F4F0] to-[#F5F4F0] px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-2xl animate-slideUp">
           <div>
-            <h2 className="mt-2 text-center text-4xl font-bold tracking-tight text-navy-900">
+            <h2 className="mt-2 text-center text-4xl font-bold tracking-tight text-[#1B1C1A]">
               Align Designs
             </h2>
-            <p className="mt-3 text-center text-sm text-stone-700">
+            <p className="mt-3 text-center text-sm text-[#6B6A65]">
               Project management system
             </p>
           </div>

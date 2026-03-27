@@ -15,19 +15,19 @@ export default function ProjectInfo({ project }: Readonly<ProjectInfoProps>) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
+    <div className="bg-white rounded-xl p-6 mb-6">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center text-gold-400 font-bold">
+        <div className="w-10 h-10 bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-full flex items-center justify-center text-white font-bold text-sm">
           {project.client.firstName[0]}{project.client.lastName[0]}
         </div>
         <div>
-          <p className="font-semibold text-navy-900">
+          <p className="font-semibold text-[#1B1C1A] text-sm">
             {project.client.firstName} {project.client.lastName}
           </p>
-          <p className="text-sm text-stone-700">{project.client.email}</p>
+          <p className="text-sm text-[#6B6A65]">{project.client.email}</p>
         </div>
       </div>
-      <div className="flex items-center gap-4 text-sm text-stone-700">
+      <div className="flex items-center gap-4 text-sm text-[#6B6A65]">
         {project._count && (
           <>
             <span className="flex items-center gap-1.5">

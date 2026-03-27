@@ -13,7 +13,7 @@ import { formatDate } from '@/lib/date.utils';
 export const PaymentLoadingSpinner = memo(function PaymentLoadingSpinner() {
   return (
     <div className="flex justify-center items-center py-4">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-800" />
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1B1C1A]" />
     </div>
   );
 });
@@ -40,10 +40,10 @@ export const InvoiceDeadlinesList = memo(function InvoiceDeadlinesList({
   return (
     <div>
       <div className="mb-3">
-        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">
+        <p className="text-xs font-semibold text-[#6B6A65] uppercase tracking-wider mb-1">
           Total Outstanding
         </p>
-        <p className="text-2xl font-bold text-navy-900">
+        <p className="text-2xl font-bold text-[#1B1C1A]">
           ${totalPending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
       </div>
@@ -52,24 +52,24 @@ export const InvoiceDeadlinesList = memo(function InvoiceDeadlinesList({
         {invoiceDeadlines.map((invoice) => (
           <div
             key={invoice.invoiceId}
-            className="bg-white border border-stone-200 rounded-lg p-3 shadow-sm"
+            className="bg-white rounded-lg p-3"
           >
             <div className="flex justify-between items-start mb-1">
-              <span className="font-semibold text-navy-800 text-sm">{invoice.label}</span>
-              <span className="font-bold text-navy-900 text-sm">
+              <span className="font-semibold text-[#1B1C1A] text-sm">{invoice.label}</span>
+              <span className="font-bold text-[#1B1C1A] text-sm">
                 ${invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span
-                className={`${invoice.date < new Date() ? 'text-red-600 font-medium' : 'text-stone-500'}`}
+                className={`${invoice.date < new Date() ? 'text-red-600 font-medium' : 'text-[#6B6A65]'}`}
               >
                 Due: {formatDate(invoice.date)}
                 {invoice.date < new Date() && ' (Overdue)'}
               </span>
               <button
                 onClick={() => router.push(`/dashboard/projects/${projectId}/payments`)}
-                className="text-navy-600 hover:text-navy-800 hover:underline"
+                className="text-[#C9A84C] hover:text-[#755B00] hover:underline"
               >
                 Pay Now
               </button>
@@ -141,8 +141,8 @@ export const NoActivePayments = memo(function NoActivePayments({
   const message = variant === 'client' ? 'No payment required yet' : 'No Active Payments';
 
   return (
-    <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
-      <p className="text-sm font-medium text-stone-700">{message}</p>
+    <div className="bg-[#F5F4F0] rounded-lg p-3">
+      <p className="text-sm font-medium text-[#6B6A65]">{message}</p>
     </div>
   );
 });

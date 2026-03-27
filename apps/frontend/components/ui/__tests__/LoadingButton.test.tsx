@@ -62,13 +62,13 @@ describe('LoadingButton', () => {
 
   it('applies variant styles', () => {
     const { rerender } = render(<LoadingButton variant="primary">Primary</LoadingButton>);
-    expect(screen.getByRole('button')).toHaveClass('bg-navy-800');
+    expect(screen.getByRole('button')).toHaveClass('bg-gradient-to-br');
 
     rerender(<LoadingButton variant="danger">Danger</LoadingButton>);
     expect(screen.getByRole('button')).toHaveClass('bg-red-600');
 
     rerender(<LoadingButton variant="secondary">Secondary</LoadingButton>);
-    expect(screen.getByRole('button')).toHaveClass('bg-stone-200');
+    expect(screen.getByRole('button')).toHaveClass('bg-[#F5F4F0]');
   });
 
   it('applies size styles', () => {

@@ -13,19 +13,20 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="flex flex-col h-full">
       <DashboardHeader title="Projects" showBackButton backUrl="/dashboard" />
 
-      {/* Main content */}
-      <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <ProjectsList
-          isAuthenticated={isAuthenticated}
-          userRole={user.role}
-          theme="blue"
-          showCreateButton={true}
-          showUsersButton={false}
-        />
-      </main>
+      <div className="flex-1 px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          <ProjectsList
+            isAuthenticated={isAuthenticated}
+            userRole={user.role}
+  
+            showCreateButton={true}
+            showUsersButton={false}
+          />
+        </div>
+      </div>
     </div>
   );
 }

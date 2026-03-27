@@ -78,11 +78,11 @@ export default function FileInput({
         <button
           type="button"
           onClick={handleButtonClick}
-          className="w-full px-4 py-2 text-sm font-medium text-stone-800 transition-colors bg-stone-200 border border-stone-300 rounded-lg hover:bg-stone-300 sm:w-auto"
+          className="w-full px-4 py-2 text-sm font-medium text-[#1B1C1A] transition-colors bg-[#F5F4F0] border border-[#D0C5B2]/20 rounded-lg hover:bg-[#F5F4F0]/80 sm:w-auto"
         >
           {multiple ? 'Choose Files' : 'Choose File'}
         </button>
-        <span className="block flex-1 text-sm truncate text-stone-600" title={fileNames || placeholder}>
+        <span className="block flex-1 text-sm truncate text-[#6B6A65]" title={fileNames || placeholder}>
           {fileNames || placeholder}
         </span>
       </div>
@@ -91,7 +91,7 @@ export default function FileInput({
           {error}
         </p>
       )}
-      <p className="mt-1 text-xs text-stone-500">
+      <p className="mt-1 text-xs text-[#6B6A65]">
         Maximum file size: {formatMaxSize()}
       </p>
       <input

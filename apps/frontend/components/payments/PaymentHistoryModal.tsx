@@ -61,7 +61,7 @@ export default function PaymentHistoryModal({
       <div className="mt-6 flex justify-end pt-4 border-t border-gray-100">
         <button
           onClick={onClose}
-          className="px-4 py-2 bg-stone-600 hover:bg-stone-700 text-white rounded-lg font-medium transition-colors"
+          className="px-4 py-2 bg-[#1B1C1A] hover:brightness-95 text-white rounded-lg font-medium transition-colors"
         >
           Close
         </button>

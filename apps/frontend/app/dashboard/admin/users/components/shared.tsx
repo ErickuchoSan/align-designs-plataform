@@ -46,7 +46,7 @@ export const ResendEmailButton = memo(function ResendEmailButton({
 
   if (user.hasPassword) {
     return (
-      <span className={`inline-flex items-center gap-1 text-stone-400 ${textSize}`} title="Password already set">
+      <span className={`inline-flex items-center gap-1 text-[#6B6A65] ${textSize}`} title="Password already set">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={iconSize}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
@@ -59,7 +59,7 @@ export const ResendEmailButton = memo(function ResendEmailButton({
     <button
       onClick={() => onResend(user)}
       disabled={isResending}
-      className={`inline-flex items-center gap-1 text-gold-600 hover:text-gold-800 transition-colors ${textSize} font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+      className={`inline-flex items-center gap-1 text-[#C9A84C] hover:text-[#755B00] transition-colors ${textSize} font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
       title="Resend welcome email"
     >
       {isResending ? (
@@ -119,7 +119,7 @@ export const TableActionButtons = memo(function TableActionButtons({
     <div className="flex items-center justify-end gap-2">
       <button
         onClick={() => onEdit(user)}
-        className="text-navy-600 hover:text-navy-900 transition-colors p-2 rounded-full hover:bg-navy-50"
+        className="text-[#6B6A65] hover:text-[#1B1C1A] transition-colors p-2 rounded-lg hover:bg-[#F5F4F0]"
         aria-label={`Edit user ${user.firstName} ${user.lastName}`}
       >
         <EditIcon />
@@ -153,10 +153,10 @@ export const CardActionButtons = memo(function CardActionButtons({
   onDelete,
 }: CardActionButtonsProps) {
   return (
-    <div className="flex items-center gap-2 pt-3 border-t border-stone-200">
+    <div className="flex items-center gap-2 pt-3 border-t border-[#D0C5B2]/20">
       <button
         onClick={() => onEdit(user)}
-        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-navy-600 hover:text-navy-900 hover:bg-navy-50 rounded-lg transition-colors border border-navy-200"
+        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[#6B6A65] hover:text-[#1B1C1A] hover:bg-[#F5F4F0] rounded-lg transition-colors"
       >
         <EditIcon className="w-4 h-4" />
         <span className="text-sm font-medium">Edit</span>
@@ -164,7 +164,7 @@ export const CardActionButtons = memo(function CardActionButtons({
       <button
         onClick={() => onDelete(user)}
         disabled={isDeleting}
-        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors border border-red-200 disabled:opacity-50"
+        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
       >
         <DeleteIcon className="w-4 h-4" />
         <span className="text-sm font-medium">Delete</span>

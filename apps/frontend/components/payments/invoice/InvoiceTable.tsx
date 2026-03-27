@@ -41,45 +41,45 @@ function InvoiceTable({
 
   return (
     <div className="hidden md:block overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-[#D0C5B2]/15">
+        <thead className="bg-[#F5F4F0]">
           <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Invoice #</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-[#6B6A65] uppercase tracking-wider">Invoice #</th>
             {showClient && (
-              <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Client</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-[#6B6A65] uppercase tracking-wider">Client</th>
             )}
-            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Paid</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{dateLabel}</th>
-            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">{actionLabel}</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-[#6B6A65] uppercase tracking-wider">Status</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-[#6B6A65] uppercase tracking-wider">Amount</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-[#6B6A65] uppercase tracking-wider">Paid</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-[#6B6A65] uppercase tracking-wider">{dateLabel}</th>
+            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-[#6B6A65] uppercase tracking-wider">{actionLabel}</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-[#D0C5B2]/15">
           {invoices.map((invoice) => (
-            <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-navy-900">#{invoice.invoiceNumber}</td>
+            <tr key={invoice.id} className="hover:bg-[#F5F4F0] transition-colors">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#1B1C1A]">#{invoice.invoiceNumber}</td>
               {showClient && (
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
                   {invoice.client?.firstName || 'Unknown'} {invoice.client?.lastName || 'Client'}
                 </td>
               )}
               <td className="px-6 py-4 whitespace-nowrap">
                 <InvoiceStatusBadge status={invoice.status} />
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-[#1B1C1A] font-medium">
                 ${invoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
                 ${invoice.amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
                 {formatDate(invoice[dateField])}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                 <button
                   onClick={() => onViewInvoice(invoice.id)}
-                  className="text-navy-600 hover:text-navy-900 transition-colors"
+                  className="text-[#C9A84C] hover:text-[#755B00] transition-colors"
                   title={actionIcon === 'download' ? 'Download PDF' : 'View Invoice'}
                   aria-label={`${actionIcon === 'download' ? 'Download PDF for' : 'View'} invoice ${invoice.invoiceNumber}`}
                 >

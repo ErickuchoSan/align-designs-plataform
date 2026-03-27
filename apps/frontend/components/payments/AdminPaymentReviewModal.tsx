@@ -144,36 +144,36 @@ export default function AdminPaymentReviewModal({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Left Column: Details & Actions */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-2">
-          <div className="p-3 space-y-3 rounded-lg bg-stone-50 sm:p-4">
-            <h4 className="text-sm font-semibold text-navy-900 sm:text-base">Payment Details</h4>
+          <div className="p-3 space-y-3 rounded-lg bg-[#F5F4F0] sm:p-4">
+            <h4 className="text-sm font-semibold text-[#1B1C1A] sm:text-base">Payment Details</h4>
             <div className="grid grid-cols-2 gap-3 text-sm sm:gap-4">
               <div>
-                <p className="text-stone-500">Amount</p>
+                <p className="text-[#6B6A65]">Amount</p>
                 <p className="font-bold text-lg text-green-600">
                   ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div>
-                <p className="text-stone-500">Date</p>
-                <p className="font-medium text-stone-900">
+                <p className="text-[#6B6A65]">Date</p>
+                <p className="font-medium text-[#1B1C1A]">
                   {formatDate(payment.paymentDate)}
                 </p>
               </div>
               <div>
-                <p className="text-stone-500">Method</p>
-                <p className="font-medium capitalize text-stone-900">{payment.paymentMethod.replace('_', ' ')}</p>
+                <p className="text-[#6B6A65]">Method</p>
+                <p className="font-medium capitalize text-[#1B1C1A]">{payment.paymentMethod.replace('_', ' ')}</p>
               </div>
               <div>
-                <p className="text-stone-500">Currently</p>
+                <p className="text-[#6B6A65]">Currently</p>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(payment.status)}`}>
                   {payment.status.replace('_', ' ')}
                 </span>
               </div>
             </div>
             {payment.notes && (
-              <div className="pt-3 mt-3 border-t border-stone-200">
-                <p className="mb-1 text-stone-500">Customer Notes:</p>
-                <p className="italic text-stone-700">&ldquo;{payment.notes}&rdquo;</p>
+              <div className="pt-3 mt-3 border-t border-[#D0C5B2]/20">
+                <p className="mb-1 text-[#6B6A65]">Customer Notes:</p>
+                <p className="italic text-[#6B6A65]">&ldquo;{payment.notes}&rdquo;</p>
               </div>
             )}
           </div>
@@ -194,7 +194,7 @@ export default function AdminPaymentReviewModal({
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setRejecting(false)}
-                      className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-800"
+                      className="px-3 py-1.5 text-sm font-medium text-[#6B6A65] hover:text-[#1B1C1A]"
                     >
                       Cancel
                     </button>
@@ -210,11 +210,11 @@ export default function AdminPaymentReviewModal({
               ) : (
                 <div className="space-y-3">
                   {isEditingAmount && (
-                    <div className="p-4 border rounded-lg bg-navy-50 border-navy-100 animate-in fade-in slide-in-from-top-2">
-                      <h5 className="mb-2 text-sm font-semibold text-navy-800">Correct Payment Amount</h5>
-                      <p className="mb-2 text-xs text-navy-600">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <div className="p-4 border rounded-lg bg-[#F5F4F0] border-[#D0C5B2]/20 animate-in fade-in slide-in-from-top-2">
+                      <h5 className="mb-2 text-sm font-semibold text-[#1B1C1A]">Correct Payment Amount</h5>
+                      <p className="mb-2 text-xs text-[#6B6A65]">Original amount: ${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="font-medium text-stone-500">$</span>
+                        <span className="font-medium text-[#6B6A65]">$</span>
                         <input
                           type="number"
                           value={correctedAmount}
@@ -247,7 +247,7 @@ export default function AdminPaymentReviewModal({
                         <button
                           onClick={toggleEditAmount}
                           disabled={processing}
-                          className="flex items-center justify-center gap-2 px-4 py-2.5 font-medium transition-colors border rounded-lg shadow-sm text-navy-700 bg-navy-50 border-navy-200 hover:bg-navy-100 disabled:opacity-50"
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 font-medium transition-colors border rounded-lg text-[#1B1C1A] bg-[#F5F4F0] border-[#D0C5B2]/20 hover:bg-[#F5F4F0] disabled:opacity-50"
                           aria-label="Edit payment amount before approval"
                         >
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -274,7 +274,7 @@ export default function AdminPaymentReviewModal({
                     <div className="text-center">
                       <button
                         onClick={toggleEditAmount}
-                        className="text-xs underline text-stone-500 hover:text-stone-700"
+                        className="text-xs underline text-[#6B6A65] hover:text-[#1B1C1A]"
                       >
                         Cancel Correction
                       </button>
@@ -287,13 +287,13 @@ export default function AdminPaymentReviewModal({
         </div>
 
         {/* Right Column: Receipt Preview */}
-        <div className="flex flex-col overflow-hidden border rounded-lg bg-stone-100 border-stone-200 lg:col-span-3 min-h-[400px] lg:min-h-[600px]">
-          <div className="flex items-center justify-between px-4 py-2 border-b bg-stone-200 border-stone-300">
-            <span className="text-sm font-medium text-stone-700">Receipt Preview</span>
+        <div className="flex flex-col overflow-hidden border rounded-lg bg-[#F5F4F0] border-[#D0C5B2]/20 lg:col-span-3 min-h-[400px] lg:min-h-[600px]">
+          <div className="flex items-center justify-between px-4 py-2 border-b bg-[#F5F4F0] border-[#D0C5B2]/20">
+            <span className="text-sm font-medium text-[#6B6A65]">Receipt Preview</span>
             <button
               type="button"
               onClick={handleOpenReceiptNewTab}
-              className="flex items-center text-xs font-medium gap-1 text-navy-600 hover:text-navy-800"
+              className="flex items-center text-xs font-medium gap-1 text-[#C9A84C] hover:text-[#755B00]"
               aria-label="Open receipt in new tab"
             >
               Open in new tab
@@ -304,7 +304,7 @@ export default function AdminPaymentReviewModal({
           </div>
           <div className="flex-1 bg-white overflow-hidden">
             {loadingReceipt && (
-              <div className="flex flex-col items-center justify-center h-full gap-2 text-stone-500">
+              <div className="flex flex-col items-center justify-center h-full gap-2 text-[#6B6A65]">
                 <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -321,7 +321,7 @@ export default function AdminPaymentReviewModal({
                 <button
                   type="button"
                   onClick={() => loadReceipt(payment.id)}
-                  className="text-xs text-navy-600 hover:text-navy-800 underline"
+                  className="text-xs text-[#C9A84C] hover:text-[#755B00] underline"
                 >
                   Try again
                 </button>

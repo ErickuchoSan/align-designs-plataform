@@ -27,8 +27,8 @@ export function PaymentProgressBar({ required, paid, pendingAmount = 0, classNam
     <div className={`space-y-2 ${className}`}>
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:text-sm text-xs">
         <div className="flex flex-col">
-          <span className="text-stone-600">
-            Paid: <span className="font-semibold text-navy-900">${effectivePaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          <span className="text-[#6B6A65]">
+            Paid: <span className="font-semibold text-[#1B1C1A]">${effectivePaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </span>
           {effectivePending > 0 && (
             <span className="text-amber-600 font-medium">
@@ -37,17 +37,17 @@ export function PaymentProgressBar({ required, paid, pendingAmount = 0, classNam
           )}
         </div>
         <div className="text-left sm:text-right">
-          <span className="text-stone-600 block">
-            Required: <span className="font-semibold text-navy-900">${required.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          <span className="text-[#6B6A65] block">
+            Required: <span className="font-semibold text-[#1B1C1A]">${required.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </span>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-stone-200 rounded-full h-2.5 flex overflow-hidden">
+      <div className="w-full bg-[#F5F4F0] rounded-full h-2.5 flex overflow-hidden">
         {/* Paid segment */}
         <div
-          className={`h-full transition-all duration-300 ${isPaidComplete ? 'bg-green-600' : 'bg-navy-600'}`}
+          className={`h-full transition-all duration-300 ${isPaidComplete ? 'bg-green-600' : 'bg-[#C9A84C]'}`}
           style={{ width: `${paidPercentage}%` }}
         />
         {/* Pending segment */}
@@ -63,7 +63,7 @@ export function PaymentProgressBar({ required, paid, pendingAmount = 0, classNam
         )}
       </div>
 
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-[#6B6A65]">
         <div className="flex gap-2">
           <span>{Math.round(paidPercentage + pendingPercentage)}% complete</span>
         </div>

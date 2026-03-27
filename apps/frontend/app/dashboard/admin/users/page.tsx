@@ -88,10 +88,11 @@ export default function UsersManagementPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-200">
+      <div className="flex flex-col h-full">
         <DashboardHeader title="User Management" showBackButton backUrl="/dashboard" />
 
-        <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <main id="main-content" className="flex-1 px-6 py-8">
+          <div className="max-w-7xl mx-auto">
           {usersHook.error && (
             <div className="mb-6 rounded-lg bg-red-50 border-l-4 border-red-500 p-4 shadow-md animate-slideDown" role="alert">
               <p className="text-sm font-medium text-red-800">{usersHook.error}</p>
@@ -109,6 +110,7 @@ export default function UsersManagementPage() {
           <UsersTable {...usersListProps} />
 
           <UsersCards {...usersListProps} />
+          </div>
         </main>
       </div>
 

@@ -78,7 +78,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-50 to-stone-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F4F0] p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full animate-slideUp">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
@@ -103,7 +103,7 @@ function ResetPasswordForm() {
               <div className="mt-3">
                 <PasswordRequirements
                   password={formData.newPassword}
-                  className="bg-navy-50 border border-navy-200 rounded-lg p-4"
+                  className="bg-[#F5F4F0] rounded-lg p-4"
                 />
               </div>
             )}
@@ -144,7 +144,7 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-navy-600 text-white py-3 rounded-lg hover:bg-navy-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium shadow-lg flex items-center justify-center"
+            className="w-full bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white py-3 rounded-lg hover:brightness-95 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium shadow-lg flex items-center justify-center"
           >
             {isLoading ? <ButtonLoader /> : 'Reset Password'}
           </button>
@@ -153,7 +153,7 @@ function ResetPasswordForm() {
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push('/login')}
-            className="text-sm text-navy-600 hover:text-navy-700 hover:underline"
+            className="text-sm text-[#C9A84C] hover:text-[#1B1C1A] hover:underline"
           >
             Back to login
           </button>

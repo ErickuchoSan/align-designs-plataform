@@ -68,12 +68,12 @@ export default function CompletionChecklistModal({
 
                 <div className="space-y-4">
                     {/* Item 1: Client Payments */}
-                    <div className="flex items-start justify-between p-3 bg-stone-50 rounded-lg">
+                    <div className="flex items-start justify-between p-3 bg-[#F5F4F0] rounded-lg">
                         <div className="flex gap-3">
                             <StatusIcon success={checklist.allClientPaymentsReceived} />
                             <div>
-                                <p className="font-medium text-navy-900">Client Payments</p>
-                                <p className="text-sm text-stone-500">All invoices must be paid</p>
+                                <p className="font-medium text-[#1B1C1A]">Client Payments</p>
+                                <p className="text-sm text-[#6B6A65]">All invoices must be paid</p>
                             </div>
                         </div>
                         {!checklist.allClientPaymentsReceived && (
@@ -84,12 +84,12 @@ export default function CompletionChecklistModal({
                     </div>
 
                     {/* Item 2: Employee Payments */}
-                    <div className="flex items-start justify-between p-3 bg-stone-50 rounded-lg">
+                    <div className="flex items-start justify-between p-3 bg-[#F5F4F0] rounded-lg">
                         <div className="flex gap-3">
                             <StatusIcon success={checklist.allEmployeesPaid} />
                             <div>
-                                <p className="font-medium text-navy-900">Employee Payments</p>
-                                <p className="text-sm text-stone-500">All pending files must be paid</p>
+                                <p className="font-medium text-[#1B1C1A]">Employee Payments</p>
+                                <p className="text-sm text-[#6B6A65]">All pending files must be paid</p>
                             </div>
                         </div>
                         {!checklist.allEmployeesPaid && (
@@ -100,12 +100,12 @@ export default function CompletionChecklistModal({
                     </div>
 
                     {/* Item 3: Feedback */}
-                    <div className="flex items-start justify-between p-3 bg-stone-50 rounded-lg">
+                    <div className="flex items-start justify-between p-3 bg-[#F5F4F0] rounded-lg">
                         <div className="flex gap-3">
                             <StatusIcon success={checklist.noOpenFeedback} />
                             <div>
-                                <p className="font-medium text-navy-900">Feedback Cycles</p>
-                                <p className="text-sm text-stone-500">All feedback cycles must be closed</p>
+                                <p className="font-medium text-[#1B1C1A]">Feedback Cycles</p>
+                                <p className="text-sm text-[#6B6A65]">All feedback cycles must be closed</p>
                             </div>
                         </div>
                         {!checklist.noOpenFeedback && (
@@ -116,12 +116,12 @@ export default function CompletionChecklistModal({
                     </div>
 
                     {/* Item 4: Delivery */}
-                    <div className="flex items-start justify-between p-3 bg-stone-50 rounded-lg">
+                    <div className="flex items-start justify-between p-3 bg-[#F5F4F0] rounded-lg">
                         <div className="flex gap-3">
                             <StatusIcon success={checklist.finalFilesDelivered} />
                             <div>
-                                <p className="font-medium text-navy-900">Final Delivery</p>
-                                <p className="text-sm text-stone-500">At least one file delivered</p>
+                                <p className="font-medium text-[#1B1C1A]">Final Delivery</p>
+                                <p className="text-sm text-[#6B6A65]">At least one file delivered</p>
                             </div>
                         </div>
                         {!checklist.finalFilesDelivered && (
@@ -132,19 +132,19 @@ export default function CompletionChecklistModal({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-stone-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#D0C5B2]/20">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 font-medium"
+                        className="px-4 py-2 bg-[#E3E2DF] text-[#1B1C1A] rounded-lg hover:bg-[#D9D8D5] font-medium transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onArchive}
                         disabled={!isReady || isLoading}
-                        className={`px-4 py-2 text-white rounded-lg font-medium transition-colors ${isReady && !isLoading
-                            ? 'bg-navy-800 hover:bg-navy-700'
-                            : 'bg-stone-400 cursor-not-allowed'
+                        className={`px-4 py-2 text-white rounded-lg font-medium transition-all ${isReady && !isLoading
+                            ? 'bg-gradient-to-br from-[#755B00] to-[#C9A84C] hover:brightness-95'
+                            : 'bg-[#E3E2DF] text-[#6B6A65] cursor-not-allowed'
                             }`}
                     >
                         {isLoading ? 'Archiving...' : 'Confirm Archive'}

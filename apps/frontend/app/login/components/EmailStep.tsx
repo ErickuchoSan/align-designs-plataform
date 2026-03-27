@@ -27,7 +27,7 @@ export default function EmailStep({ email, onSubmit, loading }: Readonly<EmailSt
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-navy-900 mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-[#1B1C1A] mb-2">
           Email
         </label>
         <input

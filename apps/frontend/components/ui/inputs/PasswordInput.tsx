@@ -16,12 +16,12 @@ interface PasswordInputProps {
 }
 
 const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
-  <div className={`flex items-center gap-2 text-sm ${met ? 'text-green-600' : 'text-stone-500'}`}>
-    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${met ? 'bg-green-100' : 'bg-stone-100'}`}>
+  <div className={`flex items-center gap-2 text-sm ${met ? 'text-green-600' : 'text-[#6B6A65]'}`}>
+    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${met ? 'bg-green-100' : 'bg-[#F5F4F0]'}`}>
       {met ? (
         <CheckIcon size="sm" className="text-green-600" />
       ) : (
-        <div className="w-2 h-2 bg-stone-400 rounded-full" />
+        <div className="w-2 h-2 bg-[#6B6A65] rounded-full" />
       )}
     </div>
     <span>{text}</span>
@@ -70,7 +70,7 @@ export default function PasswordInput({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute inset-y-0 right-0 flex items-center px-3 text-stone-500 hover:text-stone-700 transition-colors"
+          className="absolute inset-y-0 right-0 flex items-center px-3 text-[#6B6A65] hover:text-[#6B6A65] transition-colors"
           aria-label={showPassword ? 'Hide password' : 'Show password'}
         >
           {showPassword ? <EyeOffIcon size="lg" /> : <EyeIcon size="lg" />}
@@ -81,14 +81,14 @@ export default function PasswordInput({
         <div className="mt-3 space-y-3">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-stone-700">Password Strength</span>
+              <span className="font-medium text-[#6B6A65]">Password Strength</span>
               <span
                 className={`font-medium ${getStrengthColor()}`}
               >
                 {strength.label}
               </span>
             </div>
-            <div className="w-full bg-stone-200 rounded-full h-2">
+            <div className="w-full bg-[#F5F4F0] rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${strength.color}`}
                 style={{ width: `${(strength.score / 5) * 100}%` }}
@@ -96,7 +96,7 @@ export default function PasswordInput({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-stone-50 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-[#F5F4F0] rounded-lg">
             <RequirementItem met={strength.requirements.length} text={`At least ${PASSWORD_CONSTRAINTS.MIN_LENGTH} characters`} />
             <RequirementItem met={strength.requirements.uppercase} text="One uppercase letter" />
             <RequirementItem met={strength.requirements.lowercase} text="One lowercase letter" />

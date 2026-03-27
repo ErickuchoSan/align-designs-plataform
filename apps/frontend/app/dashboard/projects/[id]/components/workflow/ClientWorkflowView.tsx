@@ -60,8 +60,8 @@ function getProgressPercentage(status: ProjectStatus): string {
 // Get progress bar color based on status
 function getProgressBarColor(status: ProjectStatus): string {
   if (status === ProjectStatus.COMPLETED) return 'bg-green-500';
-  if (status === ProjectStatus.ACTIVE) return 'bg-navy-600';
-  return 'bg-stone-300';
+  if (status === ProjectStatus.ACTIVE) return 'bg-[#C9A84C]';
+  return 'bg-[#D0C5B2]';
 }
 
 // Next Step interface
@@ -97,7 +97,7 @@ const NextStepIndicator = memo(function NextStepIndicator({ nextStep }: { nextSt
         {nextStep.action && nextStep.actionLabel && (
           <button
             onClick={nextStep.action}
-            className="flex items-center gap-1 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium shrink-0"
+            className="flex items-center gap-1 px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg hover:brightness-95 transition-all text-sm font-medium shrink-0"
           >
             {nextStep.actionLabel}
           </button>
@@ -154,7 +154,7 @@ function ClientWorkflowView({
     // Payment confirmed but project not yet activated (missing brief or employee)
     if (isPaymentConfirmed) {
       return (
-        <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 mb-6">
+        <div className="bg-white rounded-2xl p-8 mb-6">
           <div className="text-center max-w-2xl mx-auto">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
@@ -173,9 +173,9 @@ function ClientWorkflowView({
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-navy-900 mb-3">Payment Approved</h2>
+            <h2 className="text-2xl font-bold text-[#1B1C1A] mb-3">Payment Approved</h2>
 
-            <p className="text-base text-stone-600 mb-6">
+            <p className="text-base text-[#6B6A65] mb-6">
               Your payment has been confirmed. We are now setting up your project and will notify you once work begins.
             </p>
 
@@ -207,7 +207,7 @@ function ClientWorkflowView({
               Awaiting Project Setup
             </div>
 
-            <p className="text-xs text-stone-500 mt-6">
+            <p className="text-xs text-[#6B6A65] mt-6">
               💡 The project will be activated shortly. You will receive a notification when it starts.
             </p>
           </div>
@@ -216,7 +216,7 @@ function ClientWorkflowView({
     }
 
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 mb-6">
+      <div className="bg-white rounded-2xl p-8 mb-6">
         <div className="text-center max-w-2xl mx-auto">
           <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg
@@ -235,16 +235,16 @@ function ClientWorkflowView({
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold text-navy-900 mb-3">Initial Payment Required</h2>
+          <h2 className="text-2xl font-bold text-[#1B1C1A] mb-3">Initial Payment Required</h2>
 
-          <p className="text-base text-stone-600 mb-2">
+          <p className="text-base text-[#6B6A65] mb-2">
             This project requires an initial payment to start. Please upload your payment proof to continue.
           </p>
 
           {project.initialAmountRequired && (
-            <div className="bg-navy-50 border border-navy-200 rounded-lg p-4 mb-6 inline-block">
-              <p className="text-sm text-navy-700 mb-1">Amount Required</p>
-              <p className="text-3xl font-bold text-navy-900">
+            <div className="bg-[#F5F4F0] rounded-lg p-4 mb-6 inline-block">
+              <p className="text-sm text-[#6B6A65] mb-1">Amount Required</p>
+              <p className="text-3xl font-bold text-[#1B1C1A]">
                 ${amountRequired.toLocaleString('en-US', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -254,7 +254,7 @@ function ClientWorkflowView({
           )}
 
           {project.initialPaymentDeadline && (
-            <p className="text-sm text-stone-600 mb-6">
+            <p className="text-sm text-[#6B6A65] mb-6">
               <span className="font-medium">Payment Deadline:</span>{' '}
               {formatDate(project.initialPaymentDeadline, 'invoice')}
               {new Date(project.initialPaymentDeadline) < new Date() && (
@@ -284,13 +284,13 @@ function ClientWorkflowView({
           ) : (
             <button
               onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
-              className="px-8 py-3 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              className="px-8 py-3 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg font-semibold hover:brightness-95 transition-all"
             >
               Upload Payment Proof
             </button>
           )}
 
-          <p className="text-xs text-stone-500 mt-6">
+          <p className="text-xs text-[#6B6A65] mt-6">
             💡 The project will be activated once the admin approves your payment
           </p>
         </div>
@@ -300,28 +300,28 @@ function ClientWorkflowView({
 
   // Active project status - Project Overview
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
+    <div className="bg-white rounded-2xl p-6 mb-6">
       {/* Header with status badge */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-navy-900">Project Overview</h2>
+        <h2 className="text-xl font-bold text-[#1B1C1A]">Project Overview</h2>
         <ProjectStatusBadge status={project.status} />
       </div>
 
       {/* Project Progress Bar */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-stone-600">Project Progress</span>
-          <span className="text-sm font-semibold text-navy-900">
+          <span className="text-sm font-medium text-[#6B6A65]">Project Progress</span>
+          <span className="text-sm font-semibold text-[#1B1C1A]">
             {getProgressPercentage(project.status)}
           </span>
         </div>
-        <div className="h-3 bg-stone-200 rounded-full overflow-hidden">
+        <div className="h-2 bg-[#D0C5B2]/30 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${getProgressBarColor(project.status)}`}
             style={{ width: getProgressPercentage(project.status) }}
           />
         </div>
-        <div className="flex justify-between text-xs text-stone-500 mt-1">
+        <div className="flex justify-between text-xs text-[#6B6A65] mt-1">
           <span>Start</span>
           <span>In Progress</span>
           <span>Complete</span>
@@ -332,24 +332,24 @@ function ClientWorkflowView({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Estimated Delivery */}
         {project.deadlineDate && (
-          <div className="bg-stone-50 rounded-lg p-4 border border-stone-200">
-            <div className="flex items-center gap-2 text-stone-500 text-sm mb-1">
+          <div className="bg-[#F5F4F0] rounded-lg p-4">
+            <div className="flex items-center gap-2 text-[#6B6A65] text-sm mb-1">
               <CalendarIcon className="w-4 h-4" />
               <span>Estimated Delivery</span>
             </div>
-            <p className="font-semibold text-navy-900">
+            <p className="font-semibold text-[#1B1C1A]">
               {formatDate(project.deadlineDate, 'invoice')}
             </p>
           </div>
         )}
 
         {/* Payment Status Summary */}
-        <div className="bg-stone-50 rounded-lg p-4 border border-stone-200">
-          <div className="flex items-center gap-2 text-stone-500 text-sm mb-1">
+        <div className="bg-[#F5F4F0] rounded-lg p-4">
+          <div className="flex items-center gap-2 text-[#6B6A65] text-sm mb-1">
             <span>💰</span>
             <span>Payment Status</span>
           </div>
-          <p className="font-semibold text-navy-900">
+          <p className="font-semibold text-[#1B1C1A]">
             {invoiceDeadlines.length === 0 && 'All caught up'}
             {invoiceDeadlines.length === 1 && '1 pending invoice'}
             {invoiceDeadlines.length > 1 && `${invoiceDeadlines.length} pending invoices`}
@@ -361,12 +361,12 @@ function ClientWorkflowView({
       <NextStepIndicator nextStep={nextStep} />
 
       {/* Payment Details Section */}
-      <div className="border border-stone-200 rounded-lg p-4">
+      <div className="bg-[#F5F4F0] rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-navy-900">Payment Details</h3>
+          <h3 className="font-semibold text-[#1B1C1A]">Payment Details</h3>
           <button
             onClick={() => router.push(`/dashboard/projects/${project.id}/payments`)}
-            className="text-sm px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors"
+            className="text-sm px-3 py-1.5 bg-[#E3E2DF] text-[#1B1C1A] hover:bg-[#D9D8D5] rounded-lg font-medium transition-colors"
           >
             View Payments
           </button>

@@ -148,7 +148,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
               <h3 id="modal-title" className={MODAL_TITLE}>{title}</h3>
               <MotionButton
                 onClick={onClose}
-                className="p-1 transition-colors rounded-lg text-stone-500 hover:text-stone-700 hover:bg-stone-200"
+                className="p-1 transition-colors rounded-lg text-[#6B6A65] hover:text-[#6B6A65] hover:bg-[#F5F4F0]"
                 aria-label="Close dialog"
                 whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
                 whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
@@ -162,7 +162,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
 
             {/* Footer */}
             {footer && (
-              <div className="flex-shrink-0 p-4 border-t border-stone-200 sm:p-6">{footer}</div>
+              <div className="flex-shrink-0 p-4 border-t border-[#D0C5B2]/20 sm:p-6">{footer}</div>
             )}
           </MotionDiv>
         </dialog>

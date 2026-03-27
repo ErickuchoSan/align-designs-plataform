@@ -38,11 +38,11 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-stone-50">
+      <div className="flex flex-col h-full">
         <DashboardHeader title="My Profile" showBackButton backUrl="/dashboard" />
 
-        <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="space-y-6">
+        <main className="flex-1 px-6 py-8">
+          <div className="max-w-4xl mx-auto space-y-6">
             <ProfileInfoCard user={user} onUpdateUser={updateUser} />
             <SecurityCard onChangePassword={() => setShowPasswordModal(true)} />
             <DeveloperSettingsCard isAdmin={user.role === 'ADMIN'} />

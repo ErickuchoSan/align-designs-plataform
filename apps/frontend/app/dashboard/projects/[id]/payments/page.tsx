@@ -28,14 +28,15 @@ export default function ProjectPaymentsPage() {
   const isClient = user?.role === 'CLIENT';
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="flex flex-col h-full">
       <DashboardHeader
         title={`${isClient ? 'My Payments' : 'Payment History'} - ${project?.name || 'Project'}`}
         showBackButton
         backUrl={`/dashboard/projects/${projectId}`}
       />
 
-      <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main id="main-content" className="flex-1 px-6 py-8">
+        <div className="max-w-7xl mx-auto">
         {isClient && (
           <ClientPaymentsView
             projectId={projectId}
@@ -63,6 +64,7 @@ export default function ProjectPaymentsPage() {
             onRefresh={loadData}
           />
         )}
+        </div>
       </main>
     </div>
   );

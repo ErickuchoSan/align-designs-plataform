@@ -78,7 +78,7 @@ export function VirtualizedList<T>({
         className={`flex items-center justify-center ${className}`}
         style={{ height: containerHeight }}
       >
-        <p className="text-stone-500 italic">{emptyMessage}</p>
+        <p className="text-[#6B6A65] italic">{emptyMessage}</p>
       </div>
     );
   }

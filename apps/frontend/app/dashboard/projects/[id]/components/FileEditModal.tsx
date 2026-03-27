@@ -56,7 +56,7 @@ export default function FileEditModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="editComment" className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="editComment" className="block text-sm font-medium text-[#1B1C1A] mb-2">
             Comment
           </label>
           <textarea
@@ -67,17 +67,17 @@ export default function FileEditModal({
             rows={3}
             className={cn(TEXTAREA_BASE, INPUT_VARIANTS.default)}
           />
-          <p className="mt-1 text-xs text-stone-700">
+          <p className="mt-1 text-xs text-[#6B6A65]">
             Leave empty to remove the comment
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-navy-900 mb-2">
+          <label className="block text-sm font-medium text-[#1B1C1A] mb-2">
             {file?.filename ? 'Replace file & Add more (optional)' : 'Add files (optional)'}
           </label>
           {file?.filename && (
-            <p className="mb-2 text-sm text-stone-700">
+            <p className="mb-2 text-sm text-[#6B6A65]">
               Current file: <span className="font-semibold">{file.originalName}</span>
             </p>
           )}
@@ -87,7 +87,7 @@ export default function FileEditModal({
             multiple={true}
           />
           {editFiles.length > 0 && (
-            <div className="mt-2 text-sm text-stone-700 max-h-32 overflow-y-auto">
+            <div className="mt-2 text-sm text-[#6B6A65] max-h-32 overflow-y-auto">
               <p className="font-medium mb-1 text-emerald-700">{editFiles.length} new file(s) selected:</p>
               <ul className="list-disc list-inside">
                 {editFiles.map((f, idx) => (
@@ -109,14 +109,14 @@ export default function FileEditModal({
             type="button"
             onClick={handleClose}
             disabled={uploading}
-            className="w-full px-5 py-2.5 text-sm font-medium text-navy-900 transition-colors bg-stone-200 rounded-lg hover:bg-stone-300 disabled:opacity-50 sm:w-auto"
+            className="w-full px-5 py-2.5 text-sm font-medium text-[#1B1C1A] transition-colors bg-[#E3E2DF] rounded-lg hover:bg-[#D9D8D5] disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={uploading}
-            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
+            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-semibold text-white transition-all bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
           >
             {uploading ? <ButtonLoader /> : 'Save Changes'}
           </button>

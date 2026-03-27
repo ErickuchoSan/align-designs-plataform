@@ -20,7 +20,7 @@ export function EmployeesSection({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-stone-600">Assigned Employees</h3>
+        <h3 className="text-sm font-medium text-[#6B6A65]">Assigned Employees</h3>
         {isAdmin && onManageEmployees && (
           <button
             onClick={onManageEmployees}
@@ -36,19 +36,19 @@ export function EmployeesSection({
           {project.employees?.map((pe: ProjectEmployee & { employee: User }) => (
             <div
               key={pe.id}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F5F4F0] rounded-lg"
             >
               <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">
                 {pe.employee.firstName[0]}{pe.employee.lastName[0]}
               </div>
-              <span className="text-sm font-medium text-navy-900">
+              <span className="text-sm font-medium text-[#1B1C1A]">
                 {pe.employee.firstName} {pe.employee.lastName}
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-stone-500 italic">No employees assigned yet</p>
+        <p className="text-sm text-[#6B6A65] italic">No employees assigned yet</p>
       )}
     </div>
   );

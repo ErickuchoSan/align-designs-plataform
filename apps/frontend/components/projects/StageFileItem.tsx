@@ -35,12 +35,12 @@ function StageFileItem({
   const hasRejections = file.rejectionCount && file.rejectionCount > 0;
 
   return (
-    <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg hover:bg-stone-100 transition-colors">
+    <div className="flex items-center justify-between p-4 bg-[#F5F4F0] rounded-lg hover:bg-[#E3E2DF] transition-colors">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* File Icon */}
-        <div className="flex-shrink-0 w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+        <div className="flex-shrink-0 w-10 h-10 bg-[#C9A84C]/20 rounded-lg flex items-center justify-center">
           <svg
-            className="w-6 h-6 text-navy-600"
+            className="w-6 h-6 text-[#C9A84C]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -57,8 +57,8 @@ function StageFileItem({
 
         {/* File Info */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-stone-900 truncate">{file.originalName}</p>
-          <p className="text-sm text-stone-500">
+          <p className="font-medium text-[#1B1C1A] truncate">{file.originalName}</p>
+          <p className="text-sm text-[#6B6A65]">
             {file.uploader && `${file.uploader.firstName} ${file.uploader.lastName}`} •{' '}
             {formatDate(file.uploadedAt)}
           </p>
@@ -71,7 +71,7 @@ function StageFileItem({
         {file.filename && (
           <button
             onClick={() => onDownload(file.id, file.originalName || 'file')}
-            className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+            className="p-2 text-[#6B6A65] hover:text-[#1B1C1A] hover:bg-[#F5F4F0] rounded-lg transition-colors"
             title="Download"
             aria-label={`Download ${file.originalName}`}
           >
@@ -89,7 +89,7 @@ function StageFileItem({
         {/* View History Button */}
         <button
           onClick={() => onViewHistory(file)}
-          className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+          className="p-2 text-[#6B6A65] hover:text-[#1B1C1A] hover:bg-[#F5F4F0] rounded-lg transition-colors"
           title="View Comments"
           aria-label={`View comments for ${file.originalName}`}
         >
@@ -107,7 +107,7 @@ function StageFileItem({
         {!(isAdmin && isSubmittedStage) && !isEmployee && (
           <button
             onClick={() => onEdit(file)}
-            className="p-2 text-stone-600 hover:text-amber-600 hover:bg-stone-200 rounded-lg transition-colors"
+            className="p-2 text-[#6B6A65] hover:text-amber-600 hover:bg-[#F5F4F0] rounded-lg transition-colors"
             title="Edit"
             aria-label={`Edit ${file.originalName}`}
           >
@@ -128,7 +128,7 @@ function StageFileItem({
             {!hasRejections && (
               <button
                 onClick={() => onEdit(file)}
-                className="p-2 text-stone-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                className="p-2 text-[#6B6A65] hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 title="Approve (Move to Admin Approved)"
                 aria-label={`Approve ${file.originalName}`}
               >
@@ -145,7 +145,7 @@ function StageFileItem({
               className={`p-2 rounded-lg transition-colors ${
                 hasRejections
                   ? 'text-red-600 bg-red-50 cursor-default opacity-80'
-                  : 'text-stone-600 hover:text-red-600 hover:bg-red-50'
+                  : 'text-[#6B6A65] hover:text-red-600 hover:bg-red-50'
               }`}
               disabled={!!hasRejections}
               title={hasRejections ? `Rejected (${file.rejectionCount} times)` : 'Reject (Create Feedback)'}
@@ -170,7 +170,7 @@ function StageFileItem({
         {canDeleteFile(file) && !(isAdmin && isSubmittedStage) && !isEmployee && (
           <button
             onClick={() => onDelete(file)}
-            className="p-2 text-stone-600 hover:text-red-600 hover:bg-stone-200 rounded-lg transition-colors"
+            className="p-2 text-[#6B6A65] hover:text-red-600 hover:bg-[#F5F4F0] rounded-lg transition-colors"
             title="Delete"
             aria-label={`Delete ${file.originalName}`}
           >

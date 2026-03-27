@@ -112,11 +112,11 @@ function StageContent({
           <div className="text-6xl mb-4 opacity-20" aria-hidden="true">
             {stage.icon}
           </div>
-          <p className="text-stone-600 mb-4">
+          <p className="text-[#6B6A65] mb-4">
             No files in this section yet
           </p>
           {stage.permissions.canWrite && (
-            <p className="text-sm text-stone-500">
+            <p className="text-sm text-[#6B6A65]">
               Click the Upload File button above to add files
             </p>
           )}
@@ -151,7 +151,7 @@ function StageContent({
 
       {/* Close Brief Section for Admin */}
       {showCloseBrief && (
-        <div className="mt-6 pt-6 border-t border-stone-200">
+        <div className="mt-6 pt-6 border-t border-[#D0C5B2]/20">
           {briefApprovedAt ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
               <CheckCircleIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
@@ -178,7 +178,7 @@ function StageContent({
                 <button
                   onClick={handleCloseBrief}
                   disabled={closingBrief}
-                  className="flex-shrink-0 px-4 py-2 bg-navy-800 text-white rounded-lg hover:bg-navy-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-shrink-0 px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg hover:brightness-95 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {closingBrief ? (
                     <span className="flex items-center gap-2">

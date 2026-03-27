@@ -43,15 +43,15 @@ const FileRow = memo(({
   );
 
   return (
-    <tr className="hover:bg-stone-50 transition-colors">
+    <tr className="hover:bg-[#F5F4F0] transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           {file.filename ? (
             <>
-              <svg className="w-5 h-5 text-navy-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[#1B1C1A] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              <div className="text-sm font-medium text-navy-900">{file.originalName}</div>
+              <div className="text-sm font-medium text-[#1B1C1A]">{file.originalName}</div>
             </>
           ) : (
             <>
@@ -65,7 +65,7 @@ const FileRow = memo(({
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         {file.filename ? (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-navy-100 text-navy-800">
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F5F4F0] text-[#1B1C1A]">
             {fileExtension}
           </span>
         ) : (
@@ -74,18 +74,18 @@ const FileRow = memo(({
           </span>
         )}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
         {file.filename ? formattedSize : '-'}
       </td>
       <td className="px-6 py-4 max-w-xs">
-        <div className="text-sm text-stone-700 line-clamp-2">
+        <div className="text-sm text-[#6B6A65] line-clamp-2">
           {file.comment ? sanitizeText(file.comment) : '-'}
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
         {uploaderName}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
         {formattedDate}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -94,7 +94,7 @@ const FileRow = memo(({
             <>
               <button
                 onClick={() => onDownload(file.id, file.originalName ?? '')}
-                className="p-2 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors"
+                className="p-2 text-[#6B6A65] hover:text-[#1B1C1A] hover:bg-[#F5F4F0] rounded-lg transition-colors"
                 title="Download"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +103,7 @@ const FileRow = memo(({
               </button>
               <button
                 onClick={() => onViewHistory(file)}
-                className="p-2 text-stone-600 hover:text-blue-600 hover:bg-stone-200 rounded-lg transition-colors"
+                className="p-2 text-[#6B6A65] hover:text-blue-600 hover:bg-[#F5F4F0] rounded-lg transition-colors"
                 title="Version History"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,7 +112,7 @@ const FileRow = memo(({
               </button>
               <button
                 onClick={() => onUploadVersion(file)}
-                className="p-2 text-stone-600 hover:text-green-600 hover:bg-stone-200 rounded-lg transition-colors"
+                className="p-2 text-[#6B6A65] hover:text-green-600 hover:bg-[#F5F4F0] rounded-lg transition-colors"
                 title="Upload New Version"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +123,7 @@ const FileRow = memo(({
           )}
           <button
             onClick={() => onEdit(file)}
-            className="p-2 text-stone-600 hover:text-gold-600 hover:bg-stone-200 rounded-lg transition-colors"
+            className="p-2 text-[#6B6A65] hover:text-[#C9A84C] hover:bg-[#F5F4F0] rounded-lg transition-colors"
             title="Edit"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ const FileRow = memo(({
           {canDelete(file) && (
             <button
               onClick={() => onDelete(file)}
-              className="p-2 text-stone-600 hover:text-red-600 hover:bg-stone-200 rounded-lg transition-colors"
+              className="p-2 text-[#6B6A65] hover:text-red-600 hover:bg-[#F5F4F0] rounded-lg transition-colors"
               title="Delete"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,14 +160,14 @@ function FileList({
 }: Readonly<FileListProps>) {
   if (files.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-12 text-center shadow-lg border border-stone-200">
-        <div className="mx-auto w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-stone-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="rounded-2xl bg-white p-12 text-center">
+        <div className="mx-auto w-16 h-16 bg-[#F5F4F0] rounded-full flex items-center justify-center mb-4">
+          <svg className="w-8 h-8 text-[#6B6A65]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         </div>
-        <p className="text-lg text-navy-900 font-medium">No files in this project</p>
-        <p className="text-sm text-stone-700 mt-2">Upload your first file to get started</p>
+        <p className="text-lg text-[#1B1C1A] font-medium">No files in this project</p>
+        <p className="text-sm text-[#6B6A65] mt-2">Upload your first file to get started</p>
       </div>
     );
   }
@@ -175,35 +175,35 @@ function FileList({
   return (
     <>
       {/* Desktop Table View */}
-      <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-stone-200 overflow-hidden">
+      <div className="hidden md:block bg-white rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-50">
+          <table className="min-w-full divide-y divide-[#D0C5B2]/20">
+            <thead className="bg-[#F5F4F0]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Size
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Comment
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Uploaded by
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-navy-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-[#1B1C1A] uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-stone-200">
+            <tbody className="bg-white divide-y divide-[#D0C5B2]/20">
               {files.map((file) => (
                 <FileRow
                   key={file.id}

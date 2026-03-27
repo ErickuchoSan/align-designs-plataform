@@ -6,7 +6,7 @@ export default function ProjectDetailLoading() {
       <PageHeaderSkeleton />
 
       {/* Project stages */}
-      <div className="bg-white border border-stone-200 rounded-xl p-6">
+      <div className="bg-white rounded-xl p-6">
         <div className="flex gap-2 mb-6">
           {['brief', 'design', 'revision', 'approval', 'delivery'].map((stage) => (
             <Skeleton key={`stage-${stage}`} className="h-10 w-24 rounded-lg" />

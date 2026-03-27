@@ -50,7 +50,7 @@ export default function CommentModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="commentText" className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="commentText" className="block text-sm font-medium text-[#1B1C1A] mb-2">
             Comment
           </label>
           <textarea
@@ -64,7 +64,7 @@ export default function CommentModal({
         </div>
 
         <div>
-          <label htmlFor="attachments" className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="attachments" className="block text-sm font-medium text-[#1B1C1A] mb-2">
             Attachments (Optional)
           </label>
           <input
@@ -72,16 +72,16 @@ export default function CommentModal({
             type="file"
             multiple
             onChange={handleFileChange}
-            className="block w-full text-sm text-stone-500
+            className="block w-full text-sm text-[#6B6A65]
               file:mr-4 file:py-2 file:px-4
               file:rounded-full file:border-0
               file:text-sm file:font-semibold
-              file:bg-navy-50 file:text-navy-700
-              hover:file:bg-navy-100
+              file:bg-[#F5F4F0] file:text-[#1B1C1A]
+              hover:file:bg-[#E3E2DF]
             "
           />
           {files.length > 0 && (
-            <div className="mt-2 text-sm text-stone-600">
+            <div className="mt-2 text-sm text-[#6B6A65]">
               {files.length} file(s) selected
             </div>
           )}
@@ -92,14 +92,14 @@ export default function CommentModal({
             type="button"
             onClick={handleClose}
             disabled={uploading}
-            className="w-full px-5 py-2.5 text-sm font-medium text-navy-900 transition-colors bg-stone-200 rounded-lg hover:bg-stone-300 disabled:opacity-50 sm:w-auto"
+            className="w-full px-5 py-2.5 text-sm font-medium text-[#1B1C1A] transition-colors bg-[#E3E2DF] rounded-lg hover:bg-[#D9D8D5] disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={uploading || (!commentText.trim() && files.length === 0)}
-            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all bg-gold-600 rounded-lg hover:bg-gold-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
+            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-semibold text-white transition-all bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
           >
             {uploading ? <ButtonLoader /> : 'Send Feedback'}
           </button>

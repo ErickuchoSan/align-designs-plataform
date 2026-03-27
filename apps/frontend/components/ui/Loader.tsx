@@ -16,7 +16,7 @@ export default function Loader({ size = 'md', color = 'blue', text }: Readonly<L
     blue: 'border-blue-600 border-t-transparent',
     white: 'border-white border-t-transparent',
     gray: 'border-gray-600 border-t-transparent',
-    navy: 'border-navy-900 border-t-transparent',
+    navy: 'border-[#1B1C1A] border-t-transparent',
   };
 
   return (
@@ -53,27 +53,27 @@ export function InlineSpinner({ label = 'Loading' }: Readonly<{ label?: string }
 
 export function ProjectCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-lg border border-stone-200 animate-pulse">
+    <div className="overflow-hidden rounded-2xl bg-white animate-pulse">
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
-          <div className="h-6 bg-stone-200 rounded w-3/4"></div>
+          <div className="h-6 bg-[#F5F4F0] rounded w-3/4"></div>
           <div className="flex gap-2 ml-2">
-            <div className="w-9 h-9 bg-stone-200 rounded-lg"></div>
-            <div className="w-9 h-9 bg-stone-200 rounded-lg"></div>
+            <div className="w-9 h-9 bg-[#F5F4F0] rounded-lg"></div>
+            <div className="w-9 h-9 bg-[#F5F4F0] rounded-lg"></div>
           </div>
         </div>
-        <div className="h-4 bg-stone-200 rounded w-full mt-2"></div>
-        <div className="h-4 bg-stone-200 rounded w-2/3 mt-1"></div>
+        <div className="h-4 bg-[#F5F4F0] rounded w-full mt-2"></div>
+        <div className="h-4 bg-[#F5F4F0] rounded w-2/3 mt-1"></div>
         <div className="mt-4 flex items-center gap-2">
-          <div className="w-8 h-8 bg-stone-200 rounded-full"></div>
+          <div className="w-8 h-8 bg-[#F5F4F0] rounded-full"></div>
           <div className="flex-1">
-            <div className="h-4 bg-stone-200 rounded w-1/2"></div>
-            <div className="h-3 bg-stone-200 rounded w-2/3 mt-1"></div>
+            <div className="h-4 bg-[#F5F4F0] rounded w-1/2"></div>
+            <div className="h-3 bg-[#F5F4F0] rounded w-2/3 mt-1"></div>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-stone-200 flex items-center justify-between">
-          <div className="h-6 bg-stone-200 rounded-full w-20"></div>
-          <div className="h-4 bg-stone-200 rounded w-24"></div>
+        <div className="mt-4 pt-4 border-t border-[#D0C5B2]/20 flex items-center justify-between">
+          <div className="h-6 bg-[#F5F4F0] rounded-full w-20"></div>
+          <div className="h-4 bg-[#F5F4F0] rounded w-24"></div>
         </div>
       </div>
     </div>
@@ -84,22 +84,22 @@ export function TableRowSkeleton() {
   return (
     <tr className="animate-pulse">
       <td className="px-6 py-4">
-        <div className="h-4 bg-stone-200 rounded w-32"></div>
+        <div className="h-4 bg-[#F5F4F0] rounded w-32"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-stone-200 rounded w-48"></div>
+        <div className="h-4 bg-[#F5F4F0] rounded w-48"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-stone-200 rounded w-32"></div>
+        <div className="h-4 bg-[#F5F4F0] rounded w-32"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-6 bg-stone-200 rounded-full w-16"></div>
+        <div className="h-6 bg-[#F5F4F0] rounded-full w-16"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-6 bg-stone-200 rounded-full w-11"></div>
+        <div className="h-6 bg-[#F5F4F0] rounded-full w-11"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-stone-200 rounded w-24"></div>
+        <div className="h-4 bg-[#F5F4F0] rounded w-24"></div>
       </td>
     </tr>
   );
@@ -107,22 +107,22 @@ export function TableRowSkeleton() {
 
 export function FileCardSkeleton() {
   return (
-    <div className="bg-white rounded-lg border border-stone-200 p-4 animate-pulse">
+    <div className="bg-white rounded-lg border border-[#D0C5B2]/20 p-4 animate-pulse">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 bg-stone-200 rounded"></div>
+          <div className="w-10 h-10 bg-[#F5F4F0] rounded"></div>
           <div className="flex-1">
-            <div className="h-4 bg-stone-200 rounded w-3/4"></div>
-            <div className="h-3 bg-stone-200 rounded w-1/2 mt-2"></div>
+            <div className="h-4 bg-[#F5F4F0] rounded w-3/4"></div>
+            <div className="h-3 bg-[#F5F4F0] rounded w-1/2 mt-2"></div>
           </div>
         </div>
         <div className="flex gap-2">
-          <div className="w-8 h-8 bg-stone-200 rounded"></div>
-          <div className="w-8 h-8 bg-stone-200 rounded"></div>
+          <div className="w-8 h-8 bg-[#F5F4F0] rounded"></div>
+          <div className="w-8 h-8 bg-[#F5F4F0] rounded"></div>
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-stone-200">
-        <div className="h-3 bg-stone-200 rounded w-1/3"></div>
+      <div className="mt-3 pt-3 border-t border-[#D0C5B2]/20">
+        <div className="h-3 bg-[#F5F4F0] rounded w-1/3"></div>
       </div>
     </div>
   );

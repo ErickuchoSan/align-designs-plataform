@@ -4,7 +4,7 @@ import { memo, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Project } from '@/types';
 import { ButtonLoader } from '@/components/ui/Loader';
-import { PROJECT_THEMES, type ProjectTheme } from '@/lib/styles';
+import { BUTTON_BASE, BUTTON_VARIANTS, BUTTON_SIZES } from '@/lib/styles';
 import ProjectFormFields from './ProjectFormFields';
 
 const Modal = dynamic(() => import('@/components/ui/Modal'), { ssr: false });
@@ -42,7 +42,6 @@ interface EditProjectModalProps {
   onFormChange: (data: ProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onConfirm: () => void;
-  theme?: ProjectTheme;
 }
 
 function EditProjectModal({
@@ -60,11 +59,7 @@ function EditProjectModal({
   onFormChange,
   onSubmit,
   onConfirm,
-  theme = 'navy',
 }: Readonly<EditProjectModalProps>) {
-  const styles = PROJECT_THEMES[theme];
-
-  // Include both available employees AND currently assigned employees
   const editModalEmployees = useMemo(() => {
     const currentEmployees = project?.employees?.map((e) => ({
       id: e.employee?.id || e.employeeId,
@@ -82,7 +77,6 @@ function EditProjectModal({
 
   return (
     <>
-      {/* Edit Confirmation Modal */}
       <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => {
@@ -96,7 +90,6 @@ function EditProjectModal({
         variant="warning"
       />
 
-      {/* Edit Project Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} title="Edit Project">
         <form onSubmit={onSubmit} className="space-y-5">
           <ProjectFormFields
@@ -104,26 +97,25 @@ function EditProjectModal({
             clients={clients}
             employees={editModalEmployees}
             isSubmitting={isSubmitting}
-            styles={styles}
             idPrefix="edit"
             onFormChange={onFormChange}
             clientDisabled={!canChangeClient}
             clientWarning={canChangeClient ? undefined : 'Client cannot be changed: current client has uploaded files or comments'}
           />
 
-          <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
+          <div className="flex gap-3 justify-end pt-4 border-t border-[#D0C5B2]/20">
             <button
               type="button"
               onClick={onEditClose}
               disabled={isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium ${styles.cancelButton} rounded-lg transition-colors disabled:opacity-50`}
+              className={`${BUTTON_BASE} ${BUTTON_VARIANTS.secondary} ${BUTTON_SIZES.md}`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-5 py-2.5 text-sm font-medium text-white ${styles.editButton} rounded-lg hover:shadow-lg transition-all disabled:opacity-50 min-w-[120px] flex items-center justify-center`}
+              className={`${BUTTON_BASE} ${BUTTON_VARIANTS.primary} ${BUTTON_SIZES.md}`}
             >
               {isSubmitting ? <ButtonLoader /> : 'Save Changes'}
             </button>

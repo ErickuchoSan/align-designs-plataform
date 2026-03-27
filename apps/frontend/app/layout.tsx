@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Epilogue } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
@@ -14,6 +14,12 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const epilogue = Epilogue({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-epilogue",
+});
+
 export const metadata: Metadata = {
   title: "Align Designs Platform",
   description: "Project and file management system",
@@ -26,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.variable} ${epilogue.variable} antialiased`}>
         <ErrorBoundary>
           <Providers>
             <SkipLinks />

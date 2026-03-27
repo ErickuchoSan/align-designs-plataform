@@ -31,7 +31,7 @@ function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {/* Total Duration Card */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+            <div className="bg-white p-6 rounded-xl">
                 <div className="flex items-center">
                     <div className="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-4">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -39,8 +39,8 @@ function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
                         </svg>
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-stone-500">Total Duration</p>
-                        <p className="text-2xl font-semibold text-navy-900">
+                        <p className="text-sm font-medium text-[#6B6A65]">Total Duration</p>
+                        <p className="text-2xl font-semibold text-[#1B1C1A]">
                             {stats.durationDays || 0}d {stats.durationHours || 0}h {stats.durationMinutes || 0}m
                         </p>
                     </div>
@@ -48,7 +48,7 @@ function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
             </div>
 
             {/* Cycles & Avg Duration */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+            <div className="bg-white p-6 rounded-xl">
                 <div className="flex items-center">
                     <div className="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,17 +56,17 @@ function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
                         </svg>
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-stone-500">Avg. Cycle Duration</p>
-                        <p className="text-2xl font-semibold text-navy-900">
-                            {averageCycleDuration} <span className="text-sm font-normal text-stone-500">days</span>
+                        <p className="text-sm font-medium text-[#6B6A65]">Avg. Cycle Duration</p>
+                        <p className="text-2xl font-semibold text-[#1B1C1A]">
+                            {averageCycleDuration} <span className="text-sm font-normal text-[#6B6A65]">days</span>
                         </p>
-                        <p className="text-xs text-stone-400 mt-1">{stats.totalCycles || 0} total feedback cycles</p>
+                        <p className="text-xs text-[#6B6A65] mt-1">{stats.totalCycles || 0} total feedback cycles</p>
                     </div>
                 </div>
             </div>
 
             {/* Rejections */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+            <div className="bg-white p-6 rounded-xl">
                 <div className="flex items-center">
                     <div className="p-3 rounded-full bg-red-100 text-red-600 mr-4">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,11 +74,11 @@ function TimeTrackingCharts({ projectId }: Readonly<TimeTrackingChartsProps>) {
                         </svg>
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-stone-500">Rejection Rate</p>
-                        <p className="text-2xl font-semibold text-navy-900">
+                        <p className="text-sm font-medium text-[#6B6A65]">Rejection Rate</p>
+                        <p className="text-2xl font-semibold text-[#1B1C1A]">
                             {rejectionPercentage}%
                         </p>
-                        <p className="text-xs text-stone-400 mt-1">{stats.totalRejections || 0} rejected files</p>
+                        <p className="text-xs text-[#6B6A65] mt-1">{stats.totalRejections || 0} rejected files</p>
                     </div>
                 </div>
             </div>

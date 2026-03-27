@@ -13,7 +13,7 @@ const STATUS_CLASSES: Record<InvoiceStatus, string> = {
   [InvoiceStatus.SENT]: 'bg-blue-100 text-blue-800',
   [InvoiceStatus.PAID]: 'bg-green-100 text-green-800',
   [InvoiceStatus.OVERDUE]: 'bg-red-100 text-red-800',
-  [InvoiceStatus.CANCELLED]: 'bg-stone-100 text-stone-800',
+  [InvoiceStatus.CANCELLED]: 'bg-[#F5F4F0] text-[#6B6A65]',
 };
 
 function InvoiceStatusBadge({ status, className = '' }: Readonly<InvoiceStatusBadgeProps>) {

@@ -89,15 +89,15 @@ export default function StageContentModal({
         <ModalErrorAlert error={error} />
 
         {/* Content Mode Selector */}
-        <div className="flex rounded-lg bg-stone-100 p-1">
+        <div className="flex rounded-lg bg-[#F5F4F0] p-1">
           <button
             type="button"
             onClick={() => setContentMode('comment')}
             className={cn(
               'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors',
               contentMode === 'comment'
-                ? 'bg-white text-navy-900 shadow-sm'
-                : 'text-stone-600 hover:text-navy-900'
+                ? 'bg-white text-[#1B1C1A] shadow-sm'
+                : 'text-[#6B6A65] hover:text-[#1B1C1A]'
             )}
           >
             Comment Only
@@ -108,8 +108,8 @@ export default function StageContentModal({
             className={cn(
               'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors',
               contentMode === 'file'
-                ? 'bg-white text-navy-900 shadow-sm'
-                : 'text-stone-600 hover:text-navy-900'
+                ? 'bg-white text-[#1B1C1A] shadow-sm'
+                : 'text-[#6B6A65] hover:text-[#1B1C1A]'
             )}
           >
             File Only
@@ -120,8 +120,8 @@ export default function StageContentModal({
             className={cn(
               'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors',
               contentMode === 'both'
-                ? 'bg-white text-navy-900 shadow-sm'
-                : 'text-stone-600 hover:text-navy-900'
+                ? 'bg-white text-[#1B1C1A] shadow-sm'
+                : 'text-[#6B6A65] hover:text-[#1B1C1A]'
             )}
           >
             File + Comment
@@ -131,7 +131,7 @@ export default function StageContentModal({
         {/* Comment Field - shown for 'comment' and 'both' modes */}
         {(contentMode === 'comment' || contentMode === 'both') && (
           <div>
-            <label htmlFor="commentText" className="block text-sm font-medium text-navy-900 mb-2">
+            <label htmlFor="commentText" className="block text-sm font-medium text-[#1B1C1A] mb-2">
               {contentMode === 'both' ? 'Comment' : 'Your Comment'}
             </label>
             <textarea
@@ -148,7 +148,7 @@ export default function StageContentModal({
         {/* File Input - shown for 'file' and 'both' modes */}
         {(contentMode === 'file' || contentMode === 'both') && (
           <div>
-            <label htmlFor="uploadFiles" className="block text-sm font-medium text-navy-900 mb-2">
+            <label htmlFor="uploadFiles" className="block text-sm font-medium text-[#1B1C1A] mb-2">
               Select Files
             </label>
             <FileInput
@@ -173,7 +173,7 @@ export default function StageContentModal({
               'flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[140px]',
               contentMode === 'comment'
                 ? 'bg-amber-600 hover:bg-amber-700'
-                : 'bg-navy-800 hover:bg-navy-700'
+                : 'bg-gradient-to-br from-[#755B00] to-[#C9A84C] hover:brightness-95'
             )}
           >
             {uploading ? <ButtonLoader /> : getSubmitButtonText()}

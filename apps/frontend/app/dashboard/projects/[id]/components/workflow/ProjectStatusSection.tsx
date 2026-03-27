@@ -29,7 +29,7 @@ export function ProjectStatusSection({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h3 className="text-sm font-medium text-stone-600 mb-2">Project Status</h3>
+        <h3 className="text-sm font-medium text-[#6B6A65] mb-2">Project Status</h3>
         <ProjectStatusBadge status={project.status} />
       </div>
 

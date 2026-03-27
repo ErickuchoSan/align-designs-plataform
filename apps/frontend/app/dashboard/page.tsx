@@ -20,20 +20,20 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="flex flex-col h-full">
       <DashboardHeader title="Dashboard" />
-
-      {/* Main content */}
-      <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <ProjectsList
-          isAuthenticated={isAuthenticated}
-          userRole={user.role}
-          onProjectClick={handleProjectClick}
-          theme="navy"
-          showCreateButton={true}
-          showUsersButton={true}
-        />
-      </main>
+      <div className="flex-1 px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          <ProjectsList
+            isAuthenticated={isAuthenticated}
+            userRole={user.role}
+            onProjectClick={handleProjectClick}
+  
+            showCreateButton={true}
+            showUsersButton={true}
+          />
+        </div>
+      </div>
     </div>
   );
 }

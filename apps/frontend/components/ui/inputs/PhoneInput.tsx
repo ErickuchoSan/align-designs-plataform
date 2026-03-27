@@ -86,8 +86,8 @@ export default function PhoneInput({
 
   return (
     <div className={cn('w-full', className)}>
-      <div className="flex items-stretch gap-0 rounded-lg border border-stone-300 focus-within:ring-2 focus-within:ring-gold-500 focus-within:border-gold-500 transition-all overflow-hidden bg-white">
-        <div className="flex-shrink-0 border-r border-stone-300">
+      <div className="flex items-stretch gap-0 rounded-lg border border-[#D0C5B2]/20 focus-within:ring-2 focus-within:ring-[#C9A84C] focus-within:border-[#C9A84C] transition-all overflow-hidden bg-white">
+        <div className="flex-shrink-0 border-r border-[#D0C5B2]/20">
           <CountryCodeSelector
             value={countryCode}
             onChange={handleCountryCodeChange}
@@ -103,7 +103,7 @@ export default function PhoneInput({
             onChange={(e) => handlePhoneChange(e.target.value)}
             placeholder={placeholder}
             className={cn(
-              'w-full h-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-navy-900 placeholder:text-stone-500',
+              'w-full h-full px-4 py-3 border-0 focus:outline-none focus:ring-0 text-[#1B1C1A] placeholder:text-[#6B6A65]',
               error && 'text-red-600'
             )}
             required={required}

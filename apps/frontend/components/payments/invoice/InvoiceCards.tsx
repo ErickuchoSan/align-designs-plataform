@@ -42,12 +42,12 @@ function InvoiceCards({
   return (
     <div className="md:hidden p-4 space-y-3">
       {invoices.map((invoice) => (
-        <div key={invoice.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+        <div key={invoice.id} className="bg-white rounded-lg p-4">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <div className="text-sm font-medium text-navy-900 mb-1">#{invoice.invoiceNumber}</div>
+              <div className="text-sm font-medium text-[#1B1C1A] mb-1">#{invoice.invoiceNumber}</div>
               {showClient && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-[#6B6A65]">
                   {invoice.client?.firstName || 'Unknown'} {invoice.client?.lastName || 'Client'}
                 </div>
               )}
@@ -56,21 +56,21 @@ function InvoiceCards({
           </div>
           <div className="space-y-2 text-sm mb-3">
             <div className="flex justify-between">
-              <span className="text-gray-500">Amount:</span>
-              <span className="font-medium text-gray-900">${invoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <span className="text-[#6B6A65]">Amount:</span>
+              <span className="font-medium text-[#1B1C1A]">${invoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Paid:</span>
+              <span className="text-[#6B6A65]">Paid:</span>
               <span className="font-medium text-green-600">${invoice.amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">{dateLabel}:</span>
-              <span className="text-gray-700">{formatDate(invoice[dateField])}</span>
+              <span className="text-[#6B6A65]">{dateLabel}:</span>
+              <span className="text-[#6B6A65]">{formatDate(invoice[dateField])}</span>
             </div>
           </div>
           <button
             onClick={() => onViewInvoice(invoice.id)}
-            className="w-full px-4 py-2 bg-navy-600 text-white rounded-lg hover:bg-navy-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg hover:brightness-95 transition-colors text-sm font-medium flex items-center justify-center gap-2"
           >
             <Icon />
             {buttonText}

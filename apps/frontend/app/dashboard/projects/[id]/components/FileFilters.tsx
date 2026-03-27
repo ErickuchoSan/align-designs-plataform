@@ -22,12 +22,12 @@ export default function FileFilters({
         placeholder="Search by name..."
         value={nameFilter}
         onChange={(e) => setNameFilter(e.target.value)}
-        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900 placeholder:text-stone-700')}
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-[#1B1C1A] placeholder:text-[#6B6A65]')}
       />
       <select
         value={typeFilter}
         onChange={(e) => setTypeFilter(e.target.value)}
-        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900')}
+        className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-[#1B1C1A]')}
       >
         <option value="all">All types</option>
         <option value="comments">Comments only</option>

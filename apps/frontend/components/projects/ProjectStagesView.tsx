@@ -162,8 +162,8 @@ function ProjectStagesView({
 
   if (stages.length === 0) {
     return (
-      <div className="rounded-lg bg-stone-50 border border-stone-200 p-8 text-center">
-        <p className="text-stone-600">No accessible stages found</p>
+      <div className="rounded-lg bg-[#F5F4F0] p-8 text-center">
+        <p className="text-[#6B6A65]">No accessible stages found</p>
       </div>
     );
   }
@@ -172,7 +172,7 @@ function ProjectStagesView({
     <div className="space-y-6">
       {/* Stage Cards Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-navy-900 mb-4">
+        <h2 className="text-lg font-semibold text-[#1B1C1A] mb-4">
           Project Progress
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -189,7 +189,7 @@ function ProjectStagesView({
 
       {/* Selected Stage Content */}
       {currentStage && user && (
-        <div className="bg-white rounded-xl border border-stone-200 shadow-sm">
+        <div className="bg-white rounded-xl">
           <StageHeader
             stage={currentStage}
             stageFiles={stageFiles}

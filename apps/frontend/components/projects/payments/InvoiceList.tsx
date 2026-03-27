@@ -30,9 +30,9 @@ const getStatusColor = (status: InvoiceStatus): string => {
     case InvoiceStatus.OVERDUE:
       return 'bg-red-100 text-red-800';
     case InvoiceStatus.CANCELLED:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-[#F5F4F0] text-[#6B6A65]';
     default:
-      return 'bg-stone-100 text-stone-800';
+      return 'bg-[#F5F4F0] text-[#6B6A65]';
   }
 };
 
@@ -70,35 +70,35 @@ function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
   return (
     <>
       {/* Desktop Table View */}
-      <div className="hidden md:block overflow-hidden border border-stone-200 rounded-lg">
+      <div className="hidden md:block overflow-hidden rounded-lg">
         <div className="max-h-96 overflow-y-auto overflow-x-auto">
-          <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-100 sticky top-0 z-10">
+          <table className="min-w-full divide-y divide-[#D0C5B2]/15">
+            <thead className="bg-[#F5F4F0] sticky top-0 z-10">
               <tr>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-stone-600 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-[#6B6A65] uppercase tracking-wider">
                   Invoice #
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-stone-600 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-[#6B6A65] uppercase tracking-wider">
                   Status
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-stone-600 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-[#6B6A65] uppercase tracking-wider">
                   Amount
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-stone-600 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-[#6B6A65] uppercase tracking-wider">
                   Paid
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-stone-600 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-[#6B6A65] uppercase tracking-wider">
                   Due Date
                 </th>
-                <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-stone-600 uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-[#6B6A65] uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-stone-200">
+            <tbody className="bg-white divide-y divide-[#D0C5B2]/15">
               {invoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-stone-50 transition-colors">
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-stone-900">
+                <tr key={invoice.id} className="hover:bg-[#F5F4F0] transition-colors">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#1B1C1A]">
                     #{invoice.invoiceNumber}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -106,20 +106,20 @@ function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
                       {invoice.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-900 font-medium">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-[#1B1C1A] font-medium">
                     {formatCurrency(invoice.totalAmount)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-green-600 font-medium">
                     {formatCurrency(invoice.amountPaid)}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-stone-600">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-[#6B6A65]">
                     {formatDate(invoice.dueDate)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-center">
                     <button
                       onClick={() => handleViewInvoice(invoice)}
                       disabled={loadingInvoiceId === invoice.id}
-                      className="inline-flex p-1.5 text-stone-600 hover:text-navy-600 hover:bg-stone-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait"
+                      className="inline-flex p-1.5 text-[#6B6A65] hover:text-[#C9A84C] hover:bg-[#F5F4F0] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait"
                       aria-label={`View invoice ${invoice.invoiceNumber}`}
                     >
                       {loadingInvoiceId === invoice.id ? (
@@ -147,32 +147,32 @@ function InvoiceList({ invoices, isAdmin }: Readonly<InvoiceListProps>) {
         {invoices.map((invoice) => (
           <div
             key={invoice.id}
-            className="border border-stone-200 rounded-lg p-4 bg-white hover:bg-stone-50 transition-colors"
+            className="rounded-lg p-4 bg-white hover:bg-[#F5F4F0] transition-colors"
           >
             <div className="flex justify-between items-start mb-3">
-              <div className="text-sm font-medium text-stone-900">#{invoice.invoiceNumber}</div>
+              <div className="text-sm font-medium text-[#1B1C1A]">#{invoice.invoiceNumber}</div>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
                 {invoice.status}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs mb-3">
               <div>
-                <div className="text-stone-500">Amount</div>
-                <div className="text-sm text-stone-900 font-medium">{formatCurrency(invoice.totalAmount)}</div>
+                <div className="text-[#6B6A65]">Amount</div>
+                <div className="text-sm text-[#1B1C1A] font-medium">{formatCurrency(invoice.totalAmount)}</div>
               </div>
               <div>
-                <div className="text-stone-500">Paid</div>
+                <div className="text-[#6B6A65]">Paid</div>
                 <div className="text-sm text-green-600 font-medium">{formatCurrency(invoice.amountPaid)}</div>
               </div>
               <div className="col-span-2">
-                <div className="text-stone-500">Due Date</div>
-                <div className="text-sm text-stone-600">{formatDate(invoice.dueDate)}</div>
+                <div className="text-[#6B6A65]">Due Date</div>
+                <div className="text-sm text-[#6B6A65]">{formatDate(invoice.dueDate)}</div>
               </div>
             </div>
             <button
               onClick={() => handleViewInvoice(invoice)}
               disabled={loadingInvoiceId === invoice.id}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-stone-600 hover:text-navy-600 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200 disabled:opacity-50 disabled:cursor-wait"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-[#6B6A65] hover:text-[#C9A84C] hover:bg-[#F5F4F0] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait"
             >
               {loadingInvoiceId === invoice.id ? (
                 <>

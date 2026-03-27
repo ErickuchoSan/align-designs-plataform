@@ -46,8 +46,8 @@ function StageCard({ stage, isActive, onClick }: Readonly<StageCardProps>) {
         w-full text-left p-4 rounded-xl border-2 transition-all duration-200
         ${
           isActive
-            ? 'border-navy-600 bg-navy-50 shadow-lg scale-105'
-            : 'border-stone-200 bg-white hover:border-navy-300 hover:shadow-md'
+            ? 'border-[#C9A84C] bg-[#F5F4F0] scale-105'
+            : 'border-[#D0C5B2]/20 bg-white hover:border-[#C9A84C]/50'
         }
       `}
     >
@@ -58,19 +58,19 @@ function StageCard({ stage, isActive, onClick }: Readonly<StageCardProps>) {
 
       <h3
         className={`font-semibold text-sm mb-1 ${
-          isActive ? 'text-navy-900' : 'text-stone-900'
+          isActive ? 'text-[#1B1C1A]' : 'text-[#1B1C1A]'
         }`}
       >
         {stage.name}
       </h3>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-stone-600">
+        <span className="text-xs text-[#6B6A65]">
           {stage.fileCount} {stage.fileCount === 1 ? 'file' : 'files'}
         </span>
         {isActive && (
           <svg
-            className="w-4 h-4 text-navy-600"
+            className="w-4 h-4 text-[#C9A84C]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

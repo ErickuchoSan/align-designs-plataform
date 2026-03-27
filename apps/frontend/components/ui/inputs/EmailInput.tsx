@@ -104,7 +104,7 @@ export default function EmailInput({ value, onChange, className = '', required =
 
   const getIcon = () => {
     if (isValidating) {
-      return <SpinnerIcon size="md" className="text-gold-600" />;
+      return <SpinnerIcon size="md" className="text-[#C9A84C]" />;
     }
     if (error) {
       return <ErrorCircleIcon size="md" className="text-red-500" />;

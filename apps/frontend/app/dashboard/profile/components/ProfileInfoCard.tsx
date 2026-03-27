@@ -55,13 +55,13 @@ function ProfileInfoCard({ user, onUpdateUser }: Readonly<ProfileInfoCardProps>)
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-8 animate-slideUp">
+    <div className="bg-white rounded-2xl p-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-navy-900">Personal Information</h2>
+        <h2 className="text-2xl font-bold text-[#1B1C1A]">Personal Information</h2>
         {!editingProfile && user.role === 'ADMIN' && (
           <button
             onClick={() => setEditingProfile(true)}
-            className="text-navy-700 hover:text-navy-900 font-medium hover:underline"
+            className="text-[#C9A84C] hover:text-[#755B00] font-medium hover:underline"
           >
             Edit
           </button>
@@ -89,28 +89,28 @@ const ProfileDisplay = memo(function ProfileDisplay({ user }: { user: User }) {
     <dl className="space-y-4">
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <dt className="block text-sm font-medium text-stone-700 mb-1">First Name</dt>
-          <dd className="text-lg text-navy-900 font-medium">{user.firstName}</dd>
+          <dt className="block text-sm font-medium text-[#6B6A65] mb-1">First Name</dt>
+          <dd className="text-lg text-[#1B1C1A] font-medium">{user.firstName}</dd>
         </div>
         <div>
-          <dt className="block text-sm font-medium text-stone-700 mb-1">Last Name</dt>
-          <dd className="text-lg text-navy-900 font-medium">{user.lastName}</dd>
+          <dt className="block text-sm font-medium text-[#6B6A65] mb-1">Last Name</dt>
+          <dd className="text-lg text-[#1B1C1A] font-medium">{user.lastName}</dd>
         </div>
       </div>
       <div>
-        <dt className="block text-sm font-medium text-stone-700 mb-1">Email</dt>
-        <dd className="text-lg text-navy-900 font-medium">{user.email}</dd>
+        <dt className="block text-sm font-medium text-[#6B6A65] mb-1">Email</dt>
+        <dd className="text-lg text-[#1B1C1A] font-medium">{user.email}</dd>
       </div>
       <div>
-        <dt className="block text-sm font-medium text-stone-700 mb-1">Phone</dt>
-        <dd className="text-lg text-navy-900 font-medium">{user.phone || 'Not specified'}</dd>
+        <dt className="block text-sm font-medium text-[#6B6A65] mb-1">Phone</dt>
+        <dd className="text-lg text-[#1B1C1A] font-medium">{user.phone || 'Not specified'}</dd>
       </div>
       <div>
-        <dt className="block text-sm font-medium text-stone-700 mb-1">Role</dt>
+        <dt className="block text-sm font-medium text-[#6B6A65] mb-1">Role</dt>
         <dd>
           <span
             className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-              user.role === 'ADMIN' ? 'bg-gold-100 text-gold-800' : 'bg-navy-100 text-navy-800'
+              user.role === 'ADMIN' ? 'bg-[#C9A84C]/20 text-[#755B00]' : 'bg-[#F5F4F0] text-[#1B1C1A]'
             }`}
           >
             {user.role === 'ADMIN' ? 'Administrator' : 'Client'}
@@ -139,7 +139,7 @@ const ProfileForm = memo(function ProfileForm({
     <form onSubmit={onSave} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="profile-firstName" className="block text-sm font-medium text-navy-900 mb-2">First Name</label>
+          <label htmlFor="profile-firstName" className="block text-sm font-medium text-[#6B6A65] mb-2">First Name</label>
           <input
             id="profile-firstName"
             type="text"
@@ -150,7 +150,7 @@ const ProfileForm = memo(function ProfileForm({
           />
         </div>
         <div>
-          <label htmlFor="profile-lastName" className="block text-sm font-medium text-navy-900 mb-2">Last Name</label>
+          <label htmlFor="profile-lastName" className="block text-sm font-medium text-[#6B6A65] mb-2">Last Name</label>
           <input
             id="profile-lastName"
             type="text"
@@ -162,7 +162,7 @@ const ProfileForm = memo(function ProfileForm({
         </div>
       </div>
       <div>
-        <label htmlFor="profile-phone" className="block text-sm font-medium text-navy-900 mb-2">Phone</label>
+        <label htmlFor="profile-phone" className="block text-sm font-medium text-[#6B6A65] mb-2">Phone</label>
         <PhoneInput
           id="profile-phone"
           value={profileData.phone}
@@ -175,14 +175,14 @@ const ProfileForm = memo(function ProfileForm({
           type="button"
           onClick={onCancel}
           disabled={isSaving}
-          className="flex-1 px-5 py-3 text-sm font-medium text-navy-900 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
+          className="flex-1 px-5 py-3 text-sm font-medium bg-[#E3E2DF] text-[#1B1C1A] rounded-lg hover:bg-[#D9D8D5] transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSaving}
-          className="flex-1 px-5 py-3 text-sm font-medium text-white bg-navy-800 rounded-lg hover:bg-navy-700 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="flex-1 px-5 py-3 text-sm font-medium text-white bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {isSaving ? <ButtonLoader /> : 'Save changes'}
         </button>

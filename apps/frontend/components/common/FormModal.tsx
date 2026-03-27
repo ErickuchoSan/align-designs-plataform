@@ -44,19 +44,19 @@ function FormModal({
 
         {children}
 
-        <div className="flex gap-3 justify-end pt-4 border-t border-stone-200">
+        <div className="flex gap-3 justify-end pt-4 border-t border-[#D0C5B2]/20">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 text-sm font-medium text-[#1B1C1A] bg-[#F5F4F0] rounded-lg hover:bg-[#F5F4F0]/80 transition-colors disabled:opacity-50"
           >
             {cancelText}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2.5 text-sm font-semibold text-navy-900 bg-gradient-to-r from-gold-500 to-gold-600 rounded-lg hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center shadow-lg hover:shadow-gold-300/50"
+            className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center shadow-sm"
           >
             {isSubmitting ? <ButtonLoader /> : submitText}
           </button>

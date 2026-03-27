@@ -133,10 +133,10 @@ export default function ClientPaymentUploadModal({
 
         {/* Amount */}
         <div>
-          <label htmlFor="payment-amount" className="block mb-2 text-sm font-medium text-stone-700">Amount Paid</label>
+          <label htmlFor="payment-amount" className="block mb-2 text-sm font-medium text-[#6B6A65]">Amount Paid</label>
           <div className="relative rounded-md shadow-sm">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <span className="text-stone-500 sm:text-sm">$</span>
+              <span className="text-[#6B6A65] sm:text-sm">$</span>
             </div>
             <input
               id="payment-amount"
@@ -153,13 +153,13 @@ export default function ClientPaymentUploadModal({
 
         {/* Payment Method */}
         <fieldset>
-          <legend className="block mb-2 text-sm font-medium text-stone-700">Payment Method</legend>
+          <legend className="block mb-2 text-sm font-medium text-[#6B6A65]">Payment Method</legend>
           <PaymentMethodSelect value={method} onChange={setMethod} />
         </fieldset>
 
         {/* Date */}
         <div>
-          <label htmlFor="payment-date" className="block mb-2 text-sm font-medium text-stone-700">Payment Date</label>
+          <label htmlFor="payment-date" className="block mb-2 text-sm font-medium text-[#6B6A65]">Payment Date</label>
           <input
             id="payment-date"
             type="date"
@@ -172,7 +172,7 @@ export default function ClientPaymentUploadModal({
 
         {/* Invoice Selection */}
         <div>
-          <label htmlFor="payment-invoice" className="block mb-2 text-sm font-medium text-stone-700">Link to Invoice (Optional)</label>
+          <label htmlFor="payment-invoice" className="block mb-2 text-sm font-medium text-[#6B6A65]">Link to Invoice (Optional)</label>
           <select
             id="payment-invoice"
             value={invoiceId}
@@ -190,25 +190,25 @@ export default function ClientPaymentUploadModal({
 
         {/* File Upload */}
         <div>
-          <label htmlFor="payment-receipt" className="block mb-2 text-sm font-medium text-stone-700">Receipt File</label>
+          <label htmlFor="payment-receipt" className="block mb-2 text-sm font-medium text-[#6B6A65]">Receipt File</label>
           <input
             id="payment-receipt"
             type="file"
             accept="image/*,.pdf"
             onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-            className="block w-full text-sm text-stone-500
+            className="block w-full text-sm text-[#6B6A65]
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-md file:border-0
                     file:text-sm file:font-semibold
-                    file:bg-stone-50 file:text-navy-700
-                    hover:file:bg-stone-100"
+                    file:bg-[#F5F4F0] file:text-[#1B1C1A]
+                    hover:file:bg-[#F5F4F0]"
           />
-          <p className="mt-1 text-xs text-stone-500">Supported: PDF, JPG, PNG (Max 5MB)</p>
+          <p className="mt-1 text-xs text-[#6B6A65]">Supported: PDF, JPG, PNG (Max 5MB)</p>
         </div>
 
         {/* Notes */}
         <div>
-          <label htmlFor="payment-notes" className="block mb-2 text-sm font-medium text-stone-700">Notes</label>
+          <label htmlFor="payment-notes" className="block mb-2 text-sm font-medium text-[#6B6A65]">Notes</label>
           <textarea
             id="payment-notes"
             rows={3}
@@ -224,7 +224,7 @@ export default function ClientPaymentUploadModal({
             type="button"
             onClick={onClose}
             disabled={uploadMutation.isPending}
-            className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'w-full border border-stone-300 sm:w-auto')}
+            className={cn(BUTTON_BASE, BUTTON_VARIANTS.ghost, BUTTON_SIZES.md, 'w-full border border-[#D0C5B2]/20 sm:w-auto')}
           >
             Cancel
           </button>

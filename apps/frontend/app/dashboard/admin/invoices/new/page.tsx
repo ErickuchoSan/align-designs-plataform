@@ -100,18 +100,18 @@ export default function CreateInvoicePage() {
     };
 
     if (loadingProjects) {
-        return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-900"></div></div>;
+        return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1B1C1A]"></div></div>;
     }
 
     return (
         <div className="max-w-3xl mx-auto">
-            <h1 className="text-2xl font-bold text-navy-900 mb-6">Create New Invoice</h1>
+            <h1 className="text-2xl font-bold text-[#1B1C1A] mb-6">Create New Invoice</h1>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="bg-white shadow rounded-lg p-6 space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-6 space-y-6">
 
                 {/* Project Selection */}
                 <div>
-                    <label htmlFor="projectId" className="block text-sm font-medium text-gray-700">Project</label>
+                    <label htmlFor="projectId" className="block text-sm font-medium text-[#6B6A65]">Project</label>
                     <select
                         id="projectId"
                         {...register('projectId')}
@@ -129,7 +129,7 @@ export default function CreateInvoicePage() {
 
                 <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                     <div>
-                        <label htmlFor="issueDate" className="block text-sm font-medium text-gray-700">Issue Date</label>
+                        <label htmlFor="issueDate" className="block text-sm font-medium text-[#6B6A65]">Issue Date</label>
                         <input
                             id="issueDate"
                             type="date"
@@ -139,7 +139,7 @@ export default function CreateInvoicePage() {
                         {errors.issueDate && <p className="mt-1 text-sm text-red-600">{errors.issueDate.message}</p>}
                     </div>
                     <div>
-                        <label htmlFor="paymentTermsDays" className="block text-sm font-medium text-gray-700">Terms (Days)</label>
+                        <label htmlFor="paymentTermsDays" className="block text-sm font-medium text-[#6B6A65]">Terms (Days)</label>
                         <input
                             id="paymentTermsDays"
                             type="number"
@@ -150,22 +150,22 @@ export default function CreateInvoicePage() {
                         {errors.paymentTermsDays && <p className="mt-1 text-sm text-red-600">{errors.paymentTermsDays.message}</p>}
                     </div>
                     <div>
-                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">Due Date</label>
+                        <label htmlFor="dueDate" className="block text-sm font-medium text-[#6B6A65]">Due Date</label>
                         <input
                             id="dueDate"
                             type="date"
                             value={dueDate}
                             readOnly
-                            className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1 bg-gray-50 text-gray-500')}
+                            className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'mt-1 bg-[#F5F4F0] text-[#6B6A65]')}
                         />
                     </div>
                 </div>
 
-                <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Financials</h3>
+                <div className="border-t border-[#D0C5B2]/20 pt-6">
+                    <h3 className="text-lg font-medium text-[#1B1C1A] mb-4">Financials</h3>
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                         <div>
-                            <label htmlFor="subtotal" className="block text-sm font-medium text-gray-700">Subtotal ($)</label>
+                            <label htmlFor="subtotal" className="block text-sm font-medium text-[#6B6A65]">Subtotal ($)</label>
                             <input
                                 id="subtotal"
                                 type="number"
@@ -176,7 +176,7 @@ export default function CreateInvoicePage() {
                             {errors.subtotal && <p className="mt-1 text-sm text-red-600">{errors.subtotal.message}</p>}
                         </div>
                         <div>
-                            <label htmlFor="taxRate" className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
+                            <label htmlFor="taxRate" className="block text-sm font-medium text-[#6B6A65]">Tax Rate (%)</label>
                             <input
                                 id="taxRate"
                                 type="number"
@@ -189,14 +189,14 @@ export default function CreateInvoicePage() {
                     </div>
                     <div className="mt-4 flex justify-end">
                         <div className="text-right">
-                            <p className="text-sm text-gray-500">Total Amount</p>
-                            <p className="text-2xl font-bold text-navy-900">${totalAmount.toFixed(2)}</p>
+                            <p className="text-sm text-[#6B6A65]">Total Amount</p>
+                            <p className="text-2xl font-bold text-[#1B1C1A]">${totalAmount.toFixed(2)}</p>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Visible to Client)</label>
+                    <label htmlFor="notes" className="block text-sm font-medium text-[#6B6A65]">Notes (Visible to Client)</label>
                     <textarea
                         id="notes"
                         rows={3}
@@ -216,7 +216,7 @@ export default function CreateInvoicePage() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md, 'bg-navy-600 hover:bg-navy-700 shadow-sm')}
+                        className={cn(BUTTON_BASE, BUTTON_VARIANTS.primary, BUTTON_SIZES.md)}
                     >
                         {isSubmitting ? <ButtonLoader /> : 'Create Invoice'}
                     </button>

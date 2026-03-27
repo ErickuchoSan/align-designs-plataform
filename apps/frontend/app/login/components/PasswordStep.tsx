@@ -33,11 +33,11 @@ export default function PasswordStep({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="text-sm text-navy-700 bg-gold-50 p-4 rounded-lg border border-gold-200 animate-slideDown">
+      <div className="text-sm text-[#6B6A65] bg-[#C9A84C]/20 p-4 rounded-lg animate-slideDown">
         Logging in as: <strong>{email}</strong>
       </div>
       <div className="animate-slideDown">
-        <label htmlFor="password" className="block text-sm font-medium text-navy-900 mb-2">
+        <label htmlFor="password" className="block text-sm font-medium text-[#1B1C1A] mb-2">
           Password
         </label>
         <input
@@ -60,7 +60,7 @@ export default function PasswordStep({
         <button
           type="button"
           onClick={onForgotPassword}
-          className="text-sm text-navy-700 hover:text-navy-900 hover:underline"
+          className="text-sm text-[#6B6A65] hover:text-[#1B1C1A] hover:underline"
         >
           Forgot your password?
         </button>
@@ -70,10 +70,10 @@ export default function PasswordStep({
       </LoadingButton>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-stone-300"></div>
+          <div className="w-full border-t border-[#D0C5B2]/20"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-stone-500">Or</span>
+          <span className="px-2 bg-white text-[#6B6A65]">Or</span>
         </div>
       </div>
       <button
@@ -87,7 +87,7 @@ export default function PasswordStep({
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-sm text-navy-700 hover:text-navy-900 hover:underline"
+        className="w-full text-sm text-[#6B6A65] hover:text-[#1B1C1A] hover:underline"
       >
         Change email
       </button>

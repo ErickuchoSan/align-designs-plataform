@@ -37,7 +37,7 @@ function SkipLinks({ links = DEFAULT_LINKS }: Readonly<SkipLinksProps>) {
           <li key={link.href}>
             <a
               href={link.href}
-              className="px-4 py-2 bg-navy-800 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 transition-colors hover:bg-navy-700"
+              className="px-4 py-2 bg-[#1B1C1A] text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 transition-colors hover:brightness-95"
             >
               {link.label}
             </a>

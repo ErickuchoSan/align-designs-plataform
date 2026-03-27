@@ -23,7 +23,7 @@ export default function UsersPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-200">
+      <div className="flex flex-col h-full">
         <DashboardHeader
           title="User Management"
           showBackButton
@@ -31,14 +31,15 @@ export default function UsersPage() {
         >
           <button
             onClick={() => usersHook.setShowCreateForm(true)}
-            className="rounded-lg bg-gradient-to-r from-gold-500 to-gold-600 px-5 py-2.5 text-sm font-semibold text-navy-900 hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 shadow-lg hover:shadow-gold-300/50"
+            className="bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white font-semibold px-5 py-2.5 rounded-lg hover:brightness-95 transition-all"
           >
             + New Client
           </button>
         </DashboardHeader>
 
         {/* Content */}
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <main className="flex-1 px-6 py-8">
+          <div className="max-w-7xl mx-auto">
 
 
           {usersHook.error && (
@@ -48,21 +49,21 @@ export default function UsersPage() {
           )}
 
           {/* Desktop Users Table */}
-          <div className="hidden md:block bg-white rounded-2xl shadow-2xl overflow-hidden border border-stone-200 animate-slideUp">
+          <div className="hidden md:block bg-white rounded-2xl overflow-hidden animate-slideUp">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-stone-200">
-                <thead className="bg-gradient-to-r from-navy-50 to-stone-100">
+              <table className="min-w-full divide-y divide-[#D0C5B2]/15">
+                <thead className="bg-[#F5F4F0]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Phone</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-navy-900 uppercase tracking-wider">Created At</th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-navy-900 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">User</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">Created At</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-[#1B1C1A] uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-stone-200">
+                <tbody className="bg-white divide-y divide-[#D0C5B2]/15">
                   {usersHook.isLoading && usersHook.users.length === 0 ? (
                     <>
                       {[1, 2, 3].map((i) => (
@@ -73,23 +74,23 @@ export default function UsersPage() {
                     usersHook.users
                       .filter((usr) => usr.role === 'CLIENT')
                       .map((usr) => (
-                        <tr key={usr.id} className="hover:bg-stone-50 transition-colors">
+                        <tr key={usr.id} className="hover:bg-[#F5F4F0] transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-semibold text-navy-900">
+                            <div className="font-semibold text-[#1B1C1A]">
                               {usr.firstName} {usr.lastName}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
                             {usr.email}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
                             {usr.phone || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${usr.role === 'ADMIN'
-                                ? 'bg-navy-100 text-navy-800 border border-navy-300'
-                                : 'bg-gold-100 text-gold-800 border border-gold-300'
+                                ? 'bg-[#F5F4F0] text-[#1B1C1A]'
+                                : 'bg-[#C9A84C]/20 text-[#755B00]'
                                 }`}
                             >
                               {usr.role === 'ADMIN' ? 'Admin' : 'Client'}
@@ -100,7 +101,7 @@ export default function UsersPage() {
                               <button
                                 onClick={() => usersHook.openToggleConfirm(usr)}
                                 disabled={usersHook.togglingUserId === usr.id}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${usr.isActive ? 'bg-emerald-600' : 'bg-stone-300'
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${usr.isActive ? 'bg-emerald-600' : 'bg-[#E3E2DF]'
                                   }`}
                                 aria-label={`${usr.isActive ? 'Deactivate' : 'Activate'} user ${usr.firstName} ${usr.lastName}`}
                               >
@@ -115,7 +116,7 @@ export default function UsersPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-[#6B6A65]">
                             {formatDate(usr.createdAt)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -157,16 +158,16 @@ export default function UsersPage() {
             {usersHook.isLoading && usersHook.users.length === 0 && (
               <>
                 {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((key) => (
-                  <div key={key} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 animate-pulse">
-                    <div className="h-4 bg-stone-200 rounded w-3/4 mb-3"></div>
-                    <div className="h-3 bg-stone-200 rounded w-1/2 mb-2"></div>
-                    <div className="h-3 bg-stone-200 rounded w-2/3"></div>
+                  <div key={key} className="bg-white rounded-2xl shadow-xl border border-[#D0C5B2]/20 p-4 animate-pulse">
+                    <div className="h-4 bg-[#F5F4F0] rounded w-3/4 mb-3"></div>
+                    <div className="h-3 bg-[#F5F4F0] rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-[#F5F4F0] rounded w-2/3"></div>
                   </div>
                 ))}
               </>
             )}
             {!usersHook.isLoading && !usersHook.users.some((usr) => usr.role === 'CLIENT') && (
-              <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-6 text-center text-stone-500">
+              <div className="bg-white rounded-2xl shadow-xl border border-[#D0C5B2]/20 p-6 text-center text-[#6B6A65]">
                 No clients found.
               </div>
             )}
@@ -174,20 +175,20 @@ export default function UsersPage() {
               usersHook.users
                 .filter((usr) => usr.role === 'CLIENT')
                 .map((usr) => (
-                  <div key={usr.id} className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4 hover:shadow-2xl transition-shadow">
+                  <div key={usr.id} className="bg-white rounded-2xl shadow-xl border border-[#D0C5B2]/20 p-4 hover:shadow-2xl transition-shadow">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <div className="font-semibold text-navy-900 text-base">
+                        <div className="font-semibold text-[#1B1C1A] text-base">
                           {usr.firstName} {usr.lastName}
                         </div>
-                        <div className="text-xs text-stone-500 mt-1">
+                        <div className="text-xs text-[#6B6A65] mt-1">
                           Created {formatDate(usr.createdAt)}
                         </div>
                       </div>
                       <button
                         onClick={() => usersHook.openToggleConfirm(usr)}
                         disabled={usersHook.togglingUserId === usr.id}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${usr.isActive ? 'bg-emerald-600' : 'bg-stone-300'
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${usr.isActive ? 'bg-emerald-600' : 'bg-[#E3E2DF]'
                           }`}
                         aria-label={`${usr.isActive ? 'Deactivate' : 'Activate'} user ${usr.firstName} ${usr.lastName}`}
                       >
@@ -200,22 +201,22 @@ export default function UsersPage() {
 
                     <div className="space-y-2 text-sm mb-3">
                       <div className="flex items-start gap-2">
-                        <svg className="w-4 h-4 text-stone-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-[#6B6A65] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
-                        <span className="text-stone-700 break-all">{usr.email}</span>
+                        <span className="text-[#6B6A65] break-all">{usr.email}</span>
                       </div>
                       {usr.phone && (
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#6B6A65] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
-                          <span className="text-stone-700">{usr.phone}</span>
+                          <span className="text-[#6B6A65]">{usr.phone}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 pt-3 border-t border-stone-200">
+                    <div className="flex items-center gap-2 pt-3 border-t border-[#D0C5B2]/20">
                       <button
                         onClick={() => usersHook.openDeleteConfirm(usr)}
                         disabled={usersHook.deletingUserId === usr.id}
@@ -233,7 +234,7 @@ export default function UsersPage() {
 
             {/* Mobile Pagination */}
             {usersHook.totalPages > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl border border-stone-200 p-4">
+              <div className="bg-white rounded-2xl shadow-xl border border-[#D0C5B2]/20 p-4">
                 <Pagination
                   currentPage={usersHook.currentPage}
                   totalPages={usersHook.totalPages}
@@ -244,6 +245,7 @@ export default function UsersPage() {
                 />
               </div>
             )}
+          </div>
           </div>
         </main>
       </div>
@@ -267,7 +269,7 @@ export default function UsersPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="user-firstName" className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="user-firstName" className="block text-sm font-semibold text-[#1B1C1A] mb-2">
                 First Name
               </label>
               <input
@@ -278,11 +280,11 @@ export default function UsersPage() {
                 onChange={(e) =>
                   usersHook.setFormData({ ...usersHook.formData, firstName: e.target.value })
                 }
-                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900')}
+                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-[#1B1C1A]')}
               />
             </div>
             <div>
-              <label htmlFor="user-lastName" className="block text-sm font-semibold text-navy-900 mb-2">
+              <label htmlFor="user-lastName" className="block text-sm font-semibold text-[#1B1C1A] mb-2">
                 Last Name
               </label>
               <input
@@ -293,13 +295,13 @@ export default function UsersPage() {
                 onChange={(e) =>
                   usersHook.setFormData({ ...usersHook.formData, lastName: e.target.value })
                 }
-                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-navy-900')}
+                className={cn(INPUT_BASE, INPUT_VARIANTS.default, 'text-[#1B1C1A]')}
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="user-email" className="block text-sm font-semibold text-navy-900 mb-2">Email</label>
+            <label htmlFor="user-email" className="block text-sm font-semibold text-[#1B1C1A] mb-2">Email</label>
             <EmailInput
               id="user-email"
               value={usersHook.formData.email}
@@ -310,7 +312,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-            <label htmlFor="user-phone" className="block text-sm font-semibold text-navy-900 mb-2">Phone</label>
+            <label htmlFor="user-phone" className="block text-sm font-semibold text-[#1B1C1A] mb-2">Phone</label>
             <PhoneInput
               id="user-phone"
               value={usersHook.formData.phone || ''}
@@ -327,14 +329,14 @@ export default function UsersPage() {
                 usersHook.setFormData({ email: '', firstName: '', lastName: '', phone: '', role: Role.CLIENT });
               }}
               disabled={usersHook.isCreating}
-              className="px-5 py-2.5 text-sm font-medium text-stone-800 bg-stone-200 rounded-lg hover:bg-stone-300 transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-[#1B1C1A] bg-[#E3E2DF] rounded-lg hover:bg-[#D9D8D5] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={usersHook.isCreating}
-              className="px-5 py-2.5 text-sm font-semibold text-navy-900 bg-gradient-to-r from-gold-500 to-gold-600 rounded-lg hover:from-gold-400 hover:to-gold-500 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none min-w-[120px] flex items-center justify-center shadow-lg hover:shadow-gold-300/50"
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] flex items-center justify-center"
             >
               {usersHook.isCreating ? <ButtonLoader /> : 'Create Client'}
             </button>

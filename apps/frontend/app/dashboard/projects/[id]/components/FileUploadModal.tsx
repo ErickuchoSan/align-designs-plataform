@@ -57,7 +57,7 @@ export default function FileUploadModal({
         <ModalErrorAlert error={error} />
 
         <div>
-          <label htmlFor="uploadFiles" className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="uploadFiles" className="block text-sm font-medium text-[#1B1C1A] mb-2">
             Select files
           </label>
           <FileInput
@@ -70,7 +70,7 @@ export default function FileUploadModal({
         </div>
 
         <div>
-          <label htmlFor="uploadComment" className="block text-sm font-medium text-navy-900 mb-2">
+          <label htmlFor="uploadComment" className="block text-sm font-medium text-[#1B1C1A] mb-2">
             Comment (optional)
           </label>
           <textarea
@@ -90,7 +90,7 @@ export default function FileUploadModal({
           <button
             type="submit"
             disabled={uploading || selectedFiles.length === 0}
-            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-medium text-white transition-all bg-navy-800 rounded-lg hover:bg-navy-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
+            className="flex items-center justify-center w-full px-5 py-2.5 text-sm font-semibold text-white transition-all bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-lg hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:min-w-[120px]"
           >
             {uploading && <ButtonLoader />}
             {!uploading && (selectedFiles.length > 1 ? 'Upload Files' : 'Upload File')}

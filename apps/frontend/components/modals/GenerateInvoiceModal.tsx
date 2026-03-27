@@ -93,7 +93,7 @@ export default function GenerateInvoiceModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Generate Invoice" size="sm">
       {checkingUnpaid && (
         <div className="flex justify-center items-center py-8">
-          <SpinnerIcon size="lg" className="text-navy-800" />
+          <SpinnerIcon size="lg" className="text-[#1B1C1A]" />
         </div>
       )}
       {!checkingUnpaid && hasUnpaid && (
@@ -122,7 +122,7 @@ export default function GenerateInvoiceModal({
           <div>
             <label htmlFor="invoice-amount" className={FORM_LABEL}>Total Amount (USD)</label>
             <div className="relative">
-              <span className="absolute left-3 top-2 text-stone-500">$</span>
+              <span className="absolute left-3 top-2 text-[#6B6A65]">$</span>
               <input
                 id="invoice-amount"
                 type="number"
@@ -161,7 +161,7 @@ export default function GenerateInvoiceModal({
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 font-medium text-stone-700 transition-colors bg-stone-100 rounded-lg hover:bg-stone-200"
+              className="flex-1 px-4 py-2 font-medium text-[#6B6A65] transition-colors bg-[#F5F4F0] rounded-lg hover:bg-[#F5F4F0]"
             >
               Cancel
             </button>

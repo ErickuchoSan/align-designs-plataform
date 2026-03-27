@@ -82,7 +82,7 @@ function PaymentsStageContent({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-navy-900" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1B1C1A]" />
       </div>
     );
   }
@@ -118,10 +118,10 @@ function PaymentsStageContent({
 
       {/* Client Invoices Section */}
       {(isAdmin || isClient) && (
-        <section className="bg-white rounded-lg border border-stone-200 p-6">
+        <section className="bg-white rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-navy-900">Client Invoices</h3>
-            <span className="text-sm text-stone-600">{invoices.length} invoice(s)</span>
+            <h3 className="text-lg font-semibold text-[#1B1C1A]">Client Invoices</h3>
+            <span className="text-sm text-[#6B6A65]">{invoices.length} invoice(s)</span>
           </div>
           <InvoiceList invoices={invoices} isAdmin={isAdmin} />
         </section>
@@ -129,10 +129,10 @@ function PaymentsStageContent({
 
       {/* Client Payments - Client View */}
       {isClient && (
-        <section className="bg-white rounded-lg border border-stone-200 p-6">
+        <section className="bg-white rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-navy-900">My Payments</h3>
-            <span className="text-sm text-stone-600">{clientPayments.length} payment(s)</span>
+            <h3 className="text-lg font-semibold text-[#1B1C1A]">My Payments</h3>
+            <span className="text-sm text-[#6B6A65]">{clientPayments.length} payment(s)</span>
           </div>
           <ClientPaymentsList payments={clientPayments} onViewReceipt={setViewingPayment} />
         </section>
@@ -140,10 +140,10 @@ function PaymentsStageContent({
 
       {/* Pending Payments - Admin View */}
       {isAdmin && (
-        <section className="bg-white rounded-lg border border-stone-200 p-6">
+        <section className="bg-white rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-navy-900">Client Payments Pending Approval</h3>
-            <span className="text-sm text-stone-600">
+            <h3 className="text-lg font-semibold text-[#1B1C1A]">Client Payments Pending Approval</h3>
+            <span className="text-sm text-[#6B6A65]">
               {clientPayments.filter((p) => p.status === 'PENDING_APPROVAL').length} pending
             </span>
           </div>
@@ -153,12 +153,12 @@ function PaymentsStageContent({
 
       {/* Employee Payments Section - Only visible to ADMIN and EMPLOYEE */}
       {userRole !== 'CLIENT' && (
-        <section className="bg-white rounded-lg border border-stone-200 p-6">
+        <section className="bg-white rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-navy-900">
+            <h3 className="text-lg font-semibold text-[#1B1C1A]">
               {isAdmin ? 'Employee Payments' : 'My Payments'}
             </h3>
-            <span className="text-sm text-stone-600">{employeePayments.length} payment(s)</span>
+            <span className="text-sm text-[#6B6A65]">{employeePayments.length} payment(s)</span>
           </div>
           <EmployeePaymentsList
             payments={employeePayments}

@@ -89,7 +89,7 @@ function AdminWorkflowView({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-stone-200 p-6 mb-6">
+    <div className="bg-white rounded-2xl p-6 mb-6">
       {/* Error message */}
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4" role="alert">
@@ -98,7 +98,7 @@ function AdminWorkflowView({
       )}
 
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-navy-900">Project Workflow</h2>
+        <h2 className="text-xl font-bold text-[#1B1C1A]">Project Workflow</h2>
         <ProjectStatusBadge status={project.status} />
       </div>
 
@@ -108,7 +108,7 @@ function AdminWorkflowView({
           <button
             onClick={() => setShowCompleteConfirm(true)}
             disabled={processing}
-            className="px-4 py-2 bg-navy-600 hover:bg-navy-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg font-medium hover:brightness-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Mark as Completed
           </button>
@@ -117,7 +117,7 @@ function AdminWorkflowView({
           <button
             onClick={handleArchiveClick}
             disabled={processing}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-[#E3E2DF] text-[#1B1C1A] rounded-lg font-medium hover:bg-[#D9D8D5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Archive Project
           </button>
@@ -205,12 +205,12 @@ const PaymentSection = memo(function PaymentSection({
 }) {
 
   return (
-    <div className="border border-stone-200 rounded-lg p-4">
+    <div className="bg-[#F5F4F0] rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-navy-900">Payment Status</h3>
+        <h3 className="font-semibold text-[#1B1C1A]">Payment Status</h3>
         <button
           onClick={onShowHistory}
-          className="text-sm px-3 py-1.5 border border-navy-200 text-navy-800 hover:bg-navy-50 rounded-lg font-medium transition-colors"
+          className="text-sm px-3 py-1.5 bg-[#E3E2DF] text-[#1B1C1A] hover:bg-[#D9D8D5] rounded-lg font-medium transition-colors"
         >
           History
         </button>
@@ -228,9 +228,9 @@ const PaymentSection = memo(function PaymentSection({
       )}
 
       {project.deadlineDate && (
-        <div className="mt-4 pt-4 border-t border-stone-200">
-          <p className="text-xs font-medium text-stone-500 mb-1">Project Completion Deadline</p>
-          <p className="text-sm font-medium text-navy-900">{formatDate(project.deadlineDate, 'invoice')}</p>
+        <div className="mt-4 pt-4 border-t border-[#D0C5B2]/20">
+          <p className="text-xs font-medium text-[#6B6A65] mb-1">Project Completion Deadline</p>
+          <p className="text-sm font-medium text-[#1B1C1A]">{formatDate(project.deadlineDate, 'invoice')}</p>
           {new Date(project.deadlineDate) < new Date() && (
             <p className="text-xs text-red-600 mt-0.5">Overdue</p>
           )}
@@ -253,12 +253,12 @@ const EmployeesSection = memo(function EmployeesSection({
   );
 
   return (
-    <div className="border border-stone-200 rounded-lg p-4">
+    <div className="bg-[#F5F4F0] rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-navy-900">Assigned Employees</h3>
+        <h3 className="font-semibold text-[#1B1C1A]">Assigned Employees</h3>
         <button
           onClick={onManageClick}
-          className="text-sm px-3 py-1.5 bg-steel-700 hover:bg-steel-600 text-white rounded-lg font-medium transition-colors"
+          className="text-sm px-3 py-1.5 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg font-medium hover:brightness-95 transition-all"
         >
           Manage Employees
         </button>
@@ -269,20 +269,20 @@ const EmployeesSection = memo(function EmployeesSection({
           {validEmployees.map((assignment) => (
             <div
               key={assignment.employee.id}
-              className="flex items-center gap-2 px-3 py-2 bg-stone-100 rounded-lg"
+              className="flex items-center gap-2 px-3 py-2 bg-[#F5F4F0] rounded-lg"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-navy-600 to-navy-800 rounded-full flex items-center justify-center text-gold-400 text-sm font-semibold">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-full flex items-center justify-center text-white text-sm font-semibold">
                 {assignment.employee.firstName[0]}
                 {assignment.employee.lastName[0]}
               </div>
-              <span className="text-sm font-medium text-navy-900">
+              <span className="text-sm font-medium text-[#1B1C1A]">
                 {assignment.employee.firstName} {assignment.employee.lastName}
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-stone-600">No employees assigned</p>
+        <p className="text-sm text-[#6B6A65]">No employees assigned</p>
       )}
     </div>
   );

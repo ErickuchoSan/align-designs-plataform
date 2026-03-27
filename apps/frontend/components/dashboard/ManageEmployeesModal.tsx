@@ -84,7 +84,7 @@ export default function ManageEmployeesModal({ isOpen, onClose, projectId, curre
                     <button
                         type="submit"
                         disabled={assignMutation.isPending || isLoading}
-                        className="flex justify-center px-4 py-2 text-sm font-medium text-white bg-navy-600 border border-transparent rounded-md hover:bg-navy-700 min-w-[100px]"
+                        className="flex justify-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-md hover:brightness-95 transition-all min-w-[100px]"
                     >
                         {assignMutation.isPending ? <ButtonLoader /> : 'Save'}
                     </button>

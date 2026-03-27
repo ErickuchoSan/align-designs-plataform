@@ -39,23 +39,23 @@ function ClientPaymentsView({
     <>
       {/* Initial Payment Progress Card */}
       {project?.initialAmountRequired && !isFullyCovered && (
-        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-navy-900 mb-4">Initial Payment Status</h2>
+        <div className="bg-white rounded-xl p-6 mb-6">
+          <h2 className="text-lg font-semibold text-[#1B1C1A] mb-4">Initial Payment Status</h2>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <div className="text-sm text-gray-600">Amount Paid</div>
+              <div className="text-sm text-[#6B6A65]">Amount Paid</div>
               <div className="text-2xl font-bold text-green-600">
                 ${Number(project?.amountPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">Amount Required</div>
-              <div className="text-2xl font-bold text-navy-900">
+              <div className="text-sm text-[#6B6A65]">Amount Required</div>
+              <div className="text-2xl font-bold text-[#1B1C1A]">
                 ${Number(project?.initialAmountRequired || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">Remaining</div>
+              <div className="text-sm text-[#6B6A65]">Remaining</div>
               <div className="text-2xl font-bold text-amber-600">
                 ${remainingAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
@@ -86,7 +86,7 @@ function ClientPaymentsView({
 
           <button
             onClick={() => setIsClientUploadModalOpen(true)}
-            className="w-full px-4 py-3 bg-navy-600 text-white rounded-lg hover:bg-navy-700 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
+            className="w-full px-4 py-3 bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white rounded-lg hover:brightness-95 transition-colors font-medium flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -97,14 +97,14 @@ function ClientPaymentsView({
       )}
 
       {/* Client Invoices Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden mb-6">
-        <div className="p-4 border-b border-stone-200 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-navy-900">Your Invoices</h3>
-          <div className="text-sm text-stone-500">{invoices.length} invoice(s)</div>
+      <div className="bg-white rounded-xl overflow-hidden mb-6">
+        <div className="p-4 border-b border-[#D0C5B2]/20 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-[#1B1C1A]">Your Invoices</h3>
+          <div className="text-sm text-[#6B6A65]">{invoices.length} invoice(s)</div>
         </div>
 
         {invoices.length === 0 ? (
-          <div className="p-8 text-center text-stone-500">No invoices found for this project.</div>
+          <div className="p-8 text-center text-[#6B6A65]">No invoices found for this project.</div>
         ) : (
           <>
             <InvoiceTable
@@ -128,9 +128,9 @@ function ClientPaymentsView({
       </div>
 
       {/* Client Payment History */}
-      <div className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
-        <div className="p-4 border-b border-stone-200">
-          <h3 className="text-lg font-semibold text-navy-900">Receipt History</h3>
+      <div className="bg-white rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-[#D0C5B2]/20">
+          <h3 className="text-lg font-semibold text-[#1B1C1A]">Receipt History</h3>
         </div>
         <PaymentHistoryTable payments={payments} isLoading={isLoading} isAdmin={false} />
       </div>

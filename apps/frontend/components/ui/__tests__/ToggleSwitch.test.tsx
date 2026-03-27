@@ -40,12 +40,12 @@ describe('ToggleSwitch', () => {
 
   it('applies active styles when isActive is true', () => {
     render(<ToggleSwitch {...defaultProps} isActive={true} />);
-    expect(screen.getByRole('switch')).toHaveClass('bg-emerald-600');
+    expect(screen.getByRole('switch')).toHaveClass('bg-[#C9A84C]');
   });
 
   it('applies inactive styles when isActive is false', () => {
     render(<ToggleSwitch {...defaultProps} isActive={false} />);
-    expect(screen.getByRole('switch')).toHaveClass('bg-stone-300');
+    expect(screen.getByRole('switch')).toHaveClass('bg-[#D0C5B2]');
   });
 
   it('is disabled when disabled prop is true', () => {

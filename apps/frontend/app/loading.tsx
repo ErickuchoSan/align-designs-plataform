@@ -7,13 +7,13 @@
  */
 export default function Loading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-stone-50 via-stone-100 to-stone-200">
+    <div className="flex min-h-screen items-center justify-center bg-[#F5F4F0]">
       <output className="text-center">
         <span
-          className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-navy-800 border-r-transparent"
+          className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#0F0F0D] border-r-transparent"
           aria-hidden="true"
         />
-        <p className="mt-4 text-sm text-stone-600" aria-live="polite">
+        <p className="mt-4 text-sm text-[#6B6A65]" aria-live="polite">
           Loading...
         </p>
       </output>

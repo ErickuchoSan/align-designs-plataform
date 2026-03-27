@@ -40,7 +40,7 @@ export default function SetPasswordStep({
         <p>Please set a password to activate your account.</p>
       </div>
       <div>
-        <label htmlFor="new-password" className="block text-sm font-medium text-navy-900 mb-2">
+        <label htmlFor="new-password" className="block text-sm font-medium text-[#1B1C1A] mb-2">
           New Password
         </label>
         <Controller
@@ -72,7 +72,7 @@ export default function SetPasswordStep({
       </div>
 
       <div>
-        <label htmlFor="confirm-password" className="block text-sm font-medium text-navy-900 mb-2">
+        <label htmlFor="confirm-password" className="block text-sm font-medium text-[#1B1C1A] mb-2">
           Confirm Password
         </label>
         <Controller

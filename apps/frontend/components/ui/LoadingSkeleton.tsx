@@ -5,14 +5,14 @@ interface SkeletonProps {
 }
 
 export const Skeleton = memo(function Skeleton({ className = '' }: Readonly<SkeletonProps>) {
-  return <div className={`animate-pulse bg-stone-200 rounded ${className}`} />;
+  return <div className={`animate-pulse bg-[#F5F4F0] rounded ${className}`} />;
 });
 
 export const TableSkeleton = memo(function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex gap-4 p-4 bg-stone-100 rounded-lg">
+      <div className="flex gap-4 p-4 bg-[#F5F4F0] rounded-lg">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-4 w-20" />
@@ -20,7 +20,7 @@ export const TableSkeleton = memo(function TableSkeleton({ rows = 5 }: { rows?: 
       </div>
       {/* Rows */}
       {Array.from({ length: rows }, (_, i) => `table-row-${i}`).map((key) => (
-        <div key={key} className="flex gap-4 p-4 bg-white border border-stone-200 rounded-lg">
+        <div key={key} className="flex gap-4 p-4 bg-white border border-[#D0C5B2]/20 rounded-lg">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-20" />
@@ -33,7 +33,7 @@ export const TableSkeleton = memo(function TableSkeleton({ rows = 5 }: { rows?: 
 
 export const CardSkeleton = memo(function CardSkeleton() {
   return (
-    <div className="bg-white border border-stone-200 rounded-xl p-6 space-y-4">
+    <div className="bg-white border border-[#D0C5B2]/20 rounded-xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-6 w-20" />
@@ -50,7 +50,7 @@ export const CardSkeleton = memo(function CardSkeleton() {
 
 export const ProjectCardSkeleton = memo(function ProjectCardSkeleton() {
   return (
-    <div className="bg-white border border-stone-200 rounded-xl p-6 space-y-4">
+    <div className="bg-white border border-[#D0C5B2]/20 rounded-xl p-6 space-y-4">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <Skeleton className="h-6 w-48" />
