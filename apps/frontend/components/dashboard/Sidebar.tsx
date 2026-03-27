@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,11 +61,6 @@ const MenuIcon = () => (
     <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
   </svg>
 );
-const CloseIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <GridIcon /> },
@@ -96,30 +90,26 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
   );
 }
 
-interface SidebarProps {
-  mobileOpen: boolean;
+interface SidebarContentProps {
+  visibleNavItems: NavItem[];
+  pathname: string;
   onMobileClose: () => void;
+  onLogout: () => void;
+  userInitials: string;
+  userFullName: string;
+  userRoleLabel: string;
 }
 
-export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout, isAdmin } = useAuth();
-
-  if (!user) return null;
-
-  const visibleNavItems = navItems.filter(item => {
-    if (!item.roles) return true;
-    return item.roles.includes(user.role);
-  });
-
-  const handleLogout = async () => {
-    onMobileClose();
-    await logout();
-    router.push('/login');
-  };
-
-  const SidebarContent = () => (
+function SidebarContent({
+  visibleNavItems,
+  pathname,
+  onMobileClose,
+  onLogout,
+  userInitials,
+  userFullName,
+  userRoleLabel,
+}: SidebarContentProps) {
+  return (
     <div className="flex flex-col h-full bg-[#0F0F0D]">
       {/* Logo */}
       <div className="px-5 py-6 flex items-center gap-2.5">
@@ -145,7 +135,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           onClick={onMobileClose}
         />
         <button
-          onClick={handleLogout}
+          onClick={onLogout}
           className="w-full relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#8A8A84] hover:text-red-400 hover:bg-white/5 transition-colors"
         >
           <span className="text-[#5A5A54]"><LogoutIcon /></span>
@@ -155,22 +145,56 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         {/* User info */}
         <div className="mt-3 px-3 py-2.5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#755B00] to-[#C9A84C] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
-            {user.firstName[0]}{user.lastName[0]}
+            {userInitials}
           </div>
           <div className="min-w-0">
-            <p className="text-[#C9C9C4] text-xs font-medium truncate">{user.firstName} {user.lastName}</p>
-            <p className="text-[#3A3A34] text-[10px] uppercase tracking-widest">{isAdmin ? 'Admin' : user.role.toLowerCase()}</p>
+            <p className="text-[#C9C9C4] text-xs font-medium truncate">{userFullName}</p>
+            <p className="text-[#3A3A34] text-[10px] uppercase tracking-widest">{userRoleLabel}</p>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+interface SidebarProps {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout, isAdmin } = useAuth();
+
+  if (!user) return null;
+
+  const visibleNavItems = navItems.filter(item => {
+    if (!item.roles) return true;
+    return item.roles.includes(user.role);
+  });
+
+  const handleLogout = async () => {
+    onMobileClose();
+    await logout();
+    router.push('/login');
+  };
+
+  const contentProps: SidebarContentProps = {
+    visibleNavItems,
+    pathname,
+    onMobileClose,
+    onLogout: handleLogout,
+    userInitials: `${user.firstName[0]}${user.lastName[0]}`,
+    userFullName: `${user.firstName} ${user.lastName}`,
+    userRoleLabel: isAdmin ? 'Admin' : user.role.toLowerCase(),
+  };
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-[240px] flex-shrink-0 h-screen sticky top-0">
-        <SidebarContent />
+        <SidebarContent {...contentProps} />
       </aside>
 
       {/* Mobile overlay */}
@@ -181,7 +205,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             onClick={onMobileClose}
           />
           <aside className="fixed left-0 top-0 bottom-0 w-[240px] z-50 lg:hidden flex flex-col shadow-2xl">
-            <SidebarContent />
+            <SidebarContent {...contentProps} />
           </aside>
         </>
       )}
