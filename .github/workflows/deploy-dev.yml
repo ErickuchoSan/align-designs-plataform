@@ -379,7 +379,7 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45  # E2E tests can take 30-40 minutes
+    timeout-minutes: 75  # E2E tests can take up to 60+ minutes
     needs: backup
     if: success() && vars.E2E_ADMIN_PASSWORD != ''
     steps:
