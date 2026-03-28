@@ -98,7 +98,7 @@ jobs:
   deploy:
     name: Deploy to Dev Server
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: [validate, sonarcloud]
     steps:
       - name: Deploy to Dev Server
@@ -108,6 +108,7 @@ jobs:
           username: root
           port: 29
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          command_timeout: 22m
           script: |
             cd /var/www/align-designs
             git pull origin main
@@ -115,9 +116,14 @@ jobs:
             # Create frontend .env.local (not tracked by git)
             echo 'NEXT_PUBLIC_API_URL=http://144.126.221.76/api' > apps/frontend/.env.local
 
-            # Stop old containers, force clean rebuild (no cache), start
+            # Stop old containers
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
-            docker compose -f docker-compose.dev.yml --env-file .env.dev build --no-cache
+
+            # Frontend: always no-cache (UI changes every deploy)
+            # Backend: use cache (deps rarely change, saves ~5min)
+            docker compose -f docker-compose.dev.yml --env-file .env.dev build --no-cache frontend-dev
+            docker compose -f docker-compose.dev.yml --env-file .env.dev build backend-dev
+
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
 
             # Run Prisma migrations inside backend container
