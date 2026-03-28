@@ -1,44 +1,28 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { PageLoader } from '@/components/ui/Loader';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useUsers } from '@/hooks/useUsers';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { Role } from '@/types';
-import { UsersTable, UsersCards, UserModals, UsersTabs } from '../users/components';
-
-type TabType = 'clients' | 'employees';
+import { UsersTable, UsersCards, UserModals } from '../users/components';
 
 export default function EmployeesPage() {
   const { isAuthenticated, isAdmin, loading } = useProtectedRoute({ requireAdmin: true });
   const usersHook = useUsers(isAuthenticated, isAdmin || false);
-  const [activeTab, setActiveTab] = useState<TabType>('employees');
-  const [userRole, setUserRole] = useState<Role.CLIENT | Role.EMPLOYEE>(Role.EMPLOYEE);
 
   const filteredUsers = useMemo(
-    () => usersHook.users.filter((usr) =>
-      activeTab === 'clients' ? usr.role === Role.CLIENT : usr.role === Role.EMPLOYEE
-    ),
-    [usersHook.users, activeTab]
-  );
-
-  const clientCount = useMemo(
-    () => usersHook.users.filter(u => u.role === Role.CLIENT).length,
-    [usersHook.users]
-  );
-
-  const employeeCount = useMemo(
-    () => usersHook.users.filter(u => u.role === Role.EMPLOYEE).length,
+    () => usersHook.users.filter((usr) => usr.role === Role.EMPLOYEE),
     [usersHook.users]
   );
 
   const usersListProps = useMemo(() => ({
     users: filteredUsers,
     isLoading: usersHook.isLoading,
-    activeTab,
-    togglingUserId: usersHook.togglingUserId,
-    deletingUserId: usersHook.deletingUserId,
+    activeTab: 'employees' as const,
+    togglingUserId: usersHook.togglingUserId ?? null,
+    deletingUserId: usersHook.deletingUserId ?? null,
     resendingUserId: usersHook.resendingUserId,
     currentPage: usersHook.currentPage,
     totalPages: usersHook.totalPages,
@@ -53,7 +37,6 @@ export default function EmployeesPage() {
   }), [
     filteredUsers,
     usersHook.isLoading,
-    activeTab,
     usersHook.togglingUserId,
     usersHook.deletingUserId,
     usersHook.resendingUserId,
@@ -74,9 +57,7 @@ export default function EmployeesPage() {
   }
 
   const handleOpenCreateModal = () => {
-    const role = activeTab === 'clients' ? Role.CLIENT : Role.EMPLOYEE;
-    setUserRole(role);
-    usersHook.setFormData({ ...usersHook.formData, role });
+    usersHook.setFormData({ ...usersHook.formData, role: Role.EMPLOYEE });
     usersHook.setShowCreateForm(true);
   };
 
@@ -93,21 +74,33 @@ export default function EmployeesPage() {
         <main id="main-content" className="flex-1 px-6 py-8">
           <div className="max-w-7xl mx-auto">
             {usersHook.error && (
-              <div className="mb-6 rounded-lg bg-red-50 border-l-4 border-red-500 p-4 shadow-md animate-slideDown" role="alert">
+              <div className="mb-6 rounded-lg bg-red-50 border-l-4 border-red-500 p-4 shadow-md" role="alert">
                 <p className="text-sm font-medium text-red-800">{usersHook.error}</p>
               </div>
             )}
 
-            <UsersTabs
-              activeTab={activeTab}
-              clientCount={clientCount}
-              employeeCount={employeeCount}
-              onTabChange={setActiveTab}
-              onCreateUser={handleOpenCreateModal}
-            />
+            <div className="mb-6 flex items-center justify-between border-b border-[#D0C5B2]/20 pb-4">
+              <p className="text-sm text-[#6B6A65]">
+                {filteredUsers.length} employee{filteredUsers.length !== 1 ? 's' : ''}
+              </p>
+              <button
+                onClick={handleOpenCreateModal}
+                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white text-sm font-semibold hover:brightness-95 transition-all"
+              >
+                + New Employee
+              </button>
+              <button
+                onClick={handleOpenCreateModal}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white hover:brightness-95 transition-all"
+                aria-label="New Employee"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
 
             <UsersTable {...usersListProps} />
-
             <UsersCards {...usersListProps} />
           </div>
         </main>
@@ -121,7 +114,7 @@ export default function EmployeesPage() {
         onFormDataChange={usersHook.setFormData}
         isCreating={usersHook.isCreating}
         createError={usersHook.error}
-        userRole={userRole}
+        userRole={Role.EMPLOYEE}
         showEditModal={usersHook.showEditModal}
         onCloseEdit={usersHook.closeEditModal}
         onEditSubmit={usersHook.handleUpdateUser}
