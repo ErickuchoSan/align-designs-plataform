@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OtpService } from '../../otp/otp.service';
 import { EmailService } from '../../email/email.service';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class OtpValidationService {
@@ -25,7 +25,7 @@ export class OtpValidationService {
       },
     });
 
-    if (!user || (user.role !== Role.CLIENT && user.role !== Role.EMPLOYEE)) {
+    if (!user) {
       // Return generic message to prevent user enumeration
       return {
         message:
@@ -76,7 +76,7 @@ export class OtpValidationService {
       },
     });
 
-    if (!user || (user.role !== Role.CLIENT && user.role !== Role.EMPLOYEE)) {
+    if (!user) {
       this.logger.warn(`Failed OTP verification attempt for email: ${email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
