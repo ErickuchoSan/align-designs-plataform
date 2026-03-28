@@ -128,9 +128,9 @@ jobs:
 
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
 
-            # Run Prisma migrations inside backend container
-            echo "Running database migrations..."
-            docker exec backend-dev npx prisma migrate deploy || echo "Migration failed or no pending migrations"
+            # Sync DB schema from schema.prisma (migration files are gitignored)
+            echo "Syncing database schema..."
+            docker exec backend-dev npx prisma db push --accept-data-loss || echo "Schema sync failed (non-blocking)"
 
             # Ensure backend is running (sometimes doesn't start after build)
             sleep 5
