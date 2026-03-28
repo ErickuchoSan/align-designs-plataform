@@ -17,6 +17,8 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
+      args:
+        CACHE_BUST: "${CACHE_BUST:-default}"
     container_name: backend-dev
     ports:
       - "3001:3001"

@@ -120,9 +120,11 @@ jobs:
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
 
             # Frontend: always no-cache (UI changes every deploy)
-            # Backend: use cache (deps rarely change, saves ~5min)
+            # Backend: CACHE_BUST=commit hash ensures source is always fresh
+            #          while node_modules layer stays cached (saves ~5min)
+            COMMIT_HASH=$(git rev-parse --short HEAD)
             docker compose -f docker-compose.dev.yml --env-file .env.dev build --no-cache frontend-dev
-            docker compose -f docker-compose.dev.yml --env-file .env.dev build backend-dev
+            CACHE_BUST=$COMMIT_HASH docker compose -f docker-compose.dev.yml --env-file .env.dev build backend-dev
 
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
 

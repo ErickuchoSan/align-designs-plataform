@@ -14,7 +14,9 @@ COPY apps/backend/prisma ./apps/backend/prisma/
 # Install ALL dependencies (including dev)
 RUN pnpm install --filter backend
 
-# Copy backend source
+# Copy backend source — ARG busts cache so code changes are always picked up
+ARG CACHE_BUST=1
+RUN echo "Backend source cache bust: $CACHE_BUST"
 COPY apps/backend ./apps/backend
 
 WORKDIR /app/apps/backend
