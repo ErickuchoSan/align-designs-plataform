@@ -12,7 +12,7 @@ concurrency:
 
 # Minimum required permissions (security best practice)
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 env:
@@ -273,9 +273,9 @@ jobs:
             cd /var/www/align-designs
             echo "::warning::Health check failed after deploy. Rolling back..."
 
-            PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
-            echo "Rolling back to commit: $PREVIOUS_COMMIT"
-            git checkout $PREVIOUS_COMMIT
+            # Revert last commit but stay on main branch (no detached HEAD)
+            git revert HEAD --no-edit
+            git push origin main
 
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
