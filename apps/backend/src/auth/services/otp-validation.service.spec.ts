@@ -140,14 +140,16 @@ describe('OtpValidationService', () => {
       expect(otpService.createOtp).not.toHaveBeenCalled();
     });
 
-    it('should return generic message for admin user (prevents enumeration)', async () => {
+    it('should send OTP email to admin user', async () => {
       prismaService.user.findFirst.mockResolvedValue(mockAdminUser);
+      otpService.createOtp.mockResolvedValue('12345678');
+      emailService.sendOtpEmail.mockResolvedValue(undefined);
 
       const result = await service.requestOtpForLogin('admin@test.com');
 
-      expect(result.message).toContain('If the email exists');
+      expect(result.message).toBe('OTP sent to email');
       expect(result.requiresPasswordSetup).toBe(false);
-      expect(otpService.createOtp).not.toHaveBeenCalled();
+      expect(otpService.createOtp).toHaveBeenCalledWith('admin-123');
     });
   });
 
@@ -185,12 +187,14 @@ describe('OtpValidationService', () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw UnauthorizedException for admin user', async () => {
+    it('should return admin user on valid OTP', async () => {
       prismaService.user.findFirst.mockResolvedValue(mockAdminUser);
+      otpService.verifyOtp.mockResolvedValue(true);
 
-      await expect(
-        service.verifyOtpForLogin('admin@test.com', '12345678'),
-      ).rejects.toThrow(UnauthorizedException);
+      const result = await service.verifyOtpForLogin('admin@test.com', '12345678');
+
+      expect(result).toEqual(mockAdminUser);
+      expect(otpService.verifyOtp).toHaveBeenCalledWith('admin-123', '12345678');
     });
 
     it('should throw UnauthorizedException for invalid OTP', async () => {
