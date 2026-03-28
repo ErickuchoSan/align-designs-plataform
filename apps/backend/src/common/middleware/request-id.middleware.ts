@@ -5,9 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 import type { AppClsStore } from '../types/cls.types';
 
 // Extend Express Request type to include requestId
-declare module 'express-serve-static-core' {
-  interface Request {
-    requestId?: string;
+declare global {
+  namespace Express {
+    interface Request {
+      requestId?: string;
+    }
   }
 }
 
