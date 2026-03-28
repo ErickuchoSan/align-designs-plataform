@@ -14,10 +14,6 @@ COPY apps/backend/prisma ./apps/backend/prisma/
 # Install ALL dependencies (including dev)
 RUN pnpm install --filter backend
 
-# Cache bust — invalidates source + build layers on every deploy
-ARG CACHE_BUST=1
-RUN echo "Build $CACHE_BUST"
-
 # Copy backend source
 COPY apps/backend ./apps/backend
 

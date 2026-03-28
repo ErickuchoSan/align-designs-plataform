@@ -17,10 +17,6 @@ COPY apps/frontend/package.json ./apps/frontend/
 # Install dependencies
 RUN pnpm install --frozen-lockfile --filter frontend
 
-# Cache bust — invalidates source + build layers on every deploy
-ARG CACHE_BUST=1
-RUN echo "Build $CACHE_BUST"
-
 # Copy frontend source
 COPY apps/frontend ./apps/frontend
 
