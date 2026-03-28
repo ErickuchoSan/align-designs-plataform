@@ -195,41 +195,72 @@ jobs:
   health-check:
     name: Health Check
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     needs: deploy
     steps:
       - name: Wait for containers to start
-        run: sleep 45
+        run: sleep 30
 
-      - name: Check Backend Health
-        id: backend_health
+      - name: Verify containers are running on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 144.126.221.76
+          username: root
+          port: 29
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/align-designs
+            echo "=== Checking container status ==="
+            docker ps --format "table {{.Names}}\t{{.Status}}"
+
+            # Try to start any stopped containers before failing
+            for container in frontend-dev backend-dev postgres-dev; do
+              if [ "$(docker inspect -f '{{.State.Running}}' $container 2>/dev/null)" != "true" ]; then
+                echo "WARNING: $container is not running. Attempting to start..."
+                docker compose -f docker-compose.dev.yml --env-file .env.dev up -d $container
+                sleep 10
+              fi
+            done
+
+            # Final check — fail if any container is still down
+            for container in frontend-dev backend-dev postgres-dev; do
+              if [ "$(docker inspect -f '{{.State.Running}}' $container 2>/dev/null)" != "true" ]; then
+                echo "::error::Container $container failed to start!"
+                exit 1
+              fi
+              echo "$container is running ✓"
+            done
+
+      - name: Check Backend HTTP Health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76/api/v1/health)
-          if [ "$response" != "200" ]; then
-            echo "::error::Backend health check failed! Status: $response"
-            echo "backend_failed=true" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-          echo "Backend health check passed! Status: $response"
+          for i in {1..6}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76/api/v1/health)
+            if [ "$response" = "200" ]; then
+              echo "Backend health check passed! Status: $response"
+              exit 0
+            fi
+            echo "Attempt $i/6 — status $response, retrying in 10s..."
+            sleep 10
+          done
+          echo "::error::Backend health check failed after 6 attempts"
+          exit 1
 
-      - name: Check Frontend Health
-        id: frontend_health
+      - name: Check Frontend HTTP Health
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76)
           if [ "$response" != "200" ]; then
             echo "::error::Frontend health check failed! Status: $response"
-            echo "frontend_failed=true" >> $GITHUB_OUTPUT
             exit 1
           fi
           echo "Frontend health check passed! Status: $response"
 
-  # Job 5b: Rollback on Health Check Failure
+  # Job 5b: Rollback — only if deploy ran but health check failed
   rollback:
     name: Rollback on Failure
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: health-check
-    if: failure()
+    needs: [deploy, health-check]
+    if: needs.deploy.result == 'success' && needs.health-check.result == 'failure'
     steps:
       - name: Rollback to Previous Version
         uses: appleboy/ssh-action@v1.0.3
@@ -240,23 +271,16 @@ jobs:
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
           script: |
             cd /var/www/align-designs
-            echo "::warning::Health check failed! Rolling back..."
+            echo "::warning::Health check failed after deploy. Rolling back..."
 
-            # Get the previous commit
             PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
             echo "Rolling back to commit: $PREVIOUS_COMMIT"
-
-            # Rollback to previous commit
             git checkout $PREVIOUS_COMMIT
 
-            # Rebuild and restart containers
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
-
-            # Wait for services
             sleep 30
 
-            # Verify rollback worked
             if curl -s http://localhost:3001/api/v1/health > /dev/null 2>&1; then
               echo "Rollback successful! Services are healthy."
             else
