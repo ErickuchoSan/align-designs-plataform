@@ -23,11 +23,12 @@ const GridIcon = () => (
     <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
   </svg>
 );
-const UsersIcon = () => (
+const EmployeesIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+    <rect x="2" y="7" width="20" height="14" rx="2" />
+    <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+    <line x1="12" y1="12" x2="12" y2="16" />
+    <line x1="10" y1="14" x2="14" y2="14" />
   </svg>
 );
 const ClientsIcon = () => (
@@ -65,10 +66,10 @@ const MenuIcon = () => (
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <GridIcon /> },
   { label: 'Projects', href: '/dashboard/projects', icon: <FolderIcon /> },
-  { label: 'Clients', href: '/dashboard/admin/clients', icon: <ClientsIcon />, roles: [Role.ADMIN] },
+  { label: 'Clients', href: '/dashboard/admin/users', icon: <ClientsIcon />, roles: [Role.ADMIN] },
+  { label: 'Employees', href: '/dashboard/admin/employees', icon: <EmployeesIcon />, roles: [Role.ADMIN] },
   { label: 'Invoices', href: '/dashboard/admin/invoices', icon: <InvoiceIcon />, roles: [Role.ADMIN] },
   { label: 'Invoices', href: '/dashboard/client/invoices', icon: <InvoiceIcon />, roles: [Role.CLIENT] },
-  { label: 'Users', href: '/dashboard/admin/users', icon: <UsersIcon />, roles: [Role.ADMIN] },
 ];
 
 function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
