@@ -98,7 +98,7 @@ jobs:
     if: ${{ success() && github.event.inputs.skip_backup != 'true' && github.event.inputs.rollback_to == '' }}
     steps:
       - name: Backup DB, Docker Images & SSH Config to Spaces
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 64.23.223.235
           username: root
@@ -201,7 +201,7 @@ jobs:
     if: ${{ github.event.inputs.rollback_to != '' }}
     steps:
       - name: Perform Rollback
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 64.23.223.235
           username: root
@@ -268,7 +268,7 @@ jobs:
           overwrite: true
 
       - name: Build and Deploy
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 64.23.223.235
           username: root
