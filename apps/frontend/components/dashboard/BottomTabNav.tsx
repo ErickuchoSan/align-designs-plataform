@@ -44,22 +44,31 @@ export default function BottomTabNav() {
 
   if (!user) return null;
 
-  const isAdmin = user.role === Role.ADMIN;
+  const adminTabs = [
+    { label: 'Home', href: '/dashboard', icon: <HomeIcon /> },
+    { label: 'Projects', href: '/dashboard/projects', icon: <FolderIcon /> },
+    { label: 'Clients', href: '/dashboard/admin/clients', icon: <ClientsIcon /> },
+    { label: 'Invoices', href: '/dashboard/admin/invoices', icon: <InvoiceIcon /> },
+    { label: 'Profile', href: '/dashboard/profile', icon: <ProfileIcon /> },
+  ];
+  const clientTabs = [
+    { label: 'Home', href: '/dashboard', icon: <HomeIcon /> },
+    { label: 'Projects', href: '/dashboard/projects', icon: <FolderIcon /> },
+    { label: 'Invoices', href: '/dashboard/client/invoices', icon: <InvoiceIcon /> },
+    { label: 'Profile', href: '/dashboard/profile', icon: <ProfileIcon /> },
+  ];
+  const employeeTabs = [
+    { label: 'Home', href: '/dashboard', icon: <HomeIcon /> },
+    { label: 'Projects', href: '/dashboard/projects', icon: <FolderIcon /> },
+    { label: 'Profile', href: '/dashboard/profile', icon: <ProfileIcon /> },
+  ];
 
-  const tabs = isAdmin
-    ? [
-        { label: 'Home', href: '/dashboard', icon: <HomeIcon /> },
-        { label: 'Projects', href: '/dashboard/projects', icon: <FolderIcon /> },
-        { label: 'Clients', href: '/dashboard/admin/clients', icon: <ClientsIcon /> },
-        { label: 'Invoices', href: '/dashboard/admin/invoices', icon: <InvoiceIcon /> },
-        { label: 'Profile', href: '/dashboard/profile', icon: <ProfileIcon /> },
-      ]
-    : [
-        { label: 'Home', href: '/dashboard', icon: <HomeIcon /> },
-        { label: 'Projects', href: '/dashboard/projects', icon: <FolderIcon /> },
-        { label: 'Invoices', href: '/dashboard/client/invoices', icon: <InvoiceIcon /> },
-        { label: 'Profile', href: '/dashboard/profile', icon: <ProfileIcon /> },
-      ];
+  const tabs =
+    user.role === Role.ADMIN
+      ? adminTabs
+      : user.role === Role.EMPLOYEE
+        ? employeeTabs
+        : clientTabs;
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#D0C5B2]/15 z-30 safe-area-pb">
