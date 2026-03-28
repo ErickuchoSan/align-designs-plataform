@@ -122,77 +122,141 @@ export default function LoginPage() {
 
   const { heading, subheading } = stepTitles[step];
 
+  const formPanel = (
+    <div className="w-full max-w-sm mx-auto">
+      {/* Heading */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-[#1B1C1A]">{heading}</h1>
+        <p className="text-sm text-[#6B6A65] mt-1">{subheading}</p>
+      </div>
+
+      {/* Steps */}
+      {step === 'email' && (
+        <EmailStep email={email} onSubmit={handleEmailSubmit} loading={isLoading} />
+      )}
+      {step === 'password' && (
+        <PasswordStep
+          email={email}
+          onSubmit={handlePasswordLogin}
+          onForgotPassword={() => setShowForgotPassword(true)}
+          onLoginWithOTP={async () => {
+            setIsLoading(true);
+            try {
+              await requestOTP({ email });
+              toast.success('Verification code sent to your email');
+              setStep('otp');
+            } catch (error) {
+              toast.error(handleApiError(error, 'Error requesting OTP'));
+            } finally {
+              setIsLoading(false);
+            }
+          }}
+          loading={isLoading}
+          onBack={resetToEmail}
+        />
+      )}
+      {step === 'otp' && (
+        <OTPStep
+          email={email}
+          onSubmit={handleVerifyOTP}
+          onResend={handleResendOTP}
+          loading={isLoading}
+          onBack={resetToEmail}
+          requiresPasswordSetup={requiresPasswordSetup}
+        />
+      )}
+      {step === 'set-password' && (
+        <SetPasswordStep onSubmit={handleSetPassword} loading={isLoading} />
+      )}
+
+      {/* Footer */}
+      <p className="mt-10 text-center text-[10px] font-semibold tracking-[0.2em] uppercase text-[#A09B90]">
+        Trouble logging in?{' '}
+        <span className="text-[#6B6A65] cursor-pointer hover:underline">Contact support</span>
+      </p>
+    </div>
+  );
+
   return (
     <>
-      {/* Full dark background */}
-      <div className="min-h-screen bg-[#0F0F0D] flex flex-col">
+      {/* ── MOBILE layout ─────────────────────────────────────────── */}
+      <div className="lg:hidden min-h-screen flex flex-col bg-[#0F0F0D]">
 
-        {/* Brand header — always visible */}
-        <div className="flex-shrink-0 px-8 pt-12 pb-8 text-center lg:text-left lg:px-16 lg:pt-16">
-          <p className="text-[#C9A84C] font-black text-2xl lg:text-3xl tracking-[0.15em] uppercase">
-            Align Designs
-          </p>
-          <p className="text-white/30 text-xs tracking-[0.25em] uppercase mt-1">
-            Architectural Excellence
-          </p>
-        </div>
+        {/* Dark top brand area */}
+        <div className="relative flex-shrink-0 px-8 pt-12 pb-10 flex items-start gap-4">
+          {/* Vertical brand text on left edge */}
+          <div
+            className="flex-shrink-0 flex flex-col items-center gap-0.5"
+            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+          >
+            <span className="text-white/20 text-[9px] font-semibold tracking-[0.3em] uppercase leading-none">
+              Align Designs
+            </span>
+          </div>
 
-        {/* Card — white, rounded-t-3xl on mobile, centered on desktop */}
-        <div className="flex-1 lg:flex lg:items-center lg:justify-center lg:px-8 lg:pb-16">
-          <div className="bg-white rounded-t-3xl lg:rounded-2xl w-full lg:max-w-md px-8 pt-10 pb-12 lg:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.4)]">
-
-            {/* Step heading */}
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold tracking-tight text-[#1B1C1A]">
-                {heading}
-              </h1>
-              <p className="text-sm text-[#6B6A65] mt-1">{subheading}</p>
-            </div>
-
-            {/* Steps */}
-            {step === 'email' && (
-              <EmailStep email={email} onSubmit={handleEmailSubmit} loading={isLoading} />
-            )}
-            {step === 'password' && (
-              <PasswordStep
-                email={email}
-                onSubmit={handlePasswordLogin}
-                onForgotPassword={() => setShowForgotPassword(true)}
-                onLoginWithOTP={async () => {
-                  setIsLoading(true);
-                  try {
-                    await requestOTP({ email });
-                    toast.success('Verification code sent to your email');
-                    setStep('otp');
-                  } catch (error) {
-                    toast.error(handleApiError(error, 'Error requesting OTP'));
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-                loading={isLoading}
-                onBack={resetToEmail}
-              />
-            )}
-            {step === 'otp' && (
-              <OTPStep
-                email={email}
-                onSubmit={handleVerifyOTP}
-                onResend={handleResendOTP}
-                loading={isLoading}
-                onBack={resetToEmail}
-                requiresPasswordSetup={requiresPasswordSetup}
-              />
-            )}
-            {step === 'set-password' && (
-              <SetPasswordStep onSubmit={handleSetPassword} loading={isLoading} />
-            )}
-
-            {/* Footer */}
-            <p className="mt-10 text-center text-[10px] font-semibold tracking-[0.2em] uppercase text-[#A09B90]">
-              Partnering with <span className="text-[#6B6A65]">The Monolith Group</span>
+          {/* Right brand block */}
+          <div>
+            <p className="text-white/40 text-[10px] tracking-[0.3em] uppercase font-semibold">
+              Architecture Studio
             </p>
           </div>
+        </div>
+
+        {/* White card rising from bottom */}
+        <div className="flex-1 bg-white rounded-t-3xl px-8 pt-10 pb-12">
+          {/* Hero "ALIGN" gold text */}
+          <div className="mb-8 text-center">
+            <p className="text-[#C9A84C] font-black text-5xl tracking-[0.12em] uppercase leading-none">
+              Align
+            </p>
+            <div className="w-10 h-0.5 bg-[#C9A84C] mx-auto mt-2 rounded-full" />
+          </div>
+
+          {formPanel}
+        </div>
+      </div>
+
+      {/* ── DESKTOP layout: split-screen ──────────────────────────── */}
+      <div className="hidden lg:flex min-h-screen">
+
+        {/* Left dark column ~42% */}
+        <div className="w-[42%] bg-[#0F0F0D] flex flex-col relative overflow-hidden flex-shrink-0">
+          {/* Subtle diagonal texture */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)',
+              backgroundSize: '14px 14px',
+            }}
+          />
+
+          {/* Brand — top left */}
+          <div className="relative z-10 px-12 pt-12">
+            <p className="text-white font-bold text-sm tracking-[0.25em] uppercase">
+              Align Designs
+            </p>
+            <p className="text-white/25 text-[10px] tracking-[0.3em] uppercase mt-1">
+              Architectural Excellence
+            </p>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Quote — bottom */}
+          <div className="relative z-10 px-12 pb-14">
+            <blockquote className="text-white/50 text-xl font-light leading-relaxed">
+              &ldquo;Precision is the soul<br />of permanent beauty.&rdquo;
+            </blockquote>
+            <p className="text-white/20 text-[10px] tracking-[0.25em] uppercase mt-6 font-semibold">
+              Partnering with The Monolith Group
+            </p>
+          </div>
+        </div>
+
+        {/* Right form column ~58% */}
+        <div className="flex-1 bg-[#F5F4F0] flex items-center justify-center px-16 py-12">
+          {formPanel}
         </div>
       </div>
 
