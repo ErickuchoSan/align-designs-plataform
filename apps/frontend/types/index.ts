@@ -28,6 +28,9 @@ export {
   PROJECT_STATUS_COLORS,
   STAGE_LABELS,
   STAGE_COLORS,
+  SERVICE_TYPE_LABELS,
+  SERVICE_TYPE_COLORS,
+  SERVICE_TYPE_IMAGES,
 } from './enums';
 
 export interface User {

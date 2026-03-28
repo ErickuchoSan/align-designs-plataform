@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import Image from 'next/image';
 import { Project } from '@/types';
-import { ProjectStatus, ServiceType, SERVICE_TYPE_IMAGES, SERVICE_TYPE_LABELS, PROJECT_STATUS_LABELS } from '@/types/enums';
+import { ProjectStatus, ServiceType, SERVICE_TYPE_IMAGES, SERVICE_TYPE_LABELS, PROJECT_STATUS_LABELS, SERVICE_TYPE_COLORS } from '@/types/enums';
 import { formatDate } from '@/lib/utils/date.utils';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 
@@ -112,9 +112,16 @@ function ProjectCard({
 
       {/* Body */}
       <div className="p-5">
-        <h3 className="font-bold text-[17px] text-[#1B1C1A] truncate leading-snug">{project.name}</h3>
+        <div className="flex items-start justify-between gap-2 mb-0.5">
+          <h3 className="font-bold text-[17px] text-[#1B1C1A] truncate leading-snug flex-1">{project.name}</h3>
+          {project.serviceType && (
+            <span className={`flex-shrink-0 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${SERVICE_TYPE_COLORS[project.serviceType]}`}>
+              {SERVICE_TYPE_LABELS[project.serviceType]}
+            </span>
+          )}
+        </div>
         {project.client && (
-          <p className="text-sm text-[#6B6A65] mt-0.5 truncate">
+          <p className="text-sm text-[#6B6A65] mt-1 truncate">
             {project.client.firstName} {project.client.lastName}
           </p>
         )}

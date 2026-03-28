@@ -129,6 +129,16 @@ export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
   [ServiceType.OTHER]:          'Other',
 };
 
+export const SERVICE_TYPE_COLORS: Record<ServiceType, string> = {
+  [ServiceType.INTERIOR_3D]:    'bg-[#E8F4FD] text-[#1A5276]',
+  [ServiceType.EXTERIOR_3D]:    'bg-[#EAF7EA] text-[#1E6B3A]',
+  [ServiceType.VIRTUAL_TOUR]:   'bg-[#F4ECF7] text-[#6C3483]',
+  [ServiceType.FLOOR_PLAN]:     'bg-[#FEF9E7] text-[#7D6608]',
+  [ServiceType.MATERIAL_STUDY]: 'bg-[#FDF2E9] text-[#784212]',
+  [ServiceType.ANIMATION]:      'bg-[#EBF5FB] text-[#154360]',
+  [ServiceType.OTHER]:          'bg-[#F2F3F4] text-[#424949]',
+};
+
 export const SERVICE_TYPE_IMAGES: Record<ServiceType, string> = {
   [ServiceType.INTERIOR_3D]:    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80&fit=crop&auto=format',
   [ServiceType.EXTERIOR_3D]:    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&fit=crop&auto=format',

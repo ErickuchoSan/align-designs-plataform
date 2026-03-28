@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { INPUT_BASE, FORM_LABEL } from '@/lib/styles';
 import { ServiceType, SERVICE_TYPE_LABELS } from '@/types/enums';
 
+const SearchableSelectStatic = dynamic(() => import('@/components/ui/inputs/SearchableSelect'), { ssr: false });
+
 const EmployeeSelect = dynamic(() => import('@/components/projects/EmployeeSelect').then(mod => ({ default: mod.EmployeeSelect })), { ssr: false });
 const SearchableSelect = dynamic(() => import('@/components/ui/inputs/SearchableSelect'), { ssr: false });
 
@@ -64,20 +66,19 @@ function ProjectFormFields({
       </div>
 
       <div>
-        <label htmlFor={`${idPrefix}-service-type`} className={FORM_LABEL}>Service Type *</label>
-        <select
+        <SearchableSelectStatic
           id={`${idPrefix}-service-type`}
+          label="Service Type"
           required
           value={formData.serviceType || ''}
-          onChange={(e) => onFormChange({ ...formData, serviceType: e.target.value as ServiceType || undefined })}
-          className={`${INPUT_BASE} appearance-none cursor-pointer`}
+          onChange={(value) => onFormChange({ ...formData, serviceType: (value as ServiceType) || undefined })}
           disabled={isSubmitting}
-        >
-          <option value="">Select a service</option>
-          {Object.values(ServiceType).map((type) => (
-            <option key={type} value={type}>{SERVICE_TYPE_LABELS[type]}</option>
-          ))}
-        </select>
+          options={Object.values(ServiceType).map((type) => ({
+            id: type,
+            name: SERVICE_TYPE_LABELS[type],
+          }))}
+          placeholder="Select a service..."
+        />
       </div>
 
       <div>
