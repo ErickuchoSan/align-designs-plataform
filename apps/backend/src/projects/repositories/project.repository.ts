@@ -86,6 +86,7 @@ export class ProjectRepository implements IProjectRepository {
         description: data.description,
         clientId: data.clientId,
         createdBy: data.createdBy,
+        serviceType: data.serviceType,
         // Phase 1: Workflow fields
         initialAmountRequired: data.initialAmountRequired,
         deadlineDate: data.deadlineDate

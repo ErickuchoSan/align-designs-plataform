@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ProjectStatus } from '@prisma/client';
+import { ProjectStatus, ServiceType } from '@prisma/client';
 import {
   uuidSchema,
   uuidArraySchema,
@@ -34,6 +34,7 @@ export const CreateProjectSchema = z.object({
     .trim()
     .optional(),
   clientId: uuidSchema,
+  serviceType: z.nativeEnum(ServiceType).optional(),
   employeeIds: uuidArraySchema.optional(),
   initialAmountRequired: optionalMoneySchema,
   deadlineDate: optionalDateStringSchema,

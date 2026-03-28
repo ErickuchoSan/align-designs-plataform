@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import dynamic from 'next/dynamic';
 import { INPUT_BASE, FORM_LABEL } from '@/lib/styles';
+import { ServiceType, SERVICE_TYPE_LABELS } from '@/types/enums';
 
 const EmployeeSelect = dynamic(() => import('@/components/projects/EmployeeSelect').then(mod => ({ default: mod.EmployeeSelect })), { ssr: false });
 const SearchableSelect = dynamic(() => import('@/components/ui/inputs/SearchableSelect'), { ssr: false });
@@ -18,6 +19,7 @@ interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  serviceType?: ServiceType;
   employeeIds?: string[];
   initialAmountRequired?: number;
   deadlineDate?: string;
@@ -59,6 +61,23 @@ function ProjectFormFields({
           className={INPUT_BASE}
           placeholder="e.g., Logo Design"
         />
+      </div>
+
+      <div>
+        <label htmlFor={`${idPrefix}-service-type`} className={FORM_LABEL}>Service Type *</label>
+        <select
+          id={`${idPrefix}-service-type`}
+          required
+          value={formData.serviceType || ''}
+          onChange={(e) => onFormChange({ ...formData, serviceType: e.target.value as ServiceType || undefined })}
+          className={`${INPUT_BASE} appearance-none cursor-pointer`}
+          disabled={isSubmitting}
+        >
+          <option value="">Select a service</option>
+          {Object.values(ServiceType).map((type) => (
+            <option key={type} value={type}>{SERVICE_TYPE_LABELS[type]}</option>
+          ))}
+        </select>
       </div>
 
       <div>

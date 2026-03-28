@@ -1,7 +1,9 @@
 import React, { useCallback } from 'react';
+import Image from 'next/image';
 import { Project } from '@/types';
+import { ProjectStatus, ServiceType, SERVICE_TYPE_IMAGES, SERVICE_TYPE_LABELS, PROJECT_STATUS_LABELS } from '@/types/enums';
 import { formatDate } from '@/lib/utils/date.utils';
-import { ProjectStatusBadge } from '../projects/ProjectStatusBadge';
+import { formatCurrency } from '@/lib/utils/currency.utils';
 
 interface ProjectCardProps {
   project: Project;
@@ -10,6 +12,33 @@ interface ProjectCardProps {
   onDelete: (project: Project) => void;
   onClick?: (project: Project) => void;
 }
+
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80&fit=crop&auto=format';
+
+const STATUS_BADGE: Record<ProjectStatus, string> = {
+  [ProjectStatus.ACTIVE]:          'bg-[#C9A84C] text-[#503D00]',
+  [ProjectStatus.WAITING_PAYMENT]: 'bg-[#FFF3CD] text-[#856404]',
+  [ProjectStatus.PAUSED]:          'bg-[#FFDAD6]/60 text-[#BA1A1A]',
+  [ProjectStatus.COMPLETED]:       'bg-[#D1E7DD] text-[#2D6A4F]',
+  [ProjectStatus.ARCHIVED]:        'bg-[#E5E2DE] text-[#656461]',
+};
+
+// Progress % based on status (visual approximation)
+const STATUS_PROGRESS: Record<ProjectStatus, number> = {
+  [ProjectStatus.WAITING_PAYMENT]: 0,
+  [ProjectStatus.ACTIVE]:          65,
+  [ProjectStatus.PAUSED]:          40,
+  [ProjectStatus.COMPLETED]:       100,
+  [ProjectStatus.ARCHIVED]:        100,
+};
+
+const PROGRESS_COLOR: Record<ProjectStatus, string> = {
+  [ProjectStatus.ACTIVE]:          'bg-[#C9A84C]',
+  [ProjectStatus.WAITING_PAYMENT]: 'bg-[#C9A84C]',
+  [ProjectStatus.PAUSED]:          'bg-[#e08c70]',
+  [ProjectStatus.COMPLETED]:       'bg-[#2D6A4F]',
+  [ProjectStatus.ARCHIVED]:        'bg-[#6B6A65]',
+};
 
 function ProjectCard({
   project,
@@ -32,34 +61,48 @@ function ProjectCard({
     onDelete(project);
   }, [onDelete, project]);
 
-  const cardContent = (
-    <div className="p-6">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-[#1B1C1A] truncate">{project.name}</h3>
-          {project.status && (
-            <div className="mt-2">
-              <ProjectStatusBadge status={project.status} />
-            </div>
-          )}
+  const imageUrl = project.serviceType ? SERVICE_TYPE_IMAGES[project.serviceType] : DEFAULT_IMAGE;
+  const progress = STATUS_PROGRESS[project.status] ?? 0;
+  const progressColor = PROGRESS_COLOR[project.status] ?? 'bg-[#C9A84C]';
+  const statusBadge = STATUS_BADGE[project.status] ?? 'bg-[#E5E2DE] text-[#656461]';
+  const statusLabel = PROJECT_STATUS_LABELS[project.status] ?? project.status;
+
+  const card = (
+    <article className="bg-white rounded-xl overflow-hidden group hover:shadow-md transition-shadow border border-[#E2E1DC]/40">
+      {/* Image */}
+      <div className="h-40 relative overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={project.serviceType ? SERVICE_TYPE_LABELS[project.serviceType] : 'Project'}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          unoptimized
+        />
+        {/* Status badge top-right */}
+        <div className="absolute top-3 right-3">
+          <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${statusBadge}`}>
+            {statusLabel}
+          </span>
         </div>
+        {/* Admin actions top-left (on hover) */}
         {isAdmin && (
-          <div className="flex gap-1 ml-3 flex-shrink-0">
+          <div className="absolute top-3 left-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={handleEdit}
-              className="p-1.5 text-[#6B6A65] hover:text-[#1B1C1A] hover:bg-[#F5F4F0] rounded-lg transition-colors"
-              aria-label={`Edit project ${project.name}`}
+              className="p-1.5 bg-white/90 backdrop-blur-sm text-[#1B1C1A] rounded-lg hover:bg-white transition-colors"
+              aria-label={`Edit ${project.name}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
             <button
               onClick={handleDelete}
-              className="p-1.5 text-[#6B6A65] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              aria-label={`Delete project ${project.name}`}
+              className="p-1.5 bg-white/90 backdrop-blur-sm text-[#BA1A1A] rounded-lg hover:bg-white transition-colors"
+              aria-label={`Delete ${project.name}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
@@ -67,75 +110,78 @@ function ProjectCard({
         )}
       </div>
 
-      {project.description && (
-        <p className="mt-2 text-sm text-[#6B6A65] line-clamp-2">{project.description}</p>
-      )}
+      {/* Body */}
+      <div className="p-5">
+        <h3 className="font-bold text-[17px] text-[#1B1C1A] truncate leading-snug">{project.name}</h3>
+        {project.client && (
+          <p className="text-sm text-[#6B6A65] mt-0.5 truncate">
+            {project.client.firstName} {project.client.lastName}
+          </p>
+        )}
 
-      {project.client && (
-        <div className="mt-4 flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-gradient-to-br from-[#755B00] to-[#C9A84C] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
-            {project.client.firstName[0]}{project.client.lastName[0]}
+        {/* Budget + Deadline */}
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          {project.initialAmountRequired != null && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6B6A65] mb-1">Budget</p>
+              <p className="font-bold text-[#1B1C1A] text-sm">{formatCurrency(project.initialAmountRequired)}</p>
+            </div>
+          )}
+          {project.deadlineDate && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6B6A65] mb-1">Deadline</p>
+              <p className="font-bold text-[#1B1C1A] text-sm">{formatDate(project.deadlineDate)}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[11px] font-semibold text-[#6B6A65]">Progress</span>
+            <span className="text-[11px] font-bold text-[#1B1C1A]">{progress}%</span>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-[#1B1C1A] truncate">
-              {project.client.firstName} {project.client.lastName}
-            </p>
-            <p className="text-xs text-[#6B6A65] truncate">{project.client.email}</p>
+          <div className="w-full bg-[#F5F4F0] h-1.5 rounded-full overflow-hidden">
+            <div className={`${progressColor} h-full rounded-full transition-all`} style={{ width: `${progress}%` }} />
           </div>
         </div>
-      )}
 
-      {project._count && (
-        <div className="mt-4 pt-3 border-t border-[#D0C5B2]/20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-xs text-[#6B6A65]">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              {project._count.files} file{project._count.files === 1 ? '' : 's'}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xs text-[#6B6A65]">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              {project._count.comments} comment{project._count.comments === 1 ? '' : 's'}
-            </span>
-          </div>
-          <p className="text-xs text-[#6B6A65]">{formatDate(project.createdAt)}</p>
-        </div>
-      )}
-    </div>
+        {/* View Details */}
+        {onClick && (
+          <button
+            type="button"
+            className="mt-4 w-full py-2 border border-[#E2E1DC] text-[#1B1C1A] text-sm font-semibold rounded-lg hover:bg-[#F5F4F0] transition-colors"
+          >
+            View Details
+          </button>
+        )}
+      </div>
+    </article>
   );
 
   if (onClick) {
     return (
-      <article className="bg-white rounded-xl hover:bg-[#F5F4F0] transition-colors cursor-pointer shadow-none hover:shadow-sm">
-        <button
-          type="button"
-          onClick={handleCardClick}
-          className="w-full text-left focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 rounded-xl"
-          aria-label={`View project ${project.name}`}
-        >
-          {cardContent}
-        </button>
-      </article>
+      <button
+        type="button"
+        onClick={handleCardClick}
+        className="w-full text-left focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:ring-offset-2 rounded-xl"
+        aria-label={`View project ${project.name}`}
+      >
+        {card}
+      </button>
     );
   }
 
-  return (
-    <article className="bg-white rounded-xl transition-colors">
-      {cardContent}
-    </article>
-  );
+  return card;
 }
 
 export default React.memo(ProjectCard, (prevProps, nextProps) => {
   return (
     prevProps.project.id === nextProps.project.id &&
     prevProps.project.name === nextProps.project.name &&
-    prevProps.project.description === nextProps.project.description &&
+    prevProps.project.status === nextProps.project.status &&
+    prevProps.project.serviceType === nextProps.project.serviceType &&
     prevProps.project._count?.files === nextProps.project._count?.files &&
-    prevProps.project._count?.comments === nextProps.project._count?.comments &&
     prevProps.isAdmin === nextProps.isAdmin
   );
 });

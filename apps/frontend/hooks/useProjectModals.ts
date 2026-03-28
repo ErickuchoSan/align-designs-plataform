@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
 import { Project } from '@/types';
+import { ServiceType } from '@/types/enums';
 
 interface ProjectFormData {
   name: string;
   description: string;
   clientId: string;
+  serviceType?: ServiceType;
   // Phase 1: Workflow fields
   employeeIds?: string[];
   initialAmountRequired?: number;
@@ -76,6 +78,7 @@ export function useProjectModals() {
       name: project.name,
       description: project.description || '',
       clientId: project.client?.id || '',
+      serviceType: project.serviceType,
       employeeIds: project.employees?.map(e => e.employee?.id).filter(Boolean) as string[] || [],
       initialAmountRequired: project.initialAmountRequired ? Number(project.initialAmountRequired) : undefined,
       deadlineDate: project.deadlineDate || undefined,

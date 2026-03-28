@@ -72,7 +72,7 @@ export default function ProjectsList({
 
       {/* Loading skeleton */}
       {projectsHook.loading && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <ProjectCardSkeleton key={i} />
           ))}
@@ -97,7 +97,7 @@ export default function ProjectsList({
       {/* Projects grid */}
       {!projectsHook.loading && projectsHook.projects.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {projectsHook.projects.map((project) => (
               <ProjectCard
                 key={project.id}

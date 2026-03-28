@@ -29,6 +29,16 @@ enum ProjectStatus {
   ARCHIVED // Archivado
 }
 
+enum ServiceType {
+  INTERIOR_3D     // 3D Interior Rendering
+  EXTERIOR_3D     // 3D Exterior Rendering
+  VIRTUAL_TOUR    // Virtual Tours
+  FLOOR_PLAN      // Floor Plans
+  MATERIAL_STUDY  // Material Studies
+  ANIMATION       // Animation
+  OTHER           // Other
+}
+
 enum Stage {
   BRIEF_PROJECT // Brief del Proyecto
   FEEDBACK_CLIENT // Feedback (Espacio del Cliente)
@@ -131,6 +141,9 @@ model Project {
   deletedBy   String?   @map("deleted_by") @db.Uuid
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Service type
+  serviceType              ServiceType?  @map("service_type")
 
   // Phase 1: Workflow fields
   status                   ProjectStatus @default(WAITING_PAYMENT)

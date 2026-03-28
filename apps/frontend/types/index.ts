@@ -6,6 +6,7 @@
 import {
   Role,
   ProjectStatus,
+  ServiceType,
   Stage,
   FeedbackStatus,
   FeedbackAudience,
@@ -15,6 +16,7 @@ import {
 export {
   Role,
   ProjectStatus,
+  ServiceType,
   Stage,
   FeedbackStatus,
   FeedbackAudience,
@@ -50,6 +52,8 @@ export interface Project {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+
+  serviceType?: ServiceType;
 
   // Phase 1: Workflow fields
   status: ProjectStatus;

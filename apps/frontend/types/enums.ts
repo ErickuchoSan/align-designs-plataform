@@ -27,6 +27,16 @@ export enum ProjectStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export enum ServiceType {
+  INTERIOR_3D    = 'INTERIOR_3D',
+  EXTERIOR_3D    = 'EXTERIOR_3D',
+  VIRTUAL_TOUR   = 'VIRTUAL_TOUR',
+  FLOOR_PLAN     = 'FLOOR_PLAN',
+  MATERIAL_STUDY = 'MATERIAL_STUDY',
+  ANIMATION      = 'ANIMATION',
+  OTHER          = 'OTHER',
+}
+
 export enum Stage {
   BRIEF_PROJECT = 'BRIEF_PROJECT',
   FEEDBACK_CLIENT = 'FEEDBACK_CLIENT',
@@ -107,6 +117,26 @@ export const ROLE_LABELS: Record<Role, string> = {
   [Role.ADMIN]: 'Administrator',
   [Role.CLIENT]: 'Client',
   [Role.EMPLOYEE]: 'Employee',
+};
+
+export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
+  [ServiceType.INTERIOR_3D]:    '3D Interior Rendering',
+  [ServiceType.EXTERIOR_3D]:    '3D Exterior Rendering',
+  [ServiceType.VIRTUAL_TOUR]:   'Virtual Tours',
+  [ServiceType.FLOOR_PLAN]:     'Floor Plans',
+  [ServiceType.MATERIAL_STUDY]: 'Material Studies',
+  [ServiceType.ANIMATION]:      'Animation',
+  [ServiceType.OTHER]:          'Other',
+};
+
+export const SERVICE_TYPE_IMAGES: Record<ServiceType, string> = {
+  [ServiceType.INTERIOR_3D]:    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80&fit=crop&auto=format',
+  [ServiceType.EXTERIOR_3D]:    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&fit=crop&auto=format',
+  [ServiceType.VIRTUAL_TOUR]:   'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80&fit=crop&auto=format',
+  [ServiceType.FLOOR_PLAN]:     'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80&fit=crop&auto=format',
+  [ServiceType.MATERIAL_STUDY]: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80&fit=crop&auto=format',
+  [ServiceType.ANIMATION]:      'https://images.unsplash.com/photo-1626544827763-d516dce335e2?w=600&q=80&fit=crop&auto=format',
+  [ServiceType.OTHER]:          'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80&fit=crop&auto=format',
 };
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
