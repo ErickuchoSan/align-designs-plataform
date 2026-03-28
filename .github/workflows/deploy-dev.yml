@@ -116,8 +116,11 @@ jobs:
             echo 'NEXT_PUBLIC_API_URL=http://144.126.221.76/api' > apps/frontend/.env.local
 
             # Stop old containers, rebuild and start
+            # CACHE_BUST=commit hash ensures Docker never serves stale builds
+            COMMIT_HASH=$(git rev-parse HEAD)
             docker compose -f docker-compose.dev.yml --env-file .env.dev down
-            docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+            docker compose -f docker-compose.dev.yml --env-file .env.dev build --build-arg CACHE_BUST=$COMMIT_HASH
+            docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
 
             # Run Prisma migrations inside backend container
             echo "Running database migrations..."
