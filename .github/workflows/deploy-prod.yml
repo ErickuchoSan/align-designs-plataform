@@ -254,7 +254,7 @@ jobs:
     if: ${{ needs.verify-dev.result == 'success' && github.event.inputs.rollback_to == '' }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
