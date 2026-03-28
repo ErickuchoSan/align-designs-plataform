@@ -377,19 +377,15 @@ export default function LoginPage() {
     <>
       <main className="flex min-h-screen overflow-hidden">
 
-        {/* ── LEFT PANEL: architectural dark column ── */}
-        <section className="hidden lg:flex w-[45%] bg-[#0F0F0D] relative flex-col justify-between p-12 overflow-hidden flex-shrink-0">
-          {/* Atmospheric gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0F0F0D]/0 via-[#0F0F0D]/20 to-[#0F0F0D]/80 pointer-events-none" />
-          {/* Subtle grid texture */}
+        {/* ── LEFT PANEL: hero image dark column ── */}
+        <section className="hidden lg:flex w-[45%] relative flex-col justify-between p-12 overflow-hidden flex-shrink-0">
+          {/* Hero image */}
           <div
-            className="absolute inset-0 opacity-[0.035]"
-            style={{
-              backgroundImage:
-                'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
-              backgroundSize: '60px 60px',
-            }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/login-hero.jpg')" }}
           />
+          {/* Dark gradient overlay — keeps text legible */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/75 pointer-events-none" />
 
           {/* Logo — top */}
           <div className="relative z-10 flex items-center gap-2.5">
@@ -403,10 +399,10 @@ export default function LoginPage() {
           <div className="relative z-10 max-w-md">
             <div className="mb-8 h-1 w-12 bg-[#C9A84C] rounded-full" />
             <blockquote className="text-white text-2xl font-bold leading-snug italic">
-              &ldquo;Architecture is the learned game, correct and magnificent, of forms assembled in the light.&rdquo;
+              &ldquo;The details are not the details. They make the design.&rdquo;
             </blockquote>
             <p className="mt-5 text-[#E6C364] text-sm tracking-widest uppercase font-semibold">
-              Le Corbusier
+              Charles Eames
             </p>
           </div>
         </section>
