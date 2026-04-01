@@ -59,7 +59,7 @@ jobs:
         run: pnpm --filter frontend test:coverage
 
       - name: Upload Coverage Reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           files: apps/backend/coverage/lcov.info,apps/frontend/coverage/lcov.info
           fail_ci_if_error: false
