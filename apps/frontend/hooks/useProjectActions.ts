@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { handleApiError } from '@/lib/errors';
 import { ProjectsService } from '@/services/projects.service';
+import { toast } from '@/lib/toast';
 
 interface ProjectFormData {
   name: string;
@@ -37,6 +38,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
         return true;
       } catch (err) {
         const errorMsg = handleApiError(err, 'Failed to create project');
+        toast.error(errorMsg || 'Failed to create project');
         onError?.(errorMsg);
         return false;
       } finally {
@@ -56,6 +58,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
         return true;
       } catch (err) {
         const errorMsg = handleApiError(err, 'Failed to update project');
+        toast.error(errorMsg || 'Failed to update project');
         onError?.(errorMsg);
         return false;
       } finally {
@@ -75,6 +78,7 @@ export function useProjectActions({ onSuccess, onError, refetchProjects }: UsePr
         return true;
       } catch (err) {
         const errorMsg = handleApiError(err, 'Failed to delete project');
+        toast.error(errorMsg || 'Failed to delete project');
         onError?.(errorMsg);
         return false;
       } finally {

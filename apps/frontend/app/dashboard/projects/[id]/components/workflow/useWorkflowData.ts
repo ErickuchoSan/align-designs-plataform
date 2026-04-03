@@ -5,8 +5,9 @@ import { Project } from '@/types';
 import { Payment } from '@/types/payments';
 import { InvoicesService } from '@/services/invoices.service';
 import { PaymentsService } from '@/services/payments.service';
-import { ProjectsService } from '@/services/projects.service';
+import { ProjectsService, type ProjectCompletionStatus } from '@/services/projects.service';
 import { handleApiError, logError } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 
 interface InvoiceDeadline {
   date: Date;
@@ -22,17 +23,6 @@ interface PaymentProgress {
   pendingInvoiceCount: number;
 }
 
-interface CompletionChecklist {
-  isReadyToComplete: boolean;
-  checklist: {
-    allPaymentsApproved: boolean;
-    allFilesDelivered: boolean;
-    feedbackComplete: boolean;
-    noOutstandingInvoices: boolean;
-  };
-  blockers: string[];
-}
-
 interface UseWorkflowDataReturn {
   // Invoice data
   invoiceDeadlines: InvoiceDeadline[];
@@ -42,7 +32,7 @@ interface UseWorkflowDataReturn {
   payments: Payment[];
   pendingAmount: number;
   // Completion data
-  checklistData: CompletionChecklist | null;
+  checklistData: ProjectCompletionStatus | null;
   checklistLoading: boolean;
   // Actions
   fetchCompletionStatus: () => Promise<void>;
@@ -70,7 +60,7 @@ export function useWorkflowData(project: Project, onUpdate: () => void): UseWork
   const [pendingAmount, setPendingAmount] = useState(0);
 
   // Completion data
-  const [checklistData, setChecklistData] = useState<CompletionChecklist | null>(null);
+  const [checklistData, setChecklistData] = useState<ProjectCompletionStatus | null>(null);
   const [checklistLoading, setChecklistLoading] = useState(false);
 
   // State
@@ -88,8 +78,9 @@ export function useWorkflowData(project: Project, onUpdate: () => void): UseWork
         ]);
         setInvoiceDeadlines(deadlines);
         setPaymentProgress(progress);
-      } catch {
-        // Silent error - invoice data loading is non-critical
+      } catch (err) {
+        logError(err, 'Error loading invoice data');
+        toast.error(handleApiError(err, 'Failed to load invoice data'));
       } finally {
         setLoadingInvoices(false);
       }
@@ -108,8 +99,9 @@ export function useWorkflowData(project: Project, onUpdate: () => void): UseWork
           .filter((p: Payment) => p.status === 'PENDING_APPROVAL')
           .reduce((sum: number, p: Payment) => sum + Number(p.amount), 0);
         setPendingAmount(pending);
-      } catch {
-        // Silent error - pending payments check is non-critical
+      } catch (err) {
+        logError(err, 'Error loading pending payments');
+        toast.error(handleApiError(err, 'Failed to load payment data'));
       }
     };
     checkPending();

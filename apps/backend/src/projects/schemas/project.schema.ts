@@ -5,7 +5,7 @@ import {
   uuidArraySchema,
   moneySchema,
   optionalMoneySchema,
-  optionalDateStringSchema,
+  optionalDateOnlyStringSchema,
   optionalStringSchema,
 } from '../../common/schemas';
 import {
@@ -37,8 +37,8 @@ export const CreateProjectSchema = z.object({
   serviceType: z.nativeEnum(ServiceType).optional(),
   employeeIds: uuidArraySchema.optional(),
   initialAmountRequired: optionalMoneySchema,
-  deadlineDate: optionalDateStringSchema,
-  initialPaymentDeadline: optionalDateStringSchema,
+  deadlineDate: optionalDateOnlyStringSchema,
+  initialPaymentDeadline: optionalDateOnlyStringSchema,
 });
 
 export type CreateProjectDto = z.infer<typeof CreateProjectSchema>;

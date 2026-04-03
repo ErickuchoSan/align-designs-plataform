@@ -85,9 +85,9 @@ function ProjectCard({
             {statusLabel}
           </span>
         </div>
-        {/* Admin actions top-left (on hover) */}
+        {/* Admin actions top-left — always visible on mobile, hover on desktop */}
         {isAdmin && (
-          <div className="absolute top-3 left-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-3 left-3 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <button
               onClick={handleEdit}
               className="p-1.5 bg-white/90 backdrop-blur-sm text-[#1B1C1A] rounded-lg hover:bg-white transition-colors"

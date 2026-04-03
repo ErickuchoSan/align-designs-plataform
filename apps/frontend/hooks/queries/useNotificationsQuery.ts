@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { NotificationsService, Notification } from '@/services/notifications.service';
 import { queryKeys } from '@/lib/query-keys';
+import { toast } from '@/lib/toast';
 
 /**
  * Query hook for fetching notifications
@@ -44,6 +45,7 @@ export function useMarkNotificationReadMutation() {
       if (context?.previousNotifications) {
         queryClient.setQueryData(queryKeys.notifications.list(), context.previousNotifications);
       }
+      toast.error('Failed to mark notification as read');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
@@ -75,6 +77,7 @@ export function useMarkAllNotificationsReadMutation() {
       if (context?.previousNotifications) {
         queryClient.setQueryData(queryKeys.notifications.list(), context.previousNotifications);
       }
+      toast.error('Failed to mark notifications as read');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
