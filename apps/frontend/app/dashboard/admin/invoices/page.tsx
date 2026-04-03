@@ -58,7 +58,7 @@ export default function InvoicesListPage() {
     <div className="flex flex-col h-full">
       <DashboardHeader title="Invoices" />
 
-      <div className="flex-1 overflow-y-auto px-6 py-8">
+      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-8">
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* ── Stat cards ── */}

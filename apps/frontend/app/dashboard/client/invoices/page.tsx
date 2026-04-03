@@ -18,7 +18,7 @@ export default function ClientInvoicesPage() {
     if (isLoading) return <div>Loading invoices...</div>;
 
     return (
-        <div className="space-y-6">
+        <div className="px-4 py-6 md:px-6 md:py-8 space-y-6">
             <h1 className="text-2xl font-bold text-[#1B1C1A]">My Invoices</h1>
 
             {/* Desktop Table View */}
