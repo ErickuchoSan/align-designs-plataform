@@ -18,10 +18,6 @@ const RETRY_DELAY = 1000; // 1 second base delay
 let csrfToken: string | null = null;
 let csrfTokenPromise: Promise<void> | null = null; // Prevent concurrent fetches
 
-// Request deduplication - prevents duplicate simultaneous requests
-// Only for GET requests to avoid race conditions with mutations
-const pendingRequests = new Map<string, { promise: Promise<unknown>; timestamp: number }>();
-
 // Helper to generate cache key for requests
 function getRequestKey(config: InternalAxiosRequestConfig): string {
   const { method, url, params } = config;
@@ -409,11 +405,6 @@ async function executeRetry(error: AxiosError, config: ExtendedConfig): Promise<
 // Interceptor to handle authentication errors and retry logic
 api.interceptors.response.use(
   (response) => {
-    // Clean up pending request from deduplication map
-    if (response.config?.method?.toUpperCase() === 'GET') {
-      pendingRequests.delete(getRequestKey(response.config as InternalAxiosRequestConfig));
-    }
-
     // Update CSRF token if present and we don't have one yet
     const newCsrfToken = response.headers['x-csrf-token'];
     if (newCsrfToken && !csrfToken) {
@@ -443,10 +434,6 @@ api.interceptors.response.use(
       const retryResult = await executeRetry(error, config);
       if (retryResult) return retryResult;
 
-      // Clean up deduplication map on error
-      if (config.method?.toUpperCase() === 'GET') {
-        pendingRequests.delete(getRequestKey(config));
-      }
     }
 
     throw error;

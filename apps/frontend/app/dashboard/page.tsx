@@ -57,7 +57,7 @@ interface StatCardProps {
   loading?: boolean;
 }
 
-function StatCard({ label, value, icon, accent = '#C9A84C', loading }: StatCardProps) {
+function StatCard({ label, value, icon, accent = '#C9A84C', loading }: Readonly<StatCardProps>) {
   return (
     <div className="bg-white rounded-xl p-6 flex items-start gap-4">
       <div
@@ -79,7 +79,7 @@ function StatCard({ label, value, icon, accent = '#C9A84C', loading }: StatCardP
 }
 
 // ── Quick Action ──────────────────────────────────────────────────────────────
-function QuickAction({ href, icon, label, description }: { href: string; icon: React.ReactNode; label: string; description: string }) {
+function QuickAction({ href, icon, label, description }: Readonly<{ href: string; icon: React.ReactNode; label: string; description: string }>) {
   return (
     <Link
       href={href}
@@ -156,11 +156,11 @@ export default function DashboardPage() {
               Good {getGreeting()}, {user.firstName}
             </h2>
             <p className="text-sm text-[#6B6A65] mt-1">
-              {isAdmin
-                ? "Here's an overview of your studio."
-                : isEmployee
-                  ? "Here are your assigned projects."
-                  : "Here's the status of your projects."}
+              {(() => {
+                if (isAdmin) return "Here's an overview of your studio.";
+                if (isEmployee) return "Here are your assigned projects.";
+                return "Here's the status of your projects.";
+              })()}
             </p>
           </div>
 

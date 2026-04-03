@@ -24,7 +24,7 @@ export default function UsersPageLayout({
   buttonLabel,
   loaderText,
   countSuffix,
-}: UsersPageLayoutProps) {
+}: Readonly<UsersPageLayoutProps>) {
   const { isAuthenticated, isAdmin, loading } = useProtectedRoute({ requireAdmin: true });
   const usersHook = useUsers(isAuthenticated, isAdmin || false);
 
@@ -98,7 +98,7 @@ export default function UsersPageLayout({
 
             <div className="mb-6 flex items-center justify-between border-b border-[#D0C5B2]/20 pb-4">
               <p className="text-sm text-[#6B6A65]">
-                {filteredUsers.length} {countSuffix}{filteredUsers.length !== 1 ? 's' : ''}
+                {filteredUsers.length} {countSuffix}{filteredUsers.length === 1 ? '' : 's'}
               </p>
               <button
                 onClick={handleOpenCreateModal}

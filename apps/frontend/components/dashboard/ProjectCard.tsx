@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import Image from 'next/image';
 import { Project } from '@/types';
-import { ProjectStatus, ServiceType, SERVICE_TYPE_IMAGES, SERVICE_TYPE_LABELS, PROJECT_STATUS_LABELS, SERVICE_TYPE_COLORS } from '@/types/enums';
+import { ProjectStatus, SERVICE_TYPE_IMAGES, SERVICE_TYPE_LABELS, PROJECT_STATUS_LABELS, SERVICE_TYPE_COLORS } from '@/types/enums';
 import { formatDate } from '@/lib/utils/date.utils';
 import { formatCurrency } from '@/lib/utils/currency.utils';
 

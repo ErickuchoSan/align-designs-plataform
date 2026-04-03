@@ -46,12 +46,7 @@ const InvoiceIcon = () => (
     <polyline points="10 9 9 9 8 9" />
   </svg>
 );
-const ProfileIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
+const ProfileIcon = ClientsIcon;
 const LogoutIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
@@ -72,7 +67,7 @@ const navItems: NavItem[] = [
   { label: 'Invoices', href: '/dashboard/client/invoices', icon: <InvoiceIcon />, roles: [Role.CLIENT] },
 ];
 
-function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
+function NavLink({ item, pathname, onClick }: Readonly<{ item: NavItem; pathname: string; onClick?: () => void }>) {
   const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
   return (
@@ -109,7 +104,7 @@ function SidebarContent({
   userInitials,
   userFullName,
   userRoleLabel,
-}: SidebarContentProps) {
+}: Readonly<SidebarContentProps>) {
   return (
     <div className="flex flex-col h-full bg-[#0F0F0D]">
       {/* Logo */}
@@ -140,7 +135,7 @@ function SidebarContent({
           className="w-full relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#8A8A84] hover:text-red-400 hover:bg-white/5 transition-colors"
         >
           <span className="text-[#5A5A54]"><LogoutIcon /></span>
-          Log out
+          <span>Log out</span>
         </button>
 
         {/* User info */}
@@ -203,7 +198,11 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         <>
           <div
             className="fixed inset-0 bg-[#0F0F0D]/60 backdrop-blur-sm z-40 lg:hidden"
+            role="button"
+            tabIndex={0}
+            aria-label="Close menu"
             onClick={onMobileClose}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onMobileClose(); }}
           />
           <aside className="fixed left-0 top-0 bottom-0 w-[240px] z-50 lg:hidden flex flex-col shadow-2xl">
             <SidebarContent {...contentProps} />
@@ -214,7 +213,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   );
 }
 
-export function MobileMenuButton({ onClick }: { onClick: () => void }) {
+export function MobileMenuButton({ onClick }: Readonly<{ onClick: () => void }>) {
   return (
     <button
       onClick={onClick}

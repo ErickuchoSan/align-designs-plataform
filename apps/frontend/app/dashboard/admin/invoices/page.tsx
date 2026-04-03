@@ -20,7 +20,7 @@ const FILTER_TABS: { label: string; value: FilterTab }[] = [
   { label: 'Overdue', value: InvoiceStatus.OVERDUE },
 ];
 
-function ClientAvatar({ firstName, lastName }: { firstName?: string; lastName?: string }) {
+function ClientAvatar({ firstName, lastName }: Readonly<{ firstName?: string; lastName?: string }>) {
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || '?';
   return (
     <div className="w-7 h-7 rounded-full bg-[#C9A84C]/15 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#755B00]">
@@ -161,7 +161,7 @@ export default function InvoicesListPage() {
                   {!isLoading && filtered.length === 0 && (
                     <tr>
                       <td colSpan={8} className="px-6 py-12 text-center text-sm text-[#6B6A65]">
-                        No invoices{activeFilter !== 'all' ? ` with status "${activeFilter}"` : ''}.
+                        No invoices{activeFilter === 'all' ? '' : ` with status "${activeFilter}"`}.
                       </td>
                     </tr>
                   )}
@@ -225,7 +225,7 @@ export default function InvoicesListPage() {
             {!isLoading && filtered.length > 0 && (
               <div className="px-6 py-4 border-t border-[#D0C5B2]/15">
                 <p className="text-xs text-[#6B6A65]">
-                  Showing {filtered.length} of {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
+                  Showing {filtered.length} of {invoices.length} invoice{invoices.length === 1 ? '' : 's'}
                 </p>
               </div>
             )}
@@ -300,9 +300,9 @@ export default function InvoicesListPage() {
 }
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, icon, accent = '#C9A84C', loading }: {
+function StatCard({ label, value, sub, icon, accent = '#C9A84C', loading }: Readonly<{
   label: string; value: string; sub: string; icon: React.ReactNode; accent?: string; loading?: boolean;
-}) {
+}>) {
   return (
     <div className="bg-white rounded-xl p-5 flex items-start gap-3">
       <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${accent}15`, color: accent }}>

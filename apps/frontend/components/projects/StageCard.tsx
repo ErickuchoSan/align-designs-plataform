@@ -57,9 +57,7 @@ function StageCard({ stage, isActive, onClick }: Readonly<StageCardProps>) {
       </div>
 
       <h3
-        className={`font-semibold text-sm mb-1 ${
-          isActive ? 'text-[#1B1C1A]' : 'text-[#1B1C1A]'
-        }`}
+        className="font-semibold text-sm mb-1 text-[#1B1C1A]"
       >
         {stage.name}
       </h3>

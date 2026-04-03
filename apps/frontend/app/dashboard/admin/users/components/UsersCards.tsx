@@ -4,7 +4,6 @@ import { memo } from 'react';
 import Pagination from '@/components/ui/Pagination';
 import ToggleSwitch from '@/components/ui/ToggleSwitch';
 import { formatDate } from '@/lib/utils/date.utils';
-import { User } from '@/types';
 import {
   UsersListProps,
   ResendEmailButton,

@@ -311,7 +311,7 @@ export default function LoginPage() {
               autoFocus
               placeholder="00000000"
               value={otpValue}
-              onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => setOtpValue(e.target.value.replaceAll(/\D/g, ''))}
               className={`${INPUT} text-center text-3xl font-mono tracking-[0.5em]`}
             />
           </div>

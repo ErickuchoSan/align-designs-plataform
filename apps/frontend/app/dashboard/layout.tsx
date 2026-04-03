@@ -3,7 +3,7 @@
 import Sidebar from '@/components/dashboard/Sidebar';
 import BottomTabNav from '@/components/dashboard/BottomTabNav';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="flex h-screen bg-[#F5F4F0] overflow-hidden">
       {/* Desktop sidebar — hidden on mobile */}

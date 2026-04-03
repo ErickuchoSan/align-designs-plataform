@@ -88,17 +88,17 @@ export class FileVersionService {
     return parentFile; // Placeholder
   }
 
-  getVersionHistory(_fileId: string): Promise<File[]> {
-    // Traverse up to find root?
-    // Or traverse down?
-    // Linked list up: file.parent -> parent.parent -> ...
-    // If we want FULL history, we need to find root, then find all descendants.
-    // Recursive query or simplified assumption.
+  async getVersionHistory(fileId: string): Promise<File[]> {
+    const history: File[] = [];
+    let currentId: string | null = fileId;
 
-    // Simplified: Show history by following `parentFileId` backwards?
-    // Yes, if I am at v3, show v3 -> v2 -> v1.
+    while (currentId) {
+      const file = await this.prisma.file.findUnique({ where: { id: currentId } });
+      if (!file) break;
+      history.push(file);
+      currentId = file.parentFileId ?? null;
+    }
 
-    // TODO: Implement version history traversal
-    return Promise.resolve([]);
+    return history;
   }
 }

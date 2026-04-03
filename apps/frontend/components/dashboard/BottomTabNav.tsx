@@ -38,12 +38,7 @@ const EmployeesIcon = () => (
     <line x1="10" y1="14" x2="14" y2="14" />
   </svg>
 );
-const ProfileIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
+const ProfileIcon = ClientsIcon;
 
 export default function BottomTabNav() {
   const pathname = usePathname();
@@ -71,12 +66,9 @@ export default function BottomTabNav() {
     { label: 'Profile', href: '/dashboard/profile', icon: <ProfileIcon /> },
   ];
 
-  const tabs =
-    user.role === Role.ADMIN
-      ? adminTabs
-      : user.role === Role.EMPLOYEE
-        ? employeeTabs
-        : clientTabs;
+  let tabs = clientTabs;
+  if (user.role === Role.ADMIN) tabs = adminTabs;
+  else if (user.role === Role.EMPLOYEE) tabs = employeeTabs;
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#D0C5B2]/15 z-30 safe-area-pb">
