@@ -181,7 +181,9 @@ describe('NotificationsService', () => {
 
       const result = await service.findAllByUser(mockUserId);
 
-      expect(result).toEqual(notifications);
+      expect(result).toEqual(
+        notifications.map((n) => ({ ...n, isRead: n.read })),
+      );
       expect(prismaService.notification.findMany).toHaveBeenCalledWith({
         where: { userId: mockUserId },
         orderBy: { createdAt: 'desc' },
