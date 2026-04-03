@@ -158,7 +158,7 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
+export default function Sidebar({ mobileOpen, onMobileClose }: Readonly<SidebarProps>) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, isAdmin } = useAuth();
@@ -196,13 +196,11 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       {/* Mobile overlay */}
       {mobileOpen && (
         <>
-          <div
-            className="fixed inset-0 bg-[#0F0F0D]/60 backdrop-blur-sm z-40 lg:hidden"
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
+            className="fixed inset-0 bg-[#0F0F0D]/60 backdrop-blur-sm z-40 lg:hidden w-full h-full cursor-default"
             aria-label="Close menu"
             onClick={onMobileClose}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onMobileClose(); }}
           />
           <aside className="fixed left-0 top-0 bottom-0 w-[240px] z-50 lg:hidden flex flex-col shadow-2xl">
             <SidebarContent {...contentProps} />

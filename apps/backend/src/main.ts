@@ -21,8 +21,7 @@ declare global {
     toJSON(): string;
   }
 }
-// NOSONAR: Standard pattern for BigInt JSON serialization in Node.js — no alternative without modifying every JSON.stringify call
-Object.defineProperty(BigInt.prototype, 'toJSON', {
+Object.defineProperty(BigInt.prototype, 'toJSON', { // NOSONAR: Standard BigInt JSON serialization — no alternative without a replacer on every JSON.stringify call
   value: function (this: bigint): string { return this.toString(); },
   writable: true,
   configurable: true,
