@@ -236,7 +236,7 @@ jobs:
       - name: Check Backend HTTP Health
         run: |
           for i in {1..6}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76/api/v1/health)
+            response=$(curl -s -o /dev/null -w "%{http_code}" https://aligndesignsllc-dev.org/api/v1/health)
             if [ "$response" = "200" ]; then
               echo "Backend health check passed! Status: $response"
               exit 0
@@ -249,7 +249,7 @@ jobs:
 
       - name: Check Frontend HTTP Health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://144.126.221.76)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://aligndesignsllc-dev.org)
           if [ "$response" != "200" ]; then
             echo "::error::Frontend health check failed! Status: $response"
             exit 1
