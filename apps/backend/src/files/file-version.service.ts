@@ -93,7 +93,7 @@ export class FileVersionService {
     let currentId: string | null = fileId;
 
     while (currentId) {
-      const file = await this.prisma.file.findUnique({ where: { id: currentId } });
+      const file: File | null = await this.prisma.file.findUnique({ where: { id: currentId } });
       if (!file) break;
       history.push(file);
       currentId = file.parentFileId ?? null;
