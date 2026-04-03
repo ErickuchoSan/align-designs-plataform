@@ -61,11 +61,12 @@ export class NotificationsService {
    * Get all notifications for a user
    */
   async findAllByUser(userId: string) {
-    return this.prisma.notification.findMany({
+    const rows = await this.prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 50, // Limit to last 50
+      take: 50,
     });
+    return rows.map((n) => ({ ...n, isRead: n.read }));
   }
 
   /**

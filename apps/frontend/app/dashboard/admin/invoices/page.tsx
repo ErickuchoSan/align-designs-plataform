@@ -97,7 +97,7 @@ export default function InvoicesListPage() {
           </div>
 
           {/* ── Table card ── */}
-          <div className="bg-white rounded-xl overflow-hidden">
+          <div className="hidden md:block bg-white rounded-xl overflow-hidden">
             {/* Filter tabs + create button */}
             <div className="px-6 pt-5 pb-4 border-b border-[#D0C5B2]/15 flex items-center justify-between gap-4">
               <div className="flex items-center gap-1 bg-[#F5F4F0] p-1 rounded-lg self-start w-fit">
@@ -233,21 +233,32 @@ export default function InvoicesListPage() {
 
           {/* ── Mobile cards ── */}
           <div className="md:hidden space-y-3">
-            {/* Mobile filter pills */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {FILTER_TABS.map(tab => (
-                <button
-                  key={tab.value}
-                  onClick={() => setActiveFilter(tab.value)}
-                  className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-                    activeFilter === tab.value
-                      ? 'bg-[#C9A84C] text-[#241A00]'
-                      : 'bg-white text-[#6B6A65] border border-[#D0C5B2]/30'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* Mobile top row: filter pills + create button */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex gap-2 overflow-x-auto pb-1">
+                {FILTER_TABS.map(tab => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveFilter(tab.value)}
+                    className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+                      activeFilter === tab.value
+                        ? 'bg-[#C9A84C] text-[#241A00]'
+                        : 'bg-white text-[#6B6A65] border border-[#D0C5B2]/30'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <Link
+                href="/dashboard/admin/invoices/new"
+                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-[#755B00] to-[#C9A84C] text-white hover:brightness-95 transition-all"
+                aria-label="Create Invoice"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </Link>
             </div>
 
             {isLoading && <div className="bg-white rounded-xl p-8 text-center text-sm text-[#6B6A65]">Loading...</div>}
