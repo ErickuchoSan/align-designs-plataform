@@ -102,7 +102,7 @@ jobs:
     needs: [validate, sonarcloud]
     steps:
       - name: Deploy to Dev Server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 144.126.221.76
           username: root
@@ -204,7 +204,7 @@ jobs:
         run: sleep 30
 
       - name: Verify containers are running on server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 144.126.221.76
           username: root
@@ -265,7 +265,7 @@ jobs:
     if: needs.deploy.result == 'success' && needs.health-check.result == 'failure'
     steps:
       - name: Rollback to Previous Version
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 144.126.221.76
           username: root
@@ -300,7 +300,7 @@ jobs:
     if: success()
     steps:
       - name: Backup DB, Docker Images & SSH Config to Spaces
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 144.126.221.76
           username: root
